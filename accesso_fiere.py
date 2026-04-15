@@ -115,10 +115,13 @@ DB_LEGACY = os.path.join(DATA_DIR, 'accesso_fiere.db')
 
 def get_current_db_path():
     """Restituisce il path DB corretto per il tenant corrente."""
-    azienda_id = session.get('azienda_id')
-    if azienda_id:
-        return get_tenant_db_path(azienda_id)
-    # Fallback al DB legacy (uso diretto senza SaaS)
+    try:
+        azienda_id = session.get('azienda_id')
+        if azienda_id:
+            return get_tenant_db_path(azienda_id)
+    except RuntimeError:
+        # Chiamato fuori dal contesto di una request (es. avvio gunicorn)
+        pass
     return DB_LEGACY
 
 # Ridefinisco DB come property dinamica
