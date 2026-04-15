@@ -600,6 +600,22 @@ def init_db():
             aggiornato_il TEXT DEFAULT (datetime('now')),
             UNIQUE(nome_jolly, cognome_jolly)
         )""",
+        """CREATE TABLE IF NOT EXISTS contratti_clienti (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            cliente_id INTEGER,
+            oggetto TEXT,
+            data_firma TEXT,
+            data_scadenza TEXT,
+            valore REAL,
+            stato TEXT DEFAULT 'attivo',
+            cantiere_id INTEGER,
+            note TEXT,
+            file_nome TEXT,
+            file_nome_originale TEXT,
+            creato_il TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY(cliente_id) REFERENCES clienti(id),
+            FOREIGN KEY(cantiere_id) REFERENCES cantieri(id)
+        )""",
     ]
     for sql in migrations:
         try: db.execute(sql)
@@ -713,7 +729,7 @@ def login_required(f):
             return redirect(url_for('login'))
         # Dipendenti non-admin: blocca accesso a pagine admin
         admin_pages = {'dashboard','dipendenti','presenze','ferie','cantieri',
-                       'documenti','scadenze','calendario','report','richieste','impostazioni','fatturazione','preventivi','clienti','cedolini'}
+                       'documenti','scadenze','calendario','richieste','impostazioni','fatturazione','preventivi','clienti','contratti_clienti'}
         if session.get('ruolo') != 'admin' and f.__name__ in admin_pages:
             return redirect(url_for('mobile'))
         return f(*a,**k)
@@ -1086,17 +1102,13 @@ textarea{resize:vertical;min-height:80px}
     <a href="/fatturazione" class="{{ 'active' if active=='fatturazione' }}"><i class="fa fa-file-invoice-dollar"></i> Fatturazione</a>
     <a href="/preventivi" class="{{ 'active' if active=='preventivi' }}"><i class="fa fa-file-invoice"></i> Preventivi</a>
     <a href="/calendario" class="{{ 'active' if active=='calendario' }}"><i class="fa fa-calendar"></i> Calendario</a>
-    <a href="/cedolini" class="{{ 'active' if active=='cedolini' }}"><i class="fa fa-money-bill-wave"></i> Cedolini</a>
+    <a href="/contratti-clienti" class="{{ 'active' if active=='contratti_clienti' }}"><i class="fa fa-file-signature"></i> Contratti Clienti</a>
     {% if session.ruolo=='admin' %}
     <div class="nav-section">Admin</div>
     <a href="/admin/richieste" class="{{ 'active' if active=='richieste' }}">
       <i class="fa fa-bell"></i> Richieste
       {% if notifiche_count > 0 %}<span class="notif-badge">{{ notifiche_count }}</span>{% endif %}
     </a>
-    <a href="/admin/spese" class="{{ 'active' if active=='admin_spese' }}"><i class="fa fa-receipt"></i> Spese rimborso
-      {% if spese_attesa > 0 %}<span class="notif-badge" style="background:#f59e0b">{{ spese_attesa }}</span>{% endif %}
-    </a>
-    <a href="/admin/report" class="{{ 'active' if active=='report' }}"><i class="fa fa-chart-bar"></i> Report</a>
     <a href="/admin/impostazioni" class="{{ 'active' if active=='impostazioni' }}"><i class="fa fa-gear"></i> Impostazioni</a>
     {% endif %}
   </nav>
@@ -13035,1935 +13047,290 @@ def cliente_elimina(cid):
 
 
 # ══════════════════════════════════════════════════════
-#  CEDOLINI
-# ══════════════════════════════════════════════════════
 
-CEDOLINI_TMPL = """
-<style>
-.ced-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:12px}
-.ced-badge{display:inline-block;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:700}
-.chart-bar{height:18px;border-radius:4px;background:linear-gradient(90deg,#6366f1,#8b5cf6);min-width:4px;transition:width .4s}
-</style>
+# ══════════════════════════════════════════════════════════
+#  CONTRATTI CLIENTI
+# ══════════════════════════════════════════════════════════
 
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
-  <h2 style="margin:0"><i class="fa fa-money-bill-wave" style="color:#10b981"></i> Cedolini & Costi Personale</h2>
-  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-    <a href="/cedolini/foglio-presenze" class="btn btn-secondary btn-sm"><i class="fa fa-file-alt"></i> Foglio presenze</a>
-    <a href="/admin/detrazioni" class="btn btn-sm" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca"><i class="fa fa-minus-circle"></i> Detrazioni & Anticipi</a>
-    <form method="GET" style="display:flex;gap:8px;align-items:center">
-      <select name="mese" onchange="this.form.submit()" style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px">
-        {% for m in range(1,13) %}
-        <option value="{{ m }}" {{ 'selected' if m==mese_sel }}>{{ ['','Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'][m] }}</option>
-        {% endfor %}
-      </select>
-      <select name="anno" onchange="this.form.submit()" style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px">
-        {% for a in anni %}
-        <option value="{{ a }}" {{ 'selected' if a==anno_sel }}>{{ a }}</option>
-        {% endfor %}
-      </select>
-    </form>
+CONTRATTI_CLIENTI_TMPL = """
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+  <div>
+    <p style="color:var(--text-light);font-size:13px;margin-top:4px">Tutti i contratti stipulati con i clienti, con scadenze e allegati.</p>
   </div>
+  <a href="/contratti-clienti/nuovo" class="btn btn-primary"><i class="fa fa-plus"></i> Nuovo contratto</a>
 </div>
-
-<!-- KPI row -->
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px">
-  <div class="card" style="padding:18px;text-align:center;border-top:3px solid #10b981">
-    <div style="font-size:22px;font-weight:800;color:#10b981">€ {{ "%.0f"|format(totale_mese) }}</div>
-    <div style="font-size:11px;color:#64748b;margin-top:4px;text-transform:uppercase;letter-spacing:.5px">Totale netto mese</div>
-  </div>
-  <div class="card" style="padding:18px;text-align:center;border-top:3px solid #6366f1">
-    <div style="font-size:22px;font-weight:800;color:#6366f1">{{ "%.1f"|format(ore_totali_mese) }}h</div>
-    <div style="font-size:11px;color:#64748b;margin-top:4px;text-transform:uppercase;letter-spacing:.5px">Ore lavorate</div>
-  </div>
-  <div class="card" style="padding:18px;text-align:center;border-top:3px solid #f59e0b">
-    <div style="font-size:22px;font-weight:800;color:#f59e0b">{{ dipendenti_attivi }}</div>
-    <div style="font-size:11px;color:#64748b;margin-top:4px;text-transform:uppercase;letter-spacing:.5px">Dipendenti attivi</div>
-  </div>
-  <div class="card" style="padding:18px;text-align:center;border-top:3px solid #ec4899">
-    <div style="font-size:22px;font-weight:800;color:#ec4899">€ {{ "%.0f"|format(totale_spese_extra) }}</div>
-    <div style="font-size:11px;color:#64748b;margin-top:4px;text-transform:uppercase;letter-spacing:.5px">Spese extra eventi</div>
-  </div>
-</div>
-
-<!-- Cedolini dipendenti -->
-<div class="card" style="margin-bottom:24px">
-  <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
-    <h3><i class="fa fa-users" style="color:#6366f1"></i> Cedolini Dipendenti — {{ ['','Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'][mese_sel] }} {{ anno_sel }}</h3>
-    {% if session.ruolo=='admin' %}
-    <a href="/cedolini/impostazioni-paga" class="btn btn-sm btn-secondary"><i class="fa fa-gear"></i> Paga oraria</a>
-    {% endif %}
-  </div>
-  <div class="card-body" style="padding:0">
-    {% if cedolini %}
-    <table style="width:100%;border-collapse:collapse;font-size:13.5px">
-      <thead><tr style="background:#f8fafc;border-bottom:2px solid var(--border)">
-        <th style="padding:12px 16px;text-align:left">Dipendente</th>
-        <th style="padding:12px 16px;text-align:right">Ore lavorate</th>
-        <th style="padding:12px 16px;text-align:right">Retribuzione</th>
-        <th style="padding:12px 16px;text-align:right">Totale netto</th>
-        <th style="padding:12px 16px;text-align:right">Rimborsi</th>
-        <th style="padding:12px 16px;text-align:right;color:#dc2626">Detrazioni</th>
-        <th style="padding:12px 16px;text-align:right;color:#10b981">Da pagare</th>
-        <th style="padding:12px 16px;text-align:left">Dettaglio</th>
-      </tr></thead>
-      <tbody>
-      {% for d in cedolini %}
-      <tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:12px 16px">
-          <div style="display:flex;align-items:center;gap:10px">
-            <div style="width:34px;height:34px;border-radius:50%;background:{{ d.colore }};display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;flex-shrink:0">{{ d.iniziali }}</div>
-            <div>
-              <div style="font-weight:700">{{ d.nome }} {{ d.cognome }}</div>
-              <div style="font-size:11px;color:#64748b">{{ d.mansione or '' }}</div>
-            </div>
-          </div>
-        </td>
-        <td style="padding:12px 16px;text-align:right;font-family:monospace;font-weight:700">{{ "%.1f"|format(d.ore) }}h</td>
-        <td style="padding:12px 16px;text-align:right;font-size:12px;color:#64748b">
-          {% if d.paga_base %}
-            <span title="Paga base">€{{ "%.0f"|format(d.paga_base) }}/mese</span>
-            {% if d.ore_soglia %}<span style="color:#94a3b8"> + {{ "%.0f"|format(d.ore_soglia) }}h soglia</span>{% endif %}
-            {% if d.paga_oraria %}<br>+ € {{ "%.2f"|format(d.paga_oraria) }}/h extra</br>{% endif %}
-          {% elif d.paga_oraria %}€ {{ "%.2f"|format(d.paga_oraria) }}/h
-          {% else %}<span style="color:#dc2626">⚠ Non impostata</span>{% endif %}
-        </td>
-        <td style="padding:12px 16px;text-align:right;font-weight:800;font-size:16px;color:#10b981">
-          {% if d.paga_oraria %}€ {{ "%.2f"|format(d.totale) }}{% else %}–{% endif %}
-        </td>
-        <td style="padding:12px 16px;text-align:right">
-          {% if d.spese_rimborso > 0 %}
-          <a href="/admin/spese?uid={{ d.id }}&stato=approvata" style="color:#f59e0b;font-weight:700;text-decoration:none">€ {{ "%.2f"|format(d.spese_rimborso) }}</a>
-          {% else %}<span style="color:#94a3b8">–</span>{% endif %}
-        </td>
-        <td style="padding:12px 16px;text-align:right">
-          {% if d.detrazioni > 0 %}
-          <a href="/admin/detrazioni?uid={{ d.id }}&mese={{ prefisso }}"
-             style="color:#dc2626;font-weight:700;text-decoration:none"
-             title="{% for x in d.detr_dettaglio %}{{ x.descrizione }}: €{{ '%.2f'|format(x.importo) }}&#10;{% endfor %}">
-            − € {{ "%.2f"|format(d.detrazioni) }}
-          </a>
-          {% else %}<span style="color:#94a3b8">–</span>{% endif %}
-        </td>
-        <td style="padding:12px 16px;text-align:right;font-weight:800;font-size:15px;color:#059669">
-          {% if d.paga_oraria %}€ {{ "%.2f"|format(d.totale_con_spese) }}{% else %}–{% endif %}
-        </td>
-        <td style="padding:12px 16px">
-          <div style="width:140px;background:#f1f5f9;border-radius:6px;overflow:hidden;position:relative">
-            {% if max_ore > 0 %}
-            <div class="chart-bar" style="width:{{ (d.ore/max_ore*100)|int }}%">&nbsp;</div>
-            {% endif %}
-          </div>
-          <div style="font-size:11px;color:#94a3b8;margin-top:3px">{{ d.giorni_lavorati }} giorni</div>
-        </td>
-      </tr>
-      {% endfor %}
-      </tbody>
-      <tfoot><tr style="background:#f0fdf4;font-weight:800">
-        <td style="padding:12px 16px">TOTALE</td>
-        <td style="padding:12px 16px;text-align:right;font-family:monospace">{{ "%.1f"|format(ore_totali_mese) }}h</td>
-        <td></td>
-        <td style="padding:12px 16px;text-align:right;color:#10b981;font-size:16px">€ {{ "%.2f"|format(totale_mese) }}</td>
-        <td style="padding:12px 16px;text-align:right;color:#f59e0b">€ {{ "%.2f"|format(cedolini|sum(attribute='spese_rimborso')) }}</td>
-        <td style="padding:12px 16px;text-align:right;color:#dc2626">− € {{ "%.2f"|format(cedolini|sum(attribute='detrazioni')) }}</td>
-        <td style="padding:12px 16px;text-align:right;color:#059669;font-size:16px">€ {{ "%.2f"|format(cedolini|sum(attribute='totale_con_spese')) }}</td>
-        <td></td>
-      </tr></tfoot>
-    </table>
-    {% else %}
-    <div style="padding:40px;text-align:center;color:#94a3b8">Nessuna presenza registrata per questo periodo.</div>
-    {% endif %}
-  </div>
-</div>
-
-{% if jolly_cedolini %}
-<div class="card" style="margin-bottom:24px;border-left:4px solid #f59e0b">
-  <div class="card-header" style="background:#fffbeb">
-    <h3><i class="fa fa-user-clock" style="color:#d97706"></i> Lavoratori Jolly (Esterni) — {{ ['','Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'][mese_sel] }} {{ anno_sel }}</h3>
-    <div style="display:flex;gap:8px;align-items:center">
-      <span style="font-size:12px;color:#92400e;background:#fef3c7;border-radius:6px;padding:4px 10px">{{ jolly_cedolini|length }} jolly · {{ "%.1f"|format(jolly_cedolini|sum(attribute='ore')) }}h · € {{ "%.2f"|format(jolly_cedolini|sum(attribute='totale')) }}</span>
-      <a href="/cedolini/jolly-paghe" class="btn btn-sm" style="background:#fef3c7;color:#92400e;border:1px solid #fde047"><i class="fa fa-coins"></i> Paga oraria jolly</a>
-    </div>
-  </div>
-  <div class="card-body" style="padding:0">
-    <table style="width:100%;border-collapse:collapse;font-size:13.5px">
-      <thead><tr style="background:#fef9c3;border-bottom:2px solid #fde047">
-        <th style="padding:12px 16px;text-align:left">Nome</th>
-        <th style="padding:12px 16px;text-align:right">Ore totali</th>
-        <th style="padding:12px 16px;text-align:center">Giorni</th>
-        <th style="padding:12px 16px;text-align:right">€/h</th>
-        <th style="padding:12px 16px;text-align:right;color:#d97706">Totale €</th>
-        <th style="padding:12px 16px;text-align:left">Cantiere/i</th>
-        <th style="padding:12px 16px;text-align:center">Azioni</th>
-      </tr></thead>
-      <tbody>
-      {% for j in jolly_cedolini %}
-      <!-- Riga riepilogo jolly -->
-      <tr style="border-bottom:1px solid #fef3c7;background:#fffbeb" id="jolly-row-{{ loop.index }}">
-        <td style="padding:10px 16px">
-          <div style="display:flex;align-items:center;gap:10px">
-            <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#d97706,#f59e0b);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;flex-shrink:0">{{ j.iniziali }}</div>
-            <div>
-              <div style="font-weight:700" id="jolly-nome-{{ loop.index }}">{{ j.nome }} {{ j.cognome }}</div>
-              <span style="font-size:10px;background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 6px;font-weight:700">👷 JOLLY</span>
-            </div>
-          </div>
-        </td>
-        <td style="padding:10px 16px;text-align:right;font-family:monospace;font-weight:700;color:#d97706">{{ "%.1f"|format(j.ore) }}h</td>
-        <td style="padding:10px 16px;text-align:center"><strong>{{ j.giorni_lavorati }}</strong></td>
-        <td style="padding:10px 16px;text-align:right;font-size:12px;color:#64748b">
-          {% if j.paga_oraria %}€ {{ "%.2f"|format(j.paga_oraria) }}{% else %}<a href="/cedolini/jolly-paghe" style="color:#f59e0b;font-size:11px">⚠ imposta</a>{% endif %}
-        </td>
-        <td style="padding:10px 16px;text-align:right;font-weight:800;font-size:15px;color:#d97706">
-          {% if j.paga_oraria %}€ {{ "%.2f"|format(j.totale) }}{% else %}<span style="color:#94a3b8">–</span>{% endif %}
-        </td>
-        <td style="padding:10px 16px;font-size:12px">{% if j.cantieri %}<span class="tag">{{ j.cantieri }}</span>{% else %}<span style="color:#94a3b8">–</span>{% endif %}</td>
-        <td style="padding:10px 16px;text-align:center">
-          <div style="display:flex;gap:6px;justify-content:center">
-            <button onclick="toggleJollyDettaglio({{ loop.index }})" class="btn btn-sm btn-secondary" title="Vedi/nascondi presenze"><i class="fa fa-list"></i></button>
-            <button onclick="apriRinominaJolly('{{ j.nome }}','{{ j.cognome }}')" class="btn btn-sm" style="background:#fef3c7;color:#92400e;border:1px solid #fde047" title="Rinomina questo jolly in tutte le presenze del mese"><i class="fa fa-user-pen"></i> Rinomina</button>
-          </div>
-        </td>
-      </tr>
-      <!-- Righe dettaglio presenze jolly (nascoste di default) -->
-      <tr id="jolly-dettaglio-{{ loop.index }}" style="display:none">
-        <td colspan="5" style="padding:0;background:#fffdf0">
-          <table style="width:100%;border-collapse:collapse;font-size:13px">
-            <thead><tr style="background:#fef3c7">
-              <th style="padding:8px 20px;text-align:left;font-size:11px;color:#92400e">DATA</th>
-              <th style="padding:8px 16px;font-size:11px;color:#92400e">CANTIERE</th>
-              <th style="padding:8px 16px;text-align:center;font-size:11px;color:#92400e">ENTRATA</th>
-              <th style="padding:8px 16px;text-align:center;font-size:11px;color:#92400e">USCITA</th>
-              <th style="padding:8px 16px;text-align:center;font-size:11px;color:#92400e">ORE</th>
-              <th style="padding:8px 16px;text-align:center;font-size:11px;color:#92400e">AZIONI</th>
-            </tr></thead>
-            <tbody>
-            {% for p in j.presenze %}
-            <tr style="border-bottom:1px solid #fef9c3" id="jolly-p-{{ p.id }}">
-              <td style="padding:8px 20px;font-family:monospace;font-weight:600">{{ p.data }}</td>
-              <td style="padding:8px 16px;font-size:12px">{{ p.cantiere_nome or '–' }}</td>
-              <td style="padding:8px 16px;text-align:center;font-family:monospace;color:#16a34a">{{ p.ora_entrata or '–' }}</td>
-              <td style="padding:8px 16px;text-align:center;font-family:monospace">{{ p.ora_uscita or '–' }}</td>
-              <td style="padding:8px 16px;text-align:center;font-weight:700;color:#d97706">{{ "%.1f"|format(p.ore_totali) if p.ore_totali else '–' }}h</td>
-              <td style="padding:8px 16px;text-align:center">
-                <div style="display:flex;gap:4px;justify-content:center">
-                  <button onclick="apriModificaJolly({{ p.id }},'{{ p.data }}','{{ p.ora_entrata or '' }}','{{ p.ora_uscita or '' }}','{{ p.ore_totali or '' }}','{{ p.cantiere_id or '' }}','{{ p.note or '' }}','{{ j.nome }}','{{ j.cognome }}')"
-                          class="btn btn-sm btn-secondary" title="Modifica"><i class="fa fa-pen"></i></button>
-                  <button onclick="apriDuplicaJolly({{ p.id }},'{{ p.data }}','{{ p.ora_entrata or '' }}','{{ p.ora_uscita or '' }}','{{ p.ore_totali or '' }}','{{ p.cantiere_id or '' }}','{{ p.note or '' }}','{{ j.nome }}','{{ j.cognome }}')"
-                          class="btn btn-sm" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe" title="Duplica e modifica"><i class="fa fa-copy"></i></button>
-                  <a href="/presenze/{{ p.id }}/elimina" class="btn btn-sm btn-danger" onclick="return confirm('Eliminare?')" title="Elimina"><i class="fa fa-trash"></i></a>
-                </div>
-              </td>
-            </tr>
-            {% endfor %}
-            </tbody>
-          </table>
-        </td>
-      </tr>
-      {% endfor %}
-      </tbody>
-      <tfoot><tr style="background:#fef3c7;font-weight:800">
-        <td style="padding:12px 16px">TOTALE JOLLY</td>
-        <td style="padding:12px 16px;text-align:right;font-family:monospace;color:#d97706">{{ "%.1f"|format(jolly_cedolini|sum(attribute='ore')) }}h</td>
-        <td style="padding:12px 16px;text-align:center">{{ jolly_cedolini|sum(attribute='giorni_lavorati') }}</td>
-        <td></td>
-        <td style="padding:12px 16px;text-align:right;color:#d97706;font-size:15px">€ {{ "%.2f"|format(jolly_cedolini|sum(attribute='totale')) }}</td>
-        <td colspan="2"></td>
-      </tr></tfoot>
-    </table>
-  </div>
-</div>
-
-<!-- Modal modifica/duplica presenza jolly -->
-<div id="modal-jolly-mod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1001;align-items:center;justify-content:center">
-  <div class="card" style="width:480px;max-width:95vw">
-    <div class="card-header" style="background:#fffbeb">
-      <h3 style="color:#92400e" id="jolly-modal-titolo"><i class="fa fa-user-clock"></i> Modifica presenza Jolly</h3>
-      <button onclick="document.getElementById('modal-jolly-mod').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer">×</button>
-    </div>
-    <form method="POST" id="form-jolly-mod">
-      <div class="card-body">
-        <input type="hidden" name="pid" id="jmod-pid">
-        <div style="background:#eff6ff;border-radius:8px;padding:8px 12px;font-size:12px;color:#1d4ed8;margin-bottom:12px" id="jmod-info-duplica" style="display:none">
-          <i class="fa fa-copy"></i> Stai creando una <strong>nuova presenza</strong> copiando i dati — modifica ciò che serve e salva.
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label>Nome *</label><input name="nome_jolly" id="jmod-nome" required></div>
-          <div class="form-group"><label>Cognome *</label><input name="cognome_jolly" id="jmod-cognome" required></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label>Data *</label><input type="date" name="data" id="jmod-data" required></div>
-          <div class="form-group"><label>Ore totali</label><input type="number" step="0.5" min="0.5" max="24" name="ore_dirette" id="jmod-ore" placeholder="es. 8"></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label>Entrata</label><input type="time" name="ora_entrata" id="jmod-oe"></div>
-          <div class="form-group"><label>Uscita</label><input type="time" name="ora_uscita" id="jmod-ou"></div>
-        </div>
-        <div class="form-group"><label>Fiera</label>
-          <select name="cantiere_id" id="jmod-cant">
-            <option value="">— nessuno —</option>
-            {% for c in cantieri_list %}<option value="{{ c.id }}">{{ c.nome }}</option>{% endfor %}
-          </select>
-        </div>
-        <div class="form-group"><label>Note</label><input name="note" id="jmod-note" placeholder="Opzionale"></div>
-      </div>
-      <div style="display:flex;gap:10px;justify-content:flex-end;padding:0 20px 16px">
-        <button type="button" onclick="document.getElementById('modal-jolly-mod').style.display='none'" class="btn btn-secondary">Annulla</button>
-        <button type="submit" class="btn btn-primary" id="jmod-btn-submit"><i class="fa fa-save"></i> Salva</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Modal rinomina jolly -->
-<div id="modal-jolly-rinomina" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1001;align-items:center;justify-content:center">
-  <div class="card" style="width:420px;max-width:95vw">
-    <div class="card-header" style="background:#fffbeb">
-      <h3 style="color:#92400e"><i class="fa fa-user-pen"></i> Rinomina Jolly</h3>
-      <button onclick="document.getElementById('modal-jolly-rinomina').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer">×</button>
-    </div>
-    <form method="POST" action="/presenze/jolly/rinomina">
-      <div class="card-body">
-        <div style="background:#fef3c7;border-radius:8px;padding:10px;font-size:12px;color:#92400e;margin-bottom:14px">
-          <i class="fa fa-info-circle"></i> Aggiorna nome e cognome in <strong>tutte</strong> le presenze di questo jolly nel mese selezionato.
-        </div>
-        <input type="hidden" name="nome_old" id="jrin-nome-old">
-        <input type="hidden" name="cognome_old" id="jrin-cognome-old">
-        <input type="hidden" name="mese" value="{{ prefisso }}">
-        <div class="form-row">
-          <div class="form-group"><label>Nuovo Nome *</label><input name="nome_new" id="jrin-nome-new" required></div>
-          <div class="form-group"><label>Nuovo Cognome *</label><input name="cognome_new" id="jrin-cognome-new" required></div>
-        </div>
-      </div>
-      <div style="display:flex;gap:10px;justify-content:flex-end;padding:0 20px 16px">
-        <button type="button" onclick="document.getElementById('modal-jolly-rinomina').style.display='none'" class="btn btn-secondary">Annulla</button>
-        <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Rinomina</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<script>
-function toggleJollyDettaglio(idx) {
-  var r = document.getElementById('jolly-dettaglio-' + idx);
-  r.style.display = r.style.display === 'none' ? 'table-row' : 'none';
-}
-function _popolaJollyModal(pid, data, oe, ou, ore, cid, note, nome, cognome) {
-  document.getElementById('jmod-pid').value = pid;
-  document.getElementById('jmod-data').value = data;
-  document.getElementById('jmod-nome').value = nome;
-  document.getElementById('jmod-cognome').value = cognome;
-  document.getElementById('jmod-oe').value = oe ? oe.substring(0,5) : '';
-  document.getElementById('jmod-ou').value = ou ? ou.substring(0,5) : '';
-  document.getElementById('jmod-ore').value = ore ? parseFloat(ore).toFixed(1) : '';
-  document.getElementById('jmod-note').value = note;
-  var sel = document.getElementById('jmod-cant');
-  for (var i=0;i<sel.options.length;i++) sel.options[i].selected=(sel.options[i].value==cid);
-}
-function apriModificaJolly(pid, data, oe, ou, ore, cid, note, nome, cognome) {
-  _popolaJollyModal(pid, data, oe, ou, ore, cid, note, nome, cognome);
-  document.getElementById('form-jolly-mod').action = '/presenze/jolly/modifica';
-  document.getElementById('jolly-modal-titolo').innerHTML = '<i class="fa fa-user-clock"></i> Modifica presenza Jolly';
-  document.getElementById('jmod-info-duplica').style.display = 'none';
-  document.getElementById('jmod-btn-submit').innerHTML = '<i class="fa fa-save"></i> Salva modifiche';
-  document.getElementById('jmod-btn-submit').className = 'btn btn-primary';
-  document.getElementById('modal-jolly-mod').style.display='flex';
-}
-function apriDuplicaJolly(pid, data, oe, ou, ore, cid, note, nome, cognome) {
-  _popolaJollyModal(pid, data, oe, ou, ore, cid, note, nome, cognome);
-  // Suggerisci giorno successivo
-  try {
-    var d = new Date(data + 'T00:00:00');
-    d.setDate(d.getDate() + 1);
-    document.getElementById('jmod-data').value = d.toISOString().split('T')[0];
-  } catch(e) {}
-  document.getElementById('form-jolly-mod').action = '/presenze/jolly/duplica-salva';
-  document.getElementById('jolly-modal-titolo').innerHTML = '<i class="fa fa-copy"></i> Duplica presenza Jolly';
-  document.getElementById('jmod-info-duplica').style.display = 'block';
-  document.getElementById('jmod-btn-submit').innerHTML = '<i class="fa fa-copy"></i> Crea nuova presenza';
-  document.getElementById('jmod-btn-submit').className = 'btn' ;
-  document.getElementById('jmod-btn-submit').style.cssText = 'background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff';
-  document.getElementById('modal-jolly-mod').style.display='flex';
-}
-function apriRinominaJolly(nome, cognome) {
-  document.getElementById('jrin-nome-old').value = nome;
-  document.getElementById('jrin-cognome-old').value = cognome;
-  document.getElementById('jrin-nome-new').value = nome;
-  document.getElementById('jrin-cognome-new').value = cognome;
-  document.getElementById('modal-jolly-rinomina').style.display='flex';
-}
-</script>
-{% endif %}
-
-<!-- Grafici -->
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
-  <!-- Grafico mensile ultimi 6 mesi -->
-  <div class="card">
-    <div class="card-header"><h3><i class="fa fa-chart-bar" style="color:#6366f1"></i> Costi ultimi 6 mesi</h3></div>
-    <div class="card-body">
-      {% if storico_mesi %}
-      {% set max_v = storico_mesi|map(attribute='totale')|max %}
-      {% for sm in storico_mesi %}
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <div style="width:50px;font-size:12px;color:#64748b;text-align:right;flex-shrink:0">{{ sm.etichetta }}</div>
-        <div style="flex:1;background:#f1f5f9;border-radius:6px;overflow:hidden">
-          <div style="height:22px;border-radius:6px;background:linear-gradient(90deg,#6366f1,#8b5cf6);width:{{ ((sm.totale/max_v*100) if max_v > 0 else 0)|int }}%;min-width:{% if sm.totale > 0 %}4{% else %}0{% endif %}px"></div>
-        </div>
-        <div style="width:70px;font-size:12px;font-weight:700;text-align:right">€ {{ "%.0f"|format(sm.totale) }}</div>
-      </div>
-      {% endfor %}
-      {% else %}
-      <p style="color:#94a3b8;text-align:center">Dati insufficienti</p>
-      {% endif %}
-    </div>
-  </div>
-
-  <!-- Grafico per cantiere/evento -->
-  <div class="card">
-    <div class="card-header"><h3><i class="fa fa-layer-group" style="color:#f59e0b"></i> Costi per cantiere/evento (mese)</h3></div>
-    <div class="card-body">
-      {% if costi_per_cantiere %}
-      {% set max_c = costi_per_cantiere|map(attribute='totale')|max %}
-      {% for cc in costi_per_cantiere %}
-      <div style="margin-bottom:12px">
-        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
-          <span style="font-weight:600;color:#1e293b">{{ cc.nome }}</span>
-          <span style="font-weight:700;color:#f59e0b">€ {{ "%.0f"|format(cc.totale) }} / {{ "%.1f"|format(cc.ore) }}h</span>
-        </div>
-        <div style="background:#f1f5f9;border-radius:6px;overflow:hidden">
-          <div style="height:18px;border-radius:6px;background:linear-gradient(90deg,#f59e0b,#fbbf24);width:{{ ((cc.totale/max_c*100) if max_c > 0 else 0)|int }}%;min-width:{% if cc.totale > 0 %}4{% else %}0{% endif %}px"></div>
-        </div>
-      </div>
-      {% endfor %}
-      {% else %}
-      <p style="color:#94a3b8;text-align:center">Nessuna fiera con ore registrate.</p>
-      {% endif %}
-    </div>
-  </div>
-</div>
-
-<!-- Spese extra per evento nel mese -->
-{% if spese_per_evento %}
+{% with msgs = get_flashed_messages(with_categories=true) %}{% for cat,msg in msgs %}
+<div class="alert alert-{{ 'success' if cat=='success' else 'error' }}">{{ msg }}</div>
+{% endfor %}{% endwith %}
 <div class="card">
-  <div class="card-header"><h3><i class="fa fa-receipt" style="color:#ec4899"></i> Spese extra per evento — {{ ['','Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'][mese_sel] }} {{ anno_sel }}</h3></div>
-  <div class="card-body" style="padding:0">
-    <!-- Barre grafiche per evento -->
-    {% set max_tot = spese_per_evento|map(attribute='totale')|max %}
-    {% for ev in spese_per_evento %}
-    <div style="padding:16px 20px;border-bottom:1px solid #fce7f3">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px">
-        <div>
-          <a href="/calendario/{{ ev.id }}" style="font-weight:700;font-size:14px;color:var(--accent2);text-decoration:none">{{ ev.titolo }}</a>
-          {% if ev.cantiere %}<span style="margin-left:8px;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700">{{ ev.cantiere }}</span>{% endif %}
-          {% if ev.tipo %}<span style="margin-left:4px;background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:99px;font-size:11px">{{ ev.tipo }}</span>{% endif %}
-          <div style="font-size:12px;color:#94a3b8;margin-top:3px">
-            {{ ev.data_inizio }}{% if ev.data_fine and ev.data_fine != ev.data_inizio %} → {{ ev.data_fine }}{% endif %}
-            {% if ev.team %}· {{ ev.team|length }} persone · {{ ev.ore_dip }}h totali{% endif %}
-          </div>
-          {% if ev.team %}
-          <div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:5px">
-            {% for t in ev.team %}
-            <span style="background:#eef2ff;color:#4338ca;padding:2px 8px;border-radius:99px;font-size:11px">{{ t.nome }} {{ t.ore }}h</span>
-            {% endfor %}
-          </div>
-          {% endif %}
-        </div>
-        <div style="text-align:right;flex-shrink:0">
-          <div style="font-size:20px;font-weight:800">€ {{ "%.0f"|format(ev.totale) }}</div>
-          <div style="font-size:11px;color:#94a3b8;margin-top:2px">
-            <span style="color:#6366f1">€{{ "%.0f"|format(ev.costo_dip) }} dip.</span>
-            {% if ev.spese_extra > 0 %} + <span style="color:#ec4899">€{{ "%.0f"|format(ev.spese_extra) }} spese</span>{% endif %}
-          </div>
-        </div>
-      </div>
-      <!-- Barra proporzionale -->
-      <div style="background:#f1f5f9;border-radius:6px;overflow:hidden;height:10px">
-        <div style="height:10px;border-radius:6px;background:linear-gradient(90deg,#6366f1,#ec4899);width:{{ ((ev.totale/max_tot*100) if max_tot>0 else 0)|int }}%"></div>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
-</div>
-{% endif %}
-"""
-
-PAGA_FORM_TMPL = """
-<div class="card" style="max-width:760px;margin:0 auto">
-  <div class="card-header"><h3><i class="fa fa-gear" style="color:#6366f1"></i> Impostazioni Retribuzione Dipendenti</h3></div>
-  <div class="card-body">
-    <div style="background:#eef4ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px;margin-bottom:20px;font-size:13px;color:#1d4ed8">
-      <strong>Logica calcolo:</strong> Se impostata una <em>paga base mensile</em>, quella viene applicata fino alle ore soglia.
-      Le ore eccedenti vengono moltiplicate per la <em>paga oraria</em> e sommate alla base.
-      Se non c'è paga base, si usa solo la tariffa oraria × ore totali.
-    </div>
-    <form method="POST">
-      <table style="width:100%;border-collapse:collapse;font-size:13px">
-        <thead><tr style="background:#f8fafc;border-bottom:2px solid var(--border)">
-          <th style="padding:10px 14px;text-align:left">Dipendente</th>
-          <th style="padding:10px 14px;text-align:center">Paga base netta<br><small style="font-weight:400;color:#94a3b8">€/mese fisso</small></th>
-          <th style="padding:10px 14px;text-align:center">Ore soglia<br><small style="font-weight:400;color:#94a3b8">incluse nella base</small></th>
-          <th style="padding:10px 14px;text-align:center">Paga oraria netta<br><small style="font-weight:400;color:#94a3b8">€/h extra soglia</small></th>
-        </tr></thead>
-        <tbody>
-        {% for d in dipendenti %}
-        <tr style="border-bottom:1px solid var(--border)">
-          <td style="padding:10px 14px">
-            <div style="display:flex;align-items:center;gap:10px">
-              <div style="width:32px;height:32px;border-radius:50%;background:#6366f1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;flex-shrink:0">{{ (d.nome[0]+d.cognome[0])|upper }}</div>
-              <div style="font-weight:600">{{ d.nome }} {{ d.cognome }}<div style="font-size:11px;color:#94a3b8">{{ d.mansione or '' }}</div></div>
-            </div>
-          </td>
-          <td style="padding:10px 14px;text-align:center">
-            <div style="display:flex;align-items:center;gap:4px;justify-content:center">
-              <span style="color:#64748b">€</span>
-              <input type="number" name="base_{{ d.id }}" step="0.01" min="0" value="{{ d.paga_base_netta or '' }}" placeholder="es. 800" style="width:100px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px;text-align:right">
-            </div>
-          </td>
-          <td style="padding:10px 14px;text-align:center">
-            <div style="display:flex;align-items:center;gap:4px;justify-content:center">
-              <input type="number" name="soglia_{{ d.id }}" step="0.5" min="0" value="{{ d.ore_soglia_mensile or '' }}" placeholder="es. 160" style="width:80px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px;text-align:right">
-              <span style="color:#64748b">h</span>
-            </div>
-          </td>
-          <td style="padding:10px 14px;text-align:center">
-            <div style="display:flex;align-items:center;gap:4px;justify-content:center">
-              <span style="color:#64748b">€</span>
-              <input type="number" name="paga_{{ d.id }}" step="0.01" min="0" value="{{ d.paga_oraria_netta or '' }}" placeholder="es. 10" style="width:80px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px;text-align:right">
-              <span style="color:#64748b">/h</span>
-            </div>
-          </td>
-        </tr>
-        {% endfor %}
-        </tbody>
-      </table>
-      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
-        <a href="/cedolini" class="btn btn-secondary">Annulla</a>
-        <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Salva</button>
-      </div>
-    </form>
-  </div>
-</div>
-"""
-
-COLORI_DIP = ['#6366f1','#ec4899','#f59e0b','#10b981','#3b82f6','#8b5cf6','#06b6d4','#f97316']
-
-ADMIN_SPESE_TMPL = """
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
-  <form method="GET" style="display:flex;gap:8px;flex-wrap:wrap">
-    <select name="stato" onchange="this.form.submit()" style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px">
-      <option value="">Tutti gli stati</option>
-      <option value="in_attesa" {{ 'selected' if filtro_stato=='in_attesa' }}>In attesa</option>
-      <option value="approvata" {{ 'selected' if filtro_stato=='approvata' }}>Approvate</option>
-      <option value="rifiutata" {{ 'selected' if filtro_stato=='rifiutata' }}>Rifiutate</option>
-    </select>
-    <select name="uid" onchange="this.form.submit()" style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px">
-      <option value="">Tutti i dipendenti</option>
-      {% for d in dipendenti %}<option value="{{ d.id }}" {{ 'selected' if filtro_uid==d.id|string }}>{{ d.nome }} {{ d.cognome }}</option>{% endfor %}
-    </select>
-  </form>
-  <div style="display:flex;gap:10px;align-items:center">
-    {% if totale_in_attesa > 0 %}
-    <span style="background:#fffbeb;color:#92400e;border:1px solid #fde68a;border-radius:8px;padding:6px 14px;font-size:13px;font-weight:700">
-      <i class="fa fa-clock"></i> € {{ "%.2f"|format(totale_in_attesa) }} da approvare
-    </span>
-    {% endif %}
-    <a href="/admin/spese/nuova" class="btn btn-primary"><i class="fa fa-plus"></i> Nuova spesa</a>
-  </div>
-</div>
-
-{% if not spese %}
-<div class="card"><div class="empty-state"><i class="fa fa-receipt"></i><p>Nessuna spesa trovata.</p></div></div>
-{% else %}
-<div class="card" style="padding:0">
-  <table style="width:100%;border-collapse:collapse">
-    <thead><tr style="background:#0f172a;color:#fff">
-      <th style="padding:10px 14px;font-size:12px;text-align:left">DIPENDENTE</th>
-      <th style="padding:10px 14px;font-size:12px">DATA</th>
-      <th style="padding:10px 14px;font-size:12px">CATEGORIA</th>
-      <th style="padding:10px 14px;font-size:12px">DESCRIZIONE</th>
-      <th style="padding:10px 14px;font-size:12px;text-align:right">IMPORTO</th>
-      <th style="padding:10px 14px;font-size:12px">SCONTRINO</th>
-      <th style="padding:10px 14px;font-size:12px">STATO</th>
-      <th style="padding:10px 14px;font-size:12px"></th>
+  <div class="table-wrap">
+  <table>
+    <thead><tr>
+      <th>Cliente</th>
+      <th>Oggetto contratto</th>
+      <th>Data firma</th>
+      <th>Scadenza</th>
+      <th>Valore</th>
+      <th>Stato</th>
+      <th>File</th>
+      <th>Azioni</th>
     </tr></thead>
     <tbody>
-    {% for s in spese %}
-    <tr style="border-bottom:1px solid var(--border);{% if s.stato=='in_attesa' %}background:#fffdf0{% endif %}">
-      <td style="padding:10px 14px">
-        <div style="font-weight:600;font-size:13px">{{ s.nome }} {{ s.cognome }}</div>
+    {% for c in contratti %}
+    <tr>
+      <td>
+        <strong>{{ c.cliente_nome }}</strong>
+        {% if c.cliente_piva %}<div style="font-size:11px;color:var(--text-light)">P.IVA {{ c.cliente_piva }}</div>{% endif %}
       </td>
-      <td style="padding:10px 14px;font-family:monospace;font-size:12px">{{ s.data }}</td>
-      <td style="padding:10px 14px">
-        <span style="background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600">{{ s.categoria }}</span>
-      </td>
-      <td style="padding:10px 14px;font-size:13px;color:#64748b;max-width:180px">{{ s.descrizione or '–' }}</td>
-      <td style="padding:10px 14px;text-align:right;font-weight:800;font-size:15px">€ {{ "%.2f"|format(s.importo) }}</td>
-      <td style="padding:10px 14px">
-        {% if s.foto_nome %}
-        <a href="/admin/spese/foto/{{ s.foto_nome }}" target="_blank"
-           style="display:inline-flex;align-items:center;gap:5px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;border-radius:8px;padding:5px 10px;font-size:12px;text-decoration:none">
-          <i class="fa fa-image"></i> Scontrino
-        </a>
+      <td style="font-size:13px">{{ c.oggetto or '–' }}</td>
+      <td style="font-size:12px;font-family:monospace">{{ c.data_firma or '–' }}</td>
+      <td>
+        {% if c.data_scadenza %}
+          {% set today = today_str %}
+          {% if c.data_scadenza < today %}
+            <span class="badge badge-red">⚠ Scaduto {{ c.data_scadenza }}</span>
+          {% elif c.giorni_scadenza <= 30 %}
+            <span class="badge badge-amber">⏳ {{ c.data_scadenza }} ({{ c.giorni_scadenza }}gg)</span>
+          {% else %}
+            <span style="font-size:12px;font-family:monospace;color:var(--text-light)">{{ c.data_scadenza }}</span>
+          {% endif %}
         {% else %}–{% endif %}
       </td>
-      <td style="padding:10px 14px">
-        {% if s.stato == 'in_attesa' %}<span style="background:#fffbeb;color:#d97706;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700">⏳ In attesa</span>
-        {% elif s.stato == 'approvata' %}<span style="background:#f0fdf4;color:#15803d;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700">✅ Approvata</span>
-        {% else %}<span style="background:#fef2f2;color:#dc2626;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700">✗ Rifiutata</span>{% endif %}
-        {% if s.note_admin %}<div style="font-size:11px;color:#94a3b8;margin-top:3px">{{ s.note_admin }}</div>{% endif %}
+      <td style="font-family:monospace;font-size:13px">
+        {% if c.valore %}€ {{ "%.2f"|format(c.valore) }}{% else %}–{% endif %}
       </td>
-      <td style="padding:10px 14px">
-        <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">
-          {% if s.stato == 'in_attesa' %}
-          <a href="/admin/spese/{{ s.id }}/approva" style="background:#f0fdf4;color:#15803d;border:1px solid #86efac;border-radius:7px;padding:5px 10px;font-size:12px;font-weight:700;text-decoration:none" title="Approva"><i class="fa fa-check"></i></a>
-          <a href="/admin/spese/{{ s.id }}/rifiuta-prompt" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:7px;padding:5px 10px;font-size:12px;font-weight:700;text-decoration:none" title="Rifiuta"><i class="fa fa-xmark"></i></a>
-          {% endif %}
-          <a href="/admin/spese/{{ s.id }}/modifica-form" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;border-radius:7px;padding:5px 10px;font-size:12px;font-weight:700;text-decoration:none" title="Modifica"><i class="fa fa-pen"></i></a>
-          <a href="/admin/spese/{{ s.id }}/elimina-confirm" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:7px;padding:5px 10px;font-size:12px;text-decoration:none" title="Elimina"><i class="fa fa-trash"></i></a>
-        </div>
+      <td>
+        {% if c.stato == 'attivo' %}<span class="badge badge-green">● Attivo</span>
+        {% elif c.stato == 'scaduto' %}<span class="badge badge-red">Scaduto</span>
+        {% elif c.stato == 'rescisso' %}<span class="badge badge-gray">Rescisso</span>
+        {% elif c.stato == 'bozza' %}<span class="badge badge-blue">Bozza</span>
+        {% else %}<span class="badge badge-gray">{{ c.stato }}</span>{% endif %}
       </td>
-    </tr>
+      <td>
+        {% if c.file_nome %}
+          <a href="/contratti-clienti/{{ c.id }}/scarica" class="btn btn-secondary btn-sm" title="Scarica"><i class="fa fa-download"></i></a>
+        {% else %}
+          <span style="color:var(--text-light);font-size:12px">Nessuno</span>
+        {% endif %}
+      </td>
+      <td>
+        <a href="/contratti-clienti/{{ c.id }}/modifica" class="btn btn-secondary btn-sm"><i class="fa fa-pen"></i></a>
+        <a href="/contratti-clienti/{{ c.id }}/elimina" class="btn btn-danger btn-sm" onclick="return confirm('Eliminare definitivamente questo contratto?')"><i class="fa fa-trash"></i></a>
+      </td>
+    </tr>{% else %}
+    <tr><td colspan="8"><div class="empty-state"><i class="fa fa-file-signature"></i><p>Nessun contratto ancora. <a href="/contratti-clienti/nuovo">Carica il primo contratto</a>.</p></div></td></tr>
     {% endfor %}
     </tbody>
-    {% if totale_filtrato > 0 %}
-    <tfoot><tr style="background:#f8fafc;font-weight:800">
-      <td colspan="4" style="padding:10px 14px;font-size:13px">TOTALE ({{ spese|length }} spese)</td>
-      <td style="padding:10px 14px;text-align:right;font-size:15px;color:#10b981">€ {{ "%.2f"|format(totale_filtrato) }}</td>
-      <td colspan="3"></td>
-    </tr></tfoot>
-    {% endif %}
   </table>
-</div>
-{% endif %}
-"""
+  </div>
+</div>"""
 
-
-@app.route('/admin/spese')
-@admin_required
-def admin_spese():
-    db = get_db()
-    filtro_stato = request.args.get('stato', '')
-    filtro_uid = request.args.get('uid', '')
-    sql = """SELECT s.*, u.nome, u.cognome FROM spese_rimborso s
-             JOIN utenti u ON u.id=s.utente_id WHERE 1=1"""
-    params = []
-    if filtro_stato:
-        sql += " AND s.stato=?"; params.append(filtro_stato)
-    if filtro_uid:
-        sql += " AND s.utente_id=?"; params.append(filtro_uid)
-    sql += " ORDER BY CASE s.stato WHEN 'in_attesa' THEN 0 ELSE 1 END, s.data DESC"
-    spese = [dict(r) for r in db.execute(sql, params).fetchall()]
-    dipendenti = db.execute("SELECT id,nome,cognome FROM utenti WHERE ruolo='dipendente' AND attivo=1 ORDER BY cognome").fetchall()
-    totale_in_attesa = sum(s['importo'] for s in spese if s['stato']=='in_attesa')
-    totale_filtrato = sum(s['importo'] for s in spese)
-    db.close()
-    return render_page(ADMIN_SPESE_TMPL, page_title='Spese Rimborsabili', active='admin_spese',
-        spese=spese, dipendenti=dipendenti,
-        filtro_stato=filtro_stato, filtro_uid=filtro_uid,
-        totale_in_attesa=totale_in_attesa, totale_filtrato=totale_filtrato,
-        categorie_spesa=CATEGORIE_SPESA)
-
-
-@app.route('/admin/spese/nuova', methods=['GET','POST'])
-@admin_required
-def admin_spesa_nuova():
-    db = get_db()
-    dipendenti = db.execute(
-        "SELECT id,nome,cognome FROM utenti WHERE attivo=1 AND ruolo='dipendente' ORDER BY cognome,nome"
-    ).fetchall()
-    veicoli = db.execute("SELECT id,targa,marca,modello FROM veicoli WHERE attivo=1 ORDER BY targa").fetchall()
-
-    if request.method == 'POST':
-        uid       = int(request.form.get('utente_id'))
-        data      = request.form.get('data') or date.today().isoformat()
-        categoria = request.form.get('categoria','Altro')
-        descrizione = request.form.get('descrizione','')
-        importo   = float(request.form.get('importo') or 0)
-        veicolo_id = request.form.get('veicolo_id') or None
-        stato     = request.form.get('stato','approvata')  # admin inserisce direttamente come approvata
-        note_admin = request.form.get('note_admin','')
-
-        # Foto opzionale
-        foto_nome = foto_path = None
-        f = request.files.get('foto')
-        if f and f.filename:
-            ext = f.filename.rsplit('.',1)[-1].lower()
-            if ext in {'jpg','jpeg','png','gif','webp','pdf'}:
-                foto_nome = datetime.now().strftime('%Y%m%d_%H%M%S_') + secure_filename(f.filename)
-                foto_path = os.path.join(get_spese_upload_path(), foto_nome)
-                f.save(foto_path)
-
-        db.execute(
-            "INSERT INTO spese_rimborso (utente_id,data,categoria,descrizione,importo,veicolo_id,foto_nome,foto_path,stato,note_admin) VALUES (?,?,?,?,?,?,?,?,?,?)",
-            (uid, data, categoria, descrizione, importo, veicolo_id, foto_nome, foto_path, stato, note_admin or None)
-        )
-        safe_commit(db); db.close()
-        flash(f'Spesa inserita e {stato}!', 'success')
-        return redirect(url_for('admin_spese'))
-
-    db.close()
-    tmpl = f"""
-<div style="margin-bottom:16px">
-  <a href="/admin/spese" class="btn btn-secondary btn-sm"><i class="fa fa-arrow-left"></i> Spese</a>
-</div>
-<div class="card" style="max-width:580px;margin:0 auto">
+CONTRATTO_FORM_TMPL = """
+<div class="card" style="max-width:680px;margin:0 auto">
   <div class="card-header">
-    <h3><i class="fa fa-plus" style="color:var(--accent)"></i> Nuova Rimborso Spesa</h3>
-    <div style="font-size:12px;color:var(--text-light);margin-top:2px">Inserimento manuale da admin — viene approvata direttamente</div>
+    <h3><i class="fa fa-file-signature" style="color:var(--accent)"></i> {{ 'Modifica' if contratto else 'Nuovo' }} Contratto Cliente</h3>
   </div>
   <div class="card-body">
-    <form method="POST" enctype="multipart/form-data">
-      <div class="form-row">
-        <div class="form-group">
-          <label>Dipendente *</label>
-          <select name="utente_id" required>
-            <option value="">— Seleziona —</option>
-            {''.join(f'<option value="{d["id"]}">{d["nome"]} {d["cognome"]}</option>' for d in dipendenti)}
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Data *</label>
-          <input type="date" name="data" value="{date.today().isoformat()}" required>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Categoria *</label>
-          <select name="categoria" required>
-            {''.join(f'<option value="{c}">{c}</option>' for c in CATEGORIE_SPESA)}
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Importo (€) *</label>
-          <input type="number" step="0.01" min="0.01" name="importo" required
-                 placeholder="es. 25.50" style="font-size:18px;font-weight:700;color:var(--accent)">
-        </div>
-      </div>
+  {% with msgs = get_flashed_messages(with_categories=true) %}{% for cat,msg in msgs %}
+  <div class="alert alert-{{ 'success' if cat=='success' else 'error' }}">{{ msg }}</div>
+  {% endfor %}{% endwith %}
+  <form method="POST" enctype="multipart/form-data">
+    <div class="form-row">
       <div class="form-group">
-        <label>Descrizione</label>
-        <input name="descrizione" placeholder="es. Pranzo trasferta Milano">
-      </div>
-      <div class="form-group">
-        <label>Veicolo (per rimborsi carburante)</label>
-        <select name="veicolo_id">
-          <option value="">— Nessuno —</option>
-          {''.join(f'<option value="{v["id"]}">{v["targa"]} — {v["marca"]} {v["modello"]}</option>' for v in veicoli)}
+        <label>Cliente *</label>
+        <select name="cliente_id" required onchange="this.form.submit()">
+          <option value="">— Seleziona cliente —</option>
+          {% for cl in clienti %}
+          <option value="{{ cl.id }}" {{ 'selected' if contratto and contratto.cliente_id==cl.id }}>{{ cl.nome }}</option>
+          {% endfor %}
         </select>
       </div>
       <div class="form-group">
         <label>Stato</label>
         <select name="stato">
-          <option value="approvata" selected>✅ Approvata</option>
-          <option value="in_attesa">⏳ In attesa</option>
-          <option value="rifiutata">❌ Rifiutata</option>
+          <option value="bozza" {{ 'selected' if contratto and contratto.stato=='bozza' }}>Bozza</option>
+          <option value="attivo" {{ 'selected' if (not contratto) or (contratto and contratto.stato=='attivo') }}>Attivo</option>
+          <option value="scaduto" {{ 'selected' if contratto and contratto.stato=='scaduto' }}>Scaduto</option>
+          <option value="rescisso" {{ 'selected' if contratto and contratto.stato=='rescisso' }}>Rescisso</option>
         </select>
       </div>
-      <div class="form-group">
-        <label>Scontrino / Documento <span style="color:var(--text-light);font-weight:400;font-size:12px">(opzionale)</span></label>
-        <input type="file" name="foto" accept=".jpg,.jpeg,.png,.gif,.webp,.pdf">
-      </div>
-      <div class="form-group">
-        <label>Note admin</label>
-        <input name="note_admin" placeholder="Note interne (opzionale)">
-      </div>
-      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
-        <a href="/admin/spese" class="btn btn-secondary">Annulla</a>
-        <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Salva spesa</button>
-      </div>
-    </form>
-  </div>
-</div>"""
-    return render_page(tmpl, page_title='Nuova Spesa', active='admin_spese')
-
-
-TIPI_DETRAZIONE = [
-    ('anticipo', '💵 Anticipo stipendio'),
-    ('acquisto', '🛒 Acquisto per dipendente'),
-    ('multa',    '⚠️ Multa / penale'),
-    ('prestito', '🤝 Restituzione prestito'),
-    ('altro',    '📌 Altro'),
-]
-
-@app.route('/admin/detrazioni')
-@admin_required
-def admin_detrazioni():
-    db = get_db()
-    uid_f  = request.args.get('uid', '')
-    mese_f = request.args.get('mese', '')
-    q = """SELECT d.*, u.nome, u.cognome
-           FROM detrazioni_dipendente d JOIN utenti u ON u.id=d.utente_id
-           WHERE 1=1"""
-    params = []
-    if uid_f:  q += " AND d.utente_id=?"; params.append(int(uid_f))
-    if mese_f: q += " AND d.mese_competenza=?"; params.append(mese_f)
-    q += " ORDER BY d.data DESC"
-    detrazioni = db.execute(q, params).fetchall()
-    dipendenti = db.execute("SELECT id,nome,cognome FROM utenti WHERE attivo=1 AND ruolo='dipendente' ORDER BY cognome").fetchall()
-    totale = sum(d['importo'] for d in detrazioni)
-    db.close()
-
-    tipi_map = dict(TIPI_DETRAZIONE)
-    tmpl = f"""
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
-  <form method="GET" style="display:flex;gap:8px;flex-wrap:wrap">
-    <select name="uid" onchange="this.form.submit()" style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px">
-      <option value="">Tutti i dipendenti</option>
-      {chr(10).join(f'<option value="{d["id"]}" {"selected" if uid_f==str(d["id"]) else ""}>{d["nome"]} {d["cognome"]}</option>' for d in dipendenti)}
-    </select>
-    <input type="month" name="mese" value="{mese_f}" style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px" onchange="this.form.submit()" placeholder="Filtra per mese">
-    <a href="/admin/detrazioni" class="btn btn-secondary btn-sm">Reset</a>
-  </form>
-  <div style="display:flex;gap:10px;align-items:center">
-    {f'<span style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:8px;padding:6px 14px;font-size:13px;font-weight:700"><i class=\'fa fa-minus-circle\'></i> € {totale:.2f} totale detrazioni</span>' if detrazioni else ''}
-    <a href="/admin/detrazioni/nuova" class="btn btn-primary"><i class="fa fa-plus"></i> Nuova detrazione</a>
-  </div>
-</div>
-
-{'''<div class="card"><div class="empty-state"><i class="fa fa-coins"></i><p>Nessuna detrazione trovata.</p></div></div>''' if not detrazioni else f'''
-<div class="card" style="padding:0">
-  <table style="width:100%;border-collapse:collapse">
-    <thead><tr style="background:#0f172a;color:#fff">
-      <th style="padding:10px 14px;font-size:12px">DIPENDENTE</th>
-      <th style="padding:10px 14px;font-size:12px">DATA</th>
-      <th style="padding:10px 14px;font-size:12px">TIPO</th>
-      <th style="padding:10px 14px;font-size:12px">DESCRIZIONE</th>
-      <th style="padding:10px 14px;font-size:12px">MESE CEDOLINO</th>
-      <th style="padding:10px 14px;font-size:12px;text-align:right">IMPORTO</th>
-      <th style="padding:10px 14px;font-size:12px"></th>
-    </tr></thead>
-    <tbody>
-    {"".join(f'''<tr style="border-bottom:1px solid var(--border)">
-      <td style="padding:10px 14px"><span class="avatar-sm">{d["nome"][0]}{d["cognome"][0]}</span><strong>{d["nome"]} {d["cognome"]}</strong></td>
-      <td style="padding:10px 14px;font-family:monospace;font-size:12px">{d["data"]}</td>
-      <td style="padding:10px 14px"><span style="background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600">{tipi_map.get(d["tipo"], d["tipo"])}</span></td>
-      <td style="padding:10px 14px;font-size:13px;color:#64748b">{d["descrizione"] or "–"}</td>
-      <td style="padding:10px 14px;font-size:12px;font-family:monospace">{d["mese_competenza"] or "–"}</td>
-      <td style="padding:10px 14px;text-align:right;font-weight:800;font-size:15px;color:#dc2626">− € {d["importo"]:.2f}</td>
-      <td style="padding:10px 14px">
-        <a href="/admin/detrazioni/{d["id"]}/elimina" class="btn btn-danger btn-sm" onclick="return confirm(\'Eliminare questa detrazione?\')"><i class="fa fa-trash"></i></a>
-      </td>
-    </tr>''' for d in detrazioni)}
-    </tbody>
-  </table>
-</div>'''}
-"""
-    return render_page(tmpl, page_title='Detrazioni & Anticipi', active='cedolini',
-                       dipendenti=dipendenti)
-
-
-@app.route('/admin/detrazioni/nuova', methods=['GET','POST'])
-@admin_required
-def admin_detrazione_nuova():
-    db = get_db()
-    dipendenti = db.execute(
-        "SELECT id,nome,cognome FROM utenti WHERE attivo=1 AND ruolo='dipendente' ORDER BY cognome,nome"
-    ).fetchall()
-
-    if request.method == 'POST':
-        uid         = int(request.form.get('utente_id'))
-        data        = request.form.get('data') or date.today().isoformat()
-        tipo        = request.form.get('tipo','altro')
-        descrizione = request.form.get('descrizione','')
-        importo     = float(request.form.get('importo') or 0)
-        mese_comp   = request.form.get('mese_competenza') or None
-        note        = request.form.get('note','')
-        db.execute(
-            "INSERT INTO detrazioni_dipendente (utente_id,data,tipo,descrizione,importo,mese_competenza,note) VALUES (?,?,?,?,?,?,?)",
-            (uid, data, tipo, descrizione, importo, mese_comp, note)
-        )
-        safe_commit(db); db.close()
-        flash('Detrazione inserita!', 'success')
-        return redirect(url_for('admin_detrazioni'))
-    db.close()
-
-    oggi = date.today()
-    mese_default = oggi.strftime('%Y-%m')
-    tipi_options = ''.join(f'<option value="{k}">{v}</option>' for k,v in TIPI_DETRAZIONE)
-    dip_options  = ''.join(f'<option value="{d["id"]}">{d["nome"]} {d["cognome"]}</option>' for d in dipendenti)
-
-    tmpl = f"""
-<div style="margin-bottom:16px">
-  <a href="/admin/detrazioni" class="btn btn-secondary btn-sm"><i class="fa fa-arrow-left"></i> Detrazioni</a>
-</div>
-<div class="card" style="max-width:580px;margin:0 auto">
-  <div class="card-header">
-    <h3><i class="fa fa-minus-circle" style="color:#dc2626"></i> Nuova Detrazione / Anticipo</h3>
-    <div style="font-size:12px;color:var(--text-light);margin-top:2px">Verrà scalata automaticamente dal cedolino del mese indicato</div>
-  </div>
-  <div class="card-body">
-    <form method="POST">
-      <div class="form-row">
-        <div class="form-group">
-          <label>Dipendente *</label>
-          <select name="utente_id" required>
-            <option value="">— Seleziona —</option>
-            {dip_options}
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Data operazione *</label>
-          <input type="date" name="data" value="{oggi.isoformat()}" required>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Tipo *</label>
-          <select name="tipo" required>{tipi_options}</select>
-        </div>
-        <div class="form-group">
-          <label>Importo da detrarre (€) *</label>
-          <input type="number" step="0.01" min="0.01" name="importo" required
-                 placeholder="es. 150.00" style="font-size:18px;font-weight:800;color:#dc2626">
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Descrizione *</label>
-        <input name="descrizione" required placeholder="es. Anticipo stipendio Marzo, Ordine Amazon cuffie, Multa parcheggio...">
-      </div>
-      <div class="form-group">
-        <label>Mese cedolino di competenza <span style="font-weight:400;color:var(--text-light);font-size:12px">(mese dal cui stipendio scalare)</span></label>
-        <input type="month" name="mese_competenza" value="{mese_default}">
-      </div>
-      <div class="form-group">
-        <label>Note interne</label>
-        <textarea name="note" placeholder="Note per uso interno (non visibili al dipendente)" rows="2" style="resize:vertical"></textarea>
-      </div>
-      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;font-size:12px;color:#dc2626;margin-bottom:16px">
-        <i class="fa fa-info-circle"></i> L'importo verrà sottratto automaticamente dal <strong>Totale netto</strong> nel cedolino del mese selezionato.
-      </div>
-      <div style="display:flex;gap:10px;justify-content:flex-end">
-        <a href="/admin/detrazioni" class="btn btn-secondary">Annulla</a>
-        <button type="submit" class="btn btn-danger"><i class="fa fa-save"></i> Salva detrazione</button>
-      </div>
-    </form>
-  </div>
-</div>"""
-    return render_page(tmpl, page_title='Nuova Detrazione', active='cedolini')
-
-
-@app.route('/admin/detrazioni/<int:did>/elimina')
-@admin_required
-def admin_detrazione_elimina(did):
-    db = get_db()
-    db.execute("DELETE FROM detrazioni_dipendente WHERE id=?", (did,))
-    safe_commit(db); db.close()
-    flash('Detrazione eliminata.', 'success')
-    return redirect(url_for('admin_detrazioni'))
-
-
-@app.route('/admin/spese/<int:sid>/approva')
-@admin_required
-def admin_spesa_approva(sid):
-    db = get_db()
-    db.execute("UPDATE spese_rimborso SET stato='approvata', note_admin=NULL WHERE id=?", (sid,))
-    safe_commit(db); db.close()
-    flash('Spesa approvata.', 'success')
-    return redirect(url_for('admin_spese'))
-
-
-@app.route('/admin/spese/<int:sid>/rifiuta-prompt', methods=['GET','POST'])
-@admin_required
-def admin_spesa_rifiuta_prompt(sid):
-    db = get_db()
-    spesa = db.execute("""SELECT s.*,u.nome,u.cognome FROM spese_rimborso s
-        JOIN utenti u ON u.id=s.utente_id WHERE s.id=?""", (sid,)).fetchone()
-    if not spesa:
-        db.close(); flash('Spesa non trovata.','error'); return redirect(url_for('admin_spese'))
-    if request.method == 'POST':
-        note = request.form.get('note_admin','')
-        db.execute("UPDATE spese_rimborso SET stato='rifiutata', note_admin=? WHERE id=?", (note, sid))
-        safe_commit(db); db.close()
-        flash('Spesa rifiutata.', 'success')
-        return redirect(url_for('admin_spese'))
-    db.close()
-    tmpl = f"""
-<div class="card" style="max-width:500px;margin:40px auto">
-  <div class="card-header"><h3><i class="fa fa-xmark-circle" style="color:#dc2626"></i> Rifiuta spesa</h3></div>
-  <div class="card-body">
-    <p style="margin-bottom:16px;color:#64748b">
-      Spesa di <strong>{spesa['nome']} {spesa['cognome']}</strong> —
-      {spesa['categoria']} — <strong>€ {spesa['importo']:.2f}</strong> del {spesa['data']}
-    </p>
-    <form method="POST">
-      <div class="form-group">
-        <label>Motivo del rifiuto *</label>
-        <textarea name="note_admin" class="form-control" rows="3" required placeholder="Specifica il motivo..."></textarea>
-      </div>
-      <div style="display:flex;gap:10px;margin-top:16px">
-        <a href="/admin/spese" class="btn btn-secondary">Annulla</a>
-        <button type="submit" class="btn btn-danger"><i class="fa fa-xmark"></i> Conferma rifiuto</button>
-      </div>
-    </form>
-  </div>
-</div>"""
-    return render_page(tmpl, page_title='Rifiuta spesa', active='admin_spese')
-
-
-@app.route('/admin/spese/<int:sid>/modifica-form', methods=['GET','POST'])
-@admin_required
-def admin_spesa_modifica_form(sid):
-    db = get_db()
-    spesa = db.execute("""SELECT s.*,u.nome,u.cognome FROM spese_rimborso s
-        JOIN utenti u ON u.id=s.utente_id WHERE s.id=?""", (sid,)).fetchone()
-    if not spesa:
-        db.close(); flash('Spesa non trovata.','error'); return redirect(url_for('admin_spese'))
-    if request.method == 'POST':
-        db.execute("""UPDATE spese_rimborso SET data=?,categoria=?,importo=?,descrizione=?,stato=?
-            WHERE id=?""", (
-            request.form.get('data'),
-            request.form.get('categoria'),
-            float(request.form.get('importo') or 0),
-            request.form.get('descrizione',''),
-            request.form.get('stato','in_attesa'),
-            sid))
-        safe_commit(db); db.close()
-        flash('Spesa aggiornata.', 'success')
-        return redirect(url_for('admin_spese'))
-    cats_options = ''.join(
-        f'<option value="{c}" {"selected" if c==spesa["categoria"] else ""}>{c}</option>'
-        for c in CATEGORIE_SPESA)
-    stati = [('in_attesa','⏳ In attesa'),('approvata','✅ Approvata'),('rifiutata','✗ Rifiutata')]
-    stati_options = ''.join(
-        f'<option value="{v}" {"selected" if v==spesa["stato"] else ""}>{l}</option>'
-        for v,l in stati)
-    db.close()
-    tmpl = f"""
-<div class="card" style="max-width:540px;margin:40px auto">
-  <div class="card-header"><h3><i class="fa fa-pen" style="color:#2563eb"></i> Modifica spesa</h3></div>
-  <div class="card-body">
-    <p style="margin-bottom:20px;color:#64748b">
-      Dipendente: <strong>{spesa['nome']} {spesa['cognome']}</strong>
-    </p>
-    <form method="POST">
-      <div class="form-row">
-        <div class="form-group">
-          <label>Data *</label>
-          <input type="date" name="data" class="form-control" value="{spesa['data']}" required>
-        </div>
-        <div class="form-group">
-          <label>Importo (€) *</label>
-          <input type="number" name="importo" class="form-control" step="0.01" min="0.01" value="{spesa['importo']}" required>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Categoria *</label>
-        <select name="categoria" class="form-control" required>{cats_options}</select>
-      </div>
-      <div class="form-group">
-        <label>Descrizione</label>
-        <textarea name="descrizione" class="form-control" rows="2">{spesa['descrizione'] or ''}</textarea>
-      </div>
-      <div class="form-group">
-        <label>Stato</label>
-        <select name="stato" class="form-control">{stati_options}</select>
-      </div>
-      <div style="display:flex;gap:10px;margin-top:20px">
-        <a href="/admin/spese" class="btn btn-secondary"><i class="fa fa-arrow-left"></i> Annulla</a>
-        <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Salva modifiche</button>
-      </div>
-    </form>
-  </div>
-</div>"""
-    return render_page(tmpl, page_title='Modifica spesa', active='admin_spese')
-
-
-@app.route('/admin/spese/<int:sid>/elimina-confirm')
-@admin_required
-def admin_spesa_elimina_confirm(sid):
-    db = get_db()
-    spesa = db.execute("""SELECT s.*,u.nome,u.cognome FROM spese_rimborso s
-        JOIN utenti u ON u.id=s.utente_id WHERE s.id=?""", (sid,)).fetchone()
-    if not spesa:
-        db.close(); flash('Spesa non trovata.','error'); return redirect(url_for('admin_spese'))
-    db.close()
-    tmpl = f"""
-<div class="card" style="max-width:500px;margin:40px auto;border-left:4px solid #dc2626">
-  <div class="card-header"><h3><i class="fa fa-trash" style="color:#dc2626"></i> Elimina spesa</h3></div>
-  <div class="card-body">
-    <p style="margin-bottom:20px">
-      Stai per eliminare definitivamente la spesa di
-      <strong>{spesa['nome']} {spesa['cognome']}</strong>:<br>
-      <span style="font-size:15px;color:#dc2626;font-weight:700">
-        {spesa['categoria']} — € {spesa['importo']:.2f} del {spesa['data']}
-      </span>
-    </p>
-    <p style="color:#94a3b8;font-size:13px;margin-bottom:20px">⚠️ L'operazione non è reversibile. La spesa verrà rimossa anche da cedolini e report.</p>
-    <div style="display:flex;gap:10px">
-      <a href="/admin/spese" class="btn btn-secondary"><i class="fa fa-arrow-left"></i> Annulla</a>
-      <a href="/admin/spese/{sid}/elimina-esegui" class="btn btn-danger"><i class="fa fa-trash"></i> Sì, elimina</a>
     </div>
-  </div>
-</div>"""
-    return render_page(tmpl, page_title='Elimina spesa', active='admin_spese')
-
-
-@app.route('/admin/spese/<int:sid>/elimina-esegui')
-@admin_required
-def admin_spesa_elimina_esegui(sid):
-    db = get_db()
-    spesa = db.execute("SELECT foto_path FROM spese_rimborso WHERE id=?", (sid,)).fetchone()
-    if spesa and spesa['foto_path'] and os.path.exists(spesa['foto_path']):
-        try: os.remove(spesa['foto_path'])
-        except: pass
-    db.execute("DELETE FROM spese_rimborso WHERE id=?", (sid,))
-    safe_commit(db); db.close()
-    flash('Spesa eliminata definitivamente.', 'success')
-    return redirect(url_for('admin_spese'))
-
-
-
-
-@app.route('/admin/spese/foto/<fn>')
-@admin_required
-def admin_spese_foto(fn):
-    fp = os.path.join(get_spese_upload_path(), fn)
-    if not os.path.exists(fp):
-        return 'Not found', 404
-    mt = mimetypes.guess_type(fn)[0] or 'image/jpeg'
-    return send_file(fp, mimetype=mt)
-
-
-@app.route('/cedolini')
-@admin_required
-def cedolini():
-    from datetime import date as _d, datetime as _dt, timedelta as _td
-    db  = get_db()
-    oggi = _d.today()
-    mese_sel = int(request.args.get('mese', oggi.month))
-    anno_sel = int(request.args.get('anno', oggi.year))
-    anni = list(range(oggi.year - 2, oggi.year + 1))
-    prefisso = f'{anno_sel}-{mese_sel:02d}'
-
-    def calc_paga(ore, paga_base, ore_soglia, paga_oraria):
-        """Calcola totale netto: base fissa + ore extra × tariffa oraria."""
-        if paga_base and paga_base > 0:
-            ore_extra = max(0, ore - (ore_soglia or 0))
-            return round(paga_base + ore_extra * (paga_oraria or 0), 2)
-        return round(ore * (paga_oraria or 0), 2)
-
-    # Dipendenti come dict (fix sqlite3.Row.get)
-    dips_raw = db.execute(
-        "SELECT * FROM utenti WHERE ruolo='dipendente' AND attivo=1 ORDER BY nome").fetchall()
-    dips = [dict(d) for d in dips_raw]
-
-    cedolini_list = []
-    ore_totali_mese = 0.0
-    totale_mese = 0.0
-    for i, d in enumerate(dips):
-        row = db.execute(
-            "SELECT COALESCE(SUM(ore_totali),0) as ore, COUNT(DISTINCT data) as giorni "
-            "FROM presenze WHERE utente_id=? AND data LIKE ?",
-            (d['id'], prefisso + '%')).fetchone()
-        ore    = float(row['ore'] or 0)
-        giorni = row['giorni'] or 0
-        paga_base    = float(d.get('paga_base_netta') or 0)
-        ore_soglia   = float(d.get('ore_soglia_mensile') or 0)
-        paga_oraria  = float(d.get('paga_oraria_netta') or 0)
-        totale = calc_paga(ore, paga_base, ore_soglia, paga_oraria)
-        # Spese rimborsabili approvate del mese
-        spese_mese = db.execute(
-            "SELECT COALESCE(SUM(importo),0) as tot FROM spese_rimborso WHERE utente_id=? AND stato='approvata' AND substr(data,1,7)=?",
-            (d['id'], prefisso)).fetchone()['tot'] or 0.0
-        # Detrazioni del mese (anticipi, acquisti, ecc.)
-        detr_mese = db.execute(
-            "SELECT COALESCE(SUM(importo),0) as tot FROM detrazioni_dipendente WHERE utente_id=? AND mese_competenza=?",
-            (d['id'], prefisso)).fetchone()['tot'] or 0.0
-        detr_dettaglio = db.execute(
-            "SELECT tipo,descrizione,importo FROM detrazioni_dipendente WHERE utente_id=? AND mese_competenza=? ORDER BY data",
-            (d['id'], prefisso)).fetchall()
-        totale_netto_finale = round(totale + spese_mese - detr_mese, 2)
-        ore_totali_mese += ore
-        totale_mese += totale
-        cedolini_list.append({
-            'id': d['id'], 'nome': d['nome'], 'cognome': d['cognome'],
-            'mansione': d.get('mansione') or '',
-            'paga_oraria': paga_oraria, 'paga_base': paga_base, 'ore_soglia': ore_soglia,
-            'ore': ore, 'giorni_lavorati': giorni,
-            'totale': totale,
-            'spese_rimborso': round(spese_mese, 2),
-            'detrazioni': round(detr_mese, 2),
-            'detr_dettaglio': [dict(x) for x in detr_dettaglio],
-            'totale_con_spese': totale_netto_finale,
-            'iniziali': (d['nome'][0]+d['cognome'][0]).upper(),
-            'colore': COLORI_DIP[i % len(COLORI_DIP)],
-        })
-    max_ore = max((c['ore'] for c in cedolini_list), default=0)
-
-    # Jolly del mese: raggruppa per nome+cognome
-    jolly_cedolini = []
-    jolly_rows = db.execute("""
-        SELECT nome_jolly, cognome_jolly,
-               COUNT(DISTINCT data) as giorni,
-               COALESCE(SUM(ore_totali),0) as ore,
-               GROUP_CONCAT(DISTINCT cantieri.nome) as cantieri_nomi
-        FROM presenze
-        LEFT JOIN cantieri ON cantieri.id=presenze.cantiere_id
-        WHERE nome_jolly IS NOT NULL AND data LIKE ?
-        GROUP BY nome_jolly, cognome_jolly
-        ORDER BY cognome_jolly
-    """, (prefisso+'%',)).fetchall()
-    for j in jolly_rows:
-        ore_j = float(j['ore'] or 0)
-        if ore_j > 0 or j['giorni'] > 0:
-            ore_totali_mese += ore_j
-            # Recupera le singole presenze di questo jolly per edit/duplica
-            presenze_jolly = db.execute("""
-                SELECT p.id, p.data, p.ora_entrata, p.ora_uscita, p.ore_totali, p.note,
-                       p.cantiere_id, c.nome as cantiere_nome
-                FROM presenze p LEFT JOIN cantieri c ON c.id=p.cantiere_id
-                WHERE p.nome_jolly=? AND p.cognome_jolly=? AND p.data LIKE ?
-                ORDER BY p.data
-            """, (j['nome_jolly'], j['cognome_jolly'], prefisso+'%')).fetchall()
-            # Recupera paga oraria
-            paga_row = db.execute(
-                "SELECT paga_oraria FROM jolly_paghe WHERE nome_jolly=? AND cognome_jolly=?",
-                (j['nome_jolly'], j['cognome_jolly'])).fetchone()
-            paga_j = float(paga_row['paga_oraria']) if paga_row else 0.0
-            totale_j = round(ore_j * paga_j, 2)
-            jolly_cedolini.append({
-                'nome': j['nome_jolly'], 'cognome': j['cognome_jolly'],
-                'iniziali': (j['nome_jolly'][0]+j['cognome_jolly'][0]).upper(),
-                'ore': round(ore_j, 1),
-                'giorni_lavorati': j['giorni'],
-                'cantieri': j['cantieri_nomi'] or '',
-                'presenze': [dict(p) for p in presenze_jolly],
-                'paga_oraria': paga_j,
-                'totale': totale_j,
-            })
-
-    # Storico ultimi 6 mesi
-    storico_mesi = []
-    m, a = mese_sel, anno_sel
-    for _ in range(6):
-        pref = f'{a}-{m:02d}'
-        tot = 0.0
-        for d in dips:
-            row = db.execute(
-                "SELECT COALESCE(SUM(ore_totali),0) as ore FROM presenze WHERE utente_id=? AND data LIKE ?",
-                (d['id'], pref+'%')).fetchone()
-            ore = float(row['ore'] or 0)
-            tot += calc_paga(ore, float(d.get('paga_base_netta') or 0),
-                             float(d.get('ore_soglia_mensile') or 0),
-                             float(d.get('paga_oraria_netta') or 0))
-        storico_mesi.insert(0, {
-            'etichetta': f"{['','Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'][m]}{str(a)[2:]}",
-            'totale': round(tot, 2),
-        })
-        m -= 1
-        if m == 0: m = 12; a -= 1
-
-    # Costi per cantiere nel mese
-    cantieri_rows = db.execute("SELECT id,nome FROM cantieri ORDER BY nome").fetchall()
-    costi_per_cantiere = []
-    for cant in cantieri_rows:
-        ore_cant = 0.0; tot_cant = 0.0
-        for d in dips:
-            row = db.execute(
-                "SELECT COALESCE(SUM(ore_totali),0) as ore FROM presenze "
-                "WHERE utente_id=? AND cantiere_id=? AND data LIKE ?",
-                (d['id'], cant['id'], prefisso+'%')).fetchone()
-            ore_d = float(row['ore'] or 0)
-            ore_cant += ore_d
-            tot_cant += calc_paga(ore_d, float(d.get('paga_base_netta') or 0),
-                                  float(d.get('ore_soglia_mensile') or 0),
-                                  float(d.get('paga_oraria_netta') or 0))
-        if ore_cant > 0:
-            costi_per_cantiere.append({'nome': cant['nome'], 'ore': ore_cant, 'totale': round(tot_cant,2)})
-    costi_per_cantiere.sort(key=lambda x: x['totale'], reverse=True)
-
-    # ── Grafico spese per evento ──
-    # Prende TUTTI gli eventi che si sovrappongono almeno in parte al mese selezionato
-    # e per ognuno calcola ore dipendenti dalle timbrature nelle date dell'evento
-    import calendar as _cal
-    mese_start = _d(anno_sel, mese_sel, 1)
-    mese_end   = _d(anno_sel, mese_sel, _cal.monthrange(anno_sel, mese_sel)[1])
-
-    tutti_eventi = db.execute(
-        "SELECT e.*, c.nome as cantiere_nome FROM eventi e "
-        "LEFT JOIN cantieri c ON e.cantiere_id = c.id "
-        "WHERE e.data_inizio IS NOT NULL ORDER BY e.data_inizio").fetchall()
-
-    spese_per_evento = []
-    totale_spese_extra = 0.0
-
-    for ev in tutti_eventi:
-        ev = dict(ev)
-        try:
-            ev_start_str = ev['data_inizio'][:10]  # prendi solo la parte data YYYY-MM-DD
-            ev_end_str   = (ev.get('data_fine') or ev['data_inizio'])[:10]
-            ev_start = _d.fromisoformat(ev_start_str)
-            ev_end   = _d.fromisoformat(ev_end_str)
-        except Exception:
-            continue
-
-        # Controlla se l'evento si sovrappone al mese selezionato
-        if ev_end < mese_start or ev_start > mese_end:
-            continue
-
-        # Genera lista di date dell'evento
-        delta = (ev_end - ev_start).days + 1
-        date_evento = [(ev_start + _td(days=i)).isoformat() for i in range(delta)]
-
-        # Spese extra (da tabella spese_evento)
-        spese = db.execute(
-            "SELECT COALESCE(SUM(importo),0) as tot FROM spese_evento WHERE evento_id=?",
-            (ev['id'],)).fetchone()['tot']
-        totale_spese_extra += float(spese or 0)
-
-        # Ore dipendenti: tutte le timbrature sul cantiere dell'evento nelle date dell'evento
-        # Non serve più l'assegnazione — conta chi ha timbrato su quel cantiere
-        costo_dip  = 0.0
-        ore_ev     = 0.0
-        dip_detail = []
-
-        if ev.get('cantiere_id'):
-            # Prendi tutte le presenze sul cantiere nelle date dell'evento
-            placeholders = ','.join('?' for _ in date_evento)
-            rows_cantiere = db.execute(f"""
-                SELECT p.utente_id, p.nome_jolly, p.cognome_jolly,
-                       p.data, COALESCE(p.ore_totali,0) as ore,
-                       u.nome, u.cognome,
-                       u.paga_oraria_netta, u.paga_base_netta, u.ore_soglia_mensile
-                FROM presenze p
-                LEFT JOIN utenti u ON u.id=p.utente_id
-                WHERE p.cantiere_id=? AND p.data IN ({placeholders})
-            """, [ev['cantiere_id']] + date_evento).fetchall()
-
-            # Raggruppa per dipendente/jolly
-            agg = {}
-            for r in rows_cantiere:
-                if r['nome_jolly']:
-                    key = f"jolly_{r['nome_jolly']}_{r['cognome_jolly']}"
-                    if key not in agg:
-                        agg[key] = {'nome': f"👷 {r['nome_jolly']} {r['cognome_jolly']}",
-                                    'ore': 0.0, 'paga': 0.0, 'is_jolly': True,
-                                    'jolly_nome': r['nome_jolly'], 'jolly_cognome': r['cognome_jolly']}
-                    agg[key]['ore'] += float(r['ore'])
-                elif r['utente_id']:
-                    key = f"dip_{r['utente_id']}"
-                    if key not in agg:
-                        agg[key] = {'nome': f"{r['nome']} {r['cognome']}",
-                                    'ore': 0.0, 'paga': float(r['paga_oraria_netta'] or 0),
-                                    'is_jolly': False}
-                    agg[key]['ore'] += float(r['ore'])
-
-            for key, d in agg.items():
-                if d['ore'] <= 0: continue
-                if d['is_jolly']:
-                    # Recupera paga jolly dalla tabella jolly_paghe
-                    jp = db.execute("SELECT paga_oraria FROM jolly_paghe WHERE nome_jolly=? AND cognome_jolly=?",
-                                    (d['jolly_nome'], d['jolly_cognome'])).fetchone()
-                    paga_h = float(jp['paga_oraria']) if jp else 0.0
-                else:
-                    paga_h = d['paga']
-                ore_ev    += d['ore']
-                costo_dip += d['ore'] * paga_h
-                dip_detail.append({'nome': d['nome'], 'ore': round(d['ore'], 1)})
-        else:
-            # Nessuna fiera: nessun costo automatico (non si sa dove ha lavorato)
-            pass
-
-        totale_ev = round(float(spese or 0) + costo_dip, 2)
-
-        # Mostra anche eventi con solo spese extra registrate
-        if totale_ev > 0 or float(spese or 0) > 0:
-            spese_per_evento.append({
-                'id': ev['id'], 'titolo': ev['titolo'],
-                'tipo': ev.get('tipo') or '',
-                'cantiere': ev.get('cantiere_nome') or '',
-                'data_inizio': ev_start_str,
-                'data_fine': ev_end_str,
-                'ore_dip': round(ore_ev, 1),
-                'costo_dip': round(costo_dip, 2),
-                'spese_extra': round(float(spese or 0), 2),
-                'totale': totale_ev,
-                'team': dip_detail,
-            })
-
-    spese_per_evento.sort(key=lambda x: x['totale'], reverse=True)
-
-    cantieri_list = db.execute("SELECT id,nome FROM cantieri WHERE attivo=1 ORDER BY nome").fetchall()
-    db.close()
-    return render_page(CEDOLINI_TMPL, page_title='Cedolini', active='cedolini',
-        mese_sel=mese_sel, anno_sel=anno_sel, anni=anni,
-        cedolini=cedolini_list, max_ore=max_ore,
-        ore_totali_mese=ore_totali_mese, totale_mese=totale_mese,
-        dipendenti_attivi=len([d for d in cedolini_list if d['ore'] > 0]),
-        totale_spese_extra=totale_spese_extra,
-        storico_mesi=storico_mesi,
-        costi_per_cantiere=costi_per_cantiere,
-        spese_per_evento=spese_per_evento,
-        jolly_cedolini=jolly_cedolini,
-        prefisso=prefisso,
-        cantieri_list=cantieri_list)
-
-
-
-@app.route('/presenze/jolly/duplica-salva', methods=['POST'])
-@admin_required
-def presenze_jolly_duplica_salva():
-    nome_jolly    = request.form.get('nome_jolly', '').strip()
-    cognome_jolly = request.form.get('cognome_jolly', '').strip()
-    data          = request.form.get('data', '')
-    cid           = request.form.get('cantiere_id') or None
-    note          = request.form.get('note', '')
-    oe            = request.form.get('ora_entrata', '') or None
-    ou            = request.form.get('ora_uscita', '') or None
-    ore_s         = request.form.get('ore_dirette', '')
-    if oe and ou:
-        try:
-            diff = datetime.strptime(ou, '%H:%M') - datetime.strptime(oe, '%H:%M')
-            ore  = round(diff.total_seconds() / 3600, 2)
-        except: ore = None
-    elif ore_s:
-        try: ore = round(float(ore_s), 2)
-        except: ore = None
-    else: ore = None
-    if not nome_jolly or not cognome_jolly or not data:
-        flash('Compila nome, cognome e data.', 'error')
-        return redirect(request.referrer or url_for('cedolini'))
-    db = get_db()
-    db.execute(
-        "INSERT INTO presenze (utente_id,data,ora_entrata,ora_uscita,ore_totali,cantiere_id,note,nome_jolly,cognome_jolly) VALUES (?,?,?,?,?,?,?,?,?)",
-        (None, data, oe, ou, ore, cid, note, nome_jolly, cognome_jolly))
-    safe_commit(db); db.close()
-    flash(f'Nuova presenza jolly {nome_jolly} {cognome_jolly} del {data} creata!', 'success')
-    return redirect(request.referrer or url_for('cedolini'))
-
-
-@app.route('/presenze/jolly/modifica', methods=['POST'])
-@admin_required
-def presenze_jolly_modifica():
-    pid           = int(request.form.get('pid', 0))
-    nome_jolly    = request.form.get('nome_jolly', '').strip()
-    cognome_jolly = request.form.get('cognome_jolly', '').strip()
-    data          = request.form.get('data', '')
-    cid           = request.form.get('cantiere_id') or None
-    note          = request.form.get('note', '')
-    oe            = request.form.get('ora_entrata', '') or None
-    ou            = request.form.get('ora_uscita', '') or None
-    ore_s         = request.form.get('ore_dirette', '')
-    if oe and ou:
-        try:
-            diff = datetime.strptime(ou, '%H:%M') - datetime.strptime(oe, '%H:%M')
-            ore  = round(diff.total_seconds() / 3600, 2)
-        except: ore = None
-    elif ore_s:
-        try: ore = round(float(ore_s), 2)
-        except: ore = None
-    else: ore = None
-    db = get_db()
-    db.execute(
-        "UPDATE presenze SET nome_jolly=?,cognome_jolly=?,data=?,cantiere_id=?,note=?,ora_entrata=?,ora_uscita=?,ore_totali=? WHERE id=?",
-        (nome_jolly, cognome_jolly, data, cid, note, oe, ou, ore, pid))
-    safe_commit(db); db.close()
-    flash(f'Presenza jolly aggiornata!', 'success')
-    return redirect(request.referrer or url_for('cedolini'))
-
-
-@app.route('/presenze/jolly/<int:pid>/duplica')
-@admin_required
-def presenze_jolly_duplica(pid):
-    db = get_db()
-    p = db.execute("SELECT * FROM presenze WHERE id=?", (pid,)).fetchone()
-    if not p:
-        db.close(); flash('Presenza non trovata.', 'error'); return redirect(url_for('cedolini'))
-    try:
-        from datetime import date as _d, timedelta as _td
-        nuova_data = (_d.fromisoformat(p['data']) + _td(days=1)).isoformat()
-    except: nuova_data = p['data']
-    db.execute(
-        "INSERT INTO presenze (utente_id,data,ora_entrata,ora_uscita,ore_totali,cantiere_id,note,nome_jolly,cognome_jolly) VALUES (?,?,?,?,?,?,?,?,?)",
-        (None, nuova_data, p['ora_entrata'], p['ora_uscita'], p['ore_totali'],
-         p['cantiere_id'], p['note'], p['nome_jolly'], p['cognome_jolly']))
-    safe_commit(db); db.close()
-    flash(f'Presenza duplicata per {nuova_data}.', 'success')
-    return redirect(request.referrer or url_for('cedolini'))
-
-
-@app.route('/presenze/jolly/rinomina', methods=['POST'])
-@admin_required
-def presenze_jolly_rinomina():
-    nome_old    = request.form.get('nome_old', '').strip()
-    cognome_old = request.form.get('cognome_old', '').strip()
-    nome_new    = request.form.get('nome_new', '').strip()
-    cognome_new = request.form.get('cognome_new', '').strip()
-    mese        = request.form.get('mese', '')
-    if not nome_new or not cognome_new:
-        flash('Inserisci nome e cognome.', 'error'); return redirect(request.referrer or url_for('cedolini'))
-    db = get_db()
-    n = db.execute(
-        "UPDATE presenze SET nome_jolly=?, cognome_jolly=? WHERE nome_jolly=? AND cognome_jolly=? AND data LIKE ?",
-        (nome_new, cognome_new, nome_old, cognome_old, mese + '%')).rowcount
-    safe_commit(db); db.close()
-    flash(f'Rinominato "{nome_old} {cognome_old}" -> "{nome_new} {cognome_new}" ({n} presenze aggiornate).', 'success')
-    return redirect(request.referrer or url_for('cedolini'))
-
-
-@app.route('/cedolini/jolly-paghe', methods=['GET','POST'])
-@admin_required
-def cedolini_jolly_paghe():
-    db = get_db()
-
-    if request.method == 'POST':
-        # Salva paga per i jolly selezionati
-        nomi_sel = request.form.getlist('jolly_sel')  # lista "nome|cognome"
-        paga     = float(request.form.get('paga_bulk') or 0)
-        n_saved  = 0
-        for key in nomi_sel:
-            try:
-                nome, cognome = key.split('|', 1)
-                db.execute("""INSERT INTO jolly_paghe (nome_jolly,cognome_jolly,paga_oraria)
-                              VALUES (?,?,?)
-                              ON CONFLICT(nome_jolly,cognome_jolly)
-                              DO UPDATE SET paga_oraria=excluded.paga_oraria, aggiornato_il=datetime('now')""",
-                           (nome, cognome, paga))
-                n_saved += 1
-            except: pass
-        # Salva anche modifiche individuali
-        for key, val in request.form.items():
-            if key.startswith('paga_ind_'):
-                raw = key[len('paga_ind_'):]
-                try:
-                    nome, cognome = raw.split('|', 1)
-                    p_ind = float(val or 0)
-                    db.execute("""INSERT INTO jolly_paghe (nome_jolly,cognome_jolly,paga_oraria)
-                                  VALUES (?,?,?)
-                                  ON CONFLICT(nome_jolly,cognome_jolly)
-                                  DO UPDATE SET paga_oraria=excluded.paga_oraria, aggiornato_il=datetime('now')""",
-                               (nome, cognome, p_ind))
-                except: pass
-        safe_commit(db)
-        flash(f'Paga aggiornata per {n_saved} jolly!', 'success') if n_saved else flash('Paghe individuali aggiornate.', 'success')
-        return redirect(url_for('cedolini_jolly_paghe'))
-
-    # Carica tutti i jolly distinti dal DB presenze + le loro paghe
-    jolly_dist = db.execute("""
-        SELECT DISTINCT nome_jolly, cognome_jolly
-        FROM presenze
-        WHERE nome_jolly IS NOT NULL
-        ORDER BY cognome_jolly, nome_jolly
-    """).fetchall()
-
-    paghe = {f"{r['nome_jolly']}|{r['cognome_jolly']}": float(r['paga_oraria'])
-             for r in db.execute("SELECT * FROM jolly_paghe").fetchall()}
-    db.close()
-
-    tmpl = """
-<div style="margin-bottom:16px">
-  <a href="/cedolini" class="btn btn-secondary btn-sm"><i class="fa fa-arrow-left"></i> Cedolini</a>
-</div>
-<div class="card" style="max-width:680px;margin:0 auto">
-  <div class="card-header" style="background:#fffbeb;border-bottom:2px solid #fde047">
-    <h3 style="color:#92400e"><i class="fa fa-coins"></i> Paga oraria lavoratori Jolly</h3>
-    <div style="font-size:12px;color:#92400e;margin-top:2px">Seleziona uno o più jolly e imposta la stessa paga, oppure modifica singolarmente</div>
-  </div>
-  <div class="card-body">
-    <form method="POST">
-      <!-- Barra paga bulk -->
-      <div style="background:#fef9c3;border:1px solid #fde047;border-radius:10px;padding:14px;margin-bottom:20px">
-        <div style="font-size:13px;font-weight:700;color:#92400e;margin-bottom:10px"><i class="fa fa-users"></i> Applica stessa paga ai selezionati</div>
-        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
-          <div class="form-group" style="margin:0;flex:1;min-width:140px">
-            <label style="font-size:12px">€/ora da applicare</label>
-            <input type="number" step="0.01" min="0" name="paga_bulk" id="paga-bulk-inp"
-                   placeholder="es. 12.50" style="font-size:18px;font-weight:700;color:#d97706">
-          </div>
-          <button type="submit" class="btn" style="background:linear-gradient(135deg,#d97706,#f59e0b);color:#fff;font-weight:700;padding:10px 20px">
-            <i class="fa fa-save"></i> Applica ai selezionati
-          </button>
-        </div>
-        <div style="font-size:11px;color:#92400e;margin-top:8px">
-          <i class="fa fa-info-circle"></i> Spunta le caselle nella tabella sotto, poi clicca "Applica"
-        </div>
+    <div class="form-group">
+      <label>Oggetto / descrizione contratto *</label>
+      <input name="oggetto" value="{{ contratto.oggetto if contratto else '' }}" required placeholder="es. Contratto allestimento stand EICMA 2025 — Pad. 18 Stand A12">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Data firma</label>
+        <input name="data_firma" type="date" value="{{ contratto.data_firma if contratto else '' }}">
       </div>
-
-      <!-- Tabella jolly -->
-      {% if jolly_dist %}
-      <table style="width:100%;border-collapse:collapse">
-        <thead><tr style="background:#fef9c3;border-bottom:2px solid #fde047">
-          <th style="padding:10px 14px;width:36px">
-            <input type="checkbox" id="chk-jolly-all" onchange="toggleTutti(this)">
-          </th>
-          <th style="padding:10px 14px;text-align:left">Jolly</th>
-          <th style="padding:10px 14px;text-align:right">Paga attuale (€/h)</th>
-          <th style="padding:10px 14px;text-align:right">Modifica singola</th>
-        </tr></thead>
-        <tbody>
-        {% for j in jolly_dist %}
-        {% set key = j.nome_jolly + '|' + j.cognome_jolly %}
-        {% set paga_att = paghe.get(key, 0) %}
-        <tr style="border-bottom:1px solid #fef3c7" id="jrow-{{ loop.index }}">
-          <td style="padding:10px 14px">
-            <input type="checkbox" name="jolly_sel" value="{{ key }}" class="chk-jolly" onchange="aggiornaBulk()">
-          </td>
-          <td style="padding:10px 14px">
-            <div style="display:flex;align-items:center;gap:10px">
-              <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#d97706,#f59e0b);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700">
-                {{ j.nome_jolly[0] }}{{ j.cognome_jolly[0] }}
-              </div>
-              <strong>{{ j.nome_jolly }} {{ j.cognome_jolly }}</strong>
-            </div>
-          </td>
-          <td style="padding:10px 14px;text-align:right;font-family:monospace">
-            {% if paga_att %}<span style="color:#d97706;font-weight:700">€ {{ "%.2f"|format(paga_att) }}</span>
-            {% else %}<span style="color:#94a3b8;font-size:12px">non impostata</span>{% endif %}
-          </td>
-          <td style="padding:10px 14px;text-align:right">
-            <input type="number" step="0.01" min="0" name="paga_ind_{{ key }}"
-                   value="{{ '%.2f'|format(paga_att) if paga_att else '' }}"
-                   placeholder="€/h" style="width:100px;text-align:right;font-weight:700;color:#d97706">
-          </td>
-        </tr>
-        {% endfor %}
-        </tbody>
-      </table>
-      <div style="display:flex;justify-content:flex-end;margin-top:14px">
-        <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Salva tutte le modifiche individuali</button>
+      <div class="form-group">
+        <label>Data scadenza / fine contratto</label>
+        <input name="data_scadenza" type="date" value="{{ contratto.data_scadenza if contratto else '' }}">
       </div>
-      {% else %}
-      <div class="empty-state"><i class="fa fa-user-clock"></i><p>Nessun jolly trovato.<br><small>Inserisci prima delle presenze jolly dalla sezione Presenze.</small></p></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Valore contratto (€)</label>
+        <input name="valore" type="number" step="0.01" min="0" value="{{ contratto.valore if contratto else '' }}" placeholder="es. 15000.00">
+      </div>
+      <div class="form-group">
+        <label>Fiera / Stand collegato</label>
+        <select name="cantiere_id">
+          <option value="">— Nessuno —</option>
+          {% for f in fiere %}
+          <option value="{{ f.id }}" {{ 'selected' if contratto and contratto.cantiere_id==f.id }}>{{ f.nome }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Note</label>
+      <textarea name="note" placeholder="Condizioni particolari, rinnovi automatici, penali...">{{ contratto.note if contratto else '' }}</textarea>
+    </div>
+    <div class="form-group">
+      <label>Allega file contratto (PDF, immagine)</label>
+      {% if contratto and contratto.file_nome %}
+      <div style="background:#f0fdf4;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:13px;display:flex;align-items:center;gap:10px">
+        <i class="fa fa-file-pdf" style="color:#16a34a"></i>
+        <span>{{ contratto.file_nome_originale or contratto.file_nome }}</span>
+        <a href="/contratti-clienti/{{ contratto.id }}/scarica" class="btn btn-secondary btn-sm">Scarica</a>
+      </div>
       {% endif %}
-    </form>
+      <input type="file" name="file_contratto" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp" style="padding:6px">
+      <div style="font-size:11px;color:var(--text-light);margin-top:4px">Max 20MB — PDF, PNG, JPG, WEBP</div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+      <a href="/contratti-clienti" class="btn btn-secondary">Annulla</a>
+      <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Salva contratto</button>
+    </div>
+  </form>
   </div>
-</div>
-<script>
-function toggleTutti(cb) {
-  document.querySelectorAll('.chk-jolly').forEach(c => {
-    c.checked = cb.checked;
-    document.getElementById('jrow-' + (Array.from(document.querySelectorAll('.chk-jolly')).indexOf(c)+1)).style.background = cb.checked ? '#fffbeb' : '';
-  });
-}
-function aggiornaBulk() {
-  var n = document.querySelectorAll('.chk-jolly:checked').length;
-  document.querySelectorAll('.chk-jolly').forEach((c,i) => {
-    document.getElementById('jrow-'+(i+1)).style.background = c.checked ? '#fffbeb' : '';
-  });
-  var all = document.getElementById('chk-jolly-all');
-  all.indeterminate = n > 0 && n < document.querySelectorAll('.chk-jolly').length;
-  all.checked = n === document.querySelectorAll('.chk-jolly').length;
-}
-</script>"""
-    return render_page(tmpl, page_title='Paga Jolly', active='cedolini',
-                       jolly_dist=jolly_dist, paghe=paghe)
+</div>"""
 
+@app.route('/contratti-clienti')
+@login_required
+def contratti_clienti():
+    db = get_db()
+    today = date.today().isoformat()
+    contratti_raw = db.execute("""
+        SELECT cc.*, cl.nome as cliente_nome, cl.piva as cliente_piva
+        FROM contratti_clienti cc
+        LEFT JOIN clienti cl ON cc.cliente_id = cl.id
+        ORDER BY cc.data_scadenza ASC NULLS LAST, cc.data_firma DESC
+    """).fetchall()
+    db.close()
+    contratti = []
+    for c in contratti_raw:
+        c = dict(c)
+        if c.get('data_scadenza'):
+            try:
+                giorni = (date.fromisoformat(c['data_scadenza']) - date.today()).days
+                c['giorni_scadenza'] = giorni
+            except:
+                c['giorni_scadenza'] = 9999
+        else:
+            c['giorni_scadenza'] = 9999
+        contratti.append(c)
+    return render_page(CONTRATTI_CLIENTI_TMPL, page_title='Contratti Clienti',
+                       active='contratti_clienti', contratti=contratti, today_str=today)
 
-@app.route('/cedolini/impostazioni-paga', methods=['GET','POST'])
+@app.route('/contratti-clienti/nuovo', methods=['GET','POST'])
 @admin_required
-def cedolini_paga():
+def contratto_cliente_nuovo():
     db = get_db()
     if request.method == 'POST':
-        dips = db.execute("SELECT id FROM utenti WHERE ruolo='dipendente'").fetchall()
-        for d in dips:
-            try:
-                paga   = float(request.form.get(f'paga_{d["id"]}') or 0)
-                base   = float(request.form.get(f'base_{d["id"]}') or 0)
-                soglia = float(request.form.get(f'soglia_{d["id"]}') or 0)
-                db.execute(
-                    "UPDATE utenti SET paga_oraria_netta=?, paga_base_netta=?, ore_soglia_mensile=? WHERE id=?",
-                    (paga, base, soglia, d['id']))
-            except: pass
+        cliente_id = request.form.get('cliente_id') or None
+        file_nome = None
+        file_nome_orig = None
+        f = request.files.get('file_contratto')
+        if f and f.filename and allowed_file(f.filename):
+            file_nome_orig = secure_filename(f.filename)
+            import uuid as _uuid
+            file_nome = f"{_uuid.uuid4().hex}_{file_nome_orig}"
+            upload_path = os.path.join(DATA_DIR, 'uploads_contratti')
+            os.makedirs(upload_path, exist_ok=True)
+            f.save(os.path.join(upload_path, file_nome))
+        db.execute("""INSERT INTO contratti_clienti
+            (cliente_id, oggetto, data_firma, data_scadenza, valore, stato, cantiere_id, note, file_nome, file_nome_originale)
+            VALUES (?,?,?,?,?,?,?,?,?,?)""",
+            (cliente_id, request.form.get('oggetto',''),
+             request.form.get('data_firma') or None, request.form.get('data_scadenza') or None,
+             request.form.get('valore') or None, request.form.get('stato','attivo'),
+             request.form.get('cantiere_id') or None, request.form.get('note',''),
+             file_nome, file_nome_orig))
         safe_commit(db); db.close()
-        flash('Paghe aggiornate!','success')
-        return redirect(url_for('cedolini'))
-    dipendenti = db.execute(
-        "SELECT * FROM utenti WHERE ruolo='dipendente' AND attivo=1 ORDER BY nome").fetchall()
+        flash('Contratto salvato con successo!', 'success')
+        return redirect(url_for('contratti_clienti'))
+    clienti = db.execute("SELECT id, nome FROM clienti ORDER BY nome").fetchall()
+    fiere = db.execute("SELECT id, nome FROM cantieri WHERE attivo=1 ORDER BY nome").fetchall()
     db.close()
-    return render_page(PAGA_FORM_TMPL, page_title='Impostazioni Paga', active='cedolini',
-        dipendenti=dipendenti)
+    return render_page(CONTRATTO_FORM_TMPL, page_title='Nuovo Contratto',
+                       active='contratti_clienti', contratto=None, clienti=clienti, fiere=fiere)
 
-
-
-
-# ══════════════════════════════════════════════════════════
-#  FOGLIO PRESENZE MENSILE — PDF stile Accesso Fiere
-# ══════════════════════════════════════════════════════════
-
-FOGLIO_PRES_TMPL = """
-<div style="margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-  <a href="/cedolini" class="btn btn-secondary btn-sm"><i class="fa fa-arrow-left"></i> Cedolini</a>
-  <h2 style="margin:0"><i class="fa fa-file-alt" style="color:#0f172a"></i> Fogli Presenze</h2>
-</div>
-
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;max-width:900px;margin:0 auto">
-
-  <!-- Card Pulizia -->
-  <div class="card">
-    <div class="card-header">
-      <h3><i class="fa fa-broom" style="color:#0891b2"></i> Pulizia</h3>
-    </div>
-    <div class="card-body">
-      <form method="GET" action="/cedolini/foglio-presenze/pdf" target="_blank">
-        <input type="hidden" name="cantiere_nome" value="Pulizia">
-        <div class="form-row">
-          <div class="form-group">
-            <label>Mese *</label>
-            <select name="mese" style="width:100%">
-              {% for m in range(1,13) %}
-              <option value="{{ m }}" {{ 'selected' if m==mese_sel }}>{{ ['','Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'][m] }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Anno *</label>
-            <select name="anno" style="width:100%">
-              {% for a in anni %}
-              <option value="{{ a }}" {{ 'selected' if a==anno_sel }}>{{ a }}</option>
-              {% endfor %}
-            </select>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Tariffa oraria (€/h)</label>
-          <input type="number" name="tariffa" value="20" step="0.5" min="0" style="font-size:18px;font-weight:700;color:#0891b2">
-        </div>
-        <button type="submit" class="btn btn-primary" style="width:100%;margin-top:4px"><i class="fa fa-file-pdf"></i> Genera PDF Pulizia</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Card Magazzino 30group -->
-  <div class="card">
-    <div class="card-header">
-      <h3><i class="fa fa-warehouse" style="color:#7c3aed"></i> Magazzino 30group</h3>
-    </div>
-    <div class="card-body">
-      <form method="GET" action="/cedolini/foglio-presenze/pdf" target="_blank">
-        <input type="hidden" name="cantiere_nome" value="Magazzino 30group">
-        <div class="form-row">
-          <div class="form-group">
-            <label>Mese *</label>
-            <select name="mese" style="width:100%">
-              {% for m in range(1,13) %}
-              <option value="{{ m }}" {{ 'selected' if m==mese_sel }}>{{ ['','Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'][m] }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Anno *</label>
-            <select name="anno" style="width:100%">
-              {% for a in anni %}
-              <option value="{{ a }}" {{ 'selected' if a==anno_sel }}>{{ a }}</option>
-              {% endfor %}
-            </select>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Tariffa oraria (€/h) <span style="font-size:11px;color:var(--text-light);font-weight:400">(non appare nel PDF)</span></label>
-          <input type="number" name="tariffa" value="20" step="0.5" min="0" style="font-size:18px;font-weight:700;color:#7c3aed">
-        </div>
-        <button type="submit" class="btn" style="width:100%;margin-top:4px;background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff"><i class="fa fa-file-pdf"></i> Genera PDF Magazzino</button>
-      </form>
-    </div>
-  </div>
-
-</div>
-"""
-
-
-@app.route('/cedolini/foglio-presenze')
+@app.route('/contratti-clienti/<int:cid>/modifica', methods=['GET','POST'])
 @admin_required
-def foglio_presenze():
-    from datetime import date as _d
-    oggi = _d.today()
-    anni = list(range(oggi.year - 2, oggi.year + 1))
-    return render_page(FOGLIO_PRES_TMPL, page_title='Fogli Presenze', active='cedolini',
-        mese_sel=oggi.month, anno_sel=oggi.year, anni=anni)
-
-
-@app.route('/cedolini/foglio-presenze/pdf')
-@admin_required
-def foglio_presenze_pdf():
-    from datetime import date as _d
-    import calendar as _cal
-    oggi = _d.today()
-    mese    = int(request.args.get('mese', oggi.month))
-    anno    = int(request.args.get('anno', oggi.year))
-    tariffa = float(request.args.get('tariffa') or 20)
-    cantiere_nome_filter = request.args.get('cantiere_nome', 'Pulizia')
-
+def contratto_cliente_modifica(cid):
     db = get_db()
-    prefisso = f'{anno}-{mese:02d}'
-    mesi_it  = ['','Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
-                'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre']
-
-    # Trova la fiera per nome (LIKE, case-insensitive)
-    cant_row = db.execute("SELECT id,nome FROM cantieri WHERE nome LIKE ? LIMIT 1",
-                          (f'%{cantiere_nome_filter}%',)).fetchone()
-    cid = cant_row['id'] if cant_row else None
-    cantiere_nome = cant_row['nome'] if cant_row else cantiere_nome_filter
-
-    if cid:
-        righe = db.execute("""
-            SELECT p.data,
-                   COUNT(DISTINCT CASE WHEN p.utente_id IS NOT NULL THEN p.utente_id END)
-                   + COUNT(CASE WHEN p.nome_jolly IS NOT NULL THEN 1 END) as n_persone,
-                   SUM(p.ore_totali) as ore_tot
-            FROM presenze p
-            WHERE p.data LIKE ? AND p.cantiere_id=?
-            GROUP BY p.data ORDER BY p.data
-        """, (prefisso+'%', cid)).fetchall()
-    else:
-        # Se la fiera non esiste ancora, foglio vuoto
-        righe = []
+    contratto = db.execute("SELECT * FROM contratti_clienti WHERE id=?", (cid,)).fetchone()
+    if not contratto:
+        db.close(); flash('Contratto non trovato.', 'error'); return redirect(url_for('contratti_clienti'))
+    if request.method == 'POST':
+        file_nome = contratto['file_nome']
+        file_nome_orig = contratto['file_nome_originale']
+        f = request.files.get('file_contratto')
+        if f and f.filename and allowed_file(f.filename):
+            file_nome_orig = secure_filename(f.filename)
+            import uuid as _uuid
+            file_nome = f"{_uuid.uuid4().hex}_{file_nome_orig}"
+            upload_path = os.path.join(DATA_DIR, 'uploads_contratti')
+            os.makedirs(upload_path, exist_ok=True)
+            f.save(os.path.join(upload_path, file_nome))
+        db.execute("""UPDATE contratti_clienti SET
+            cliente_id=?, oggetto=?, data_firma=?, data_scadenza=?, valore=?,
+            stato=?, cantiere_id=?, note=?, file_nome=?, file_nome_originale=?
+            WHERE id=?""",
+            (request.form.get('cliente_id') or None, request.form.get('oggetto',''),
+             request.form.get('data_firma') or None, request.form.get('data_scadenza') or None,
+             request.form.get('valore') or None, request.form.get('stato','attivo'),
+             request.form.get('cantiere_id') or None, request.form.get('note',''),
+             file_nome, file_nome_orig, cid))
+        safe_commit(db); db.close()
+        flash('Contratto aggiornato.', 'success')
+        return redirect(url_for('contratti_clienti'))
+    clienti = db.execute("SELECT id, nome FROM clienti ORDER BY nome").fetchall()
+    fiere = db.execute("SELECT id, nome FROM cantieri WHERE attivo=1 ORDER BY nome").fetchall()
     db.close()
+    return render_page(CONTRATTO_FORM_TMPL, page_title='Modifica Contratto',
+                       active='contratti_clienti', contratto=contratto, clienti=clienti, fiere=fiere)
 
-    # Costruisci dict giorno → dati
-    giorni_dati = {}
-    for r in righe:
-        giorno = int(r['data'].split('-')[2])
-        giorni_dati[giorno] = {
-            'n_persone': r['n_persone'] or 0,
-            'ore':       float(r['ore_tot'] or 0),
-        }
+@app.route('/contratti-clienti/<int:cid>/scarica')
+@login_required
+def contratto_cliente_scarica(cid):
+    db = get_db()
+    c = db.execute("SELECT * FROM contratti_clienti WHERE id=?", (cid,)).fetchone()
+    db.close()
+    if not c or not c['file_nome']:
+        flash('File non trovato.', 'error'); return redirect(url_for('contratti_clienti'))
+    path = os.path.join(DATA_DIR, 'uploads_contratti', c['file_nome'])
+    if not os.path.exists(path):
+        flash('File non trovato sul server.', 'error'); return redirect(url_for('contratti_clienti'))
+    return send_file(path, as_attachment=True, download_name=c['file_nome_originale'] or c['file_nome'])
 
-    totale_ore = sum(v['ore'] for v in giorni_dati.values())
-    totale_importo = round(totale_ore * tariffa, 2)
-    n_giorni_mese = _cal.monthrange(anno, mese)[1]
-    az_nome = get_setting('azienda', 'Accesso Fiere S.r.l.')
+@app.route('/contratti-clienti/<int:cid>/elimina')
+@admin_required
+def contratto_cliente_elimina(cid):
+    db = get_db()
+    c = db.execute("SELECT * FROM contratti_clienti WHERE id=?", (cid,)).fetchone()
+    if c and c['file_nome']:
+        try:
+            os.remove(os.path.join(DATA_DIR, 'uploads_contratti', c['file_nome']))
+        except: pass
+    db.execute("DELETE FROM contratti_clienti WHERE id=?", (cid,))
+    safe_commit(db); db.close()
+    flash('Contratto eliminato.', 'success')
+    return redirect(url_for('contratti_clienti'))
 
-    # ── ReportLab PDF ──
-    try:
-        from reportlab.lib.pagesizes import A4
-        from reportlab.lib import colors
-        from reportlab.lib.units import mm
-        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer, Paragraph
-        from reportlab.lib.styles import ParagraphStyle
-        from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
-        import io as _io
-    except ImportError:
-        return "ReportLab non installato", 500
-
-    BLU   = colors.HexColor('#0f172a')
-    ACC   = colors.HexColor('#2563eb')
-    WHITE = colors.white
-    GRAY  = colors.HexColor('#f1f5f9')
-    GRAY2 = colors.HexColor('#e2e8f0')
-    TEXTC = colors.HexColor('#1e293b')
-    TEXTL = colors.HexColor('#64748b')
-    W, H  = A4
-
-    buf = _io.BytesIO()
-    doc = SimpleDocTemplate(buf, pagesize=A4,
-        leftMargin=18*mm, rightMargin=18*mm, topMargin=16*mm, bottomMargin=16*mm)
-
-    def P(txt, font='Helvetica', size=9, color=TEXTC, align=TA_LEFT):
-        s = ParagraphStyle('x', fontName=font, fontSize=size, textColor=color, alignment=align, leading=size*1.3)
-        return Paragraph(str(txt), s)
-
-    story = []
-
-    # ── Intestazione identica al modello ──
-    hdr = Table([[
-        P(az_nome, 'Helvetica-Bold', 13, BLU),
-        P(f'Foglio presenze — {cantiere_nome.upper()} — Mese: {mesi_it[mese].upper()} {anno}', 'Helvetica-Bold', 11, BLU, TA_RIGHT),
-    ]], colWidths=[95*mm, None])
-    hdr.setStyle(TableStyle([
-        ('BACKGROUND',(0,0),(-1,-1), colors.HexColor('#f8fafc')),
-        ('LINEBELOW',(0,0),(-1,0), 1.5, ACC),
-        ('TOPPADDING',(0,0),(-1,-1), 8),
-        ('BOTTOMPADDING',(0,0),(-1,-1), 8),
-        ('LEFTPADDING',(0,0),(-1,-1), 8),
-        ('RIGHTPADDING',(0,0),(-1,-1), 8),
-    ]))
-    story.append(hdr)
-    story.append(Spacer(1, 5*mm))
-
-    # Riga "Foglio presenze lavoratore: ___"
-    dip_row = Table([[
-        P('Foglio presenze lavoratore:', 'Helvetica', 9, TEXTL),
-        P('_' * 50, 'Helvetica', 9, TEXTC),
-    ]], colWidths=[60*mm, None])
-    dip_row.setStyle(TableStyle([('VALIGN',(0,0),(-1,-1),'MIDDLE')]))
-    story.append(dip_row)
-    story.append(Spacer(1, 5*mm))
-
-    # ── Tabella dati — colonne identiche al modello ──
-    col_w = [18*mm, 80*mm, 28*mm, 28*mm, 30*mm]
-    thead = [
-        P('DATA', 'Helvetica-Bold', 9, WHITE, TA_CENTER),
-        P('CANTIERE', 'Helvetica-Bold', 9, WHITE, TA_LEFT),
-        P('ORE', 'Helvetica-Bold', 9, WHITE, TA_CENTER),
-        P('SPESE', 'Helvetica-Bold', 9, WHITE, TA_CENTER),
-        P('RIFERIMENTO', 'Helvetica-Bold', 9, WHITE, TA_CENTER),
-    ]
-    tdata = [thead]
-
-    for g in range(1, n_giorni_mese + 1):
-        if g in giorni_dati:
-            d = giorni_dati[g]
-            np_ = d['n_persone']
-            ore_ = d['ore']
-            persona_str = f"{np_} PERSON{'A' if np_==1 else 'E'}"
-            ore_fmt = str(int(ore_)) if ore_ == int(ore_) else f"{ore_:.1f}".replace('.', ',')
-            tdata.append([
-                P(str(g), 'Helvetica-Bold', 9, TEXTC, TA_CENTER),
-                P(persona_str, 'Helvetica', 9, TEXTC, TA_LEFT),
-                P(ore_fmt, 'Helvetica-Bold', 9, TEXTC, TA_CENTER),
-                P('', 'Helvetica', 9, TEXTL, TA_CENTER),
-                P('', 'Helvetica', 9, TEXTL, TA_CENTER),
-            ])
-        else:
-            tdata.append([
-                P(str(g), 'Helvetica', 9, TEXTC, TA_CENTER),
-                P('', 'Helvetica', 9, TEXTL, TA_LEFT),
-                P('', 'Helvetica', 9, TEXTL, TA_CENTER),
-                P('', 'Helvetica', 9, TEXTL, TA_CENTER),
-                P('', 'Helvetica', 9, TEXTL, TA_CENTER),
-            ])
-
-    # Riga totali
-    tot_ore_fmt = str(int(totale_ore)) if totale_ore == int(totale_ore) else f"{totale_ore:.1f}".replace('.', ',')
-    mostra_importo = 'magazzino' not in cantiere_nome.lower()
-    if mostra_importo:
-        tdata.append([
-            P('', 'Helvetica-Bold', 9, BLU, TA_LEFT),
-            P('TOTALE ORE:', 'Helvetica-Bold', 10, BLU, TA_RIGHT),
-            P(tot_ore_fmt, 'Helvetica-Bold', 10, BLU, TA_CENTER),
-            P('TOTALE IMPORTO:', 'Helvetica-Bold', 9, BLU, TA_RIGHT),
-            P(f'€ {totale_importo:,.0f}'.replace(',','.'), 'Helvetica-Bold', 10, BLU, TA_CENTER),
-        ])
-    else:
-        tdata.append([
-            P('', 'Helvetica-Bold', 9, BLU, TA_LEFT),
-            P('TOTALE ORE:', 'Helvetica-Bold', 10, BLU, TA_RIGHT),
-            P(tot_ore_fmt, 'Helvetica-Bold', 12, BLU, TA_CENTER),
-            P('', 'Helvetica', 9, BLU, TA_CENTER),
-            P('', 'Helvetica', 9, BLU, TA_CENTER),
-        ])
-
-    tab = Table(tdata, colWidths=col_w, repeatRows=1)
-    n = len(tdata)
-    row_styles = [
-        ('BACKGROUND', (0,0), (-1,0), BLU),
-        ('TOPPADDING',    (0,0), (-1,-1), 5),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 5),
-        ('LEFTPADDING',   (0,0), (-1,-1), 6),
-        ('RIGHTPADDING',  (0,0), (-1,-1), 6),
-        ('BOX',  (0,0), (-1,-1), 0.8, GRAY2),
-        ('INNERGRID', (0,0), (-1,-1), 0.4, GRAY2),
-        ('BACKGROUND', (0, n-1), (-1, n-1), colors.HexColor('#eef4ff')),
-        ('LINEABOVE',  (0, n-1), (-1, n-1), 1.2, ACC),
-        ('LINEBELOW',  (0, n-1), (-1, n-1), 1.2, ACC),
-    ]
-    # Zebra
-    for i in range(1, n-1):
-        g_num = i  # riga 1=giorno1
-        giorno_dt = _d(anno, mese, g_num) if 1 <= g_num <= n_giorni_mese else None
-        if giorno_dt and giorno_dt.weekday() >= 5:
-            row_styles.append(('BACKGROUND', (0,i), (-1,i), colors.HexColor('#f0f4ff')))
-        elif i % 2 == 0:
-            row_styles.append(('BACKGROUND', (0,i), (-1,i), colors.HexColor('#fafafa')))
-    tab.setStyle(TableStyle(row_styles))
-    story.append(tab)
-
-    doc.build(story)
-    buf.seek(0)
-    nome_file = f"FoglioPresenze_{cantiere_nome.replace(' ','_')}_{mesi_it[mese]}_{anno}.pdf"
-    return Response(buf.read(), mimetype='application/pdf',
-        headers={'Content-Disposition': f'attachment; filename="{nome_file}"'})
-
-
-# ══════════════════════════════════════════════════════════════════════════════
 #  SAAS — LANDING · REGISTRAZIONE · ABBONAMENTI · SUPERADMIN
 # ══════════════════════════════════════════════════════════════════════════════
 
