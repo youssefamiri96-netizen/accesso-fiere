@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Database (non committare dati locali)
+*.db
+*.sqlite
+*.sqlite3
+tenants/
+
+# Upload files
+uploads_dipendenti/
+uploads_veicoli/
+uploads_eventi/
+
+# Secrets / env
+.env
+.env.local
+*.secret
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
