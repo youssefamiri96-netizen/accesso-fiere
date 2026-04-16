@@ -1080,20 +1080,12 @@ textarea{resize:vertical;min-height:80px}
 <body>
 <aside class="sidebar">
   <div class="sidebar-logo">
-    <svg width="36" height="36" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
-        <!-- Padiglione fieristico -->
-        <rect x="3" y="18" width="30" height="13" rx="1" fill="#1a6bb5"/>
-        <!-- Tetto ad arco -->
-        <path d="M2 19 Q18 6 34 19 Z" fill="#f59e0b"/>
-        <!-- Portale -->
-        <rect x="14" y="22" width="8" height="9" rx="1" fill="#0a3660"/>
-        <path d="M14 23 Q18 19 22 23" fill="#d97706"/>
-        <!-- Finestre -->
-        <rect x="5" y="21" width="5" height="4" rx="1" fill="#7dd3fc" opacity="0.8"/>
-        <rect x="26" y="21" width="5" height="4" rx="1" fill="#7dd3fc" opacity="0.8"/>
-        <!-- Pennone -->
-        <line x1="18" y1="6" x2="18" y2="1" stroke="#fff" stroke-width="1"/>
-        <polygon points="18,1 23,3 18,5" fill="#e63946"/>
+    <svg width="36" height="36" viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;border-radius:8px">
+        <rect width="52" height="52" rx="12" fill="#0f4c81"/>
+        <rect x="11" y="20" width="7" height="22" rx="2" fill="#ffffff"/>
+        <rect x="34" y="20" width="7" height="22" rx="2" fill="#ffffff"/>
+        <path d="M11 22 Q26 6 41 22" fill="none" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
+        <rect x="8" y="42" width="36" height="3" rx="1.5" fill="#f59e0b"/>
       </svg>
     <div>
       <div class="company">{{ azienda_nome }}</div>
