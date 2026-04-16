@@ -1189,7 +1189,14 @@ input:focus,select:focus{outline:none;border-color:#0f4c81}
 </style></head>
 <body>
 <div class="left">
-  <div class="logo">🏢 Accesso Fiere</div>
+  <div class="logo" style="display:flex;align-items:center;justify-content:center;gap:10px">
+    <svg width="32" height="32" viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg" style="border-radius:8px;background:#0f4c81;padding:4px">
+      <rect x="11" y="20" width="7" height="22" rx="2" fill="#fff"/>
+      <rect x="34" y="20" width="7" height="22" rx="2" fill="#fff"/>
+      <path d="M11 22 Q26 6 41 22" fill="none" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
+      <rect x="8" y="42" width="36" height="3" rx="1.5" fill="#f59e0b"/>
+    </svg>
+    Accesso Fiere</div>
   <div class="tagline">Gestionale Allestitori</div>
   <div class="features">
     <div class="feature"><i class="fa fa-users"></i> Dipendenti & Cantieri</div>
@@ -1238,6 +1245,14 @@ input:focus,select:focus{outline:none;border-color:#0f4c81}
     <a href="/auth/google" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px;background:#fff;border:1.5px solid #e2e8f0;border-radius:9px;font-size:14px;font-weight:600;color:#1e293b;text-decoration:none;transition:.15s" onmouseover="this.style.borderColor='#4285f4';this.style.background='#f8faff'" onmouseout="this.style.borderColor='#e2e8f0';this.style.background='#fff'">
       <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/><path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24c0 3.55.85 6.91 2.34 9.88l7.35-5.7z"/><path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/></svg>
       Accedi con Google
+    </a>
+    <div style="display:flex;align-items:center;gap:10px;margin:16px 0 4px">
+      <div style="flex:1;height:1px;background:#e2e8f0"></div>
+      <span style="font-size:12px;color:#94a3b8">non hai un account?</span>
+      <div style="flex:1;height:1px;background:#e2e8f0"></div>
+    </div>
+    <a href="/registrati" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:#f0f6ff;border:1.5px solid #bfdbfe;border-radius:9px;font-size:14px;font-weight:700;color:#0f4c81;text-decoration:none;margin-top:10px;transition:.15s" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#f0f6ff'">
+      <i class="fa fa-rocket"></i> Registra la tua azienda — 14 giorni gratis
     </a>
 </div>
 </body></html>"""
@@ -13707,63 +13722,147 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 REGISTRATI_TMPL = """<!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Registrati — GestionaleHR</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Registrati — Accesso Fiere</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:linear-gradient(135deg,#0f172a,#0f4c81);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-.card{background:#fff;border-radius:20px;padding:40px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
-.logo{text-align:center;font-size:22px;font-weight:900;color:#0f172a;margin-bottom:8px}<i class="fa fa-chart-line" style="color:#f59e0b"></i>
-.subtitle{text-align:center;color:#64748b;font-size:14px;margin-bottom:28px}
-.form-group{margin-bottom:16px}
-label{font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:5px}
-input,select{width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;transition:.2s}
-input:focus,select:focus{border-color:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.1)}
-.btn{width:100%;padding:14px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px}
-.btn:hover{opacity:.9}
-.error{background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:16px}
-.trial-badge{text-align:center;background:#f0fdf4;color:#16a34a;border-radius:8px;padding:10px;font-size:13px;font-weight:600;margin-bottom:20px}
-.login-link{text-align:center;margin-top:20px;font-size:13px;color:#64748b}
-.login-link a{color:#f59e0b;font-weight:700;text-decoration:none}
-.piano-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:4px}
-.piano-opt{border:2px solid #e2e8f0;border-radius:10px;padding:10px 8px;text-align:center;cursor:pointer;transition:.2s}
-.piano-opt.sel{border-color:#f59e0b;background:#fffbeb}
-.piano-opt .nome{font-weight:700;font-size:13px}
-.piano-opt .prezzo{color:#f59e0b;font-weight:800;font-size:15px}
+body{font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;background:#f1f5f9}
+.left{width:480px;background:#0f172a;display:flex;flex-direction:column;justify-content:center;padding:56px 48px;color:#fff;flex-shrink:0;position:relative;overflow:hidden}
+.left::before{content:'';position:absolute;top:-80px;right:-80px;width:300px;height:300px;border-radius:50%;background:rgba(15,76,129,.4)}
+.left::after{content:'';position:absolute;bottom:-60px;left:-60px;width:200px;height:200px;border-radius:50%;background:rgba(245,158,11,.08)}
+.brand{display:flex;align-items:center;gap:14px;margin-bottom:48px;position:relative;z-index:1}
+.brand-icon{width:48px;height:48px;background:#0f4c81;border-radius:12px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.1)}
+.brand-name{font-size:20px;font-weight:800;color:#fff;letter-spacing:-.3px}
+.brand-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:1px;text-transform:uppercase;letter-spacing:1px}
+.hero-title{font-size:32px;font-weight:800;line-height:1.2;margin-bottom:16px;position:relative;z-index:1}
+.hero-title span{color:#f59e0b}
+.hero-sub{font-size:14px;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:40px;position:relative;z-index:1}
+.features{position:relative;z-index:1}
+.feature{display:flex;align-items:flex-start;gap:14px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.feature:last-child{border:none}
+.feat-icon{width:34px;height:34px;border-radius:8px;background:rgba(15,76,129,.5);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-top:1px}
+.feat-text .t{font-size:13px;font-weight:600;color:#fff}
+.feat-text .s{font-size:12px;color:rgba(255,255,255,.4);margin-top:2px}
+.right{flex:1;display:flex;align-items:center;justify-content:center;padding:40px}
+.form-card{background:#fff;border-radius:20px;padding:44px;width:100%;max-width:480px;box-shadow:0 4px 40px rgba(0,0,0,.08)}
+.trial-pill{background:linear-gradient(135deg,#ecfdf5,#d1fae5);color:#065f46;border-radius:99px;padding:6px 16px;font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:6px;margin-bottom:24px;border:1px solid #a7f3d0}
+h2{font-size:24px;font-weight:800;color:#0f172a;margin-bottom:6px}
+.sub{font-size:14px;color:#64748b;margin-bottom:28px}
+.form-group{margin-bottom:18px}
+label{display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+input,select{width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;font-family:inherit;transition:.2s;color:#0f172a;background:#fff}
+input:focus,select:focus{outline:none;border-color:#0f4c81;box-shadow:0 0 0 3px rgba(15,76,129,.08)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.piani{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:4px}
+.piano-card{border:2px solid #e2e8f0;border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:.2s;position:relative}
+.piano-card:hover{border-color:#0f4c81}
+.piano-card input[type=radio]{position:absolute;opacity:0;pointer-events:none}
+.piano-card.checked{border-color:#0f4c81;background:#f0f6ff}
+.piano-card .pnome{font-size:12px;font-weight:700;color:#0f172a;margin-bottom:4px}
+.piano-card .pprezzo{font-size:18px;font-weight:800;color:#0f4c81}
+.piano-card .psub{font-size:10px;color:#94a3b8;margin-top:3px}
+.btn-register{width:100%;padding:14px;background:#0f4c81;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;transition:.18s}
+.btn-register:hover{background:#0a3660}
+.error{background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;font-size:13px;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:#94a3b8;font-size:12px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+.login-link{text-align:center;font-size:13px;color:#64748b;margin-top:20px}
+.login-link a{color:#0f4c81;font-weight:700;text-decoration:none}
+@media(max-width:900px){.left{display:none}.right{padding:20px}}
+@media(max-width:500px){.form-row{grid-template-columns:1fr}.piani{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<div class="card">
-  <div class="logo"><i class="fa fa-chart-line" style="color:#f59e0b"></i> GestionaleHR</div>
-  <div class="subtitle">Crea il tuo account aziendale in 30 secondi</div>
-  <div class="trial-badge"><i class="fa fa-gift"></i> 14 giorni gratuiti — Nessuna carta richiesta</div>
-  {% if error %}<div class="error"><i class="fa fa-exclamation-circle"></i> {{ error }}</div>{% endif %}
-  <form method="POST">
-    <div class="form-group">
-      <label>Nome azienda *</label>
-      <input name="nome_azienda" placeholder="Es. Rossi Costruzioni SRL" required>
+<div class="left">
+  <div class="brand">
+    <div class="brand-icon">
+      <svg width="28" height="28" viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
+        <rect x="11" y="20" width="7" height="22" rx="2" fill="#fff"/>
+        <rect x="34" y="20" width="7" height="22" rx="2" fill="#fff"/>
+        <path d="M11 22 Q26 6 41 22" fill="none" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
+        <rect x="8" y="42" width="36" height="3" rx="1.5" fill="#f59e0b"/>
+      </svg>
     </div>
-    <div class="form-group">
-      <label>Email admin *</label>
-      <input type="email" name="email" placeholder="admin@tuaazienda.it" required>
+    <div>
+      <div class="brand-name">Accesso Fiere</div>
+      <div class="brand-sub">Gestionale Allestitori</div>
     </div>
-    <div class="form-group">
-      <label>Password *</label>
-      <input type="password" name="password" placeholder="Minimo 6 caratteri" required>
+  </div>
+  <div class="hero-title">Il gestionale pensato<br>per chi <span>allestisce le fiere</span></div>
+  <div class="hero-sub">Gestisci personale, fiere, veicoli, documenti e preventivi — tutto in un unico strumento, isolato per la tua azienda.</div>
+  <div class="features">
+    <div class="feature">
+      <div class="feat-icon"><i class="fa fa-store" style="color:#f59e0b"></i></div>
+      <div class="feat-text"><div class="t">Fiere & Stand</div><div class="s">Padiglioni, superfici, tipi allestimento</div></div>
     </div>
-    <div class="form-group">
-      <label>Piano</label>
-      <select name="piano">
-        <option value="base" {{ 'selected' if piano_sel=='base' }}>Base — €29/mese (fino a 5 dip.)</option>
-        <option value="professional" {{ 'selected' if piano_sel=='professional' }}>Professional — €59/mese (fino a 20 dip.)</option>
-        <option value="enterprise" {{ 'selected' if piano_sel=='enterprise' }}>Enterprise — €99/mese (illimitati)</option>
-      </select>
+    <div class="feature">
+      <div class="feat-icon"><i class="fa fa-users" style="color:#60a5fa"></i></div>
+      <div class="feat-text"><div class="t">Personale di cantiere</div><div class="s">Presenze, ferie, documenti per dipendente</div></div>
     </div>
-    <button type="submit" class="btn"><i class="fa fa-rocket"></i> Crea account — inizia gratis 14 giorni</button>
-  </form>
-  <div class="login-link">Hai già un account? <a href="/login">Accedi</a></div>
+    <div class="feature">
+      <div class="feat-icon"><i class="fa fa-truck" style="color:#34d399"></i></div>
+      <div class="feat-text"><div class="t">Mezzi & Logistica</div><div class="s">Parco veicoli con scadenze automatiche</div></div>
+    </div>
+    <div class="feature">
+      <div class="feat-icon"><i class="fa fa-file-invoice" style="color:#a78bfa"></i></div>
+      <div class="feat-text"><div class="t">Preventivi & Contratti</div><div class="s">PDF, clienti, contratti firmati</div></div>
+    </div>
+    <div class="feature">
+      <div class="feat-icon"><i class="fa fa-database" style="color:#fb923c"></i></div>
+      <div class="feat-text"><div class="t">Dati 100% tuoi</div><div class="s">Database isolato per ogni azienda</div></div>
+    </div>
+  </div>
+</div>
+<div class="right">
+  <div class="form-card">
+    <div class="trial-pill"><i class="fa fa-gift"></i> 14 giorni gratuiti — nessuna carta richiesta</div>
+    <h2>Crea il tuo account</h2>
+    <p class="sub">Inizia subito, sei operativo in 30 secondi.</p>
+    {% if error %}<div class="error"><i class="fa fa-exclamation-circle"></i> {{ error }}</div>{% endif %}
+    <form method="POST">
+      <div class="form-group">
+        <label>Nome azienda</label>
+        <input name="nome_azienda" placeholder="Es. Rossi Allestimenti S.r.l." required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Email amministratore</label>
+          <input type="email" name="email" placeholder="admin@tuaazienda.it" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" name="password" placeholder="Min. 6 caratteri" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Scegli il piano</label>
+        <div class="piani">
+          <label class="piano-card {{ 'checked' if piano_sel=='base' }}">
+            <input type="radio" name="piano" value="base" {{ 'checked' if piano_sel=='base' }} onchange="document.querySelectorAll('.piano-card').forEach(c=>c.classList.remove('checked'));this.closest('.piano-card').classList.add('checked')">
+            <div class="pnome">Base</div>
+            <div class="pprezzo">€29</div>
+            <div class="psub">/mese · 5 op.</div>
+          </label>
+          <label class="piano-card {{ 'checked' if piano_sel=='professional' }}">
+            <input type="radio" name="piano" value="professional" {{ 'checked' if piano_sel=='professional' }} onchange="document.querySelectorAll('.piano-card').forEach(c=>c.classList.remove('checked'));this.closest('.piano-card').classList.add('checked')">
+            <div class="pnome" style="color:#0f4c81">Pro</div>
+            <div class="pprezzo">€59</div>
+            <div class="psub">/mese · 20 op.</div>
+          </label>
+          <label class="piano-card {{ 'checked' if piano_sel=='enterprise' }}">
+            <input type="radio" name="piano" value="enterprise" {{ 'checked' if piano_sel=='enterprise' }} onchange="document.querySelectorAll('.piano-card').forEach(c=>c.classList.remove('checked'));this.closest('.piano-card').classList.add('checked')">
+            <div class="pnome">Enterprise</div>
+            <div class="pprezzo">€99</div>
+            <div class="psub">/mese · ∞ op.</div>
+          </label>
+        </div>
+      </div>
+      <button type="submit" class="btn-register"><i class="fa fa-rocket"></i> Crea account e inizia gratis</button>
+    </form>
+    <div class="login-link">Hai già un account? <a href="/login">Accedi →</a></div>
+  </div>
 </div>
 </body>
 </html>"""
