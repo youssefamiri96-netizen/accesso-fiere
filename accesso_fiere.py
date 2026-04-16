@@ -725,6 +725,37 @@ def ensure_columns():
                 return
 
 # ─────────────────────────────────────────────
+#  AUTO-INIT DB PER RICHIESTE AUTHENTICATED
+# ─────────────────────────────────────────────
+_tenant_initialized = set()  # cache per non reinizializzare ad ogni request
+
+@app.before_request
+def auto_init_tenant_db():
+    """Se l'utente è loggato su un tenant, assicura che il DB esista e sia aggiornato."""
+    azienda_id = session.get('azienda_id')
+    if not azienda_id:
+        return
+    if azienda_id in _tenant_initialized:
+        return
+    try:
+        db_path = get_tenant_db_path(azienda_id)
+        if not os.path.exists(db_path):
+            init_db()
+            ensure_columns()
+        else:
+            # Controlla se mancano tabelle critiche
+            db = get_db()
+            tables = {r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+            db.close()
+            missing = {'utenti','cantieri','presenze','preventivi','clienti','contratti_clienti'} - tables
+            if missing:
+                init_db()
+                ensure_columns()
+        _tenant_initialized.add(azienda_id)
+    except Exception as e:
+        print(f'[auto_init_tenant_db] {e}')
+
+# ─────────────────────────────────────────────
 #  AUTH
 # ─────────────────────────────────────────────
 def login_required(f):
@@ -1287,11 +1318,11 @@ def login():
             # Verifica stato abbonamento
             if az['stato'] == 'sospeso':
                 return render_template_string(LOGIN_TMPL, error='Abbonamento sospeso. Contatta il supporto.', **lang_ctx)
-            # Inizializza DB tenant se non esiste
+            # Inizializza/aggiorna DB tenant (sempre, aggiunge tabelle mancanti)
             db_path = get_tenant_db_path(az['id'])
-            if not os.path.exists(db_path):
-                session['azienda_id'] = az['id']
-                init_db()  # crea schema sul DB tenant
+            session['azienda_id'] = az['id']
+            init_db()       # crea tabelle se non esistono (idempotente)
+            ensure_columns()  # aggiunge colonne/tabelle nuove
             session.update({
                 'user_id': 0,  # user_id speciale per il super-admin dell'azienda
                 'nome': 'Admin',
@@ -1322,6 +1353,11 @@ def login():
         db.close()
         if u:
             session.update({'user_id':u['id'],'nome':u['nome'],'cognome':u['cognome'],'ruolo':u['ruolo'],'email':u['email']})
+            # Assicura sempre che il DB sia aggiornato con tutte le tabelle
+            try:
+                init_db()
+                ensure_columns()
+            except Exception: pass
             if u['ruolo'] == 'admin':
                 return redirect(url_for('dashboard'))
             else:
@@ -4518,31 +4554,88 @@ DIP_TMPL = """
 </div>"""
 
 DIP_FORM_TMPL = """
-<div class="card" style="max-width:600px;margin:0 auto">
-  <div class="card-header"><h3>{{ 'Modifica' if dip else 'Nuovo' }} Dipendente</h3></div>
+<div class="card" style="max-width:640px;margin:0 auto">
+  <div class="card-header">
+    <h3><i class="fa fa-user-plus" style="color:var(--accent)"></i> {{ 'Modifica' if dip else 'Nuovo' }} Dipendente</h3>
+  </div>
   <div class="card-body">
+  {% with msgs = get_flashed_messages(with_categories=true) %}{% for cat,msg in msgs %}
+  <div class="alert alert-{{ 'success' if cat=='success' else 'error' }}">{{ msg }}</div>
+  {% endfor %}{% endwith %}
   <form method="POST">
-    <div class="form-row"><div class="form-group"><label>Nome *</label><input name="nome" value="{{ dip.nome if dip else '' }}" required></div>
-    <div class="form-group"><label>Cognome *</label><input name="cognome" value="{{ dip.cognome if dip else '' }}" required></div></div>
-    <div class="form-group"><label>Email *</label><input type="email" name="email" value="{{ dip.email if dip else '' }}" required></div>
-    {% if not dip %}<div class="form-group"><label>Password *</label><input type="password" name="password" required></div>{% endif %}
-    <div class="form-row">
-      <div class="form-group"><label>Mansione / Qualifica</label><input name="mansione" value="{{ dip.mansione if dip else '' }}" placeholder="Es. Operaio, Muratore, Elettricista..."></div>
-      <div class="form-group"><label>Telefono</label><input name="telefono" value="{{ dip.telefono if dip else '' }}"></div>
+
+    <div style="background:#f8fafc;border-radius:10px;padding:16px;margin-bottom:20px;border:1px solid var(--border)">
+      <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">
+        <i class="fa fa-id-card"></i> Dati anagrafici
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Nome *</label><input name="nome" value="{{ dip.nome if dip else '' }}" required placeholder="Mario"></div>
+        <div class="form-group"><label>Cognome *</label><input name="cognome" value="{{ dip.cognome if dip else '' }}" required placeholder="Rossi"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Mansione / Qualifica</label><input name="mansione" value="{{ dip.mansione if dip else '' }}" placeholder="Es. Montatore, Capo squadra..."></div>
+        <div class="form-group"><label>Telefono</label><input name="telefono" value="{{ dip.telefono if dip else '' }}" placeholder="+39 333 000 0000"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Data assunzione</label><input type="date" name="data_assunzione" value="{{ dip.data_assunzione if dip else '' }}"></div>
+        <div class="form-group"><label>Ruolo nel sistema</label>
+          <select name="ruolo">
+            <option value="dipendente" {{ 'selected' if (not dip) or (dip and dip.ruolo=='dipendente') }}>Operatore / Dipendente</option>
+            <option value="admin" {{ 'selected' if dip and dip.ruolo=='admin' }}>Amministratore</option>
+          </select>
+        </div>
+      </div>
     </div>
-    <div class="form-row">
-      <div class="form-group"><label>Data assunzione</label><input type="date" name="data_assunzione" value="{{ dip.data_assunzione if dip else '' }}"></div>
-      <div class="form-group"><label>Ruolo</label><select name="ruolo">
-        <option value="dipendente" {{ 'selected' if dip and dip.ruolo=='dipendente' else '' }}>Dipendente</option>
-        <option value="admin" {{ 'selected' if dip and dip.ruolo=='admin' else '' }}>Admin</option>
-      </select></div>
+
+    <div style="background:#eff6ff;border-radius:10px;padding:16px;margin-bottom:20px;border:1px solid #bfdbfe">
+      <div style="font-size:11px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">
+        <i class="fa fa-key"></i> Credenziali di accesso — App mobile
+      </div>
+      <p style="font-size:12px;color:#3b82f6;margin-bottom:14px">Il dipendente userà email e password per accedere all'app dal telefono. Potrà cambiarle dopo il primo accesso.</p>
+      <div class="form-group">
+        <label>Email di accesso *</label>
+        <input type="email" name="email" value="{{ dip.email if dip else '' }}" required placeholder="mario.rossi@email.it">
+      </div>
+      {% if not dip %}
+      <div class="form-group">
+        <label>Password iniziale *</label>
+        <div style="position:relative">
+          <input type="text" name="password" id="pwd_field" required placeholder="Es. Rossi2025" style="padding-right:40px">
+          <button type="button" onclick="generatePwd()" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#3b82f6;font-size:12px;font-weight:700" title="Genera password">
+            <i class="fa fa-magic"></i>
+          </button>
+        </div>
+        <div style="font-size:11px;color:#64748b;margin-top:4px"><i class="fa fa-info-circle"></i> Comunica questa password al dipendente — potrà cambiarla dall'app</div>
+      </div>
+      {% else %}
+      <div style="background:#fff;border-radius:8px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;border:1px solid #bfdbfe">
+        <div>
+          <div style="font-size:12px;color:#64748b">Password attuale</div>
+          <div style="font-size:13px;font-weight:600;color:#1e293b;margin-top:2px">••••••••••</div>
+        </div>
+        <a href="/dipendenti/{{ dip.id }}/reset-password" class="btn btn-blue btn-sm" onclick="return confirm('Generare una nuova password temporanea per {{ dip.nome }}?')">
+          <i class="fa fa-rotate"></i> Reset password
+        </a>
+      </div>
+      {% endif %}
     </div>
+
     <div style="display:flex;gap:10px;justify-content:flex-end">
       <a href="/dipendenti" class="btn btn-secondary">Annulla</a>
-      <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Salva</button>
+      <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Salva dipendente</button>
     </div>
-  </form></div>
-</div>"""
+  </form>
+  </div>
+</div>
+<script>
+function generatePwd() {
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  let pwd = '';
+  for (let i = 0; i < 8; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
+  document.getElementById('pwd_field').value = pwd;
+  document.getElementById('pwd_field').type = 'text';
+}
+</script>"""
 
 @app.route('/dipendenti')
 @login_required
@@ -4593,6 +4686,19 @@ def dipendente_modifica(uid):
 def dipendente_elimina(uid):
     db=get_db();db.execute("UPDATE utenti SET attivo=0 WHERE id=?",(uid,));safe_commit(db);db.close()
     flash('Rimosso.','success');return redirect(url_for('dipendenti'))
+
+@app.route('/dipendenti/<int:uid>/reset-password')
+@admin_required
+def dipendente_reset_password(uid):
+    import random, string
+    chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
+    new_pwd = ''.join(random.choices(chars, k=8))
+    db = get_db()
+    dip = db.execute("SELECT nome, cognome, email FROM utenti WHERE id=?", (uid,)).fetchone()
+    db.execute("UPDATE utenti SET password=? WHERE id=?", (hash_pw(new_pwd), uid))
+    safe_commit(db); db.close()
+    flash(f'✅ Password di {dip["nome"]} {dip["cognome"]} resettata. Nuova password temporanea: <strong>{new_pwd}</strong> — comunicala al dipendente.', 'success')
+    return redirect(url_for('dipendente_modifica', uid=uid))
 
 # ══════════════════════════════════════════════════════════
 #  DOCUMENTI & SCADENZE
@@ -9990,6 +10096,14 @@ select option{background:#1e293b}
     <i class="fa fa-receipt" style="font-size:22px"></i>
     {{ t.spese_btn }}
   </a>
+  <a href="/mobile/profilo" style="background:#1e293b;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.8);border-radius:14px;padding:14px 16px;font-size:14px;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:10px">
+    <i class="fa fa-user-gear" style="font-size:18px;color:#94a3b8"></i>
+    <div>
+      <div>Impostazioni profilo</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:1px">Cambia email e password</div>
+    </div>
+    <i class="fa fa-chevron-right" style="margin-left:auto;font-size:12px;color:rgba(255,255,255,.3)"></i>
+  </a>
   <div class="switch-link">
     <a href="/dashboard"><i class="fa fa-desktop"></i> {{ t.desktop_ver }}</a>
   </div>
@@ -10034,6 +10148,148 @@ document.getElementById('form-ore').addEventListener('submit', function() {
 </script>
 </body>
 </html>"""
+
+
+MOBILE_PROFILO_TMPL = """<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Profilo</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}
+.header{background:linear-gradient(135deg,#1e3a5f,#0f172a);padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:14px}
+.back-btn{color:rgba(255,255,255,.6);text-decoration:none;font-size:16px;padding:6px}
+.header-title{font-size:18px;font-weight:800;color:#fff}
+.content{padding:20px;max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.card{background:#1e293b;border-radius:16px;padding:20px;border:1px solid rgba(255,255,255,.07)}
+.card-title{font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px}
+.avatar-row{display:flex;align-items:center;gap:14px;margin-bottom:4px}
+.avatar-big{width:56px;height:56px;border-radius:50%;background:#0f4c81;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;flex-shrink:0}
+.user-name{font-size:20px;font-weight:800;color:#fff}
+.user-role{font-size:12px;color:rgba(255,255,255,.4);margin-top:3px;text-transform:capitalize}
+label{display:block;font-size:12px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+input{width:100%;background:#0f172a;border:1.5px solid rgba(255,255,255,.12);border-radius:12px;color:#fff;font-size:16px;padding:14px 16px;outline:none;-webkit-appearance:none;font-family:inherit;margin-bottom:14px}
+input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+.btn-save{width:100%;background:linear-gradient(135deg,#0f4c81,#2563eb);color:#fff;border:none;border-radius:14px;padding:16px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-save:active{opacity:.85}
+.flash{padding:14px 16px;border-radius:12px;font-size:14px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:10px}
+.flash.success{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+.flash.error{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#fca5a5}
+.hint{font-size:12px;color:rgba(255,255,255,.3);margin-top:-10px;margin-bottom:14px;padding-left:4px}
+</style>
+</head>
+<body>
+<div class="header">
+  <a href="/mobile" class="back-btn"><i class="fa fa-arrow-left"></i></a>
+  <div class="header-title">Impostazioni profilo</div>
+</div>
+<div class="content">
+  {% for cat,msg in messages %}
+  <div class="flash {{ cat }}"><i class="fa fa-{{ 'check-circle' if cat=='success' else 'exclamation-circle' }}"></i> {{ msg }}</div>
+  {% endfor %}
+
+  <!-- Chi sei -->
+  <div class="card">
+    <div class="avatar-row">
+      <div class="avatar-big">{{ nome[0]|upper }}{{ cognome[0]|upper }}</div>
+      <div>
+        <div class="user-name">{{ nome }} {{ cognome }}</div>
+        <div class="user-role"><i class="fa fa-hard-hat"></i> {{ mansione or 'Dipendente' }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cambia email -->
+  <div class="card">
+    <div class="card-title"><i class="fa fa-envelope"></i> Cambia email di accesso</div>
+    <form method="POST" action="/mobile/profilo/cambia-email">
+      <label>Nuova email</label>
+      <input type="email" name="nuova_email" value="{{ email }}" required autocomplete="email">
+      <label>Conferma password attuale</label>
+      <input type="password" name="password_attuale" required placeholder="••••••••">
+      <button type="submit" class="btn-save"><i class="fa fa-save"></i> Aggiorna email</button>
+    </form>
+  </div>
+
+  <!-- Cambia password -->
+  <div class="card">
+    <div class="card-title"><i class="fa fa-key"></i> Cambia password</div>
+    <form method="POST" action="/mobile/profilo/cambia-password">
+      <label>Password attuale</label>
+      <input type="password" name="password_attuale" required placeholder="••••••••">
+      <label>Nuova password</label>
+      <input type="password" name="nuova_password" required placeholder="Minimo 6 caratteri" id="np">
+      <div class="hint">Almeno 6 caratteri</div>
+      <label>Ripeti nuova password</label>
+      <input type="password" name="conferma_password" required placeholder="Ripeti la password">
+      <button type="submit" class="btn-save"><i class="fa fa-lock"></i> Cambia password</button>
+    </form>
+  </div>
+
+  <a href="/logout" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:14px;color:#fca5a5;text-decoration:none;font-size:14px;font-weight:700">
+    <i class="fa fa-right-from-bracket"></i> Esci dall'account
+  </a>
+</div>
+</body>
+</html>"""
+
+@app.route('/mobile/profilo')
+@login_required
+def mobile_profilo():
+    db = get_db()
+    u = db.execute("SELECT * FROM utenti WHERE id=?", (session['user_id'],)).fetchone()
+    db.close()
+    msgs = get_flashed_messages(with_categories=True)
+    return render_template_string(MOBILE_PROFILO_TMPL,
+        nome=u['nome'], cognome=u['cognome'],
+        email=u['email'], mansione=u.get('mansione') or '',
+        messages=msgs)
+
+@app.route('/mobile/profilo/cambia-email', methods=['POST'])
+@login_required
+def mobile_cambia_email():
+    nuova = request.form.get('nuova_email','').strip().lower()
+    pwd   = hash_pw(request.form.get('password_attuale',''))
+    db = get_db()
+    u = db.execute("SELECT * FROM utenti WHERE id=?", (session['user_id'],)).fetchone()
+    if u['password'] != pwd:
+        db.close(); flash('Password attuale non corretta.', 'error')
+        return redirect(url_for('mobile_profilo'))
+    existing = db.execute("SELECT id FROM utenti WHERE email=? AND id!=?", (nuova, session['user_id'])).fetchone()
+    if existing:
+        db.close(); flash('Email già in uso da un altro account.', 'error')
+        return redirect(url_for('mobile_profilo'))
+    db.execute("UPDATE utenti SET email=? WHERE id=?", (nuova, session['user_id']))
+    safe_commit(db); db.close()
+    session['email'] = nuova
+    flash('Email aggiornata con successo!', 'success')
+    return redirect(url_for('mobile_profilo'))
+
+@app.route('/mobile/profilo/cambia-password', methods=['POST'])
+@login_required
+def mobile_cambia_password():
+    pwd_attuale  = hash_pw(request.form.get('password_attuale',''))
+    nuova_pwd    = request.form.get('nuova_password','')
+    conferma_pwd = request.form.get('conferma_password','')
+    db = get_db()
+    u = db.execute("SELECT * FROM utenti WHERE id=?", (session['user_id'],)).fetchone()
+    if u['password'] != pwd_attuale:
+        db.close(); flash('Password attuale non corretta.', 'error')
+        return redirect(url_for('mobile_profilo'))
+    if len(nuova_pwd) < 6:
+        db.close(); flash('La nuova password deve avere almeno 6 caratteri.', 'error')
+        return redirect(url_for('mobile_profilo'))
+    if nuova_pwd != conferma_pwd:
+        db.close(); flash('Le due password non coincidono.', 'error')
+        return redirect(url_for('mobile_profilo'))
+    db.execute("UPDATE utenti SET password=? WHERE id=?", (hash_pw(nuova_pwd), session['user_id']))
+    safe_commit(db); db.close()
+    flash('✅ Password cambiata con successo!', 'success')
+    return redirect(url_for('mobile_profilo'))
 
 
 @app.route('/mobile')
