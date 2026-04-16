@@ -13214,7 +13214,7 @@ def contratti_clienti():
     db = get_db()
     today = date.today().isoformat()
     contratti_raw = db.execute("""
-        SELECT cc.*, cl.nome as cliente_nome, cl.piva as cliente_piva
+        SELECT cc.*, cl.nome as cliente_nome, cl.partita_iva as cliente_piva
         FROM contratti_clienti cc
         LEFT JOIN clienti cl ON cc.cliente_id = cl.id
         ORDER BY cc.data_scadenza ASC NULLS LAST, cc.data_firma DESC
