@@ -130,9 +130,11 @@ DB = DB_LEGACY  # mantenuto per compatibilità con codice esistente
 UPLOAD_DIR         = os.path.join(DATA_DIR, 'uploads_dipendenti')
 UPLOAD_DIR_VEICOLI = os.path.join(DATA_DIR, 'uploads_veicoli')
 UPLOAD_DIR_EVENTI  = os.path.join(DATA_DIR, 'uploads_eventi')
+UPLOAD_DIR_DOCS    = os.path.join(DATA_DIR, 'uploads_documenti')
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(UPLOAD_DIR_VEICOLI, exist_ok=True)
 os.makedirs(UPLOAD_DIR_EVENTI,  exist_ok=True)
+os.makedirs(UPLOAD_DIR_DOCS,    exist_ok=True)
 ALLOWED_EXT = {'pdf','png','jpg','jpeg','gif','webp','bmp'}
 app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024  # 20 MB max
 
@@ -369,7 +371,10 @@ def init_db():
             creato_da INTEGER
         )""",
         "ALTER TABLE impostazioni ADD COLUMN valore2 TEXT",
-        "INSERT OR IGNORE INTO impostazioni (chiave,valore) VALUES ('sede_legale','')",
+        "ALTER TABLE documenti ADD COLUMN file_nome TEXT",
+        "ALTER TABLE documenti ADD COLUMN file_nome_originale TEXT",
+        "ALTER TABLE documenti ADD COLUMN file_dimensione INTEGER",
+        "INSERT OR IGNORE INTO impostazioni (chiave,valore) VALUES ('sede_legale',''')",
         "INSERT OR IGNORE INTO impostazioni (chiave,valore) VALUES ('partita_iva','')",
         "INSERT OR IGNORE INTO impostazioni (chiave,valore) VALUES ('codice_inail','')",
         "INSERT OR IGNORE INTO impostazioni (chiave,valore) VALUES ('codice_inps','')",
@@ -4677,6 +4682,10 @@ DOC_TMPL = """
           <a href="/dipendenti/{{ d.assegnato_a }}/documenti/{{ d.id }}/elimina" class="btn btn-danger btn-sm" onclick="return confirm('Eliminare?')" title="Elimina"><i class="fa fa-trash"></i></a>
         {% else %}
           <a href="/documenti/{{ d.id }}/modifica" class="btn btn-secondary btn-sm"><i class="fa fa-pen"></i></a>
+          {% if d.sorgente == 'documenti' and d.nome_file %}
+          <a href="/documenti/{{ d.id }}/anteprima" class="btn btn-secondary btn-sm" target="_blank" title="Visualizza"><i class="fa fa-eye"></i></a>
+          <a href="/documenti/{{ d.id }}/scarica" class="btn btn-secondary btn-sm" title="Scarica"><i class="fa fa-download"></i></a>
+          {% endif %}
           <a href="/documenti/{{ d.id }}/elimina" class="btn btn-danger btn-sm" onclick="return confirm('Eliminare?')"><i class="fa fa-trash"></i></a>
         {% endif %}
       </td>{% endif %}
@@ -4711,24 +4720,70 @@ function scaricaSelezionati() {
 """
 
 DOC_FORM_TMPL = """
-<div class="card" style="max-width:600px;margin:0 auto">
-  <div class="card-header"><h3>{{ 'Modifica' if doc else 'Nuovo' }} Documento</h3></div>
-  <div class="card-body"><form method="POST">
-    <div class="form-group"><label>Titolo *</label><input name="titolo" value="{{ doc.titolo if doc else '' }}" required></div>
-    <div class="form-group"><label>Descrizione</label><textarea name="descrizione">{{ doc.descrizione if doc else '' }}</textarea></div>
+<div class="card" style="max-width:640px;margin:0 auto">
+  <div class="card-header">
+    <h3><i class="fa fa-file-alt" style="color:var(--accent)"></i> {{ 'Modifica' if doc else 'Nuovo' }} Documento</h3>
+  </div>
+  <div class="card-body">
+  <form method="POST" enctype="multipart/form-data">
+    <div class="form-group">
+      <label>Titolo *</label>
+      <input name="titolo" value="{{ doc.titolo if doc else '' }}" required placeholder="es. Contratto CCNL 2025">
+    </div>
+    <div class="form-group">
+      <label>Descrizione / Note</label>
+      <textarea name="descrizione" placeholder="Descrizione opzionale del documento...">{{ doc.descrizione if doc else '' }}</textarea>
+    </div>
     <div class="form-row">
-      <div class="form-group"><label>Categoria</label><input name="categoria" value="{{ doc.categoria if doc else '' }}" placeholder="es. Contratti"></div>
-      <div class="form-group"><label>Scadenza</label><input type="date" name="data_scadenza" value="{{ doc.data_scadenza if doc else '' }}"></div>
+      <div class="form-group">
+        <label>Categoria</label>
+        <select name="categoria">
+          <option value="">— Seleziona —</option>
+          {% set cats = ['Contratto','UNILAV','Visita medica','Corso / Attestato','Documento identità','Normativa','Sicurezza','Altro'] %}
+          {% for c in cats %}
+          <option value="{{ c }}" {{ 'selected' if doc and doc.categoria==c }}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Data scadenza</label>
+        <input type="date" name="data_scadenza" value="{{ doc.data_scadenza if doc else '' }}">
+      </div>
     </div>
-    <div class="form-group"><label>Assegnato a</label>
-      <select name="assegnato_a"><option value="">Tutti</option>
-      {% for u in utenti %}<option value="{{ u.id }}" {{ 'selected' if doc and doc.assegnato_a==u.id }}>{{ u.nome }} {{ u.cognome }}</option>{% endfor %}
-      </select></div>
-    <div style="display:flex;gap:10px;justify-content:flex-end">
+    <div class="form-group">
+      <label>Assegnato a</label>
+      <select name="assegnato_a">
+        <option value="">— Aziendale (tutti) —</option>
+        {% for u in utenti %}
+        <option value="{{ u.id }}" {{ 'selected' if doc and doc.assegnato_a==u.id }}>{{ u.nome }} {{ u.cognome }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Allega file (PDF, immagine)</label>
+      {% if doc and doc.file_nome %}
+      <div style="background:#f0fdf4;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid #bbf7d0">
+        <div style="display:flex;align-items:center;gap:8px">
+          <i class="fa fa-file-pdf" style="color:#16a34a;font-size:16px"></i>
+          <span style="font-weight:600">{{ doc.file_nome_originale or doc.file_nome }}</span>
+          {% if doc.file_dimensione %}<span style="color:#64748b;font-size:11px">({{ (doc.file_dimensione/1024)|int }} KB)</span>{% endif %}
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <a href="/documenti/{{ doc.id }}/scarica" class="btn btn-secondary btn-sm" target="_blank"><i class="fa fa-download"></i> Scarica</a>
+          <a href="/documenti/{{ doc.id }}/rimuovi-file" class="btn btn-danger btn-sm" onclick="return confirm('Rimuovere il file allegato?')"><i class="fa fa-trash"></i></a>
+        </div>
+      </div>
+      <p style="font-size:12px;color:#64748b;margin-bottom:6px">Carica un nuovo file per sostituire quello attuale.</p>
+      {% endif %}
+      <input type="file" name="file_doc" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.bmp,.doc,.docx,.xls,.xlsx" style="padding:8px;border:1.5px dashed var(--border);border-radius:8px;background:#f8fafc;cursor:pointer">
+      <div style="font-size:11px;color:var(--text-light);margin-top:5px"><i class="fa fa-info-circle"></i> Max 20 MB — PDF, immagini, Word, Excel</div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
       <a href="/documenti" class="btn btn-secondary">Annulla</a>
-      <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Salva</button>
+      <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Salva documento</button>
     </div>
-  </form></div>
+  </form>
+  </div>
 </div>"""
 
 @app.route('/documenti')
@@ -4800,26 +4855,97 @@ def documenti():
 @admin_required
 def documento_nuovo():
     if request.method=='POST':
-        db=get_db(); a=request.form.get('assegnato_a') or None
-        db.execute("INSERT INTO documenti (titolo,descrizione,categoria,data_scadenza,creato_da,assegnato_a) VALUES (?,?,?,?,?,?)",
-            (request.form['titolo'],request.form.get('descrizione'),request.form.get('categoria'),
-             request.form.get('data_scadenza') or None,session['user_id'],int(a) if a else None))
-        safe_commit(db);db.close();flash('Documento aggiunto!','success');return redirect(url_for('documenti'))
-    db=get_db();utenti=db.execute("SELECT id,nome,cognome FROM utenti WHERE attivo=1").fetchall();db.close()
-    return render_page(DOC_FORM_TMPL,page_title='Nuovo Documento',active='documenti',doc=None,utenti=utenti)
+        db=get_db()
+        a = request.form.get('assegnato_a') or None
+        file_nome = None; file_nome_orig = None; file_dim = None
+        f = request.files.get('file_doc')
+        if f and f.filename:
+            import uuid as _uuid
+            file_nome_orig = secure_filename(f.filename)
+            file_nome = f"{_uuid.uuid4().hex}_{file_nome_orig}"
+            f.save(os.path.join(UPLOAD_DIR_DOCS, file_nome))
+            file_dim = os.path.getsize(os.path.join(UPLOAD_DIR_DOCS, file_nome))
+        db.execute("INSERT INTO documenti (titolo,descrizione,categoria,data_scadenza,creato_da,assegnato_a,file_nome,file_nome_originale,file_dimensione) VALUES (?,?,?,?,?,?,?,?,?)",
+            (request.form['titolo'], request.form.get('descrizione'), request.form.get('categoria'),
+             request.form.get('data_scadenza') or None, session['user_id'],
+             int(a) if a else None, file_nome, file_nome_orig, file_dim))
+        safe_commit(db); db.close()
+        flash('Documento aggiunto!', 'success')
+        return redirect(url_for('documenti'))
+    db=get_db(); utenti=db.execute("SELECT id,nome,cognome FROM utenti WHERE attivo=1").fetchall(); db.close()
+    return render_page(DOC_FORM_TMPL, page_title='Nuovo Documento', active='documenti', doc=None, utenti=utenti)
 
 @app.route('/documenti/<int:did>/modifica',methods=['GET','POST'])
 @admin_required
 def documento_modifica(did):
-    db=get_db();doc=db.execute("SELECT * FROM documenti WHERE id=?",(did,)).fetchone()
+    db=get_db()
+    doc=db.execute("SELECT * FROM documenti WHERE id=?",(did,)).fetchone()
     if request.method=='POST':
-        a=request.form.get('assegnato_a') or None
-        db.execute("UPDATE documenti SET titolo=?,descrizione=?,categoria=?,data_scadenza=?,assegnato_a=? WHERE id=?",
-            (request.form['titolo'],request.form.get('descrizione'),request.form.get('categoria'),
-             request.form.get('data_scadenza') or None,int(a) if a else None,did))
-        safe_commit(db);db.close();flash('Aggiornato.','success');return redirect(url_for('documenti'))
-    utenti=db.execute("SELECT id,nome,cognome FROM utenti WHERE attivo=1").fetchall();db.close()
-    return render_page(DOC_FORM_TMPL,page_title='Modifica Documento',active='documenti',doc=doc,utenti=utenti)
+        a = request.form.get('assegnato_a') or None
+        file_nome = doc['file_nome'] if doc['file_nome'] else None
+        file_nome_orig = doc['file_nome_originale'] if doc['file_nome_originale'] else None
+        file_dim = doc['file_dimensione'] if doc['file_dimensione'] else None
+        f = request.files.get('file_doc')
+        if f and f.filename:
+            # Rimuovi vecchio file se presente
+            if file_nome:
+                try: os.remove(os.path.join(UPLOAD_DIR_DOCS, file_nome))
+                except: pass
+            import uuid as _uuid
+            file_nome_orig = secure_filename(f.filename)
+            file_nome = f"{_uuid.uuid4().hex}_{file_nome_orig}"
+            f.save(os.path.join(UPLOAD_DIR_DOCS, file_nome))
+            file_dim = os.path.getsize(os.path.join(UPLOAD_DIR_DOCS, file_nome))
+        db.execute("UPDATE documenti SET titolo=?,descrizione=?,categoria=?,data_scadenza=?,assegnato_a=?,file_nome=?,file_nome_originale=?,file_dimensione=? WHERE id=?",
+            (request.form['titolo'], request.form.get('descrizione'), request.form.get('categoria'),
+             request.form.get('data_scadenza') or None, int(a) if a else None,
+             file_nome, file_nome_orig, file_dim, did))
+        safe_commit(db); db.close()
+        flash('Documento aggiornato.', 'success')
+        return redirect(url_for('documenti'))
+    utenti=db.execute("SELECT id,nome,cognome FROM utenti WHERE attivo=1").fetchall(); db.close()
+    return render_page(DOC_FORM_TMPL, page_title='Modifica Documento', active='documenti', doc=doc, utenti=utenti)
+
+@app.route('/documenti/<int:did>/scarica')
+@login_required
+def documento_scarica(did):
+    db=get_db()
+    doc=db.execute("SELECT * FROM documenti WHERE id=?",(did,)).fetchone()
+    db.close()
+    if not doc or not doc['file_nome']:
+        flash('File non disponibile.','error'); return redirect(url_for('documenti'))
+    path = os.path.join(UPLOAD_DIR_DOCS, doc['file_nome'])
+    if not os.path.exists(path):
+        flash('File non trovato sul server.','error'); return redirect(url_for('documenti'))
+    return send_file(path, as_attachment=True, download_name=doc['file_nome_originale'] or doc['file_nome'])
+
+@app.route('/documenti/<int:did>/anteprima')
+@login_required
+def documento_anteprima(did):
+    db=get_db()
+    doc=db.execute("SELECT * FROM documenti WHERE id=?",(did,)).fetchone()
+    db.close()
+    if not doc or not doc['file_nome']:
+        flash('File non disponibile.','error'); return redirect(url_for('documenti'))
+    path = os.path.join(UPLOAD_DIR_DOCS, doc['file_nome'])
+    if not os.path.exists(path):
+        flash('File non trovato sul server.','error'); return redirect(url_for('documenti'))
+    mime,_ = mimetypes.guess_type(path)
+    return send_file(path, mimetype=mime or 'application/octet-stream')
+
+@app.route('/documenti/<int:did>/rimuovi-file')
+@admin_required
+def documento_rimuovi_file(did):
+    db=get_db()
+    doc=db.execute("SELECT * FROM documenti WHERE id=?",(did,)).fetchone()
+    if doc and doc['file_nome']:
+        try: os.remove(os.path.join(UPLOAD_DIR_DOCS, doc['file_nome']))
+        except: pass
+        db.execute("UPDATE documenti SET file_nome=NULL,file_nome_originale=NULL,file_dimensione=NULL WHERE id=?",(did,))
+        safe_commit(db)
+    db.close()
+    flash('File rimosso.','success')
+    return redirect(url_for('documento_modifica', did=did))
 
 @app.route('/documenti/<int:did>/elimina')
 @admin_required
