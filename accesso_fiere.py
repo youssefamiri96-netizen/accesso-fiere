@@ -60,6 +60,52 @@ else:
 
 os.makedirs(DATA_DIR, exist_ok=True)
 
+# Migrazione automatica: se DATA_DIR è /data (volume Railway) ma i DB sono ancora in BASE_DIR,
+# copia i file dal vecchio path. Succede la prima volta che monti il volume persistente.
+if DATA_DIR != BASE_DIR:
+    import shutil as _sh
+    _migrated = []
+    # Master DB
+    _legacy_master = os.path.join(BASE_DIR, 'accesso_fiere_master.db')
+    _data_master = os.path.join(DATA_DIR, 'accesso_fiere_master.db')
+    if os.path.isfile(_legacy_master) and not os.path.isfile(_data_master):
+        try:
+            _sh.copy2(_legacy_master, _data_master)
+            _migrated.append('master DB')
+        except Exception as _e:
+            print(f"[ACCESSO FIERE] Errore migrazione master: {_e}", flush=True)
+    # DB legacy (primo tenant)
+    _legacy_db = os.path.join(BASE_DIR, 'accesso_fiere.db')
+    _data_db = os.path.join(DATA_DIR, 'accesso_fiere.db')
+    if os.path.isfile(_legacy_db) and not os.path.isfile(_data_db):
+        try:
+            _sh.copy2(_legacy_db, _data_db)
+            _migrated.append('DB legacy')
+        except Exception as _e:
+            print(f"[ACCESSO FIERE] Errore migrazione legacy: {_e}", flush=True)
+    # Cartella tenants
+    _legacy_tenants = os.path.join(BASE_DIR, 'tenants')
+    _data_tenants = os.path.join(DATA_DIR, 'tenants')
+    if os.path.isdir(_legacy_tenants) and not os.path.isdir(_data_tenants):
+        try:
+            _sh.copytree(_legacy_tenants, _data_tenants)
+            _migrated.append(f'cartella tenants ({len(os.listdir(_legacy_tenants))} file)')
+        except Exception as _e:
+            print(f"[ACCESSO FIERE] Errore migrazione tenants: {_e}", flush=True)
+    # Cartelle upload
+    for _up in ('uploads_dipendenti','uploads_documenti','uploads_eventi','uploads_veicoli',
+                'uploads_fatture','uploads_docs_azienda','uploads_spese','uploads_contratti'):
+        _src = os.path.join(BASE_DIR, _up)
+        _dst = os.path.join(DATA_DIR, _up)
+        if os.path.isdir(_src) and not os.path.isdir(_dst):
+            try:
+                _sh.copytree(_src, _dst)
+                _migrated.append(f'{_up}')
+            except Exception:
+                pass
+    if _migrated:
+        print(f"[ACCESSO FIERE] ✅ MIGRAZIONE completata da {BASE_DIR} a {DATA_DIR}: {', '.join(_migrated)}", flush=True)
+
 # LOG di diagnostica all'avvio — visibile nei log Railway
 print(f"[ACCESSO FIERE] DATA_DIR = {DATA_DIR}", flush=True)
 print(f"[ACCESSO FIERE] /data exists: {os.path.isdir('/data')}", flush=True)
@@ -1465,7 +1511,13 @@ def diag():
     out.append("<h3>Aziende registrate nel master DB</h3>")
     try:
         mdb = get_master_db()
-        aziende = mdb.execute("SELECT id, nome, email_admin, stato, data_creazione FROM aziende ORDER BY id").fetchall()
+        # Rileva le colonne esistenti per essere resiliente a schema diversi
+        cols_info = mdb.execute("PRAGMA table_info(aziende)").fetchall()
+        cols = [c[1] for c in cols_info]
+        select_cols = ['id', 'nome', 'email_admin', 'stato']
+        if 'data_creazione' in cols: select_cols.append('data_creazione')
+        elif 'created_at' in cols:   select_cols.append('created_at')
+        aziende = mdb.execute(f"SELECT {','.join(select_cols)} FROM aziende ORDER BY id").fetchall()
         mdb.close()
         if aziende:
             out.append("<table border='1' cellpadding='6' style='border-collapse:collapse'>")
@@ -1474,10 +1526,11 @@ def diag():
                 a = dict(a)
                 tenant_path = get_tenant_db_path(a['id'])
                 exists = os.path.isfile(tenant_path)
-                out.append(f"<tr><td>{a['id']}</td><td>{_html.escape(a['nome'] or '')}</td>"
-                           f"<td>{_html.escape(a['email_admin'] or '')}</td>"
-                           f"<td>{_html.escape(a['stato'] or '')}</td>"
-                           f"<td>{_html.escape(a.get('data_creazione','') or '')}</td>"
+                creata = a.get('data_creazione') or a.get('created_at') or ''
+                out.append(f"<tr><td>{a['id']}</td><td>{_html.escape(a.get('nome','') or '')}</td>"
+                           f"<td>{_html.escape(a.get('email_admin','') or '')}</td>"
+                           f"<td>{_html.escape(a.get('stato','') or '')}</td>"
+                           f"<td>{_html.escape(str(creata))}</td>"
                            f"<td>{'SI' if exists else 'NO'}</td></tr>")
             out.append("</table>")
         else:
