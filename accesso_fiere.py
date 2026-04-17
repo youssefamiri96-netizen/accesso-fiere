@@ -50,10 +50,29 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'accesso-fiere-secret-2025-changeme')
 BASE_DIR    = os.path.dirname(os.path.abspath(__file__))
 # Su Railway usa /data (volume persistente), in locale usa la cartella del file
-if os.path.isdir('/data'):
+# IMPORTANTE: se esiste la variabile env DATA_DIR, usa quella (più affidabile del check fs)
+if os.environ.get('DATA_DIR'):
+    DATA_DIR = os.environ['DATA_DIR']
+elif os.path.isdir('/data') and os.access('/data', os.W_OK):
     DATA_DIR = '/data'
 else:
     DATA_DIR = BASE_DIR
+
+os.makedirs(DATA_DIR, exist_ok=True)
+
+# LOG di diagnostica all'avvio — visibile nei log Railway
+print(f"[ACCESSO FIERE] DATA_DIR = {DATA_DIR}", flush=True)
+print(f"[ACCESSO FIERE] /data exists: {os.path.isdir('/data')}", flush=True)
+print(f"[ACCESSO FIERE] /data writable: {os.access('/data', os.W_OK) if os.path.isdir('/data') else 'N/A'}", flush=True)
+try:
+    tenants_dir = os.path.join(DATA_DIR, 'tenants')
+    if os.path.isdir(tenants_dir):
+        tenants_list = os.listdir(tenants_dir)
+        print(f"[ACCESSO FIERE] Tenant DBs trovati: {len(tenants_list)} → {tenants_list}", flush=True)
+    else:
+        print(f"[ACCESSO FIERE] Cartella tenants non esiste ancora", flush=True)
+except Exception as _e:
+    print(f"[ACCESSO FIERE] Errore lettura tenants: {_e}", flush=True)
 
 # ── MASTER DB (SaaS) ─────────────────────────────────────────
 # Contiene aziende, abbonamenti, piani — separato dai DB tenant
@@ -1421,6 +1440,84 @@ def login():
 
 @app.route('/logout')
 def logout(): session.clear(); return redirect(url_for('login'))
+
+@app.route('/diag')
+def diag():
+    """Endpoint di diagnostica: mostra dove stanno i dati e quali aziende esistono.
+    Accesso: serve essere loggati come admin, oppure passare ?key=<SECRET_KEY>."""
+    import html as _html
+    auth_ok = False
+    if session.get('ruolo') == 'admin':
+        auth_ok = True
+    elif request.args.get('key') == app.secret_key:
+        auth_ok = True
+    if not auth_ok:
+        return 'Accesso negato. Logga come admin o usa ?key=<SECRET_KEY>', 403
+
+    out = []
+    out.append(f"<h2>Diagnostica dati</h2>")
+    out.append(f"<p><b>DATA_DIR:</b> <code>{_html.escape(DATA_DIR)}</code></p>")
+    out.append(f"<p><b>/data esiste:</b> {os.path.isdir('/data')}</p>")
+    out.append(f"<p><b>/data scrivibile:</b> {os.access('/data', os.W_OK) if os.path.isdir('/data') else 'N/A'}</p>")
+    out.append(f"<p><b>MASTER_DB:</b> <code>{_html.escape(MASTER_DB)}</code> — esiste: {os.path.isfile(MASTER_DB)}</p>")
+
+    # Lista aziende nel master
+    out.append("<h3>Aziende registrate nel master DB</h3>")
+    try:
+        mdb = get_master_db()
+        aziende = mdb.execute("SELECT id, nome, email_admin, stato, data_creazione FROM aziende ORDER BY id").fetchall()
+        mdb.close()
+        if aziende:
+            out.append("<table border='1' cellpadding='6' style='border-collapse:collapse'>")
+            out.append("<tr><th>ID</th><th>Nome</th><th>Email admin</th><th>Stato</th><th>Creata</th><th>DB tenant esiste?</th></tr>")
+            for a in aziende:
+                a = dict(a)
+                tenant_path = get_tenant_db_path(a['id'])
+                exists = os.path.isfile(tenant_path)
+                out.append(f"<tr><td>{a['id']}</td><td>{_html.escape(a['nome'] or '')}</td>"
+                           f"<td>{_html.escape(a['email_admin'] or '')}</td>"
+                           f"<td>{_html.escape(a['stato'] or '')}</td>"
+                           f"<td>{_html.escape(a.get('data_creazione','') or '')}</td>"
+                           f"<td>{'SI' if exists else 'NO'}</td></tr>")
+            out.append("</table>")
+        else:
+            out.append("<p><b>Nessuna azienda nel master DB</b></p>")
+    except Exception as e:
+        out.append(f"<p>Errore: {_html.escape(str(e))}</p>")
+
+    # Lista file nella cartella tenants
+    out.append("<h3>File nella cartella tenants</h3>")
+    tenants_dir = os.path.join(DATA_DIR, 'tenants')
+    if os.path.isdir(tenants_dir):
+        files = os.listdir(tenants_dir)
+        if files:
+            out.append("<ul>")
+            for f in sorted(files):
+                fp = os.path.join(tenants_dir, f)
+                sz = os.path.getsize(fp) if os.path.isfile(fp) else 0
+                out.append(f"<li><code>{_html.escape(f)}</code> — {sz} byte</li>")
+            out.append("</ul>")
+        else:
+            out.append("<p>Cartella tenants vuota</p>")
+    else:
+        out.append("<p>Cartella tenants non esiste</p>")
+
+    # File nella root di DATA_DIR
+    out.append("<h3>File in DATA_DIR</h3>")
+    out.append("<ul>")
+    try:
+        for f in sorted(os.listdir(DATA_DIR)):
+            fp = os.path.join(DATA_DIR, f)
+            if os.path.isfile(fp):
+                sz = os.path.getsize(fp)
+                out.append(f"<li><code>{_html.escape(f)}</code> — {sz} byte (file)</li>")
+            else:
+                out.append(f"<li><code>{_html.escape(f)}</code>/ (cartella)</li>")
+    except Exception as e:
+        out.append(f"<li>Errore: {_html.escape(str(e))}</li>")
+    out.append("</ul>")
+
+    return '<html><body style="font-family:system-ui;max-width:900px;margin:20px auto;padding:20px">' + '\n'.join(out) + '</body></html>'
 
 
 # ══════════════════════════════════════════════════════════
