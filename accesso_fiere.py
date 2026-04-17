@@ -1347,18 +1347,72 @@ def login():
             session['user_id'] = admin_tenant['id']
             return redirect(url_for('dashboard'))
 
-        # Login normale nel DB tenant corrente (o legacy)
-        db = get_db()
-        u = db.execute("SELECT * FROM utenti WHERE email=? AND password=? AND attivo=1",(email,pw)).fetchone()
-        db.close()
-        if u:
-            session.update({'user_id':u['id'],'nome':u['nome'],'cognome':u['cognome'],'ruolo':u['ruolo'],'email':u['email']})
+        # Login dipendente: cerca in TUTTI i tenant DB per trovare a quale azienda appartiene
+        mdb = get_master_db()
+        aziende_attive = mdb.execute(
+            "SELECT id, nome FROM aziende WHERE stato != 'sospeso'"
+        ).fetchall()
+        mdb.close()
+
+        utente_trovato = None
+        azienda_trovata = None
+
+        for az_row in aziende_attive:
+            az_dict = dict(az_row)
+            db_path = get_tenant_db_path(az_dict['id'])
+            if not os.path.exists(db_path):
+                continue
+            try:
+                conn = sqlite3.connect(db_path)
+                conn.row_factory = sqlite3.Row
+                u = conn.execute(
+                    "SELECT * FROM utenti WHERE email=? AND password=? AND attivo=1",
+                    (email, pw)
+                ).fetchone()
+                conn.close()
+                if u:
+                    utente_trovato = dict(u)
+                    azienda_trovata = az_dict
+                    break
+            except Exception:
+                # Tabella utenti potrebbe non esistere ancora su DB appena creato
+                continue
+
+        # Fallback: prova anche il DB legacy (per compatibilità con installazioni vecchie)
+        if not utente_trovato:
+            try:
+                conn = sqlite3.connect(DB_LEGACY)
+                conn.row_factory = sqlite3.Row
+                u = conn.execute(
+                    "SELECT * FROM utenti WHERE email=? AND password=? AND attivo=1",
+                    (email, pw)
+                ).fetchone()
+                conn.close()
+                if u:
+                    utente_trovato = dict(u)
+            except Exception:
+                pass
+
+        if utente_trovato:
+            session.update({
+                'user_id': utente_trovato['id'],
+                'nome': utente_trovato['nome'],
+                'cognome': utente_trovato['cognome'],
+                'ruolo': utente_trovato['ruolo'],
+                'email': utente_trovato['email'],
+            })
+            # Imposta l'azienda di appartenenza (se il login è stato trovato in un tenant)
+            if azienda_trovata:
+                session['azienda_id'] = azienda_trovata['id']
+                session['azienda_nome'] = azienda_trovata['nome']
+                session['is_saas'] = True
             # Assicura sempre che il DB sia aggiornato con tutte le tabelle
             try:
                 init_db()
                 ensure_columns()
-            except Exception: pass
-            if u['ruolo'] == 'admin':
+            except Exception:
+                pass
+            if utente_trovato['ruolo'] == 'admin':
                 return redirect(url_for('dashboard'))
             else:
                 return redirect(url_for('mobile'))
