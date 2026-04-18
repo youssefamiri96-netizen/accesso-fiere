@@ -1358,6 +1358,10 @@ textarea{resize:vertical;min-height:80px}
       <i class="fa fa-bell"></i> Richieste
       {% if notifiche_count > 0 %}<span class="notif-badge">{{ notifiche_count }}</span>{% endif %}
     </a>
+    <a href="/admin/spese" class="{{ 'active' if active=='spese' }}">
+      <i class="fa fa-receipt"></i> Rimborsi Spese
+      {% if spese_attesa > 0 %}<span class="notif-badge">{{ spese_attesa }}</span>{% endif %}
+    </a>
     <a href="/admin/impostazioni" class="{{ 'active' if active=='impostazioni' }}"><i class="fa fa-gear"></i> Impostazioni</a>
     {% endif %}
   </nav>
@@ -11693,6 +11697,359 @@ def get_spese_upload_path():
     p = os.path.join(DATA_DIR, 'uploads_spese')
     os.makedirs(p, exist_ok=True)
     return p
+
+
+# ══════════════════════════════════════════════════════════
+#  ADMIN — GESTIONE SPESE / RIMBORSI
+# ══════════════════════════════════════════════════════════
+
+SPESE_ADMIN_TMPL = """
+<style>
+.sp-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:20px}
+.sp-stat{background:#fff;border-radius:12px;padding:16px;border:1px solid var(--border);text-align:center}
+.sp-stat .val{font-size:24px;font-weight:800;margin-bottom:4px}
+.sp-stat .lbl{font-size:11px;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+.sp-stat.amber .val{color:#d97706}
+.sp-stat.verde .val{color:#16a34a}
+.sp-stat.rosso .val{color:#dc2626}
+.sp-stat.blu .val{color:#2563eb}
+.badge-sp{padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700;white-space:nowrap}
+.bsp-att{background:#fef3c7;color:#92400e}
+.bsp-app{background:#dcfce7;color:#15803d}
+.bsp-rif{background:#fee2e2;color:#991b1b}
+.sp-tabs{display:flex;gap:8px;margin-bottom:18px;border-bottom:2px solid var(--border);flex-wrap:wrap}
+.sp-tab{padding:10px 16px;text-decoration:none;font-weight:700;font-size:13px;border-bottom:3px solid transparent;color:#64748b;margin-bottom:-2px;white-space:nowrap}
+.sp-tab.att{border-bottom-color:#d97706;color:#d97706}
+.sp-tab.app{border-bottom-color:#16a34a;color:#16a34a}
+.sp-tab.rif{border-bottom-color:#dc2626;color:#dc2626}
+.sp-tab.all{border-bottom-color:#2563eb;color:#2563eb}
+.foto-prev{width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer;transition:.2s}
+.foto-prev:hover{transform:scale(1.05)}
+</style>
+
+<!-- Statistiche -->
+<div class="sp-stats">
+  <div class="sp-stat amber">
+    <div class="val">{{ n_attesa }}</div>
+    <div class="lbl">⏳ In attesa</div>
+  </div>
+  <div class="sp-stat verde">
+    <div class="val">€ {{ "%.0f"|format(tot_approvate) }}</div>
+    <div class="lbl">✓ Approvate {{ "(" + mese_corrente + ")" if mese_corrente }}</div>
+  </div>
+  <div class="sp-stat rosso">
+    <div class="val">{{ n_rifiutate }}</div>
+    <div class="lbl">✗ Rifiutate</div>
+  </div>
+  <div class="sp-stat blu">
+    <div class="val">€ {{ "%.0f"|format(tot_attesa) }}</div>
+    <div class="lbl">Importo da valutare</div>
+  </div>
+</div>
+
+<!-- Tabs stato -->
+<div class="sp-tabs">
+  <a href="/admin/spese?stato=in_attesa{% if filtro_uid %}&uid={{ filtro_uid }}{% endif %}"
+     class="sp-tab {% if filtro_stato=='in_attesa' %}att{% endif %}">
+     <i class="fa fa-hourglass-half"></i> In attesa {% if n_attesa > 0 %}({{ n_attesa }}){% endif %}</a>
+  <a href="/admin/spese?stato=approvata{% if filtro_uid %}&uid={{ filtro_uid }}{% endif %}"
+     class="sp-tab {% if filtro_stato=='approvata' %}app{% endif %}">
+     <i class="fa fa-check"></i> Approvate</a>
+  <a href="/admin/spese?stato=rifiutata{% if filtro_uid %}&uid={{ filtro_uid }}{% endif %}"
+     class="sp-tab {% if filtro_stato=='rifiutata' %}rif{% endif %}">
+     <i class="fa fa-xmark"></i> Rifiutate</a>
+  <a href="/admin/spese?stato=tutti{% if filtro_uid %}&uid={{ filtro_uid }}{% endif %}"
+     class="sp-tab {% if filtro_stato=='tutti' %}all{% endif %}">
+     <i class="fa fa-list"></i> Tutte</a>
+</div>
+
+<!-- Filtri dipendente -->
+<form method="GET" style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:end">
+  <input type="hidden" name="stato" value="{{ filtro_stato }}">
+  <div class="form-group" style="margin:0;min-width:220px">
+    <label style="font-size:11px">Dipendente</label>
+    <select name="uid" onchange="this.form.submit()">
+      <option value="">— Tutti —</option>
+      {% for u in tutti_dipendenti %}
+      <option value="{{ u.id }}" {{ 'selected' if filtro_uid == u.id|string }}>{{ u.nome }} {{ u.cognome }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="form-group" style="margin:0">
+    <label style="font-size:11px">Dal</label>
+    <input type="date" name="da" value="{{ filtro_da or '' }}">
+  </div>
+  <div class="form-group" style="margin:0">
+    <label style="font-size:11px">Al</label>
+    <input type="date" name="a" value="{{ filtro_a or '' }}">
+  </div>
+  <button type="submit" class="btn btn-secondary btn-sm"><i class="fa fa-filter"></i> Filtra</button>
+  {% if filtro_uid or filtro_da or filtro_a %}
+  <a href="/admin/spese?stato={{ filtro_stato }}" class="btn btn-secondary btn-sm"><i class="fa fa-xmark"></i> Reset</a>
+  {% endif %}
+</form>
+
+{% if not spese %}
+<div class="card">
+  <div class="card-body" style="text-align:center;padding:50px;color:var(--text-light)">
+    <i class="fa fa-receipt" style="font-size:46px;opacity:.3"></i>
+    <p style="margin-top:14px;font-size:14px">Nessuna spesa {% if filtro_stato=='in_attesa' %}in attesa di valutazione{% elif filtro_stato=='approvata' %}approvata{% elif filtro_stato=='rifiutata' %}rifiutata{% else %}trovata{% endif %}.</p>
+  </div>
+</div>
+{% else %}
+
+<div class="card" style="padding:0;overflow:hidden">
+<table class="tbl" style="margin:0">
+<thead><tr style="background:#0f172a;color:#fff">
+  <th style="padding:10px 12px;font-size:11px;text-align:left">FOTO</th>
+  <th style="padding:10px 12px;font-size:11px;text-align:left">DATA</th>
+  <th style="padding:10px 12px;font-size:11px;text-align:left">DIPENDENTE</th>
+  <th style="padding:10px 12px;font-size:11px;text-align:left">CATEGORIA</th>
+  <th style="padding:10px 12px;font-size:11px;text-align:left">DESCRIZIONE</th>
+  <th style="padding:10px 12px;font-size:11px;text-align:left">VEICOLO</th>
+  <th style="padding:10px 12px;font-size:11px;text-align:right">IMPORTO</th>
+  <th style="padding:10px 12px;font-size:11px;text-align:center">STATO</th>
+  <th style="padding:10px 12px"></th>
+</tr></thead>
+<tbody>
+{% for s in spese %}
+<tr style="border-bottom:1px solid var(--border)">
+  <td style="padding:10px 12px">
+    {% if s.foto_nome %}
+    <a href="/admin/spese/foto/{{ s.foto_nome }}" target="_blank" title="Apri scontrino">
+      <img src="/admin/spese/foto/{{ s.foto_nome }}" class="foto-prev" alt="scontrino">
+    </a>
+    {% else %}<span style="color:var(--text-light)">—</span>{% endif %}
+  </td>
+  <td style="padding:10px 12px;font-family:monospace;font-size:12px">{{ s.data }}</td>
+  <td style="padding:10px 12px">
+    <strong>{{ s.nome }} {{ s.cognome }}</strong>
+  </td>
+  <td style="padding:10px 12px">
+    <span style="background:#eef2ff;color:#3730a3;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700">{{ s.categoria }}</span>
+  </td>
+  <td style="padding:10px 12px;font-size:13px;max-width:280px">
+    {{ s.descrizione or '—' }}
+    {% if s.note_admin %}
+    <div style="font-size:11px;color:var(--text-light);margin-top:4px;font-style:italic"><i class="fa fa-note-sticky"></i> Nota admin: {{ s.note_admin }}</div>
+    {% endif %}
+  </td>
+  <td style="padding:10px 12px;font-size:12px">{{ s.veicolo_targa or '—' }}</td>
+  <td style="padding:10px 12px;text-align:right;font-weight:800;color:#059669;font-size:15px">€ {{ "%.2f"|format(s.importo) }}</td>
+  <td style="padding:10px 12px;text-align:center">
+    {% if s.stato == 'in_attesa' %}<span class="badge-sp bsp-att">⏳ In attesa</span>
+    {% elif s.stato == 'approvata' %}<span class="badge-sp bsp-app">✓ Approvata</span>
+    {% elif s.stato == 'rifiutata' %}<span class="badge-sp bsp-rif">✗ Rifiutata</span>
+    {% endif %}
+  </td>
+  <td style="padding:10px 12px;text-align:right;white-space:nowrap">
+    {% if s.stato == 'in_attesa' %}
+    <button onclick="apriGestione({{ s.id }}, 'approva', '{{ (s.nome + ' ' + s.cognome)|e }}', {{ s.importo }})"
+            class="btn btn-sm" style="background:#16a34a;color:#fff;border:none;padding:5px 10px">
+      <i class="fa fa-check"></i> Approva
+    </button>
+    <button onclick="apriGestione({{ s.id }}, 'rifiuta', '{{ (s.nome + ' ' + s.cognome)|e }}', {{ s.importo }})"
+            class="btn btn-sm" style="background:#dc2626;color:#fff;border:none;padding:5px 10px">
+      <i class="fa fa-xmark"></i> Rifiuta
+    </button>
+    {% endif %}
+    <a href="/admin/spese/{{ s.id }}/elimina"
+       onclick="return confirm('Eliminare questa spesa (€ {{ \"%.2f\"|format(s.importo) }})?')"
+       class="btn btn-sm btn-danger" title="Elimina"><i class="fa fa-trash"></i></a>
+  </td>
+</tr>
+{% endfor %}
+<tr style="background:#f8fafc;font-weight:700">
+  <td colspan="6" style="padding:12px;text-align:right;font-size:13px">TOTALE {{ filtro_stato|upper }}</td>
+  <td style="padding:12px;text-align:right;font-size:15px;color:#059669">€ {{ "%.2f"|format(spese|sum(attribute='importo')) }}</td>
+  <td colspan="2"></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+{% endif %}
+
+<!-- Modal gestione spesa -->
+<div id="modal-gest" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:1000;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:12px;max-width:480px;width:100%;padding:24px">
+    <h3 id="modal-titolo" style="margin:0 0 14px;font-size:18px"></h3>
+    <p id="modal-info" style="font-size:13px;color:var(--text-light);margin-bottom:14px"></p>
+    <form method="POST" id="form-gest">
+      <div class="form-group">
+        <label>Nota per il dipendente <span style="font-size:11px;color:var(--text-light)">(opzionale)</span></label>
+        <textarea name="nota_admin" id="nota-gest" rows="3" placeholder="Es. Approvata dopo verifica scontrino. / Manca lo scontrino leggibile."></textarea>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px">
+        <button type="button" onclick="document.getElementById('modal-gest').style.display='none'" class="btn btn-secondary">Annulla</button>
+        <button type="submit" id="btn-conferma" class="btn btn-primary">Conferma</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function apriGestione(sid, azione, nome, importo) {
+  const modal = document.getElementById('modal-gest');
+  const form  = document.getElementById('form-gest');
+  const titolo= document.getElementById('modal-titolo');
+  const info  = document.getElementById('modal-info');
+  const btn   = document.getElementById('btn-conferma');
+  form.action = '/admin/spese/' + sid + '/gestisci?azione=' + azione;
+  if (azione === 'approva') {
+    titolo.innerHTML = '<i class="fa fa-check" style="color:#16a34a"></i> Approva rimborso';
+    info.textContent = 'Approvare la spesa di ' + nome + ' da € ' + importo.toFixed(2) + '?';
+    btn.style.background = '#16a34a';
+    btn.innerHTML = '<i class="fa fa-check"></i> Approva';
+  } else {
+    titolo.innerHTML = '<i class="fa fa-xmark" style="color:#dc2626"></i> Rifiuta rimborso';
+    info.textContent = 'Rifiutare la spesa di ' + nome + ' da € ' + importo.toFixed(2) + '? Consigliato aggiungere una nota per spiegare il motivo.';
+    btn.style.background = '#dc2626';
+    btn.innerHTML = '<i class="fa fa-xmark"></i> Rifiuta';
+  }
+  document.getElementById('nota-gest').value = '';
+  modal.style.display = 'flex';
+}
+</script>
+"""
+
+
+@app.route('/admin/spese')
+@admin_required
+def admin_spese():
+    """Pagina admin per approvare/rifiutare richieste di rimborso spese."""
+    db = get_db()
+    filtro_stato = request.args.get('stato', 'in_attesa')
+    filtro_uid   = request.args.get('uid', '') or ''
+    filtro_da    = request.args.get('da', '') or ''
+    filtro_a     = request.args.get('a', '') or ''
+
+    sql = """SELECT s.*, u.nome, u.cognome, v.targa as veicolo_targa
+             FROM spese_rimborso s JOIN utenti u ON u.id=s.utente_id
+             LEFT JOIN veicoli v ON v.id=s.veicolo_id WHERE 1=1"""
+    params = []
+    if filtro_stato and filtro_stato != 'tutti':
+        sql += " AND s.stato=?"
+        params.append(filtro_stato)
+    if filtro_uid:
+        sql += " AND s.utente_id=?"
+        params.append(int(filtro_uid))
+    if filtro_da:
+        sql += " AND s.data>=?"
+        params.append(filtro_da)
+    if filtro_a:
+        sql += " AND s.data<=?"
+        params.append(filtro_a)
+    sql += " ORDER BY CASE s.stato WHEN 'in_attesa' THEN 0 ELSE 1 END, s.data DESC, s.creato_il DESC"
+    spese = [dict(r) for r in db.execute(sql, params).fetchall()]
+
+    # Statistiche
+    mese_corr = date.today().strftime('%Y-%m')
+    n_attesa      = db.execute("SELECT COUNT(*) FROM spese_rimborso WHERE stato='in_attesa'").fetchone()[0]
+    tot_attesa    = db.execute("SELECT COALESCE(SUM(importo),0) FROM spese_rimborso WHERE stato='in_attesa'").fetchone()[0]
+    n_rifiutate   = db.execute("SELECT COUNT(*) FROM spese_rimborso WHERE stato='rifiutata'").fetchone()[0]
+    tot_approvate = db.execute(
+        "SELECT COALESCE(SUM(importo),0) FROM spese_rimborso WHERE stato='approvata' AND substr(data,1,7)=?",
+        (mese_corr,)).fetchone()[0]
+
+    tutti_dipendenti = db.execute(
+        "SELECT id, nome, cognome FROM utenti WHERE COALESCE(attivo,1)=1 ORDER BY cognome, nome"
+    ).fetchall()
+    db.close()
+
+    return render_page(SPESE_ADMIN_TMPL,
+        page_title='Rimborsi Spese', active='spese',
+        spese=spese,
+        filtro_stato=filtro_stato, filtro_uid=filtro_uid, filtro_da=filtro_da, filtro_a=filtro_a,
+        n_attesa=n_attesa, tot_attesa=tot_attesa,
+        n_rifiutate=n_rifiutate, tot_approvate=tot_approvate,
+        mese_corrente=mese_corr,
+        tutti_dipendenti=[dict(u) for u in tutti_dipendenti])
+
+
+@app.route('/admin/spese/<int:sid>/gestisci', methods=['POST'])
+@admin_required
+def admin_spesa_gestisci(sid):
+    """Approva o rifiuta una richiesta di rimborso."""
+    azione = request.args.get('azione', '') or request.form.get('azione', '')
+    if azione not in ('approva', 'rifiuta'):
+        flash('Azione non valida.', 'error')
+        return redirect(url_for('admin_spese'))
+
+    nota = request.form.get('nota_admin', '').strip()
+    nuovo_stato = 'approvata' if azione == 'approva' else 'rifiutata'
+
+    db = get_db()
+    spesa = db.execute("""SELECT s.*, u.email, u.nome as u_nome, u.cognome as u_cognome
+                          FROM spese_rimborso s LEFT JOIN utenti u ON u.id=s.utente_id
+                          WHERE s.id=?""", (sid,)).fetchone()
+    if not spesa:
+        db.close()
+        flash('Spesa non trovata.', 'error')
+        return redirect(url_for('admin_spese'))
+
+    db.execute("UPDATE spese_rimborso SET stato=?, note_admin=? WHERE id=?",
+               (nuovo_stato, nota, sid))
+    safe_commit(db); db.close()
+
+    # Notifica email al dipendente
+    if spesa['email']:
+        import threading
+        stato_txt = 'approvata ✅' if nuovo_stato == 'approvata' else 'rifiutata ❌'
+        colore = '#16a34a' if nuovo_stato == 'approvata' else '#dc2626'
+        _email = spesa['email']
+        _nome_dip = f"{spesa['u_nome']} {spesa['u_cognome']}".strip()
+        _cat  = spesa['categoria'] or ''
+        _imp  = float(spesa['importo'] or 0)
+        _data = spesa['data'] or ''
+        _desc = spesa['descrizione'] or ''
+        _nota = nota
+        def _send():
+            try:
+                send_email(_email,
+                    f'[ACCESSO FIERE] La tua richiesta di rimborso è stata {stato_txt}',
+                    f'<p>Ciao {_nome_dip},</p>'
+                    f'<p>la tua richiesta di rimborso è stata <b style="color:{colore}">{stato_txt}</b>.</p>'
+                    f'<table style="border-collapse:collapse;font-family:sans-serif;margin:14px 0">'
+                    f'<tr><td style="padding:6px 12px;color:#64748b">Data</td><td style="padding:6px 12px"><b>{_data}</b></td></tr>'
+                    f'<tr><td style="padding:6px 12px;color:#64748b">Categoria</td><td style="padding:6px 12px"><b>{_cat}</b></td></tr>'
+                    f'<tr><td style="padding:6px 12px;color:#64748b">Importo</td><td style="padding:6px 12px;font-size:18px;color:{colore}"><b>€ {_imp:.2f}</b></td></tr>'
+                    f'<tr><td style="padding:6px 12px;color:#64748b">Descrizione</td><td style="padding:6px 12px">{_desc or "–"}</td></tr>'
+                    f'</table>'
+                    + (f'<div style="background:#f8fafc;border-left:4px solid {colore};padding:12px;margin:12px 0"><b>Nota dell\'amministratore:</b><br>{_nota}</div>' if _nota else '')
+                )
+            except Exception as e:
+                print(f'[EMAIL spesa gestisci] {e}')
+        threading.Thread(target=_send, daemon=True).start()
+
+    flash(f'Spesa {nuovo_stato}' + (f' (nota: "{nota}")' if nota else '') + '.', 'success')
+    return redirect(request.referrer or url_for('admin_spese'))
+
+
+@app.route('/admin/spese/<int:sid>/elimina')
+@admin_required
+def admin_spesa_elimina(sid):
+    db = get_db()
+    spesa = db.execute("SELECT foto_nome, foto_path FROM spese_rimborso WHERE id=?", (sid,)).fetchone()
+    if spesa and spesa['foto_path']:
+        try: os.remove(spesa['foto_path'])
+        except: pass
+    db.execute("DELETE FROM spese_rimborso WHERE id=?", (sid,))
+    safe_commit(db); db.close()
+    flash('Spesa eliminata.', 'success')
+    return redirect(request.referrer or url_for('admin_spese'))
+
+
+@app.route('/admin/spese/foto/<fn>')
+@admin_required
+def admin_spesa_foto(fn):
+    """Serve la foto scontrino per l'admin."""
+    fp = os.path.join(get_spese_upload_path(), fn)
+    if not os.path.exists(fp):
+        return 'Not found', 404
+    from flask import send_file as _sf
+    return _sf(fp)
+
 
 MOBILE_SPESE_TMPL = """<!DOCTYPE html>
 <html lang="{{ lang }}" dir="{{ t.dir }}">
