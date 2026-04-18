@@ -594,10 +594,6 @@ def init_db():
             creato_il TEXT DEFAULT (datetime('now'))
         )""",
         "ALTER TABLE preventivi ADD COLUMN data_inizio_lavoro TEXT",
-        "ALTER TABLE preventivi_voci ADD COLUMN data_inizio TEXT",
-        "ALTER TABLE preventivi_voci ADD COLUMN data_fine TEXT",
-        "ALTER TABLE preventivi_voci ADD COLUMN importo_modificato REAL",
-        "ALTER TABLE preventivi_voci ADD COLUMN sconto_riga REAL DEFAULT 0",
         "ALTER TABLE preventivi ADD COLUMN data_fine_lavoro TEXT",
         "ALTER TABLE preventivi ADD COLUMN luogo_lavoro TEXT",
         "ALTER TABLE eventi ADD COLUMN preventivo_id INTEGER",
@@ -612,6 +608,10 @@ def init_db():
             ordine INTEGER DEFAULT 0,
             FOREIGN KEY(preventivo_id) REFERENCES preventivi(id)
         )""",
+        "ALTER TABLE preventivi_voci ADD COLUMN data_inizio TEXT",
+        "ALTER TABLE preventivi_voci ADD COLUMN data_fine TEXT",
+        "ALTER TABLE preventivi_voci ADD COLUMN importo_modificato REAL",
+        "ALTER TABLE preventivi_voci ADD COLUMN sconto_riga REAL DEFAULT 0",
         """CREATE TABLE IF NOT EXISTS documenti_azienda (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             titolo TEXT NOT NULL,
@@ -799,6 +799,13 @@ def ensure_columns():
                 "ALTER TABLE eventi_files ADD COLUMN dipendente_id INTEGER",
                 "ALTER TABLE eventi_dipendenti ADD COLUMN data_da TEXT",
                 "ALTER TABLE eventi_dipendenti ADD COLUMN data_a TEXT",
+                "ALTER TABLE preventivi_voci ADD COLUMN data_inizio TEXT",
+                "ALTER TABLE preventivi_voci ADD COLUMN data_fine TEXT",
+                "ALTER TABLE preventivi_voci ADD COLUMN importo_modificato REAL",
+                "ALTER TABLE preventivi_voci ADD COLUMN sconto_riga REAL DEFAULT 0",
+                "ALTER TABLE preventivi ADD COLUMN data_inizio_lavoro TEXT",
+                "ALTER TABLE preventivi ADD COLUMN data_fine_lavoro TEXT",
+                "ALTER TABLE preventivi ADD COLUMN luogo_lavoro TEXT",
             ]:
                 try: db.execute(sql)
                 except: pass
@@ -838,7 +845,9 @@ def auto_init_tenant_db():
             missing = {'utenti','cantieri','presenze','preventivi','clienti','contratti_clienti'} - tables
             if missing:
                 init_db()
-                ensure_columns()
+            # Chiama sempre ensure_columns per applicare eventuali nuove colonne
+            # ai DB già esistenti (migrazione idempotente).
+            ensure_columns()
         _tenant_initialized.add(azienda_id)
     except Exception as e:
         print(f'[auto_init_tenant_db] {e}')
