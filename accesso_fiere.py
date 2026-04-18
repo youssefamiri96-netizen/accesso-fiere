@@ -14347,7 +14347,8 @@ BANCA_ORE_TMPL = """
       La chiusura del mese precedente avviene <strong>automaticamente</strong> al primo accesso di ogni mese.
     </p>
   </div>
-  <form action="/banca-ore/chiudi-mese" method="POST" onsubmit="return confirm('Chiudere manualmente il mese {{ mese_default }} per tutti i dipendenti con contratto?')" style="display:flex;gap:8px;align-items:center">
+  <form action="/banca-ore/chiudi-mese" method="POST" onsubmit="return confirm('Chiudere manualmente il mese {{ mese_default }} per tutti i dipendenti con contratto?')" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <a href="/banca-ore/report" class="btn btn-blue btn-sm" style="white-space:nowrap"><i class="fa fa-chart-line"></i> Report & Export</a>
     <input type="month" name="mese" value="{{ mese_default }}" required style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px">
     <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-lock"></i> Chiudi mese</button>
   </form>
@@ -14594,6 +14595,391 @@ def banca_ore_movimento_elimina(mid):
     safe_commit(db); db.close()
     flash('Movimento eliminato.','success')
     return redirect(url_for('banca_ore_dettaglio', uid=uid) if uid else url_for('banca_ore'))
+
+
+# ─── REPORT BANCA ORE ──────────────────────────────────────
+
+def _banca_ore_report_data(db, dipendente_id, mese_da, mese_a):
+    """Ritorna lista di dipendenti con breakdown mensile nell'intervallo [mese_da, mese_a].
+    Ogni dipendente: {id, nome, cognome, ore_contratto_mensili, saldo_iniziale, saldo_finale,
+                     mesi: [{mese, ore_lavorate, ore_contratto, delta_mese, rettifiche: [...], saldo_progressivo}]}
+    """
+    # Dipendenti da includere
+    if dipendente_id and dipendente_id != 'tutti':
+        dip_rows = db.execute("""SELECT * FROM utenti WHERE id=? AND COALESCE(attivo,1)=1""",
+                              (int(dipendente_id),)).fetchall()
+    else:
+        dip_rows = db.execute("""SELECT * FROM utenti WHERE COALESCE(attivo,1)=1 
+                                 AND ruolo != 'admin' AND COALESCE(ore_contratto_mensili,0) > 0
+                                 ORDER BY cognome, nome""").fetchall()
+
+    # Genera lista mesi nell'intervallo
+    from datetime import datetime as _dt
+    y1, m1 = int(mese_da[:4]), int(mese_da[5:7])
+    y2, m2 = int(mese_a[:4]),  int(mese_a[5:7])
+    mesi = []
+    y, m = y1, m1
+    while (y, m) <= (y2, m2):
+        mesi.append(f"{y:04d}-{m:02d}")
+        m += 1
+        if m > 12:
+            m = 1; y += 1
+        if len(mesi) > 120:
+            break
+
+    result = []
+    for u in dip_rows:
+        ud = dict(u)
+        # Saldo iniziale = somma delta PRIMA del primo mese nell'intervallo
+        saldo_iniziale = db.execute("""SELECT COALESCE(SUM(delta),0) as s FROM banca_ore_movimenti 
+                                       WHERE utente_id=? AND mese < ?""",
+                                    (u['id'], mesi[0])).fetchone()['s']
+        saldo_iniziale = round(float(saldo_iniziale or 0), 2)
+
+        saldo_progressivo = saldo_iniziale
+        righe_mesi = []
+        ore_contr_mens = float(u['ore_contratto_mensili'] or 0)
+        for mese in mesi:
+            # Presenze effettive del mese
+            row = db.execute("""SELECT COALESCE(SUM(ore_totali),0) as ore FROM presenze
+                                WHERE utente_id=? AND substr(data,1,7)=?""",
+                             (u['id'], mese)).fetchone()
+            ore_lav = round(float(row['ore'] or 0), 2)
+            # Movimenti in banca ore per questo mese
+            movs = db.execute("""SELECT id, tipo, delta, descrizione, creato_il
+                                 FROM banca_ore_movimenti
+                                 WHERE utente_id=? AND mese=? ORDER BY id""",
+                              (u['id'], mese)).fetchall()
+            chiusura = None
+            rettifiche = []
+            delta_mese = 0.0
+            for m in movs:
+                md = dict(m)
+                delta_mese += float(m['delta'] or 0)
+                if m['tipo'] == 'chiusura_mensile':
+                    chiusura = md
+                else:
+                    rettifiche.append(md)
+            delta_mese = round(delta_mese, 2)
+            saldo_progressivo = round(saldo_progressivo + delta_mese, 2)
+            righe_mesi.append({
+                'mese': mese,
+                'ore_lavorate': ore_lav,
+                'ore_contratto': ore_contr_mens,
+                'chiusura': chiusura,
+                'rettifiche': rettifiche,
+                'delta_mese': delta_mese,
+                'saldo_progressivo': saldo_progressivo,
+            })
+        ud['saldo_iniziale'] = saldo_iniziale
+        ud['saldo_finale']   = saldo_progressivo
+        ud['mesi']           = righe_mesi
+        result.append(ud)
+    return result, mesi
+
+
+BANCA_ORE_REPORT_TMPL = """
+<style>
+.rep-box{background:#fff;border-radius:12px;border:1px solid var(--border);padding:16px;margin-bottom:14px}
+.rep-tab{width:100%;border-collapse:collapse;font-size:13px}
+.rep-tab th{background:#0f172a;color:#fff;padding:8px 10px;text-align:left;font-size:11px;font-weight:700}
+.rep-tab td{padding:8px 10px;border-bottom:1px solid var(--border)}
+.rep-tab tr.m-riga{background:#f8fafc}
+.rep-tab tr.m-rett td{background:#fef3c7;font-size:12px;color:#92400e}
+.rep-saldo{font-size:22px;font-weight:800}
+.rep-pos{color:#16a34a}.rep-neg{color:#dc2626}.rep-zero{color:#64748b}
+.rep-dip-card{margin-bottom:24px}
+.rep-dip-head{background:linear-gradient(135deg,#0f4c81,#1e3a5f);color:#fff;padding:14px 18px;border-radius:12px 12px 0 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+</style>
+
+<div style="margin-bottom:16px">
+  <a href="/banca-ore" class="btn btn-secondary btn-sm"><i class="fa fa-arrow-left"></i> Torna alla banca ore</a>
+</div>
+
+<div class="rep-box">
+  <form method="GET" action="/banca-ore/report" style="display:grid;grid-template-columns:2fr 1fr 1fr auto auto;gap:12px;align-items:end">
+    <div class="form-group" style="margin:0">
+      <label>Dipendente</label>
+      <select name="dipendente_id">
+        <option value="tutti" {{ 'selected' if dipendente_id == 'tutti' }}>— Tutti i dipendenti con contratto —</option>
+        {% for u in tutti_dipendenti %}
+        <option value="{{ u.id }}" {{ 'selected' if dipendente_id == u.id|string }}>{{ u.nome }} {{ u.cognome }}{% if u.titolo %} ({{ u.titolo }}){% endif %}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group" style="margin:0">
+      <label>Dal mese</label>
+      <input type="month" name="mese_da" value="{{ mese_da }}" required>
+    </div>
+    <div class="form-group" style="margin:0">
+      <label>Al mese</label>
+      <input type="month" name="mese_a" value="{{ mese_a }}" required>
+    </div>
+    <button type="submit" class="btn btn-primary"><i class="fa fa-filter"></i> Applica</button>
+    <a href="/banca-ore/report/export?dipendente_id={{ dipendente_id }}&mese_da={{ mese_da }}&mese_a={{ mese_a }}" class="btn btn-blue">
+      <i class="fa fa-file-excel"></i> Excel
+    </a>
+  </form>
+</div>
+
+{% if not report %}
+<div class="rep-box" style="text-align:center;padding:40px;color:var(--text-light)">
+  <i class="fa fa-chart-line" style="font-size:40px;opacity:.3"></i>
+  <p style="margin-top:12px">Nessun dato trovato per i filtri selezionati.</p>
+</div>
+{% else %}
+
+{% for u in report %}
+<div class="rep-dip-card">
+  <div class="rep-dip-head">
+    <div>
+      <div style="font-size:18px;font-weight:800">{{ u.nome }} {{ u.cognome }}</div>
+      <div style="font-size:12px;opacity:.8">
+        Contratto: <strong>{{ "%.1f"|format(u.ore_contratto_mensili or 0) }}h/mese</strong>
+        &nbsp;·&nbsp; Periodo: {{ mese_da }} → {{ mese_a }}
+      </div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:11px;opacity:.8;text-transform:uppercase;font-weight:700">Saldo finale</div>
+      <div class="rep-saldo {% if u.saldo_finale > 0 %}rep-pos{% elif u.saldo_finale < 0 %}rep-neg{% else %}rep-zero{% endif %}" style="color:#fff">
+        {% if u.saldo_finale > 0 %}+{% endif %}{{ "%.2f"|format(u.saldo_finale) }} h
+      </div>
+      <div style="font-size:11px;opacity:.8">Saldo iniziale: {% if u.saldo_iniziale > 0 %}+{% endif %}{{ "%.2f"|format(u.saldo_iniziale) }}h</div>
+    </div>
+  </div>
+  <div style="background:#fff;border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;overflow:hidden">
+    <table class="rep-tab">
+      <thead>
+        <tr>
+          <th>MESE</th>
+          <th style="text-align:right">ORE LAVORATE</th>
+          <th style="text-align:right">CONTRATTO</th>
+          <th style="text-align:right">DELTA MESE</th>
+          <th>NOTE / MOVIMENTI</th>
+          <th style="text-align:right">SALDO PROGRESSIVO</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for m in u.mesi %}
+      <tr class="m-riga">
+        <td style="font-family:monospace;font-weight:700">{{ m.mese }}</td>
+        <td style="text-align:right;font-family:monospace">{{ "%.2f"|format(m.ore_lavorate) }} h</td>
+        <td style="text-align:right;font-family:monospace;color:var(--text-light)">{{ "%.2f"|format(m.ore_contratto) }} h</td>
+        <td style="text-align:right;font-weight:700" class="{% if m.delta_mese > 0 %}rep-pos{% elif m.delta_mese < 0 %}rep-neg{% else %}rep-zero{% endif %}">
+          {% if m.delta_mese > 0 %}+{% endif %}{{ "%.2f"|format(m.delta_mese) }} h
+        </td>
+        <td style="font-size:12px;color:var(--text-light)">
+          {% if m.chiusura %}
+            <div><i class="fa fa-lock" style="color:#2563eb"></i> Chiusura mensile: {{ m.chiusura.descrizione or '' }}</div>
+          {% elif m.ore_lavorate > 0 %}
+            <span style="color:#f59e0b"><i class="fa fa-clock"></i> Mese non ancora chiuso</span>
+          {% else %}
+            <span style="opacity:.5">—</span>
+          {% endif %}
+        </td>
+        <td style="text-align:right;font-weight:800" class="{% if m.saldo_progressivo > 0 %}rep-pos{% elif m.saldo_progressivo < 0 %}rep-neg{% else %}rep-zero{% endif %}">
+          {% if m.saldo_progressivo > 0 %}+{% endif %}{{ "%.2f"|format(m.saldo_progressivo) }} h
+        </td>
+      </tr>
+      {% for r in m.rettifiche %}
+      <tr class="m-rett">
+        <td></td>
+        <td></td>
+        <td></td>
+        <td style="text-align:right;font-weight:700">
+          {% if r.delta > 0 %}+{% endif %}{{ "%.2f"|format(r.delta) }} h
+        </td>
+        <td>
+          <strong>{% if r.tipo=='rettifica' %}↻ Rettifica{% elif r.tipo=='manuale' %}✎ Manuale{% else %}{{ r.tipo }}{% endif %}:</strong>
+          {{ r.descrizione or '—' }}
+          {% if r.delta < 0 %}<span style="background:#fca5a5;color:#7f1d1d;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:6px;font-weight:700">PRELIEVO</span>{% endif %}
+        </td>
+        <td></td>
+      </tr>
+      {% endfor %}
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endfor %}
+
+{% if report|length > 1 %}
+<div class="rep-box" style="background:#f0fdf4;border-color:#86efac">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <strong style="color:#15803d;font-size:14px"><i class="fa fa-chart-simple"></i> Totale dipendenti nel report</strong>
+      <div style="font-size:12px;color:#16a34a;margin-top:2px">{{ report|length }} dipendenti · periodo {{ mese_da }} → {{ mese_a }}</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:11px;color:#16a34a;text-transform:uppercase;font-weight:700">Saldo totale</div>
+      {% set tot_saldo = report|sum(attribute='saldo_finale') %}
+      <div class="rep-saldo {% if tot_saldo > 0 %}rep-pos{% elif tot_saldo < 0 %}rep-neg{% else %}rep-zero{% endif %}">
+        {% if tot_saldo > 0 %}+{% endif %}{{ "%.2f"|format(tot_saldo) }} h
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% endif %}
+"""
+
+
+@app.route('/banca-ore/report')
+@admin_required
+def banca_ore_report():
+    from datetime import timedelta as _td
+    # Default: ultimi 6 mesi
+    oggi = date.today()
+    primo = oggi.replace(day=1)
+    fine_mese_scorso = primo - _td(days=1)
+    sei_mesi_fa = fine_mese_scorso.replace(day=1)
+    for _ in range(5):
+        sei_mesi_fa = (sei_mesi_fa - _td(days=1)).replace(day=1)
+
+    dipendente_id = request.args.get('dipendente_id', 'tutti')
+    mese_da = request.args.get('mese_da') or sei_mesi_fa.strftime('%Y-%m')
+    mese_a  = request.args.get('mese_a')  or fine_mese_scorso.strftime('%Y-%m')
+    if mese_a < mese_da:
+        mese_a = mese_da
+
+    db = get_db()
+    tutti_dipendenti = db.execute("""SELECT id, nome, cognome, mansione as titolo, ore_contratto_mensili 
+                                     FROM utenti WHERE COALESCE(attivo,1)=1 AND ruolo != 'admin'
+                                     ORDER BY cognome, nome""").fetchall()
+    report, _mesi = _banca_ore_report_data(db, dipendente_id, mese_da, mese_a)
+    db.close()
+    return render_page(BANCA_ORE_REPORT_TMPL,
+                       page_title='Report Banca Ore', active='banca_ore',
+                       report=report, tutti_dipendenti=[dict(u) for u in tutti_dipendenti],
+                       dipendente_id=dipendente_id, mese_da=mese_da, mese_a=mese_a)
+
+
+@app.route('/banca-ore/report/export')
+@admin_required
+def banca_ore_report_export():
+    if not EXCEL_OK:
+        flash('openpyxl non disponibile.', 'error')
+        return redirect(url_for('banca_ore_report'))
+    from datetime import timedelta as _td
+    oggi = date.today()
+    primo = oggi.replace(day=1)
+    fine_mese_scorso = primo - _td(days=1)
+    sei_mesi_fa = fine_mese_scorso.replace(day=1)
+    for _ in range(5):
+        sei_mesi_fa = (sei_mesi_fa - _td(days=1)).replace(day=1)
+
+    dipendente_id = request.args.get('dipendente_id', 'tutti')
+    mese_da = request.args.get('mese_da') or sei_mesi_fa.strftime('%Y-%m')
+    mese_a  = request.args.get('mese_a')  or fine_mese_scorso.strftime('%Y-%m')
+
+    db = get_db()
+    report, mesi_list = _banca_ore_report_data(db, dipendente_id, mese_da, mese_a)
+    db.close()
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Banca Ore Report"
+
+    # Header con titolo
+    header_font  = Font(bold=True, color="FFFFFF", size=11)
+    header_fill  = PatternFill("solid", fgColor="0F172A")
+    center       = Alignment(horizontal="center", vertical="center")
+    left         = Alignment(horizontal="left",   vertical="center")
+    right        = Alignment(horizontal="right",  vertical="center")
+    dip_fill     = PatternFill("solid", fgColor="0F4C81")
+    dip_font     = Font(bold=True, color="FFFFFF", size=12)
+    pos_fill     = PatternFill("solid", fgColor="D1FAE5")
+    neg_fill     = PatternFill("solid", fgColor="FEE2E2")
+    rett_fill    = PatternFill("solid", fgColor="FEF3C7")
+
+    # Titolo
+    ws.cell(1, 1, f"Report Banca Ore · Periodo {mese_da} → {mese_a}").font = Font(bold=True, size=14, color="0F4C81")
+    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=7)
+    ws.cell(2, 1, f"Generato il {date.today().isoformat()}").font = Font(italic=True, size=10, color="64748B")
+    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=7)
+
+    row_i = 4
+    for u in report:
+        # Intestazione dipendente
+        c = ws.cell(row_i, 1, f"{u['nome']} {u['cognome']} · Contratto: {u['ore_contratto_mensili']:.1f}h/mese · Saldo iniziale: {u['saldo_iniziale']:+.2f}h · Saldo finale: {u['saldo_finale']:+.2f}h")
+        c.font = dip_font; c.fill = dip_fill; c.alignment = left
+        ws.merge_cells(start_row=row_i, start_column=1, end_row=row_i, end_column=7)
+        row_i += 1
+
+        # Header colonne
+        headers = ['MESE', 'ORE LAV.', 'CONTRATTO', 'DELTA MESE', 'TIPO MOVIMENTO', 'DESCRIZIONE', 'SALDO PROGR.']
+        for j, h in enumerate(headers, 1):
+            c = ws.cell(row_i, j, h)
+            c.font = header_font; c.fill = header_fill; c.alignment = center
+        row_i += 1
+
+        # Righe mesi
+        for m in u['mesi']:
+            # Riga chiusura (o semplice riepilogo se non chiuso)
+            mese_str = m['mese']
+            ore_lav  = m['ore_lavorate']
+            ore_con  = m['ore_contratto']
+            delta    = m['delta_mese']
+            saldo    = m['saldo_progressivo']
+
+            ws.cell(row_i, 1, mese_str).alignment = center
+            cell_ore = ws.cell(row_i, 2, ore_lav); cell_ore.number_format = '0.00" h"'; cell_ore.alignment = right
+            cell_con = ws.cell(row_i, 3, ore_con); cell_con.number_format = '0.00" h"'; cell_con.alignment = right
+            cell_dlt = ws.cell(row_i, 4, delta);   cell_dlt.number_format = '+0.00" h";-0.00" h";0.00" h"'; cell_dlt.alignment = right
+            if delta > 0: cell_dlt.fill = pos_fill; cell_dlt.font = Font(bold=True, color="16A34A")
+            elif delta < 0: cell_dlt.fill = neg_fill; cell_dlt.font = Font(bold=True, color="DC2626")
+            if m['chiusura']:
+                ws.cell(row_i, 5, 'Chiusura mensile').alignment = left
+                ws.cell(row_i, 6, m['chiusura']['descrizione'] or '').alignment = left
+            else:
+                ws.cell(row_i, 5, '— non chiuso —').font = Font(italic=True, color="F59E0B")
+                ws.cell(row_i, 6, '').alignment = left
+            cell_sal = ws.cell(row_i, 7, saldo)
+            cell_sal.number_format = '+0.00" h";-0.00" h";0.00" h"'
+            cell_sal.alignment = right; cell_sal.font = Font(bold=True)
+            row_i += 1
+
+            # Righe rettifiche/prelievi dettagliate
+            for r in m['rettifiche']:
+                ws.cell(row_i, 1, f"  ↳ {mese_str}").font = Font(italic=True, size=10, color="64748B")
+                ws.cell(row_i, 2, '').alignment = right
+                ws.cell(row_i, 3, '').alignment = right
+                d = float(r['delta'] or 0)
+                cell_d = ws.cell(row_i, 4, d)
+                cell_d.number_format = '+0.00" h";-0.00" h";0.00" h"'; cell_d.alignment = right
+                cell_d.fill = rett_fill; cell_d.font = Font(bold=True, color="92400E")
+                tipo_lbl = 'Rettifica' if r['tipo'] == 'rettifica' else ('Manuale' if r['tipo'] == 'manuale' else r['tipo'])
+                if d < 0: tipo_lbl += ' (PRELIEVO)'
+                c5 = ws.cell(row_i, 5, tipo_lbl); c5.fill = rett_fill
+                c6 = ws.cell(row_i, 6, r['descrizione'] or ''); c6.fill = rett_fill
+                ws.cell(row_i, 7, '').fill = rett_fill
+                row_i += 1
+
+        # Riga totale dipendente
+        c = ws.cell(row_i, 1, f"SALDO FINALE {u['nome']} {u['cognome']}")
+        c.font = Font(bold=True, size=11); c.alignment = right
+        ws.merge_cells(start_row=row_i, start_column=1, end_row=row_i, end_column=6)
+        cell_fin = ws.cell(row_i, 7, u['saldo_finale'])
+        cell_fin.number_format = '+0.00" h";-0.00" h";0.00" h"'
+        cell_fin.font = Font(bold=True, size=12, color="FFFFFF")
+        if u['saldo_finale'] > 0: cell_fin.fill = PatternFill("solid", fgColor="16A34A")
+        elif u['saldo_finale'] < 0: cell_fin.fill = PatternFill("solid", fgColor="DC2626")
+        else: cell_fin.fill = PatternFill("solid", fgColor="64748B")
+        cell_fin.alignment = right
+        row_i += 2
+
+    # Larghezze colonne
+    widths = [14, 12, 12, 14, 22, 40, 16]
+    for i, w in enumerate(widths, 1):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(i)].width = w
+
+    buf = _io.BytesIO(); wb.save(buf); buf.seek(0)
+    suffix = 'tutti' if dipendente_id == 'tutti' else f'dip{dipendente_id}'
+    fname = f"banca_ore_{suffix}_{mese_da}_{mese_a}.xlsx"
+    return Response(buf, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    headers={'Content-Disposition': f'attachment; filename={fname}'})
 
 
 
