@@ -633,6 +633,44 @@ def init_db():
         "ALTER TABLE preventivi_voci ADD COLUMN data_fine TEXT",
         "ALTER TABLE preventivi_voci ADD COLUMN importo_modificato REAL",
         "ALTER TABLE preventivi_voci ADD COLUMN sconto_riga REAL DEFAULT 0",
+        # ── Banca ore ─────────────────────────────────────
+        "ALTER TABLE utenti ADD COLUMN ore_contratto_mensili REAL DEFAULT 0",
+        """CREATE TABLE IF NOT EXISTS banca_ore_movimenti (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            utente_id INTEGER NOT NULL,
+            mese TEXT NOT NULL,
+            tipo TEXT NOT NULL,
+            ore_lavorate REAL DEFAULT 0,
+            ore_contratto REAL DEFAULT 0,
+            delta REAL NOT NULL,
+            descrizione TEXT,
+            creato_il TEXT DEFAULT (datetime('now')),
+            creato_da INTEGER,
+            FOREIGN KEY(utente_id) REFERENCES utenti(id)
+        )""",
+        "CREATE INDEX IF NOT EXISTS idx_banca_ore_utente ON banca_ore_movimenti(utente_id)",
+        "CREATE INDEX IF NOT EXISTS idx_banca_ore_mese ON banca_ore_movimenti(mese)",
+        # ── Fatturazione attiva/passiva + fornitori ───────
+        "ALTER TABLE fatture ADD COLUMN tipo TEXT DEFAULT 'attiva'",
+        "ALTER TABLE fatture ADD COLUMN fornitore_id INTEGER",
+        "ALTER TABLE fatture ADD COLUMN fornitore_nome TEXT",
+        """CREATE TABLE IF NOT EXISTS fornitori (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL,
+            piva TEXT,
+            codice_fiscale TEXT,
+            indirizzo TEXT,
+            citta TEXT,
+            cap TEXT,
+            paese TEXT DEFAULT 'Italia',
+            email TEXT,
+            telefono TEXT,
+            referente TEXT,
+            sito_web TEXT,
+            note TEXT,
+            attivo INTEGER DEFAULT 1,
+            creato_il TEXT DEFAULT (datetime('now'))
+        )""",
         """CREATE TABLE IF NOT EXISTS documenti_azienda (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             titolo TEXT NOT NULL,
@@ -827,6 +865,37 @@ def ensure_columns():
                 "ALTER TABLE preventivi ADD COLUMN data_inizio_lavoro TEXT",
                 "ALTER TABLE preventivi ADD COLUMN data_fine_lavoro TEXT",
                 "ALTER TABLE preventivi ADD COLUMN luogo_lavoro TEXT",
+                # Banca ore
+                "ALTER TABLE utenti ADD COLUMN ore_contratto_mensili REAL DEFAULT 0",
+                """CREATE TABLE IF NOT EXISTS banca_ore_movimenti (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    utente_id INTEGER NOT NULL,
+                    mese TEXT NOT NULL,
+                    tipo TEXT NOT NULL,
+                    ore_lavorate REAL DEFAULT 0,
+                    ore_contratto REAL DEFAULT 0,
+                    delta REAL NOT NULL,
+                    descrizione TEXT,
+                    creato_il TEXT DEFAULT (datetime('now')),
+                    creato_da INTEGER,
+                    FOREIGN KEY(utente_id) REFERENCES utenti(id)
+                )""",
+                "CREATE INDEX IF NOT EXISTS idx_banca_ore_utente ON banca_ore_movimenti(utente_id)",
+                "CREATE INDEX IF NOT EXISTS idx_banca_ore_mese ON banca_ore_movimenti(mese)",
+                # Fatturazione attiva/passiva
+                "ALTER TABLE fatture ADD COLUMN tipo TEXT DEFAULT 'attiva'",
+                "ALTER TABLE fatture ADD COLUMN fornitore_id INTEGER",
+                "ALTER TABLE fatture ADD COLUMN fornitore_nome TEXT",
+                """CREATE TABLE IF NOT EXISTS fornitori (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nome TEXT NOT NULL,
+                    piva TEXT, codice_fiscale TEXT,
+                    indirizzo TEXT, citta TEXT, cap TEXT,
+                    paese TEXT DEFAULT 'Italia',
+                    email TEXT, telefono TEXT, referente TEXT,
+                    sito_web TEXT, note TEXT, attivo INTEGER DEFAULT 1,
+                    creato_il TEXT DEFAULT (datetime('now'))
+                )""",
             ]:
                 try: db.execute(sql)
                 except: pass
@@ -1267,6 +1336,7 @@ textarea{resize:vertical;min-height:80px}
     <a href="/dashboard" class="{{ 'active' if active=='dashboard' }}"><i class="fa fa-house"></i> Dashboard</a>
     <a href="/dipendenti" class="{{ 'active' if active=='dipendenti' }}"><i class="fa fa-users"></i> Dipendenti</a>
     <a href="/presenze" class="{{ 'active' if active=='presenze' }}"><i class="fa fa-clock"></i> Presenze</a>
+    <a href="/banca-ore" class="{{ 'active' if active=='banca_ore' }}"><i class="fa fa-piggy-bank"></i> Banca Ore</a>
     <a href="/ferie" class="{{ 'active' if active=='ferie' }}"><i class="fa fa-umbrella-beach"></i> Ferie & Permessi</a>
     <div class="nav-section">Fiere & Allestimenti</div>
     <a href="/cantieri" class="{{ 'active' if active=='cantieri' }}"><i class="fa fa-store"></i> Fiere & Stand</a>
@@ -1276,7 +1346,9 @@ textarea{resize:vertical;min-height:80px}
     <a href="/veicoli" class="{{ 'active' if active=='veicoli' }}"><i class="fa fa-truck"></i> Mezzi & Veicoli</a>
     <a href="/pos" class="{{ 'active' if active=='pos' }}"><i class="fa fa-file-shield"></i> PSAF</a>
     <a href="/clienti" class="{{ 'active' if active=='clienti' }}"><i class="fa fa-address-book"></i> Clienti</a>
-    <a href="/fatturazione" class="{{ 'active' if active=='fatturazione' }}"><i class="fa fa-file-invoice-dollar"></i> Fatturazione</a>
+    <a href="/fornitori" class="{{ 'active' if active=='fornitori' }}"><i class="fa fa-truck-fast"></i> Fornitori</a>
+    <a href="/fatturazione" class="{{ 'active' if active=='fatturazione_attiva' }}"><i class="fa fa-file-invoice-dollar"></i> Fatt. Attiva</a>
+    <a href="/fatturazione?tipo=passiva" class="{{ 'active' if active=='fatturazione_passiva' }}"><i class="fa fa-file-invoice"></i> Fatt. Passiva</a>
     <a href="/preventivi" class="{{ 'active' if active=='preventivi' }}"><i class="fa fa-file-invoice"></i> Preventivi</a>
     <a href="/calendario" class="{{ 'active' if active=='calendario' }}"><i class="fa fa-calendar"></i> Calendario</a>
     <a href="/contratti-clienti" class="{{ 'active' if active=='contratti_clienti' }}"><i class="fa fa-file-signature"></i> Contratti Clienti</a>
@@ -4867,6 +4939,26 @@ DIP_FORM_TMPL = """
       </div>
     </div>
 
+    <div style="background:#f0fdf4;border-radius:10px;padding:16px;margin-bottom:20px;border:1px solid #86efac">
+      <div style="font-size:11px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">
+        <i class="fa fa-piggy-bank"></i> Banca ore — monte ore contrattuale
+      </div>
+      <p style="font-size:12px;color:#16a34a;margin-bottom:14px">Ore mensili da contratto. Se il dipendente lavora oltre questo monte, le ore extra vanno in banca come credito. Se lavora meno, si crea un debito. Imposta <strong>0</strong> per disattivare la banca ore per questo dipendente.</p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Ore contrattuali mensili</label>
+          <input type="number" name="ore_contratto_mensili" step="0.5" min="0" max="744"
+                 value="{{ dip.ore_contratto_mensili if dip and dip.ore_contratto_mensili else '' }}"
+                 placeholder="Es. 173 (full-time 40h/settimana)">
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end">
+          <div style="font-size:12px;color:#16a34a;padding:8px 12px;background:#fff;border-radius:6px;border:1px dashed #86efac">
+            <strong>Esempi:</strong> Full-time ≈ 173h &nbsp;·&nbsp; 30h/sett ≈ 130h &nbsp;·&nbsp; 20h/sett ≈ 87h
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div style="background:#eff6ff;border-radius:10px;padding:16px;margin-bottom:20px;border:1px solid #bfdbfe">
       <div style="font-size:11px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">
         <i class="fa fa-key"></i> Credenziali di accesso — App mobile
@@ -4935,9 +5027,13 @@ def dipendente_nuovo():
     if request.method=='POST':
         db=get_db()
         try:
-            db.execute("INSERT INTO utenti (nome,cognome,email,password,mansione,telefono,data_assunzione,ruolo) VALUES (?,?,?,?,?,?,?,?)",
+            ore_contr = request.form.get('ore_contratto_mensili', '') or 0
+            try: ore_contr = float(ore_contr)
+            except: ore_contr = 0
+            db.execute("INSERT INTO utenti (nome,cognome,email,password,mansione,telefono,data_assunzione,ruolo,ore_contratto_mensili) VALUES (?,?,?,?,?,?,?,?,?)",
                 (request.form['nome'],request.form['cognome'],request.form['email'].lower(),hash_pw(request.form['password']),
-                 request.form.get('mansione'),request.form.get('telefono'),request.form.get('data_assunzione'),request.form.get('ruolo','dipendente')))
+                 request.form.get('mansione'),request.form.get('telefono'),request.form.get('data_assunzione'),request.form.get('ruolo','dipendente'),
+                 ore_contr))
             safe_commit(db);flash('Dipendente aggiunto!','success')
         except Exception as e:
             if 'UNIQUE' in str(e):
@@ -4953,10 +5049,13 @@ def dipendente_nuovo():
 def dipendente_modifica(uid):
     db=get_db();dip=db.execute("SELECT * FROM utenti WHERE id=?",(uid,)).fetchone()
     if request.method=='POST':
-        db.execute("UPDATE utenti SET nome=?,cognome=?,email=?,mansione=?,telefono=?,data_assunzione=?,ruolo=? WHERE id=?",
+        ore_contr = request.form.get('ore_contratto_mensili', '') or 0
+        try: ore_contr = float(ore_contr)
+        except: ore_contr = 0
+        db.execute("UPDATE utenti SET nome=?,cognome=?,email=?,mansione=?,telefono=?,data_assunzione=?,ruolo=?,ore_contratto_mensili=? WHERE id=?",
             (request.form['nome'],request.form['cognome'],request.form['email'].lower(),
              request.form.get('mansione'),request.form.get('telefono'),request.form.get('data_assunzione'),
-             request.form.get('ruolo','dipendente'),uid))
+             request.form.get('ruolo','dipendente'),ore_contr,uid))
         safe_commit(db);db.close();flash('Aggiornato.','success');return redirect(url_for('dipendenti'))
     db.close()
     return render_page(DIP_FORM_TMPL,page_title='Modifica Dipendente',active='dipendenti',dip=dip)
@@ -8837,11 +8936,21 @@ FATT_LIST_TMPL = """
 .progress-fill{background:linear-gradient(90deg,#2563eb,#22c55e);height:100%;border-radius:99px;transition:.3s}
 </style>
 
+<!-- Tabs attiva/passiva -->
+<div style="display:flex;gap:8px;margin-bottom:20px;border-bottom:2px solid var(--border)">
+  <a href="/fatturazione?tipo=attiva" style="padding:10px 18px;text-decoration:none;font-weight:700;font-size:14px;border-bottom:3px solid {% if tipo=='attiva' %}#2563eb{% else %}transparent{% endif %};color:{% if tipo=='attiva' %}#2563eb{% else %}#64748b{% endif %};margin-bottom:-2px">
+    <i class="fa fa-arrow-up-long"></i> Attiva (clienti pagano noi)
+  </a>
+  <a href="/fatturazione?tipo=passiva" style="padding:10px 18px;text-decoration:none;font-weight:700;font-size:14px;border-bottom:3px solid {% if tipo=='passiva' %}#dc2626{% else %}transparent{% endif %};color:{% if tipo=='passiva' %}#dc2626{% else %}#64748b{% endif %};margin-bottom:-2px">
+    <i class="fa fa-arrow-down-long"></i> Passiva (noi paghiamo)
+  </a>
+</div>
+
 <!-- Statistiche -->
 <div class="stat-fatt">
   <div class="sf rosso">
     <div class="val">€ {{ "%.0f"|format(tot_da_pagare) }}</div>
-    <div class="lbl">📋 Da incassare</div>
+    <div class="lbl">{% if tipo=='attiva' %}📋 Da incassare{% else %}📋 Da pagare{% endif %}</div>
   </div>
   <div class="sf amber">
     <div class="val">€ {{ "%.0f"|format(tot_parziale) }}</div>
@@ -8849,7 +8958,7 @@ FATT_LIST_TMPL = """
   </div>
   <div class="sf verde">
     <div class="val">€ {{ "%.0f"|format(tot_pagato) }}</div>
-    <div class="lbl">✅ Incassato totale</div>
+    <div class="lbl">{% if tipo=='attiva' %}✅ Incassato totale{% else %}✅ Pagato totale{% endif %}</div>
   </div>
   <div class="sf blu">
     <div class="val">{{ n_scadute }}</div>
@@ -8873,10 +8982,10 @@ FATT_LIST_TMPL = """
   </div>
 </div>
 
-<!-- Top clienti -->
+<!-- Top controparti -->
 {% if top_clienti %}
 <div class="card" style="margin-bottom:20px">
-  <div class="card-header"><h3><i class="fa fa-trophy" style="color:#f59e0b"></i> Clienti più puntuali</h3></div>
+  <div class="card-header"><h3><i class="fa fa-trophy" style="color:#f59e0b"></i> {% if tipo=='attiva' %}Clienti più puntuali{% else %}Fornitori/controparti più frequenti{% endif %}</h3></div>
   <div class="card-body">
     {% for c in top_clienti %}
     <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
@@ -8899,10 +9008,15 @@ FATT_LIST_TMPL = """
 <!-- Azioni + filtri -->
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
   <div style="display:flex;gap:10px;flex-wrap:wrap">
-    <a href="/fatturazione/nuova" class="btn btn-primary"><i class="fa fa-plus"></i> Nuova fattura</a>
+    <a href="/fatturazione/nuova?tipo={{ tipo }}" class="btn btn-primary"><i class="fa fa-plus"></i> Nuova fattura {{ tipo }}</a>
+    {% if tipo == 'attiva' %}
     <a href="/fatturazione/clienti" class="btn btn-secondary"><i class="fa fa-users"></i> Clienti</a>
+    {% else %}
+    <a href="/fornitori" class="btn btn-secondary"><i class="fa fa-truck-fast"></i> Fornitori</a>
+    {% endif %}
   </div>
   <form style="display:flex;gap:10px;flex-wrap:wrap" method="GET">
+    <input type="hidden" name="tipo" value="{{ tipo }}">
     <select name="stato" onchange="this.form.submit()" style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px">
       <option value="">Tutti gli stati</option>
       <option value="da_emettere" {{ 'selected' if filtro_stato=='da_emettere' }}>⏳ Da emettere</option>
@@ -8911,7 +9025,7 @@ FATT_LIST_TMPL = """
       <option value="pagata" {{ 'selected' if filtro_stato=='pagata' }}>Pagate</option>
       <option value="scaduta" {{ 'selected' if filtro_stato=='scaduta' }}>Scadute</option>
     </select>
-    <input type="text" name="q" value="{{ q or '' }}" placeholder="Cerca cliente/numero..." style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;width:200px">
+    <input type="text" name="q" value="{{ q or '' }}" placeholder="Cerca {{ 'cliente' if tipo=='attiva' else 'fornitore' }}/numero..." style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;width:200px">
     <button type="submit" class="btn btn-secondary btn-sm"><i class="fa fa-search"></i></button>
   </form>
 </div>
@@ -8926,7 +9040,7 @@ FATT_LIST_TMPL = """
     {% if has_rate and all_paid %}<span style="color:#16a34a;font-size:13px">✅</span>{% endif %}
   </td>
   <td><strong>{{ f.numero }}</strong></td>
-  <td>{{ f.cliente_nome or '–' }}</td>
+  <td>{% if tipo=='passiva' %}{{ f.fornitore_nome or f.cliente_nome or '–' }}{% else %}{{ f.cliente_nome or '–' }}{% endif %}</td>
   <td style="font-family:monospace;font-size:12px">{{ f.data_emissione or '–' }}</td>
   <td style="font-family:monospace;font-size:12px;{{ 'color:#dc2626;font-weight:700' if f.scadenza_scaduta and f.stato_display != 'pagata' else '' }}">
     {{ f.scadenza_display or '–' }}{% if f.scadenza_scaduta and f.stato_display != 'pagata' %} ⚠️{% endif %}
@@ -9017,7 +9131,7 @@ FATT_LIST_TMPL = """
 <thead><tr style="background:#0f172a;color:#fff">
   <th style="width:24px;padding:10px 8px"></th>
   <th style="padding:10px 8px;font-size:12px">N°</th>
-  <th style="padding:10px 8px;font-size:12px">CLIENTE</th>
+  <th style="padding:10px 8px;font-size:12px">{% if tipo=='passiva' %}FORNITORE/CLIENTE{% else %}CLIENTE{% endif %}</th>
   <th style="padding:10px 8px;font-size:12px">DATA</th>
   <th style="padding:10px 8px;font-size:12px">SCADENZA</th>
   <th style="padding:10px 8px;font-size:12px">IMPORTO</th>
@@ -9324,6 +9438,7 @@ FATT_FORM_TMPL = """
 <div class="card" style="margin-bottom:20px">
   <div class="card-header"><h3><i class="fa fa-file-invoice-dollar" style="color:var(--accent2)"></i> Dati fattura</h3></div>
   <div class="card-body">
+    <input type="hidden" name="tipo" value="{{ tipo or 'attiva' }}">
     <div class="form-row">
       <div class="form-group">
         <label>Numero fattura *</label>
@@ -9334,6 +9449,7 @@ FATT_FORM_TMPL = """
         <input type="date" name="data_emissione" value="{{ fattura.data_emissione or today }}">
       </div>
     </div>
+    {% if tipo == 'attiva' %}
     <div class="form-row">
       <div class="form-group">
         <label>Cliente</label>
@@ -9349,6 +9465,44 @@ FATT_FORM_TMPL = """
         <input name="cliente_nome" id="cliente-nome" value="{{ fattura.cliente_nome or '' }}" placeholder="Inserisci se non in lista">
       </div>
     </div>
+    {% else %}
+    <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#991b1b">
+      <i class="fa fa-info-circle"></i> <strong>Fatturazione passiva</strong>: inserisci chi ti ha emesso la fattura (fornitore o cliente con nota di credito).
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Fornitore</label>
+        <select name="fornitore_id" id="fornitore-sel">
+          <option value="">— Nessuno —</option>
+          {% for fr in fornitori %}
+          <option value="{{ fr.id }}" {{ 'selected' if fattura.fornitore_id == fr.id }}>{{ fr.nome }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Nome fornitore (se nuovo)</label>
+        <input name="fornitore_nome" id="fornitore-nome" value="{{ fattura.fornitore_nome or '' }}" placeholder="Inserisci se non in lista">
+      </div>
+    </div>
+    <div style="margin:-6px 0 12px;font-size:12px;color:var(--text-light)">
+      <strong>oppure</strong>, se è un cliente (nota di credito, rimborso, ecc.):
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Cliente</label>
+        <select name="cliente_id" id="cliente-sel" onchange="onClienteChange()">
+          <option value="">— Nessuno —</option>
+          {% for c in clienti %}
+          <option value="{{ c.id }}" {{ 'selected' if fattura.cliente_id == c.id }}>{{ c.nome }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Nome cliente (se nuovo)</label>
+        <input name="cliente_nome" id="cliente-nome" value="{{ fattura.cliente_nome or '' }}" placeholder="Inserisci se non in lista">
+      </div>
+    </div>
+    {% endif %}
     <div class="form-group">
       <label>Descrizione lavori</label>
       <textarea name="descrizione" rows="2" placeholder="Es. Montaggio stand Fiera Milano - pad. 5">{{ fattura.descrizione or '' }}</textarea>
@@ -9697,19 +9851,22 @@ Se un campo non esiste metti "". Date in formato YYYY-MM-DD."""
 @admin_required
 def fatturazione():
     db = get_db()
+    tipo = request.args.get('tipo', 'attiva')
+    if tipo not in ('attiva', 'passiva'):
+        tipo = 'attiva'
     filtro_stato = request.args.get('stato', '')
     q = request.args.get('q', '').strip()
 
     sql = """SELECT f.*, 
              COALESCE((SELECT SUM(r.importo) FROM rate_fattura r WHERE r.fattura_id=f.id AND r.stato='pagata'),0) as pagato
-             FROM fatture f WHERE 1=1"""
-    params = []
+             FROM fatture f WHERE COALESCE(f.tipo,'attiva')=?"""
+    params = [tipo]
     if filtro_stato:
         sql += " AND f.stato=?"
         params.append(filtro_stato)
     if q:
-        sql += " AND (f.numero LIKE ? OR f.cliente_nome LIKE ?)"
-        params += [f'%{q}%', f'%{q}%']
+        sql += " AND (f.numero LIKE ? OR f.cliente_nome LIKE ? OR f.fornitore_nome LIKE ?)"
+        params += [f'%{q}%', f'%{q}%', f'%{q}%']
     sql += " ORDER BY f.data_emissione DESC"
 
     fatture_raw = db.execute(sql, params).fetchall()
@@ -9777,14 +9934,26 @@ def fatturazione():
         if fd['scaduta'] and s != 'pagata':
             n_scadute_c += 1
 
-    # Statistiche clienti
-    top_raw = db.execute("""
-        SELECT cliente_nome as nome,
-               COUNT(*) as n_totale,
-               SUM(CASE WHEN stato='pagata' THEN 1 ELSE 0 END) as n_pagate
-        FROM fatture WHERE cliente_nome IS NOT NULL AND cliente_nome != ''
-        GROUP BY cliente_nome HAVING n_totale >= 1
-        ORDER BY (n_pagate*1.0/n_totale) DESC LIMIT 5""").fetchall()
+    # Statistiche controparti (clienti per attiva, fornitori per passiva)
+    if tipo == 'attiva':
+        top_raw = db.execute("""
+            SELECT cliente_nome as nome,
+                   COUNT(*) as n_totale,
+                   SUM(CASE WHEN stato='pagata' THEN 1 ELSE 0 END) as n_pagate
+            FROM fatture WHERE COALESCE(tipo,'attiva')='attiva'
+              AND cliente_nome IS NOT NULL AND cliente_nome != ''
+            GROUP BY cliente_nome HAVING n_totale >= 1
+            ORDER BY (n_pagate*1.0/n_totale) DESC LIMIT 5""").fetchall()
+    else:
+        top_raw = db.execute("""
+            SELECT COALESCE(fornitore_nome, cliente_nome) as nome,
+                   COUNT(*) as n_totale,
+                   SUM(CASE WHEN stato='pagata' THEN 1 ELSE 0 END) as n_pagate
+            FROM fatture WHERE tipo='passiva'
+              AND COALESCE(fornitore_nome, cliente_nome) IS NOT NULL
+              AND COALESCE(fornitore_nome, cliente_nome) != ''
+            GROUP BY COALESCE(fornitore_nome, cliente_nome) HAVING n_totale >= 1
+            ORDER BY (n_pagate*1.0/n_totale) DESC LIMIT 5""").fetchall()
     top_clienti = [dict(r, perc=round(r['n_pagate']/r['n_totale']*100, 0)) for r in top_raw]
 
     # Dati grafico mensile ultimi 6 mesi
@@ -9797,16 +9966,19 @@ def fatturazione():
         for _ in range(i):
             d = (d - _td(days=1)).replace(day=1)
         m_str = d.strftime('%Y-%m')
-        row_f = db.execute("SELECT SUM(importo_totale) FROM fatture WHERE substr(data_emissione,1,7)=?", (m_str,)).fetchone()
+        row_f = db.execute("SELECT SUM(importo_totale) FROM fatture WHERE substr(data_emissione,1,7)=? AND COALESCE(tipo,'attiva')=?", (m_str, tipo)).fetchone()
         row_p = db.execute("""SELECT SUM(r.importo) FROM rate_fattura r 
                               JOIN fatture f ON f.id=r.fattura_id 
-                              WHERE r.stato='pagata' AND substr(r.data_pagamento,1,7)=?""", (m_str,)).fetchone()
+                              WHERE r.stato='pagata' AND substr(r.data_pagamento,1,7)=?
+                              AND COALESCE(f.tipo,'attiva')=?""", (m_str, tipo)).fetchone()
         mesi_labels.append(mesi_nomi_short[d.month-1])
         mesi_fatturato.append(round(row_f[0] or 0, 2))
         mesi_incassato.append(round(row_p[0] or 0, 2))
 
     db.close()
-    return render_page(FATT_LIST_TMPL, page_title='Fatturazione', active='fatturazione',
+    active_key = 'fatturazione_attiva' if tipo == 'attiva' else 'fatturazione_passiva'
+    page_title = 'Fatturazione Attiva' if tipo == 'attiva' else 'Fatturazione Passiva'
+    return render_page(FATT_LIST_TMPL, page_title=page_title, active=active_key, tipo=tipo,
         fatture=fatture, filtro_stato=filtro_stato, q=q,
         tot_da_pagare=tot_da_pagare, tot_parziale=tot_parziale, tot_pagato=tot_pagato,
         n_da_pagare=n_da_pagare, n_parziale=n_parziale, n_pagate=n_pagate, n_scadute=n_scadute_c, n_scadute_c=n_scadute_c,
@@ -9819,13 +9991,20 @@ def fatturazione():
 def fatturazione_nuova():
     if request.method == 'POST':
         return _salva_fattura(None)
+    tipo = request.args.get('tipo', 'attiva')
+    if tipo not in ('attiva','passiva'): tipo = 'attiva'
     db = get_db()
     clienti = db.execute("SELECT id, nome FROM clienti ORDER BY nome").fetchall()
+    fornitori = db.execute("SELECT id, nome FROM fornitori WHERE COALESCE(attivo,1)=1 ORDER BY nome").fetchall()
     db.close()
     ai_result = session.pop('fatt_ai_result', None)
     pre = session.pop('fatt_pre', {})
-    return render_page(FATT_FORM_TMPL, page_title='Nuova fattura', active='fatturazione',
-        form_action='/fatturazione/nuova', fattura=pre, clienti=clienti,
+    if not pre.get('tipo'):
+        pre['tipo'] = tipo
+    active_key = 'fatturazione_attiva' if tipo == 'attiva' else 'fatturazione_passiva'
+    return render_page(FATT_FORM_TMPL,
+        page_title='Nuova fattura ' + tipo, active=active_key, tipo=tipo,
+        form_action='/fatturazione/nuova', fattura=pre, clienti=clienti, fornitori=fornitori,
         ai_result=ai_result, ai_ok=bool(get_setting('anthropic_api_key','')),
         today=date.today().isoformat())
 
@@ -9838,19 +10017,28 @@ def fatturazione_modifica(fid):
     db = get_db()
     f = db.execute("SELECT * FROM fatture WHERE id=?", (fid,)).fetchone()
     clienti = db.execute("SELECT id, nome FROM clienti ORDER BY nome").fetchall()
+    fornitori = db.execute("SELECT id, nome FROM fornitori WHERE COALESCE(attivo,1)=1 ORDER BY nome").fetchall()
     db.close()
     if not f:
         return redirect(url_for('fatturazione'))
-    return render_page(FATT_FORM_TMPL, page_title='Modifica fattura', active='fatturazione',
-        form_action=f'/fatturazione/{fid}/modifica', fattura=dict(f), clienti=clienti,
+    fd = dict(f)
+    tipo = fd.get('tipo') or 'attiva'
+    active_key = 'fatturazione_attiva' if tipo == 'attiva' else 'fatturazione_passiva'
+    return render_page(FATT_FORM_TMPL, page_title='Modifica fattura', active=active_key, tipo=tipo,
+        form_action=f'/fatturazione/{fid}/modifica', fattura=fd, clienti=clienti, fornitori=fornitori,
         ai_result=None, ai_ok=bool(get_setting('anthropic_api_key','')),
         today=date.today().isoformat())
 
 
 def _salva_fattura(fid):
+    tipo = request.form.get('tipo', 'attiva')
+    if tipo not in ('attiva','passiva'): tipo = 'attiva'
     numero = request.form.get('numero', '').strip()
+    # Controparte: cliente (attiva) o fornitore (passiva); entrambi accettati in passiva
     cliente_id = request.form.get('cliente_id') or None
     cliente_nome = request.form.get('cliente_nome', '').strip()
+    fornitore_id = request.form.get('fornitore_id') or None
+    fornitore_nome = request.form.get('fornitore_nome', '').strip()
     data_em = request.form.get('data_emissione') or date.today().isoformat()
     data_scad = request.form.get('data_scadenza') or None
     cond = request.form.get('condizioni_pagamento', '30gg')
@@ -9874,6 +10062,10 @@ def _salva_fattura(fid):
         c = db.execute("SELECT nome FROM clienti WHERE id=?", (cliente_id,)).fetchone()
         if c:
             cliente_nome = c['nome']
+    if fornitore_id:
+        fr = db.execute("SELECT nome FROM fornitori WHERE id=?", (fornitore_id,)).fetchone()
+        if fr:
+            fornitore_nome = fr['nome']
 
     # Gestisci upload file
     file_nome = None
@@ -9918,20 +10110,24 @@ def _salva_fattura(fid):
             if old:
                 file_nome = old['file_nome']
                 file_path_db = old['file_path']
-        db.execute("""UPDATE fatture SET numero=?,cliente_id=?,cliente_nome=?,data_emissione=?,
+        db.execute("""UPDATE fatture SET tipo=?,numero=?,cliente_id=?,cliente_nome=?,
+            fornitore_id=?,fornitore_nome=?,data_emissione=?,
             data_scadenza=?,condizioni_pagamento=?,imponibile=?,imponibile_lordo=?,sconto_importo=?,
             iva_perc=?,iva_importo=?,
             importo_totale=?,descrizione=?,note=?,file_nome=?,file_path=? WHERE id=?""",
-            (numero, cliente_id, cliente_nome, data_em, data_scad, cond,
+            (tipo, numero, cliente_id, cliente_nome, fornitore_id, fornitore_nome,
+             data_em, data_scad, cond,
              imponibile, imponibile_lordo, sconto_importo,
              iva_perc, iva_imp, importo_tot, descrizione, note, file_nome, file_path_db, fid))
         saved_id = fid
     else:
-        cur = db.execute("""INSERT INTO fatture (numero,cliente_id,cliente_nome,data_emissione,
+        cur = db.execute("""INSERT INTO fatture (tipo,numero,cliente_id,cliente_nome,
+            fornitore_id,fornitore_nome,data_emissione,
             data_scadenza,condizioni_pagamento,imponibile,imponibile_lordo,sconto_importo,
             iva_perc,iva_importo,importo_totale,
-            descrizione,note,file_nome,file_path,stato) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'da_pagare')""",
-            (numero, cliente_id, cliente_nome, data_em, data_scad, cond,
+            descrizione,note,file_nome,file_path,stato) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'da_pagare')""",
+            (tipo, numero, cliente_id, cliente_nome, fornitore_id, fornitore_nome,
+             data_em, data_scad, cond,
              imponibile, imponibile_lordo, sconto_importo,
              iva_perc, iva_imp, importo_tot, descrizione, note, file_nome, file_path_db))
         saved_id = cur.lastrowid
@@ -13858,6 +14054,546 @@ def cliente_elimina(cid):
     safe_commit(db); db.close()
     flash('Cliente eliminato.','success')
     return redirect(url_for('clienti_lista'))
+
+
+
+# ══════════════════════════════════════════════════════════
+#  FORNITORI
+# ══════════════════════════════════════════════════════════
+
+FORNITORI_TMPL = """
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+  <div>
+    <p style="color:var(--text-light);font-size:13px;margin-top:4px">Anagrafica fornitori per la fatturazione passiva.</p>
+  </div>
+  <a href="/fornitori/nuovo" class="btn btn-primary"><i class="fa fa-plus"></i> Nuovo fornitore</a>
+</div>
+
+{% if not fornitori %}
+<div class="card"><div class="card-body" style="text-align:center;padding:40px;color:var(--text-light)">
+  <i class="fa fa-truck-fast" style="font-size:40px;opacity:.3"></i>
+  <p style="margin-top:12px">Nessun fornitore registrato. Aggiungi il primo!</p>
+</div></div>
+{% else %}
+<div class="card">
+<table class="tbl">
+  <thead><tr style="background:#0f172a;color:#fff">
+    <th style="padding:10px 12px;text-align:left">NOME</th>
+    <th style="padding:10px 12px;text-align:left">P.IVA</th>
+    <th style="padding:10px 12px;text-align:left">CITTÀ</th>
+    <th style="padding:10px 12px;text-align:left">EMAIL / TEL</th>
+    <th style="padding:10px 12px;text-align:center">FATTURE</th>
+    <th style="padding:10px 12px;text-align:right">TOT. PAGATO</th>
+    <th></th>
+  </tr></thead>
+  <tbody>
+  {% for f in fornitori %}
+  <tr style="border-bottom:1px solid var(--border)">
+    <td style="padding:10px 12px"><strong>{{ f.nome }}</strong>{% if f.referente %}<div style="font-size:12px;color:var(--text-light)">{{ f.referente }}</div>{% endif %}</td>
+    <td style="padding:10px 12px;font-family:monospace;font-size:12px">{{ f.piva or '–' }}</td>
+    <td style="padding:10px 12px">{{ f.citta or '–' }}</td>
+    <td style="padding:10px 12px;font-size:12px">
+      {% if f.email %}<div>{{ f.email }}</div>{% endif %}
+      {% if f.telefono %}<div style="color:var(--text-light)">{{ f.telefono }}</div>{% endif %}
+    </td>
+    <td style="padding:10px 12px;text-align:center">{{ f.n_fatture }}</td>
+    <td style="padding:10px 12px;text-align:right;font-weight:700;color:#16a34a">€ {{ "%.2f"|format(f.tot_fatturato) }}</td>
+    <td style="padding:10px 12px;text-align:right;white-space:nowrap">
+      <a href="/fornitori/{{ f.id }}/modifica" class="btn btn-sm btn-secondary"><i class="fa fa-pen"></i></a>
+      <a href="/fornitori/{{ f.id }}/elimina" class="btn btn-sm btn-danger" onclick="return confirm('Eliminare {{ f.nome }}?')"><i class="fa fa-trash"></i></a>
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+"""
+
+FORNITORE_FORM_TMPL = """
+<div style="margin-bottom:16px"><a href="/fornitori" class="btn btn-secondary btn-sm"><i class="fa fa-arrow-left"></i> Torna ai fornitori</a></div>
+<form method="POST" class="card">
+<div class="card-header"><h3><i class="fa fa-truck-fast" style="color:var(--accent2)"></i> {% if fr %}Modifica fornitore{% else %}Nuovo fornitore{% endif %}</h3></div>
+<div class="card-body">
+  <div class="form-row">
+    <div class="form-group">
+      <label>Nome / Ragione sociale *</label>
+      <input name="nome" required value="{{ fr.nome if fr else '' }}">
+    </div>
+    <div class="form-group">
+      <label>Referente</label>
+      <input name="referente" value="{{ fr.referente if fr else '' }}">
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>P.IVA</label><input name="piva" value="{{ fr.piva if fr else '' }}"></div>
+    <div class="form-group"><label>Codice fiscale</label><input name="codice_fiscale" value="{{ fr.codice_fiscale if fr else '' }}"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group" style="grid-column:span 2"><label>Indirizzo</label><input name="indirizzo" value="{{ fr.indirizzo if fr else '' }}"></div>
+  </div>
+  <div class="form-row-3">
+    <div class="form-group"><label>Città</label><input name="citta" value="{{ fr.citta if fr else '' }}"></div>
+    <div class="form-group"><label>CAP</label><input name="cap" value="{{ fr.cap if fr else '' }}"></div>
+    <div class="form-group"><label>Paese</label><input name="paese" value="{{ fr.paese if fr else 'Italia' }}"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Email</label><input type="email" name="email" value="{{ fr.email if fr else '' }}"></div>
+    <div class="form-group"><label>Telefono</label><input name="telefono" value="{{ fr.telefono if fr else '' }}"></div>
+  </div>
+  <div class="form-group"><label>Sito web</label><input name="sito_web" value="{{ fr.sito_web if fr else '' }}"></div>
+  <div class="form-group"><label>Note</label><textarea name="note" rows="3">{{ fr.note if fr else '' }}</textarea></div>
+  <div style="text-align:right;margin-top:16px">
+    <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Salva</button>
+  </div>
+</div>
+</form>
+"""
+
+
+@app.route('/fornitori')
+@login_required
+def fornitori_lista():
+    db = get_db()
+    rows = db.execute("SELECT * FROM fornitori WHERE COALESCE(attivo,1)=1 ORDER BY nome").fetchall()
+    fornitori = []
+    for r in rows:
+        fd = dict(r)
+        fd['n_fatture'] = db.execute("SELECT COUNT(*) FROM fatture WHERE fornitore_id=?", (r['id'],)).fetchone()[0]
+        tot_paid = db.execute("""SELECT COALESCE(SUM(rf.importo),0) FROM rate_fattura rf
+                                  JOIN fatture f ON f.id=rf.fattura_id
+                                  WHERE f.fornitore_id=? AND rf.stato='pagata'""", (r['id'],)).fetchone()[0]
+        fd['tot_fatturato'] = tot_paid or 0.0
+        fornitori.append(fd)
+    db.close()
+    return render_page(FORNITORI_TMPL, page_title='Fornitori', active='fornitori', fornitori=fornitori)
+
+
+@app.route('/fornitori/nuovo', methods=['GET','POST'])
+@admin_required
+def fornitore_nuovo():
+    if request.method == 'POST':
+        db = get_db()
+        db.execute("""INSERT INTO fornitori
+            (nome,piva,codice_fiscale,indirizzo,citta,cap,paese,email,telefono,sito_web,referente,note)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""", (
+            request.form.get('nome','').strip(),
+            request.form.get('piva','').strip(),
+            request.form.get('codice_fiscale','').strip(),
+            request.form.get('indirizzo','').strip(),
+            request.form.get('citta','').strip(),
+            request.form.get('cap','').strip(),
+            request.form.get('paese','Italia').strip(),
+            request.form.get('email','').strip(),
+            request.form.get('telefono','').strip(),
+            request.form.get('sito_web','').strip(),
+            request.form.get('referente','').strip(),
+            request.form.get('note','').strip(),
+        ))
+        safe_commit(db); db.close()
+        flash('Fornitore aggiunto!','success')
+        return redirect(url_for('fornitori_lista'))
+    return render_page(FORNITORE_FORM_TMPL, page_title='Nuovo fornitore', active='fornitori', fr=None)
+
+
+@app.route('/fornitori/<int:fid>/modifica', methods=['GET','POST'])
+@admin_required
+def fornitore_modifica(fid):
+    db = get_db()
+    fr = db.execute("SELECT * FROM fornitori WHERE id=?", (fid,)).fetchone()
+    if not fr:
+        db.close(); flash('Fornitore non trovato.','error'); return redirect(url_for('fornitori_lista'))
+    if request.method == 'POST':
+        db.execute("""UPDATE fornitori SET nome=?,piva=?,codice_fiscale=?,indirizzo=?,citta=?,cap=?,
+            paese=?,email=?,telefono=?,sito_web=?,referente=?,note=? WHERE id=?""", (
+            request.form.get('nome','').strip(),
+            request.form.get('piva','').strip(),
+            request.form.get('codice_fiscale','').strip(),
+            request.form.get('indirizzo','').strip(),
+            request.form.get('citta','').strip(),
+            request.form.get('cap','').strip(),
+            request.form.get('paese','Italia').strip(),
+            request.form.get('email','').strip(),
+            request.form.get('telefono','').strip(),
+            request.form.get('sito_web','').strip(),
+            request.form.get('referente','').strip(),
+            request.form.get('note','').strip(),
+            fid,
+        ))
+        safe_commit(db); db.close()
+        flash('Fornitore aggiornato.','success')
+        return redirect(url_for('fornitori_lista'))
+    db.close()
+    return render_page(FORNITORE_FORM_TMPL, page_title='Modifica fornitore', active='fornitori', fr=dict(fr))
+
+
+@app.route('/fornitori/<int:fid>/elimina')
+@admin_required
+def fornitore_elimina(fid):
+    db = get_db()
+    # Soft delete: se ha fatture collegate, disattiva; altrimenti cancella
+    n = db.execute("SELECT COUNT(*) FROM fatture WHERE fornitore_id=?", (fid,)).fetchone()[0]
+    if n > 0:
+        db.execute("UPDATE fornitori SET attivo=0 WHERE id=?", (fid,))
+        flash(f'Fornitore disattivato (ha {n} fatture collegate).','info')
+    else:
+        db.execute("DELETE FROM fornitori WHERE id=?", (fid,))
+        flash('Fornitore eliminato.','success')
+    safe_commit(db); db.close()
+    return redirect(url_for('fornitori_lista'))
+
+
+# ══════════════════════════════════════════════════════════
+#  BANCA ORE
+# ══════════════════════════════════════════════════════════
+
+def _banca_ore_saldo(db, utente_id):
+    """Calcola il saldo banca ore per un utente (somma di tutti i delta)."""
+    row = db.execute("SELECT COALESCE(SUM(delta),0) as s FROM banca_ore_movimenti WHERE utente_id=?", (utente_id,)).fetchone()
+    return round(row['s'] or 0, 2)
+
+
+def _banca_ore_mese_gia_chiuso(db, utente_id, mese):
+    """Ritorna True se esiste già una chiusura_mensile per l'utente in quel mese."""
+    row = db.execute("""SELECT id FROM banca_ore_movimenti 
+                        WHERE utente_id=? AND mese=? AND tipo='chiusura_mensile' LIMIT 1""",
+                     (utente_id, mese)).fetchone()
+    return row is not None
+
+
+def _banca_ore_calcola_chiusura_mese(db, utente, mese):
+    """Per un utente in un dato mese, somma ore presenze, confronta con ore_contratto_mensili,
+    e ritorna (ore_lavorate, ore_contratto, delta) senza scrivere ancora.
+    Se ore_contratto_mensili è 0 o None, ritorna None (skip)."""
+    ore_contratto = float(utente['ore_contratto_mensili'] or 0)
+    if ore_contratto <= 0:
+        return None
+    row = db.execute("""SELECT COALESCE(SUM(ore_totali),0) as ore
+                        FROM presenze WHERE utente_id=? AND substr(data,1,7)=?""",
+                     (utente['id'], mese)).fetchone()
+    ore_lavorate = round(float(row['ore'] or 0), 2)
+    delta = round(ore_lavorate - ore_contratto, 2)
+    return (ore_lavorate, ore_contratto, delta)
+
+
+def _banca_ore_chiudi_mese_auto():
+    """Chiamata da before_request. Se siamo dopo il 1° del mese e il mese precedente non è ancora
+    stato chiuso per tutti i dipendenti attivi con contratto, lo fa automaticamente. Idempotente."""
+    from datetime import datetime as _dt, timedelta as _td
+    azienda_id = session.get('azienda_id')
+    if not azienda_id:
+        return
+    try:
+        oggi = date.today()
+        # Calcola il mese precedente (YYYY-MM)
+        primo_del_mese = oggi.replace(day=1)
+        mese_prec = (primo_del_mese - _td(days=1)).strftime('%Y-%m')
+        db = get_db()
+        dipendenti = db.execute("""SELECT id, nome, cognome, ore_contratto_mensili 
+                                    FROM utenti WHERE COALESCE(attivo,1)=1 
+                                    AND ruolo!='admin' AND COALESCE(ore_contratto_mensili,0)>0""").fetchall()
+        for u in dipendenti:
+            if _banca_ore_mese_gia_chiuso(db, u['id'], mese_prec):
+                continue
+            calc = _banca_ore_calcola_chiusura_mese(db, u, mese_prec)
+            if calc is None:
+                continue
+            ore_lav, ore_con, delta = calc
+            db.execute("""INSERT INTO banca_ore_movimenti
+                (utente_id, mese, tipo, ore_lavorate, ore_contratto, delta, descrizione, creato_da)
+                VALUES (?,?,?,?,?,?,?,?)""",
+                (u['id'], mese_prec, 'chiusura_mensile', ore_lav, ore_con, delta,
+                 f"Chiusura automatica mese {mese_prec}", None))
+        safe_commit(db)
+        db.close()
+    except Exception as e:
+        print(f'[banca_ore_auto] {e}')
+
+
+# Hook sulla before_request per chiusura automatica (una volta al giorno per sessione)
+_banca_ore_auto_done = set()
+
+@app.before_request
+def banca_ore_auto_hook():
+    azienda_id = session.get('azienda_id')
+    if not azienda_id:
+        return
+    key = f"{azienda_id}_{date.today().isoformat()}"
+    if key in _banca_ore_auto_done:
+        return
+    # Esegui solo per request GET e non su assets / logo
+    try:
+        if request.method == 'GET' and not request.path.startswith(('/static','/admin/logo','/favicon')):
+            _banca_ore_chiudi_mese_auto()
+            _banca_ore_auto_done.add(key)
+    except Exception:
+        pass
+
+
+BANCA_ORE_TMPL = """
+<style>
+.bo-card{background:#fff;border-radius:12px;border:1px solid var(--border);padding:16px;margin-bottom:14px}
+.bo-saldo{font-size:32px;font-weight:800}
+.bo-pos{color:#16a34a}.bo-neg{color:#dc2626}.bo-zero{color:#64748b}
+.bo-tab{width:100%;border-collapse:collapse;font-size:13px}
+.bo-tab th{background:#0f172a;color:#fff;padding:10px 12px;text-align:left;font-size:12px}
+.bo-tab td{padding:10px 12px;border-bottom:1px solid var(--border)}
+</style>
+
+<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+  <div>
+    <p style="color:var(--text-light);font-size:13px;margin:4px 0 0">
+      Saldo banca ore di ogni dipendente. Positivo = credito (ore in più), negativo = debito (ore da recuperare).
+      La chiusura del mese precedente avviene <strong>automaticamente</strong> al primo accesso di ogni mese.
+    </p>
+  </div>
+  <form action="/banca-ore/chiudi-mese" method="POST" onsubmit="return confirm('Chiudere manualmente il mese {{ mese_default }} per tutti i dipendenti con contratto?')" style="display:flex;gap:8px;align-items:center">
+    <input type="month" name="mese" value="{{ mese_default }}" required style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px">
+    <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-lock"></i> Chiudi mese</button>
+  </form>
+</div>
+
+{% if not dipendenti %}
+<div class="bo-card" style="text-align:center;padding:40px;color:var(--text-light)">
+  <i class="fa fa-piggy-bank" style="font-size:40px;opacity:.3"></i>
+  <p style="margin-top:12px">Nessun dipendente con ore contrattuali impostate.<br>
+  Imposta <code>ore_contratto_mensili</code> dalla scheda di ogni dipendente.</p>
+</div>
+{% else %}
+<div class="bo-card" style="padding:0;overflow:hidden">
+<table class="bo-tab">
+  <thead><tr>
+    <th>DIPENDENTE</th>
+    <th style="text-align:right">CONTRATTO MENSILE</th>
+    <th style="text-align:right">SALDO BANCA</th>
+    <th style="text-align:center">ULTIMA CHIUSURA</th>
+    <th></th>
+  </tr></thead>
+  <tbody>
+  {% for u in dipendenti %}
+  <tr>
+    <td><strong>{{ u.nome }} {{ u.cognome }}</strong>{% if u.titolo %}<div style="font-size:11px;color:var(--text-light)">{{ u.titolo }}</div>{% endif %}</td>
+    <td style="text-align:right;font-family:monospace">{{ "%.1f"|format(u.ore_contratto_mensili or 0) }} h</td>
+    <td style="text-align:right">
+      <span class="bo-saldo {% if u.saldo > 0 %}bo-pos{% elif u.saldo < 0 %}bo-neg{% else %}bo-zero{% endif %}">
+        {% if u.saldo > 0 %}+{% endif %}{{ "%.1f"|format(u.saldo) }} h
+      </span>
+    </td>
+    <td style="text-align:center;font-size:12px;color:var(--text-light)">{{ u.ultima_chiusura or '—' }}</td>
+    <td style="text-align:right">
+      <a href="/banca-ore/{{ u.id }}" class="btn btn-sm btn-secondary"><i class="fa fa-eye"></i> Dettaglio</a>
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+
+{% if senza_contratto %}
+<div class="bo-card" style="background:#fef3c7;border-color:#fbbf24;margin-top:20px">
+  <strong style="color:#92400e"><i class="fa fa-triangle-exclamation"></i> Dipendenti senza ore contrattuali impostate:</strong>
+  <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+    {% for u in senza_contratto %}
+    <a href="/dipendenti/{{ u.id }}/modifica" style="background:#fff;padding:4px 10px;border-radius:6px;font-size:12px;text-decoration:none;color:#92400e;border:1px solid #fbbf24">{{ u.nome }} {{ u.cognome }}</a>
+    {% endfor %}
+  </div>
+  <p style="margin-top:8px;font-size:12px;color:#92400e">Per attivare la banca ore, imposta le ore contrattuali mensili nella scheda del dipendente.</p>
+</div>
+{% endif %}
+"""
+
+BANCA_ORE_DETTAGLIO_TMPL = """
+<div style="margin-bottom:16px"><a href="/banca-ore" class="btn btn-secondary btn-sm"><i class="fa fa-arrow-left"></i> Torna alla banca ore</a></div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px">
+  <div class="bo-card">
+    <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700">Dipendente</div>
+    <div style="font-size:20px;font-weight:800;margin-top:4px">{{ u.nome }} {{ u.cognome }}</div>
+    <div style="font-size:12px;color:var(--text-light)">{{ u.titolo or '—' }}</div>
+  </div>
+  <div class="bo-card">
+    <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700">Contratto mensile</div>
+    <div style="font-size:24px;font-weight:800;margin-top:4px">{{ "%.1f"|format(u.ore_contratto_mensili or 0) }} h</div>
+  </div>
+  <div class="bo-card">
+    <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700">Saldo attuale</div>
+    <div class="bo-saldo {% if saldo > 0 %}bo-pos{% elif saldo < 0 %}bo-neg{% else %}bo-zero{% endif %}" style="margin-top:4px">
+      {% if saldo > 0 %}+{% endif %}{{ "%.1f"|format(saldo) }} h
+    </div>
+  </div>
+</div>
+
+<div class="bo-card">
+  <h3 style="margin:0 0 14px;font-size:16px"><i class="fa fa-pen-to-square"></i> Rettifica manuale</h3>
+  <form action="/banca-ore/{{ u.id }}/rettifica" method="POST" style="display:grid;grid-template-columns:120px 1fr auto;gap:10px;align-items:end">
+    <div class="form-group" style="margin:0">
+      <label>Delta ore (±)</label>
+      <input type="number" name="delta" step="0.25" required placeholder="es. -4 o 8" style="font-weight:700">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label>Descrizione / motivo</label>
+      <input name="descrizione" placeholder="es. Correzione presenze, compenso straordinario..." required>
+    </div>
+    <button type="submit" class="btn btn-primary"><i class="fa fa-plus"></i> Aggiungi</button>
+  </form>
+</div>
+
+<div class="bo-card" style="padding:0;overflow:hidden">
+  <div style="padding:14px 16px;border-bottom:1px solid var(--border)"><strong>Movimenti</strong></div>
+  {% if not movimenti %}
+  <div style="padding:24px;text-align:center;color:var(--text-light)">Nessun movimento.</div>
+  {% else %}
+  <table class="bo-tab">
+    <thead><tr>
+      <th>DATA</th><th>MESE</th><th>TIPO</th><th>DESCRIZIONE</th>
+      <th style="text-align:right">ORE LAV.</th>
+      <th style="text-align:right">CONTRATTO</th>
+      <th style="text-align:right">DELTA</th>
+      <th></th>
+    </tr></thead>
+    <tbody>
+    {% for m in movimenti %}
+    <tr>
+      <td style="font-family:monospace;font-size:11px">{{ m.creato_il[:10] if m.creato_il else '—' }}</td>
+      <td style="font-family:monospace;font-size:12px">{{ m.mese }}</td>
+      <td>
+        {% if m.tipo == 'chiusura_mensile' %}<span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">chiusura</span>
+        {% elif m.tipo == 'manuale' %}<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">manuale</span>
+        {% elif m.tipo == 'rettifica' %}<span style="background:#f3e8ff;color:#7c3aed;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">rettifica</span>
+        {% else %}<span style="padding:2px 8px;border-radius:4px;font-size:11px">{{ m.tipo }}</span>{% endif %}
+      </td>
+      <td style="font-size:12px">{{ m.descrizione or '' }}</td>
+      <td style="text-align:right;font-family:monospace;font-size:12px">{% if m.ore_lavorate %}{{ "%.1f"|format(m.ore_lavorate) }}{% else %}—{% endif %}</td>
+      <td style="text-align:right;font-family:monospace;font-size:12px">{% if m.ore_contratto %}{{ "%.1f"|format(m.ore_contratto) }}{% else %}—{% endif %}</td>
+      <td style="text-align:right;font-weight:800" class="{% if m.delta > 0 %}bo-pos{% elif m.delta < 0 %}bo-neg{% else %}bo-zero{% endif %}">
+        {% if m.delta > 0 %}+{% endif %}{{ "%.2f"|format(m.delta) }} h
+      </td>
+      <td style="text-align:right">
+        <a href="/banca-ore/movimento/{{ m.id }}/elimina" onclick="return confirm('Eliminare questo movimento?')" class="btn btn-sm btn-danger" title="Elimina"><i class="fa fa-trash"></i></a>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+"""
+
+
+@app.route('/banca-ore')
+@admin_required
+def banca_ore():
+    from datetime import timedelta as _td
+    db = get_db()
+    dip_raw = db.execute("""SELECT id, nome, cognome, titolo, ore_contratto_mensili 
+                             FROM utenti WHERE COALESCE(attivo,1)=1 AND ruolo != 'admin'
+                             ORDER BY cognome, nome""").fetchall()
+    dipendenti = []
+    senza_contratto = []
+    for u in dip_raw:
+        ud = dict(u)
+        if not u['ore_contratto_mensili'] or u['ore_contratto_mensili'] <= 0:
+            senza_contratto.append(ud)
+            continue
+        ud['saldo'] = _banca_ore_saldo(db, u['id'])
+        last = db.execute("""SELECT mese FROM banca_ore_movimenti 
+                             WHERE utente_id=? AND tipo='chiusura_mensile' 
+                             ORDER BY mese DESC LIMIT 1""", (u['id'],)).fetchone()
+        ud['ultima_chiusura'] = last['mese'] if last else None
+        dipendenti.append(ud)
+    # Mese default = mese precedente
+    oggi = date.today()
+    primo = oggi.replace(day=1)
+    mese_prec_dt = (primo - _td(days=1))
+    mese_default = mese_prec_dt.strftime('%Y-%m')
+    db.close()
+    return render_page(BANCA_ORE_TMPL, page_title='Banca Ore', active='banca_ore',
+                       dipendenti=dipendenti, senza_contratto=senza_contratto, mese_default=mese_default)
+
+
+@app.route('/banca-ore/<int:uid>')
+@admin_required
+def banca_ore_dettaglio(uid):
+    db = get_db()
+    u = db.execute("SELECT * FROM utenti WHERE id=?", (uid,)).fetchone()
+    if not u:
+        db.close(); flash('Dipendente non trovato.','error'); return redirect(url_for('banca_ore'))
+    movimenti = db.execute("""SELECT * FROM banca_ore_movimenti 
+                              WHERE utente_id=? ORDER BY mese DESC, id DESC""", (uid,)).fetchall()
+    saldo = _banca_ore_saldo(db, uid)
+    db.close()
+    return render_page(BANCA_ORE_DETTAGLIO_TMPL,
+                       page_title=f"Banca Ore — {u['nome']} {u['cognome']}",
+                       active='banca_ore', u=dict(u), movimenti=[dict(m) for m in movimenti], saldo=saldo)
+
+
+@app.route('/banca-ore/<int:uid>/rettifica', methods=['POST'])
+@admin_required
+def banca_ore_rettifica(uid):
+    try:
+        delta = float(request.form.get('delta', 0))
+    except ValueError:
+        flash('Valore delta non valido.','error')
+        return redirect(url_for('banca_ore_dettaglio', uid=uid))
+    descrizione = request.form.get('descrizione','').strip()
+    if not descrizione:
+        flash('Descrizione obbligatoria.','error')
+        return redirect(url_for('banca_ore_dettaglio', uid=uid))
+    mese = date.today().strftime('%Y-%m')
+    db = get_db()
+    db.execute("""INSERT INTO banca_ore_movimenti
+        (utente_id, mese, tipo, delta, descrizione, creato_da)
+        VALUES (?,?,?,?,?,?)""",
+        (uid, mese, 'rettifica', delta, descrizione, session.get('user_id')))
+    safe_commit(db); db.close()
+    flash(f'Rettifica registrata: {delta:+.2f} h', 'success')
+    return redirect(url_for('banca_ore_dettaglio', uid=uid))
+
+
+@app.route('/banca-ore/chiudi-mese', methods=['POST'])
+@admin_required
+def banca_ore_chiudi_mese():
+    mese = request.form.get('mese','').strip()
+    if not mese or len(mese) != 7:
+        flash('Formato mese non valido.','error')
+        return redirect(url_for('banca_ore'))
+    db = get_db()
+    dipendenti = db.execute("""SELECT id, nome, cognome, ore_contratto_mensili 
+                                FROM utenti WHERE COALESCE(attivo,1)=1 
+                                AND ruolo != 'admin' AND COALESCE(ore_contratto_mensili,0)>0""").fetchall()
+    n_creati = 0
+    n_skip = 0
+    for u in dipendenti:
+        if _banca_ore_mese_gia_chiuso(db, u['id'], mese):
+            n_skip += 1
+            continue
+        calc = _banca_ore_calcola_chiusura_mese(db, u, mese)
+        if calc is None:
+            n_skip += 1
+            continue
+        ore_lav, ore_con, delta = calc
+        db.execute("""INSERT INTO banca_ore_movimenti
+            (utente_id, mese, tipo, ore_lavorate, ore_contratto, delta, descrizione, creato_da)
+            VALUES (?,?,?,?,?,?,?,?)""",
+            (u['id'], mese, 'chiusura_mensile', ore_lav, ore_con, delta,
+             f"Chiusura manuale mese {mese}", session.get('user_id')))
+        n_creati += 1
+    safe_commit(db); db.close()
+    flash(f'Chiusura mese {mese}: {n_creati} movimenti creati, {n_skip} già presenti/saltati.', 'success')
+    return redirect(url_for('banca_ore'))
+
+
+@app.route('/banca-ore/movimento/<int:mid>/elimina')
+@admin_required
+def banca_ore_movimento_elimina(mid):
+    db = get_db()
+    row = db.execute("SELECT utente_id FROM banca_ore_movimenti WHERE id=?", (mid,)).fetchone()
+    uid = row['utente_id'] if row else None
+    db.execute("DELETE FROM banca_ore_movimenti WHERE id=?", (mid,))
+    safe_commit(db); db.close()
+    flash('Movimento eliminato.','success')
+    return redirect(url_for('banca_ore_dettaglio', uid=uid) if uid else url_for('banca_ore'))
 
 
 
