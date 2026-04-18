@@ -950,6 +950,19 @@ def login_required(f):
     def d(*a,**k):
         if 'user_id' not in session:
             return redirect(url_for('login'))
+        # Verifica che l'utente sia ancora attivo (altrimenti logout forzato)
+        # Skip per super-admin SaaS (user_id=0 con is_saas) e per route di autenticazione stessa
+        if session.get('user_id') and not session.get('is_saas'):
+            try:
+                db = get_db()
+                u = db.execute("SELECT attivo FROM utenti WHERE id=?", (session['user_id'],)).fetchone()
+                db.close()
+                if not u or u['attivo'] != 1:
+                    session.clear()
+                    flash('Il tuo account è stato disattivato. Contatta l\'amministratore.', 'error')
+                    return redirect(url_for('login'))
+            except Exception:
+                pass
         # Dipendenti non-admin: blocca accesso a pagine admin
         admin_pages = {'dashboard','dipendenti','presenze','ferie','cantieri',
                        'documenti','scadenze','calendario','richieste','impostazioni','fatturazione','preventivi','clienti','contratti_clienti'}
@@ -963,6 +976,18 @@ def admin_required(f):
     def d(*a,**k):
         if 'user_id' not in session:
             return redirect(url_for('login'))
+        # Verifica che l'admin sia ancora attivo
+        if session.get('user_id') and not session.get('is_saas'):
+            try:
+                db = get_db()
+                u = db.execute("SELECT attivo FROM utenti WHERE id=?", (session['user_id'],)).fetchone()
+                db.close()
+                if not u or u['attivo'] != 1:
+                    session.clear()
+                    flash('Il tuo account è stato disattivato.', 'error')
+                    return redirect(url_for('login'))
+            except Exception:
+                pass
         if session.get('ruolo') != 'admin':
             flash('Accesso riservato agli amministratori.','error')
             return redirect(url_for('mobile'))
@@ -1852,6 +1877,11 @@ def auth_google_callback():
     u = db.execute("SELECT * FROM utenti WHERE google_id=? OR email=?", (google_id, email)).fetchone()
 
     if u:
+        # Blocca utenti disattivati
+        if u['attivo'] != 1:
+            db.close()
+            flash('Il tuo account è stato disattivato. Contatta l\'amministratore.', 'error')
+            return redirect(url_for('login'))
         # Utente esistente — aggiorna google_id e avatar se mancanti
         db.execute("UPDATE utenti SET google_id=?, avatar_url=? WHERE id=?",
                    (google_id, avatar_url, u['id']))
@@ -4885,28 +4915,89 @@ def export_report():
 #  DIPENDENTI
 # ══════════════════════════════════════════════════════════
 DIP_TMPL = """
+<style>
+.dip-tabs{display:flex;gap:8px;margin-bottom:18px;border-bottom:2px solid var(--border);flex-wrap:wrap}
+.dip-tab{padding:10px 18px;text-decoration:none;font-weight:700;font-size:13px;border-bottom:3px solid transparent;color:#64748b;margin-bottom:-2px;white-space:nowrap}
+.dip-tab.active-at{border-bottom-color:#16a34a;color:#16a34a}
+.dip-tab.active-dis{border-bottom-color:#dc2626;color:#dc2626}
+.dip-tab.active-all{border-bottom-color:#2563eb;color:#2563eb}
+tr.riga-disattivo{opacity:.65;background:#fafafa}
+tr.riga-disattivo td{color:#94a3b8}
+</style>
+
+<div class="dip-tabs">
+  <a href="/dipendenti?mostra=attivi" class="dip-tab {% if mostra=='attivi' %}active-at{% endif %}">
+    <i class="fa fa-user-check"></i> Attivi ({{ n_attivi }})
+  </a>
+  <a href="/dipendenti?mostra=disattivati" class="dip-tab {% if mostra=='disattivati' %}active-dis{% endif %}">
+    <i class="fa fa-user-slash"></i> Disattivati ({{ n_disattivati }})
+  </a>
+  <a href="/dipendenti?mostra=tutti" class="dip-tab {% if mostra=='tutti' %}active-all{% endif %}">
+    <i class="fa fa-users"></i> Tutti ({{ n_attivi + n_disattivati }})
+  </a>
+</div>
+
+{% if mostra == 'disattivati' and dipendenti %}
+<div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:12px 16px;border-radius:8px;margin-bottom:16px;font-size:13px;color:#92400e">
+  <i class="fa fa-circle-info"></i> Questi account sono <strong>disattivati</strong>: i dipendenti non possono più accedere al sistema, ma tutte le loro presenze, ore e documenti rimangono salvati nel portale e visibili nei report. Puoi <strong>riattivare</strong> un account in qualsiasi momento.
+</div>
+{% endif %}
+
 <div class="card">
   <div class="table-wrap"><table>
-    <thead><tr><th>Dipendente</th><th>Titolo</th><th>Email</th><th>Assunto il</th><th>Documenti</th><th>Stato</th>{% if session.ruolo=='admin' %}<th>Azioni</th>{% endif %}</tr></thead>
+    <thead><tr>
+      <th>Dipendente</th>
+      <th>Titolo</th>
+      <th>Email</th>
+      <th>Assunto il</th>
+      <th style="text-align:right">Presenze</th>
+      <th style="text-align:right">Ore totali</th>
+      <th>Documenti</th>
+      <th>Stato</th>
+      {% if session.ruolo=='admin' %}<th>Azioni</th>{% endif %}
+    </tr></thead>
     <tbody>{% for d in dipendenti %}
-    <tr>
+    <tr class="{% if not d.attivo %}riga-disattivo{% endif %}">
       <td><div style="display:flex;align-items:center"><span class="avatar-sm">{{ d.nome[0] }}{{ d.cognome[0] }}</span><div><div style="font-weight:600">{{ d.nome }} {{ d.cognome }}</div><div style="font-size:11px;color:var(--text-light)">{{ d.ruolo }}</div></div></div></td>
       <td>{{ d.mansione or d.titolo or '–' }}</td>
       <td style="color:var(--accent2)">{{ d.email }}</td>
       <td>{{ d.data_assunzione or '–' }}</td>
+      <td style="text-align:right;font-family:monospace;font-size:12px">{{ d.n_presenze or 0 }}</td>
+      <td style="text-align:right;font-family:monospace;font-size:12px;font-weight:700">{{ "%.1f"|format(d.tot_ore or 0) }} h</td>
       <td>
         <a href="/dipendenti/{{ d.id }}/documenti" class="btn btn-secondary btn-sm" style="gap:5px">
           <i class="fa fa-folder-open"></i>
           {% if d.n_docs > 0 %}<span class="badge badge-blue" style="margin-left:2px">{{ d.n_docs }}</span>{% endif %}
         </a>
       </td>
-      <td>{% if d.attivo %}<span class="badge badge-green">● Attivo</span>{% else %}<span class="badge badge-red">Inattivo</span>{% endif %}</td>
+      <td>
+        {% if d.attivo %}<span class="badge badge-green">● Attivo</span>
+        {% else %}<span class="badge badge-red" style="background:#fee2e2;color:#991b1b"><i class="fa fa-ban"></i> Disattivato</span>{% endif %}
+      </td>
       {% if session.ruolo=='admin' %}<td style="display:flex;gap:6px">
-        <a href="/dipendenti/{{ d.id }}/modifica" class="btn btn-secondary btn-sm"><i class="fa fa-pen"></i></a>
-        <a href="/dipendenti/{{ d.id }}/elimina" class="btn btn-danger btn-sm" onclick="return confirm('Rimuovere?')"><i class="fa fa-trash"></i></a>
+        <a href="/dipendenti/{{ d.id }}/modifica" class="btn btn-secondary btn-sm" title="Modifica"><i class="fa fa-pen"></i></a>
+        {% if d.attivo %}
+        <a href="/dipendenti/{{ d.id }}/elimina"
+           onclick="return confirm('Disattivare l&#39;account di {{ d.nome }} {{ d.cognome }}?\\n\\n✓ Le presenze, ore e documenti restano salvati nel portale\\n✗ {{ d.nome }} non potrà più accedere al sistema')"
+           class="btn btn-sm" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca" title="Disattiva account">
+           <i class="fa fa-user-slash"></i> Disattiva
+        </a>
+        {% else %}
+        <a href="/dipendenti/{{ d.id }}/riattiva"
+           onclick="return confirm('Riattivare l&#39;account di {{ d.nome }} {{ d.cognome }}?\\nPotrà accedere nuovamente.')"
+           class="btn btn-sm" style="background:#f0fdf4;color:#16a34a;border:1px solid #86efac" title="Riattiva account">
+           <i class="fa fa-user-check"></i> Riattiva
+        </a>
+        {% endif %}
       </td>{% endif %}
     </tr>{% endfor %}</tbody>
   </table></div>
+  {% if not dipendenti %}
+  <div style="padding:40px;text-align:center;color:var(--text-light)">
+    <i class="fa fa-users-slash" style="font-size:40px;opacity:.3"></i>
+    <p style="margin-top:12px">Nessun dipendente {% if mostra=='disattivati' %}disattivato{% else %}trovato{% endif %}.</p>
+  </div>
+  {% endif %}
 </div>"""
 
 DIP_FORM_TMPL = """
@@ -5017,13 +5108,27 @@ function generatePwd() {
 @login_required
 def dipendenti():
     db=get_db()
-    dips_raw=db.execute("SELECT * FROM utenti WHERE attivo=1 ORDER BY cognome,nome").fetchall()
+    mostra = request.args.get('mostra', 'attivi')  # 'attivi' | 'disattivati' | 'tutti'
+    if mostra == 'disattivati':
+        dips_raw = db.execute("SELECT * FROM utenti WHERE COALESCE(attivo,0)=0 ORDER BY cognome,nome").fetchall()
+    elif mostra == 'tutti':
+        dips_raw = db.execute("SELECT * FROM utenti ORDER BY COALESCE(attivo,0) DESC, cognome, nome").fetchall()
+    else:
+        dips_raw = db.execute("SELECT * FROM utenti WHERE attivo=1 ORDER BY cognome,nome").fetchall()
+    n_attivi       = db.execute("SELECT COUNT(*) FROM utenti WHERE attivo=1").fetchone()[0]
+    n_disattivati  = db.execute("SELECT COUNT(*) FROM utenti WHERE COALESCE(attivo,0)=0").fetchone()[0]
     dips=[]
     for d in dips_raw:
         n=db.execute("SELECT COUNT(*) FROM documenti_dipendente WHERE utente_id=?",(d['id'],)).fetchone()[0]
-        row=dict(d); row['n_docs']=n; dips.append(row)
+        # Conteggio presenze e ore totali (preservate anche per disattivati)
+        n_pres = db.execute("SELECT COUNT(*) FROM presenze WHERE utente_id=?", (d['id'],)).fetchone()[0]
+        tot_ore = db.execute("SELECT COALESCE(SUM(ore_totali),0) FROM presenze WHERE utente_id=?", (d['id'],)).fetchone()[0]
+        row=dict(d); row['n_docs']=n; row['n_presenze']=n_pres; row['tot_ore']=round(tot_ore or 0, 1)
+        dips.append(row)
     db.close()
-    return render_page(DIP_TMPL,page_title='Dipendenti',active='dipendenti',dipendenti=dips)
+    return render_page(DIP_TMPL, page_title='Dipendenti', active='dipendenti',
+                       dipendenti=dips, mostra=mostra,
+                       n_attivi=n_attivi, n_disattivati=n_disattivati)
 
 @app.route('/dipendenti/nuovo',methods=['GET','POST'])
 @admin_required
@@ -5067,8 +5172,28 @@ def dipendente_modifica(uid):
 @app.route('/dipendenti/<int:uid>/elimina')
 @admin_required
 def dipendente_elimina(uid):
-    db=get_db();db.execute("UPDATE utenti SET attivo=0 WHERE id=?",(uid,));safe_commit(db);db.close()
-    flash('Rimosso.','success');return redirect(url_for('dipendenti'))
+    """Disattiva l'account del dipendente: non può più accedere, ma ore e presenze restano salvate."""
+    db = get_db()
+    dip = db.execute("SELECT nome, cognome FROM utenti WHERE id=?", (uid,)).fetchone()
+    if not dip:
+        db.close(); flash('Dipendente non trovato.', 'error'); return redirect(url_for('dipendenti'))
+    db.execute("UPDATE utenti SET attivo=0 WHERE id=?", (uid,))
+    safe_commit(db); db.close()
+    flash(f'✅ Account di {dip["nome"]} {dip["cognome"]} disattivato. Non potrà più accedere, ma presenze, ore e documenti restano salvati nel portale.', 'success')
+    return redirect(url_for('dipendenti'))
+
+@app.route('/dipendenti/<int:uid>/riattiva')
+@admin_required
+def dipendente_riattiva(uid):
+    """Riattiva un account dipendente precedentemente disattivato."""
+    db = get_db()
+    dip = db.execute("SELECT nome, cognome FROM utenti WHERE id=?", (uid,)).fetchone()
+    if not dip:
+        db.close(); flash('Dipendente non trovato.', 'error'); return redirect(url_for('dipendenti'))
+    db.execute("UPDATE utenti SET attivo=1 WHERE id=?", (uid,))
+    safe_commit(db); db.close()
+    flash(f'✅ Account di {dip["nome"]} {dip["cognome"]} riattivato. Potrà accedere nuovamente.', 'success')
+    return redirect(url_for('dipendenti', mostra='attivi'))
 
 @app.route('/dipendenti/<int:uid>/reset-password')
 @admin_required
