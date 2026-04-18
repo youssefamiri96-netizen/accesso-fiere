@@ -204,17 +204,38 @@ os.makedirs(UPLOAD_DIR_DOCS,    exist_ok=True)
 os.makedirs(UPLOAD_DIR_LOGHI,   exist_ok=True)
 
 # ── Logo aziendale helpers ────────────────────────────
+def _logo_tenant_key():
+    """Ritorna la chiave-tenant da usare per il nome file del logo.
+    Usa azienda_id (la vera chiave di sessione multi-tenant) con fallback a 'legacy'."""
+    from flask import session
+    return str(session.get('azienda_id') or 'legacy')
+
+
 def get_logo_azienda_path(tenant_id=None):
-    """Ritorna il path del logo aziendale se esiste, altrimenti None."""
+    """Ritorna il path del logo aziendale se esiste (qualsiasi estensione), altrimenti None."""
     if tenant_id is None:
-        from flask import session
-        tenant_id = session.get('tenant_id', 'legacy')
-    fname = f"logo_{tenant_id}.png"
-    path  = os.path.join(UPLOAD_DIR_LOGHI, fname)
-    return path if os.path.exists(path) else None
+        tid = _logo_tenant_key()
+    else:
+        tid = str(tenant_id)
+    try:
+        for fname in os.listdir(UPLOAD_DIR_LOGHI):
+            if fname.startswith(f'logo_{tid}.'):
+                return os.path.join(UPLOAD_DIR_LOGHI, fname)
+    except Exception:
+        pass
+    # Fallback backward-compat: vecchi upload salvati come logo_legacy.*
+    if tid != 'legacy':
+        try:
+            for fname in os.listdir(UPLOAD_DIR_LOGHI):
+                if fname.startswith('logo_legacy.'):
+                    return os.path.join(UPLOAD_DIR_LOGHI, fname)
+        except Exception:
+            pass
+    return None
+
 
 def get_logo_azienda_b64(tenant_id=None):
-    """Ritorna il logo aziendale come base64 PNG, o None."""
+    """Ritorna il logo aziendale come base64, o None."""
     path = get_logo_azienda_path(tenant_id)
     if path is None:
         return None
@@ -1077,12 +1098,18 @@ def check_scadenze_email():
 def render_page(tmpl, **ctx):
     # ── Logo aziendale ─────────────────────────────────
     try:
-        tid = session.get('tenant_id', 'legacy')
+        tid = str(session.get('azienda_id') or 'legacy')
         logo_path = None
         for _fname in os.listdir(UPLOAD_DIR_LOGHI):
             if _fname.startswith(f'logo_{tid}.'):
                 logo_path = os.path.join(UPLOAD_DIR_LOGHI, _fname)
                 break
+        # Backward-compat: vecchi upload sotto 'logo_legacy.*'
+        if logo_path is None and tid != 'legacy':
+            for _fname in os.listdir(UPLOAD_DIR_LOGHI):
+                if _fname.startswith('logo_legacy.'):
+                    logo_path = os.path.join(UPLOAD_DIR_LOGHI, _fname)
+                    break
         ctx.setdefault('ha_logo_az', logo_path is not None)
         ctx.setdefault('logo_az_ts', int(os.path.getmtime(logo_path)) if logo_path else 0)
     except Exception:
@@ -12085,12 +12112,12 @@ def logo_upload():
     if ext not in allowed:
         flash('Formato non supportato. Usa PNG, JPG, GIF o SVG.', 'error')
         return redirect(url_for('impostazioni'))
-    # Salva sempre come PNG per semplicità (o col suo ext)
-    tid  = session.get('tenant_id', 'legacy')
+    # Salva col suo ext nativo, nome file basato su azienda_id (isolamento multi-tenant)
+    tid  = str(session.get('azienda_id') or 'legacy')
     dest = os.path.join(UPLOAD_DIR_LOGHI, f'logo_{tid}.{ext}')
-    # Rimuovi eventuali loghi precedenti di questo tenant
+    # Rimuovi eventuali loghi precedenti di questo tenant (incluso legacy se presente)
     for old_f in os.listdir(UPLOAD_DIR_LOGHI):
-        if old_f.startswith(f'logo_{tid}.'):
+        if old_f.startswith(f'logo_{tid}.') or old_f.startswith('logo_legacy.'):
             try: os.remove(os.path.join(UPLOAD_DIR_LOGHI, old_f))
             except: pass
     f.save(dest)
@@ -12102,15 +12129,20 @@ def logo_upload():
 @login_required
 def logo_serve():
     """Serve il logo dell'azienda corrente."""
-    tid = session.get('tenant_id', 'legacy')
-    # Cerca qualsiasi file logo_{tid}.*
+    tid = str(session.get('azienda_id') or 'legacy')
+    mime_map = {'png':'image/png','jpg':'image/jpeg','jpeg':'image/jpeg',
+                'gif':'image/gif','webp':'image/webp','svg':'image/svg+xml'}
+    # Prima cerca per azienda_id
     for fname in os.listdir(UPLOAD_DIR_LOGHI):
         if fname.startswith(f'logo_{tid}.'):
             ext = fname.rsplit('.', 1)[-1].lower()
-            mime_map = {'png':'image/png','jpg':'image/jpeg','jpeg':'image/jpeg',
-                        'gif':'image/gif','webp':'image/webp','svg':'image/svg+xml'}
-            mime = mime_map.get(ext, 'image/png')
-            return send_file(os.path.join(UPLOAD_DIR_LOGHI, fname), mimetype=mime)
+            return send_file(os.path.join(UPLOAD_DIR_LOGHI, fname), mimetype=mime_map.get(ext, 'image/png'))
+    # Backward-compat: logo_legacy.*
+    if tid != 'legacy':
+        for fname in os.listdir(UPLOAD_DIR_LOGHI):
+            if fname.startswith('logo_legacy.'):
+                ext = fname.rsplit('.', 1)[-1].lower()
+                return send_file(os.path.join(UPLOAD_DIR_LOGHI, fname), mimetype=mime_map.get(ext, 'image/png'))
     from flask import abort
     abort(404)
 
@@ -12118,10 +12150,10 @@ def logo_serve():
 @app.route('/admin/logo/delete', methods=['POST'])
 @admin_required
 def logo_delete():
-    tid = session.get('tenant_id', 'legacy')
+    tid = str(session.get('azienda_id') or 'legacy')
     rimosso = False
     for fname in os.listdir(UPLOAD_DIR_LOGHI):
-        if fname.startswith(f'logo_{tid}.'):
+        if fname.startswith(f'logo_{tid}.') or fname.startswith('logo_legacy.'):
             try:
                 os.remove(os.path.join(UPLOAD_DIR_LOGHI, fname))
                 rimosso = True
