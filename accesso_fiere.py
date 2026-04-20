@@ -1427,6 +1427,34 @@ textarea{resize:vertical;min-height:80px}
 <script>
 function updateClock(){var e=document.getElementById('live-clock');if(e)e.textContent=new Date().toLocaleTimeString('it-IT');}
 setInterval(updateClock,1000);updateClock();
+
+// ── Auto-logout se l'account viene disattivato dall'admin ──
+(function(){
+  var checking = false;
+  function checkSession(){
+    if (checking) return;
+    checking = true;
+    fetch('/api/session-check', {credentials:'same-origin', cache:'no-store'})
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if (!data.active) {
+          var msg = 'La tua sessione è terminata.';
+          if (data.reason === 'deactivated') msg = '⚠ Il tuo account è stato disattivato dall\\'amministratore. Sarai disconnesso ora.';
+          else if (data.reason === 'deleted') msg = '⚠ Il tuo account è stato rimosso. Sarai disconnesso ora.';
+          else if (data.reason === 'not_logged_in') msg = 'La tua sessione è scaduta. Effettua di nuovo il login.';
+          alert(msg);
+          window.location.href = '/login';
+        }
+      })
+      .catch(function(){ /* ignora errori di rete temporanei */ })
+      .finally(function(){ checking = false; });
+  }
+  // Controlla ogni 30 secondi e quando la pagina torna in primo piano
+  setInterval(checkSession, 30000);
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'visible') checkSession();
+  });
+})();
 </script>
 </body></html>"""
 
@@ -1663,6 +1691,33 @@ def login():
 
 @app.route('/logout')
 def logout(): session.clear(); return redirect(url_for('login'))
+
+@app.route('/api/session-check')
+def api_session_check():
+    """Endpoint leggero per il polling lato client.
+    Risponde {active: true} se l'utente è ancora loggato e attivo,
+    altrimenti {active: false, reason: ...}. Usato dal JS per fare
+    logout automatico in tempo quasi-reale quando l'admin disattiva l'account."""
+    from flask import jsonify
+    if 'user_id' not in session:
+        return jsonify({'active': False, 'reason': 'not_logged_in'})
+    # Super-admin SaaS: sempre attivo
+    if session.get('is_saas') and session.get('user_id') == 0:
+        return jsonify({'active': True})
+    try:
+        db = get_db()
+        u = db.execute("SELECT attivo FROM utenti WHERE id=?", (session['user_id'],)).fetchone()
+        db.close()
+        if not u:
+            session.clear()
+            return jsonify({'active': False, 'reason': 'deleted'})
+        if u['attivo'] != 1:
+            session.clear()
+            return jsonify({'active': False, 'reason': 'deactivated'})
+        return jsonify({'active': True})
+    except Exception:
+        # In caso di errore DB, non fare logout (evita falsi positivi)
+        return jsonify({'active': True})
 
 @app.route('/diag')
 def diag():
@@ -10750,6 +10805,32 @@ document.getElementById('form-ore').addEventListener('submit', function() {
   document.getElementById('submit-btn').disabled = true;
   document.getElementById('submit-btn').innerHTML = '<i class="fa fa-spinner fa-spin"></i> {{ t.sending }}';
 });
+
+// ── Auto-logout se l'account viene disattivato ──
+(function(){
+  var checking = false;
+  function checkSession(){
+    if (checking) return;
+    checking = true;
+    fetch('/api/session-check', {credentials:'same-origin', cache:'no-store'})
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if (!data.active) {
+          var msg = 'La tua sessione e\\' terminata.';
+          if (data.reason === 'deactivated') msg = 'Il tuo account e\\' stato disattivato dall\\'amministratore. Sarai disconnesso ora.';
+          else if (data.reason === 'deleted') msg = 'Il tuo account e\\' stato rimosso. Sarai disconnesso ora.';
+          alert(msg);
+          window.location.href = '/login';
+        }
+      })
+      .catch(function(){})
+      .finally(function(){ checking = false; });
+  }
+  setInterval(checkSession, 30000);
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'visible') checkSession();
+  });
+})();
 </script>
 </body>
 </html>"""
@@ -10839,6 +10920,32 @@ input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
     <i class="fa fa-right-from-bracket"></i> Esci dall'account
   </a>
 </div>
+<script>
+(function(){
+  var checking = false;
+  function checkSession(){
+    if (checking) return;
+    checking = true;
+    fetch('/api/session-check', {credentials:'same-origin', cache:'no-store'})
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if (!data.active) {
+          var msg = 'La tua sessione e\\' terminata.';
+          if (data.reason === 'deactivated') msg = 'Il tuo account e\\' stato disattivato dall\\'amministratore. Sarai disconnesso ora.';
+          else if (data.reason === 'deleted') msg = 'Il tuo account e\\' stato rimosso. Sarai disconnesso ora.';
+          alert(msg);
+          window.location.href = '/login';
+        }
+      })
+      .catch(function(){})
+      .finally(function(){ checking = false; });
+  }
+  setInterval(checkSession, 30000);
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'visible') checkSession();
+  });
+})();
+</script>
 </body>
 </html>"""
 
@@ -12327,6 +12434,32 @@ document.getElementById('form-spesa').addEventListener('submit', function() {
   document.getElementById('submit-btn').disabled = true;
   document.getElementById('submit-btn').innerHTML = '<i class="fa fa-spinner fa-spin"></i> ' + SENDING_TXT;
 });
+
+// ── Auto-logout se l'account viene disattivato ──
+(function(){
+  var checking = false;
+  function checkSession(){
+    if (checking) return;
+    checking = true;
+    fetch('/api/session-check', {credentials:'same-origin', cache:'no-store'})
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if (!data.active) {
+          var msg = 'La tua sessione e\\' terminata.';
+          if (data.reason === 'deactivated') msg = 'Il tuo account e\\' stato disattivato dall\\'amministratore. Sarai disconnesso ora.';
+          else if (data.reason === 'deleted') msg = 'Il tuo account e\\' stato rimosso. Sarai disconnesso ora.';
+          alert(msg);
+          window.location.href = '/login';
+        }
+      })
+      .catch(function(){})
+      .finally(function(){ checking = false; });
+  }
+  setInterval(checkSession, 30000);
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'visible') checkSession();
+  });
+})();
 </script>
 </body></html>
 """
