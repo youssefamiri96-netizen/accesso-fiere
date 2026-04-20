@@ -10,7 +10,8 @@ Avvio:     python gestionale.py
 """
 
 from flask import (Flask, render_template_string, request,
-                   redirect, url_for, session, jsonify, flash, Response, send_file)
+                   redirect, url_for, session, jsonify, flash, Response, send_file,
+                   get_flashed_messages)
 from datetime import datetime, date, timedelta
 import sqlite3, hashlib, os, json, smtplib, io, zipfile, base64, mimetypes, threading, time
 from functools import wraps
@@ -1704,24 +1705,29 @@ _SESSION_POLL_JS = """
   function checkSession(){
     if (checking) return;
     checking = true;
-    fetch('/api/session-check', {credentials:'same-origin', cache:'no-store'})
+    fetch('/api/session-check?_=' + Date.now(), {credentials:'same-origin', cache:'no-store'})
       .then(function(r){ return r.json(); })
       .then(function(data){
         if (!data.active) {
           var msg = 'La tua sessione e\\u0027 terminata.';
           if (data.reason === 'deactivated') msg = 'Il tuo account e\\u0027 stato disattivato dall\\u0027amministratore. Sarai disconnesso ora.';
           else if (data.reason === 'deleted') msg = 'Il tuo account e\\u0027 stato rimosso. Sarai disconnesso ora.';
-          alert(msg);
+          try { alert(msg); } catch(e) {}
           window.location.href = '/login';
         }
       })
       .catch(function(){ /* errore di rete: ignora per evitare falsi positivi */ })
       .finally(function(){ checking = false; });
   }
-  setInterval(checkSession, 30000);
+  // Check ogni 10 secondi (richiesto dall'utente)
+  setInterval(checkSession, 10000);
+  // Re-check immediato quando la pagina torna in primo piano (utile per PWA mobile)
   document.addEventListener('visibilitychange', function(){
     if (document.visibilityState === 'visible') checkSession();
   });
+  window.addEventListener('focus', checkSession);
+  // Check anche al primo caricamento (per buttare fuori subito chi ricarica una pagina cached)
+  setTimeout(checkSession, 500);
 })();
 </script>
 """
@@ -1729,21 +1735,26 @@ _SESSION_POLL_JS = """
 
 @app.after_request
 def _inject_session_poll(response):
-    """Inietta il polling JS in tutte le risposte HTML, ma SOLO se l'utente è loggato
-    e NON è la pagina /login. Garantisce che ogni pagina (desktop o mobile, qualsiasi
-    template) abbia il check della sessione attiva."""
+    """Inietta il polling JS in tutte le risposte HTML, ma SOLO se l'utente è loggato.
+    Aggiunge anche header anti-cache per le pagine HTML loggate, in modo che il browser/PWA
+    non serva versioni vecchie del template (senza polling) e l'utente disattivato venga
+    sempre forzato al re-fetch della pagina (che lo rederigerà al login)."""
     try:
-        # Solo HTML
         ctype = response.headers.get('Content-Type', '')
+        # Solo HTML
         if 'text/html' not in ctype:
             return response
-        # Solo se loggato (altrimenti il polling rederigerebbe verso /login da /login stesso)
+        # Solo se loggato
         if 'user_id' not in session:
             return response
         # Skip endpoint API e statici
         if request.path.startswith('/api/') or request.path.startswith('/static'):
             return response
-        # Inietta prima del </body>
+        # Anti-cache: forza il browser a non servire versioni vecchie
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        # Inietta il JS prima del </body>
         body_bytes = response.get_data()
         if not body_bytes:
             return response
@@ -1751,13 +1762,17 @@ def _inject_session_poll(response):
             body_str = body_bytes.decode('utf-8')
         except UnicodeDecodeError:
             return response
-        # Solo se contiene </body>
         idx = body_str.rfind('</body>')
         if idx == -1:
-            return response
-        new_body = body_str[:idx] + _SESSION_POLL_JS + body_str[idx:]
+            # Nessun </body> chiuso: appendi alla fine prima di </html> o in fondo
+            idx_html = body_str.rfind('</html>')
+            if idx_html != -1:
+                new_body = body_str[:idx_html] + _SESSION_POLL_JS + body_str[idx_html:]
+            else:
+                new_body = body_str + _SESSION_POLL_JS
+        else:
+            new_body = body_str[:idx] + _SESSION_POLL_JS + body_str[idx:]
         response.set_data(new_body.encode('utf-8'))
-        # Aggiorna Content-Length
         response.headers['Content-Length'] = str(len(response.get_data()))
     except Exception:
         # Non rompere la risposta se l'iniezione fallisce
@@ -10949,10 +10964,14 @@ def mobile_profilo():
     db = get_db()
     u = db.execute("SELECT * FROM utenti WHERE id=?", (session['user_id'],)).fetchone()
     db.close()
+    if not u:
+        flash('Sessione non valida. Effettua di nuovo il login.', 'error')
+        return redirect(url_for('login'))
+    u = dict(u)  # converti Row in dict per poter usare .get()
     msgs = get_flashed_messages(with_categories=True)
     return render_template_string(MOBILE_PROFILO_TMPL,
-        nome=u['nome'], cognome=u['cognome'],
-        email=u['email'], mansione=u.get('mansione') or '',
+        nome=u.get('nome',''), cognome=u.get('cognome',''),
+        email=u.get('email',''), mansione=u.get('mansione') or '',
         messages=msgs)
 
 @app.route('/mobile/profilo/cambia-email', methods=['POST'])
