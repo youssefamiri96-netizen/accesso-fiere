@@ -636,6 +636,7 @@ def init_db():
         "ALTER TABLE preventivi_voci ADD COLUMN sconto_riga REAL DEFAULT 0",
         # ── Banca ore ─────────────────────────────────────
         "ALTER TABLE utenti ADD COLUMN ore_contratto_mensili REAL DEFAULT 0",
+        "ALTER TABLE utenti ADD COLUMN ore_contratto_giornaliere REAL DEFAULT 0",
         """CREATE TABLE IF NOT EXISTS banca_ore_movimenti (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             utente_id INTEGER NOT NULL,
@@ -868,6 +869,7 @@ def ensure_columns():
                 "ALTER TABLE preventivi ADD COLUMN luogo_lavoro TEXT",
                 # Banca ore
                 "ALTER TABLE utenti ADD COLUMN ore_contratto_mensili REAL DEFAULT 0",
+                "ALTER TABLE utenti ADD COLUMN ore_contratto_giornaliere REAL DEFAULT 0",
                 """CREATE TABLE IF NOT EXISTS banca_ore_movimenti (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     utente_id INTEGER NOT NULL,
@@ -5152,19 +5154,24 @@ DIP_FORM_TMPL = """
 
     <div style="background:#f0fdf4;border-radius:10px;padding:16px;margin-bottom:20px;border:1px solid #86efac">
       <div style="font-size:11px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">
-        <i class="fa fa-piggy-bank"></i> Banca ore — monte ore contrattuale
+        <i class="fa fa-piggy-bank"></i> Banca ore — orario di lavoro contrattuale
       </div>
-      <p style="font-size:12px;color:#16a34a;margin-bottom:14px">Ore mensili da contratto. Se il dipendente lavora oltre questo monte, le ore extra vanno in banca come credito. Se lavora meno, si crea un debito. Imposta <strong>0</strong> per disattivare la banca ore per questo dipendente.</p>
+      <p style="font-size:12px;color:#16a34a;margin-bottom:14px">
+        Indica quante ore al giorno lavora questo dipendente da contratto.
+        Il sistema calcola automaticamente il monte mensile dovuto in base ai giorni lavorativi reali (lun-ven, esclusi festivi italiani).
+        Imposta <strong>0</strong> per disattivare la banca ore per questo dipendente.
+      </p>
       <div class="form-row">
         <div class="form-group">
-          <label>Ore contrattuali mensili</label>
-          <input type="number" name="ore_contratto_mensili" step="0.5" min="0" max="744"
-                 value="{{ dip.ore_contratto_mensili if dip and dip.ore_contratto_mensili else '' }}"
-                 placeholder="Es. 173 (full-time 40h/settimana)">
+          <label>Ore al giorno da contratto *</label>
+          {% set ore_g_iniziali = (dip.ore_contratto_giornaliere if dip and dip.ore_contratto_giornaliere else (dip.ore_contratto_mensili / 22.0 if dip and dip.ore_contratto_mensili else '')) %}
+          <input type="number" name="ore_contratto_giornaliere" step="0.25" min="0" max="24"
+                 value="{{ '%.2f'|format(ore_g_iniziali) if ore_g_iniziali else '' }}"
+                 placeholder="Es. 8 (full-time)">
         </div>
         <div class="form-group" style="display:flex;align-items:flex-end">
           <div style="font-size:12px;color:#16a34a;padding:8px 12px;background:#fff;border-radius:6px;border:1px dashed #86efac">
-            <strong>Esempi:</strong> Full-time ≈ 173h &nbsp;·&nbsp; 30h/sett ≈ 130h &nbsp;·&nbsp; 20h/sett ≈ 87h
+            <strong>Esempi:</strong> Full-time = 8h/g &nbsp;·&nbsp; Part-time 30h/sett = 6h/g &nbsp;·&nbsp; Part-time 20h/sett = 4h/g
           </div>
         </div>
       </div>
@@ -5252,13 +5259,15 @@ def dipendente_nuovo():
     if request.method=='POST':
         db=get_db()
         try:
-            ore_contr = request.form.get('ore_contratto_mensili', '') or 0
-            try: ore_contr = float(ore_contr)
-            except: ore_contr = 0
-            db.execute("INSERT INTO utenti (nome,cognome,email,password,mansione,telefono,data_assunzione,ruolo,ore_contratto_mensili) VALUES (?,?,?,?,?,?,?,?,?)",
+            ore_g = request.form.get('ore_contratto_giornaliere', '') or 0
+            try: ore_g = float(ore_g)
+            except: ore_g = 0
+            # Per retrocompatibilità salvo anche ore_contratto_mensili (= ore_g * 22)
+            ore_m = round(ore_g * 22, 2) if ore_g > 0 else 0
+            db.execute("INSERT INTO utenti (nome,cognome,email,password,mansione,telefono,data_assunzione,ruolo,ore_contratto_giornaliere,ore_contratto_mensili) VALUES (?,?,?,?,?,?,?,?,?,?)",
                 (request.form['nome'],request.form['cognome'],request.form['email'].lower(),hash_pw(request.form['password']),
                  request.form.get('mansione'),request.form.get('telefono'),request.form.get('data_assunzione'),request.form.get('ruolo','dipendente'),
-                 ore_contr))
+                 ore_g, ore_m))
             safe_commit(db);flash('Dipendente aggiunto!','success')
         except Exception as e:
             if 'UNIQUE' in str(e):
@@ -5274,13 +5283,14 @@ def dipendente_nuovo():
 def dipendente_modifica(uid):
     db=get_db();dip=db.execute("SELECT * FROM utenti WHERE id=?",(uid,)).fetchone()
     if request.method=='POST':
-        ore_contr = request.form.get('ore_contratto_mensili', '') or 0
-        try: ore_contr = float(ore_contr)
-        except: ore_contr = 0
-        db.execute("UPDATE utenti SET nome=?,cognome=?,email=?,mansione=?,telefono=?,data_assunzione=?,ruolo=?,ore_contratto_mensili=? WHERE id=?",
+        ore_g = request.form.get('ore_contratto_giornaliere', '') or 0
+        try: ore_g = float(ore_g)
+        except: ore_g = 0
+        ore_m = round(ore_g * 22, 2) if ore_g > 0 else 0
+        db.execute("UPDATE utenti SET nome=?,cognome=?,email=?,mansione=?,telefono=?,data_assunzione=?,ruolo=?,ore_contratto_giornaliere=?,ore_contratto_mensili=? WHERE id=?",
             (request.form['nome'],request.form['cognome'],request.form['email'].lower(),
              request.form.get('mansione'),request.form.get('telefono'),request.form.get('data_assunzione'),
-             request.form.get('ruolo','dipendente'),ore_contr,uid))
+             request.form.get('ruolo','dipendente'),ore_g,ore_m,uid))
         safe_commit(db);db.close();flash('Aggiornato.','success');return redirect(url_for('dipendenti'))
     db.close()
     return render_page(DIP_FORM_TMPL,page_title='Modifica Dipendente',active='dipendenti',dip=dip)
@@ -14850,86 +14860,209 @@ def fornitore_elimina(fid):
 # ══════════════════════════════════════════════════════════
 
 def _banca_ore_saldo(db, utente_id):
-    """Calcola il saldo banca ore per un utente (somma di tutti i delta)."""
-    row = db.execute("SELECT COALESCE(SUM(delta),0) as s FROM banca_ore_movimenti WHERE utente_id=?", (utente_id,)).fetchone()
-    return round(row['s'] or 0, 2)
+    """Saldo LIVE banca ore: somma di tutti i delta mensili (live) + rettifiche manuali.
+    Calcolato al volo dalle presenze effettive. Nessun bisogno di chiusure mensili."""
+    info = _banca_ore_info_completa(db, utente_id)
+    return info['saldo']
 
 
+# Festività italiane fisse + Pasqua/Pasquetta calcolate
+def _festivita_italiane(year):
+    """Restituisce set di date festive italiane per l'anno."""
+    from datetime import date as _d, timedelta as _td
+    fissi = [
+        (1, 1),    # Capodanno
+        (1, 6),    # Epifania
+        (4, 25),   # Liberazione
+        (5, 1),    # Festa lavoro
+        (6, 2),    # Repubblica
+        (8, 15),   # Ferragosto
+        (11, 1),   # Ognissanti
+        (12, 8),   # Immacolata
+        (12, 25),  # Natale
+        (12, 26),  # S.Stefano
+    ]
+    festivi = {_d(year, m, d) for m, d in fissi}
+    # Pasqua (algoritmo di Gauss)
+    a = year % 19
+    b = year // 100; c = year % 100
+    d_ = b // 4; e = b % 4
+    f = (b + 8) // 25
+    g = (b - f + 1) // 3
+    h = (19 * a + b - d_ - g + 15) % 30
+    i = c // 4; k = c % 4
+    l = (32 + 2 * e + 2 * i - h - k) % 7
+    m_ = (a + 11 * h + 22 * l) // 451
+    month = (h + l - 7 * m_ + 114) // 31
+    day = ((h + l - 7 * m_ + 114) % 31) + 1
+    pasqua = _d(year, month, day)
+    pasquetta = pasqua + _td(days=1)
+    festivi.add(pasqua); festivi.add(pasquetta)
+    return festivi
+
+
+def _giorni_lavorativi_nel_mese(anno, mese, fino_a=None):
+    """Conta i giorni lavorativi (lun-ven, esclusi festivi) del mese.
+    Se fino_a (date) è fornito, conta solo fino a quella data inclusa.
+    Se il mese è futuro rispetto a fino_a, ritorna 0."""
+    from datetime import date as _d
+    from calendar import monthrange
+    festivi = _festivita_italiane(anno)
+    _, last = monthrange(anno, mese)
+    count = 0
+    for g in range(1, last + 1):
+        gdate = _d(anno, mese, g)
+        if fino_a is not None and gdate > fino_a:
+            break
+        if gdate.weekday() >= 5:  # sab/dom
+            continue
+        if gdate in festivi:
+            continue
+        count += 1
+    return count
+
+
+def _banca_ore_info_completa(db, utente_id):
+    """Calcolo LIVE della banca ore per un utente.
+    
+    Logica:
+      - Per ogni mese da inizio anno a oggi: 
+          monte_dovuto = ore_contratto_giornaliere * giorni_lavorativi
+          ore_lavorate = SUM(presenze.ore_totali) per quel mese
+          delta_mese = ore_lavorate - monte_dovuto
+      - Per il mese in corso, conta solo i giorni fino a oggi (non l'intero mese)
+      - saldo = somma(delta_mese di tutti i mesi) + somma(rettifiche manuali)
+    
+    Restituisce dict con: saldo, ore_lavorate_totali, monte_totale, rettifiche_totali, mesi[]
+    """
+    from datetime import date as _d
+    from calendar import monthrange
+    
+    u = db.execute("""SELECT id, nome, cognome, ore_contratto_giornaliere, ore_contratto_mensili,
+                              data_assunzione FROM utenti WHERE id=?""", (utente_id,)).fetchone()
+    if not u:
+        return {'saldo': 0.0, 'ore_lavorate_totali': 0.0, 'monte_totale': 0.0,
+                'rettifiche_totali': 0.0, 'mesi': [], 'ore_giornaliere': 0.0}
+    
+    # Determino le ore giornaliere: priorità a ore_contratto_giornaliere, fallback su mensili/22
+    ore_g = float(u['ore_contratto_giornaliere'] or 0)
+    if ore_g <= 0 and u['ore_contratto_mensili']:
+        ore_g = round(float(u['ore_contratto_mensili']) / 22.0, 2)
+    if ore_g <= 0:
+        return {'saldo': 0.0, 'ore_lavorate_totali': 0.0, 'monte_totale': 0.0,
+                'rettifiche_totali': 0.0, 'mesi': [], 'ore_giornaliere': 0.0}
+    
+    oggi = _d.today()
+    
+    # Determino il primo mese da considerare: data assunzione, o prima presenza, o gennaio anno corrente
+    primo_mese = None
+    if u['data_assunzione']:
+        try:
+            ass = _d.fromisoformat(u['data_assunzione'])
+            primo_mese = ass.replace(day=1)
+        except Exception:
+            primo_mese = None
+    if not primo_mese:
+        prima_pres = db.execute("SELECT MIN(data) as d FROM presenze WHERE utente_id=?", (utente_id,)).fetchone()
+        if prima_pres and prima_pres['d']:
+            try:
+                primo_mese = _d.fromisoformat(prima_pres['d']).replace(day=1)
+            except Exception:
+                primo_mese = oggi.replace(month=1, day=1)
+        else:
+            primo_mese = oggi.replace(month=1, day=1)
+    
+    # Itera i mesi
+    mesi_data = []
+    saldo_progressivo = 0.0
+    ore_lav_tot = 0.0
+    monte_tot = 0.0
+    
+    y, m = primo_mese.year, primo_mese.month
+    safety = 0
+    while (y, m) <= (oggi.year, oggi.month) and safety < 240:
+        safety += 1
+        mese_str = f"{y:04d}-{m:02d}"
+        
+        # Per il mese in corso: conta solo fino a oggi. Per la data assunzione: dal giorno di assunzione
+        fino_a = oggi if (y == oggi.year and m == oggi.month) else _d(y, m, monthrange(y, m)[1])
+        da = primo_mese if (y == primo_mese.year and m == primo_mese.month and u['data_assunzione']) else _d(y, m, 1)
+        
+        # Calcolo giorni lavorativi nel range [da, fino_a]
+        festivi = _festivita_italiane(y)
+        giorni_lav = 0
+        from datetime import timedelta as _td
+        d_iter = da
+        while d_iter <= fino_a:
+            if d_iter.weekday() < 5 and d_iter not in festivi:
+                giorni_lav += 1
+            d_iter += _td(days=1)
+        
+        monte = round(giorni_lav * ore_g, 2)
+        
+        # Ore lavorate dalle presenze
+        row = db.execute("""SELECT COALESCE(SUM(ore_totali),0) as ore FROM presenze
+                            WHERE utente_id=? AND substr(data,1,7)=?""",
+                         (utente_id, mese_str)).fetchone()
+        ore_lav = round(float(row['ore'] or 0), 2)
+        
+        delta = round(ore_lav - monte, 2)
+        saldo_progressivo = round(saldo_progressivo + delta, 2)
+        ore_lav_tot += ore_lav
+        monte_tot += monte
+        
+        mesi_data.append({
+            'mese': mese_str,
+            'giorni_lavorativi': giorni_lav,
+            'ore_lavorate': ore_lav,
+            'monte_dovuto': monte,
+            'delta': delta,
+            'saldo_progressivo': saldo_progressivo,
+            'is_corrente': (y == oggi.year and m == oggi.month),
+        })
+        
+        m += 1
+        if m > 12: m = 1; y += 1
+    
+    # Rettifiche manuali (movimenti di tipo 'rettifica' o 'manuale')
+    try:
+        rett_row = db.execute("""SELECT COALESCE(SUM(delta),0) as s FROM banca_ore_movimenti
+                                 WHERE utente_id=? AND tipo IN ('rettifica','manuale')""",
+                              (utente_id,)).fetchone()
+        rettifiche = round(float(rett_row['s'] or 0), 2)
+    except Exception:
+        rettifiche = 0.0
+    
+    saldo_finale = round(saldo_progressivo + rettifiche, 2)
+    
+    return {
+        'saldo': saldo_finale,
+        'ore_lavorate_totali': round(ore_lav_tot, 2),
+        'monte_totale': round(monte_tot, 2),
+        'rettifiche_totali': rettifiche,
+        'mesi': mesi_data,
+        'ore_giornaliere': ore_g,
+    }
+
+
+# Funzioni legacy mantenute per retrocompatibilità ma DEPRECATE (no-op):
 def _banca_ore_mese_gia_chiuso(db, utente_id, mese):
-    """Ritorna True se esiste già una chiusura_mensile per l'utente in quel mese."""
-    row = db.execute("""SELECT id FROM banca_ore_movimenti 
-                        WHERE utente_id=? AND mese=? AND tipo='chiusura_mensile' LIMIT 1""",
-                     (utente_id, mese)).fetchone()
-    return row is not None
+    """DEPRECATA: nel nuovo sistema non ci sono più chiusure (saldo è live)."""
+    return False
 
 
 def _banca_ore_calcola_chiusura_mese(db, utente, mese):
-    """Per un utente in un dato mese, somma ore presenze, confronta con ore_contratto_mensili,
-    e ritorna (ore_lavorate, ore_contratto, delta) senza scrivere ancora.
-    Se ore_contratto_mensili è 0 o None, ritorna None (skip)."""
-    ore_contratto = float(utente['ore_contratto_mensili'] or 0)
-    if ore_contratto <= 0:
-        return None
-    row = db.execute("""SELECT COALESCE(SUM(ore_totali),0) as ore
-                        FROM presenze WHERE utente_id=? AND substr(data,1,7)=?""",
-                     (utente['id'], mese)).fetchone()
-    ore_lavorate = round(float(row['ore'] or 0), 2)
-    delta = round(ore_lavorate - ore_contratto, 2)
-    return (ore_lavorate, ore_contratto, delta)
+    """DEPRECATA: nel nuovo sistema il saldo si calcola live."""
+    return None
 
 
 def _banca_ore_chiudi_mese_auto():
-    """Chiamata da before_request. Se siamo dopo il 1° del mese e il mese precedente non è ancora
-    stato chiuso per tutti i dipendenti attivi con contratto, lo fa automaticamente. Idempotente."""
-    from datetime import datetime as _dt, timedelta as _td
-    azienda_id = session.get('azienda_id')
-    if not azienda_id:
-        return
-    try:
-        oggi = date.today()
-        # Calcola il mese precedente (YYYY-MM)
-        primo_del_mese = oggi.replace(day=1)
-        mese_prec = (primo_del_mese - _td(days=1)).strftime('%Y-%m')
-        db = get_db()
-        dipendenti = db.execute("""SELECT id, nome, cognome, ore_contratto_mensili 
-                                    FROM utenti WHERE COALESCE(attivo,1)=1 
-                                    AND ruolo!='admin' AND COALESCE(ore_contratto_mensili,0)>0""").fetchall()
-        for u in dipendenti:
-            if _banca_ore_mese_gia_chiuso(db, u['id'], mese_prec):
-                continue
-            calc = _banca_ore_calcola_chiusura_mese(db, u, mese_prec)
-            if calc is None:
-                continue
-            ore_lav, ore_con, delta = calc
-            db.execute("""INSERT INTO banca_ore_movimenti
-                (utente_id, mese, tipo, ore_lavorate, ore_contratto, delta, descrizione, creato_da)
-                VALUES (?,?,?,?,?,?,?,?)""",
-                (u['id'], mese_prec, 'chiusura_mensile', ore_lav, ore_con, delta,
-                 f"Chiusura automatica mese {mese_prec}", None))
-        safe_commit(db)
-        db.close()
-    except Exception as e:
-        print(f'[banca_ore_auto] {e}')
+    """DEPRECATA: nessuna chiusura automatica nel nuovo sistema."""
+    pass
 
 
-# Hook sulla before_request per chiusura automatica (una volta al giorno per sessione)
-_banca_ore_auto_done = set()
-
-@app.before_request
-def banca_ore_auto_hook():
-    azienda_id = session.get('azienda_id')
-    if not azienda_id:
-        return
-    key = f"{azienda_id}_{date.today().isoformat()}"
-    if key in _banca_ore_auto_done:
-        return
-    # Esegui solo per request GET e non su assets / logo
-    try:
-        if request.method == 'GET' and not request.path.startswith(('/static','/admin/logo','/favicon')):
-            _banca_ore_chiudi_mese_auto()
-            _banca_ore_auto_done.add(key)
-    except Exception:
-        pass
+# (Rimosso hook chiusura automatica: nel nuovo sistema il saldo è LIVE,
+# calcolato al volo dalle presenze. Nessuna scrittura periodica necessaria.)
 
 
 BANCA_ORE_TMPL = """
@@ -14940,49 +15073,68 @@ BANCA_ORE_TMPL = """
 .bo-tab{width:100%;border-collapse:collapse;font-size:13px}
 .bo-tab th{background:#0f172a;color:#fff;padding:10px 12px;text-align:left;font-size:12px}
 .bo-tab td{padding:10px 12px;border-bottom:1px solid var(--border)}
+.bo-info{background:#eff6ff;border-left:4px solid #3b82f6;padding:14px 18px;border-radius:8px;margin-bottom:18px;font-size:13px;color:#1e3a8a}
+.bo-info strong{color:#1e40af}
+.mese-mini{font-size:11px;color:var(--text-light);font-family:monospace}
 </style>
 
-<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:20px">
-  <div>
+<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:18px">
+  <div style="flex:1;min-width:280px">
     <p style="color:var(--text-light);font-size:13px;margin:4px 0 0">
-      Saldo banca ore di ogni dipendente. Positivo = credito (ore in più), negativo = debito (ore da recuperare).
-      La chiusura del mese precedente avviene <strong>automaticamente</strong> al primo accesso di ogni mese.
+      Saldo banca ore <strong style="color:var(--text)">in tempo reale</strong>: si aggiorna automaticamente ogni volta che il dipendente registra ore.
     </p>
   </div>
-  <form action="/banca-ore/chiudi-mese" method="POST" onsubmit="return confirm('Chiudere manualmente il mese {{ mese_default }} per tutti i dipendenti con contratto?')" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
     <a href="/banca-ore/report" class="btn btn-blue btn-sm" style="white-space:nowrap"><i class="fa fa-chart-line"></i> Report & Export</a>
-    <input type="month" name="mese" value="{{ mese_default }}" required style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px">
-    <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-lock"></i> Chiudi mese</button>
-  </form>
+  </div>
+</div>
+
+<div class="bo-info">
+  <strong><i class="fa fa-circle-info"></i> Come funziona la banca ore:</strong>
+  Ogni mese il sistema calcola il <strong>monte ore dovuto</strong> = ore contratto giornaliere × giorni lavorativi (lun-ven, esclusi festivi italiani).
+  Confronta con le ore effettivamente lavorate dalle presenze: la differenza va in banca.
+  <strong>Saldo positivo</strong> = il dipendente è in credito (ha lavorato di più). <strong>Saldo negativo</strong> = è in debito (ha lavorato meno).
+  Per il mese in corso, conta solo i giorni fino a oggi.
 </div>
 
 {% if not dipendenti %}
 <div class="bo-card" style="text-align:center;padding:40px;color:var(--text-light)">
   <i class="fa fa-piggy-bank" style="font-size:40px;opacity:.3"></i>
   <p style="margin-top:12px">Nessun dipendente con ore contrattuali impostate.<br>
-  Imposta <code>ore_contratto_mensili</code> dalla scheda di ogni dipendente.</p>
+  Imposta <strong>ore al giorno da contratto</strong> dalla scheda di ogni dipendente.</p>
 </div>
 {% else %}
 <div class="bo-card" style="padding:0;overflow:hidden">
 <table class="bo-tab">
   <thead><tr>
     <th>DIPENDENTE</th>
-    <th style="text-align:right">CONTRATTO MENSILE</th>
-    <th style="text-align:right">SALDO BANCA</th>
-    <th style="text-align:center">ULTIMA CHIUSURA</th>
+    <th style="text-align:right">ORE/GIORNO</th>
+    <th style="text-align:right">MESE CORRENTE</th>
+    <th style="text-align:right">SALDO BANCA (LIVE)</th>
     <th></th>
   </tr></thead>
   <tbody>
   {% for u in dipendenti %}
   <tr>
     <td><strong>{{ u.nome }} {{ u.cognome }}</strong>{% if u.titolo %}<div style="font-size:11px;color:var(--text-light)">{{ u.titolo }}</div>{% endif %}</td>
-    <td style="text-align:right;font-family:monospace">{{ "%.1f"|format(u.ore_contratto_mensili or 0) }} h</td>
+    <td style="text-align:right;font-family:monospace">{{ "%.1f"|format(u.ore_giornaliere or 0) }} h/g</td>
+    <td style="text-align:right">
+      {% if u.mese_corrente %}
+      <div style="font-family:monospace;font-size:13px;font-weight:700">{{ "%.1f"|format(u.mese_corrente.ore_lavorate) }}h / {{ "%.1f"|format(u.mese_corrente.monte_dovuto) }}h</div>
+      <div class="mese-mini">{{ u.mese_corrente.giorni_lavorativi }} giorni lavorativi · delta
+        <span class="{% if u.mese_corrente.delta > 0 %}bo-pos{% elif u.mese_corrente.delta < 0 %}bo-neg{% else %}bo-zero{% endif %}" style="font-weight:700">
+        {% if u.mese_corrente.delta > 0 %}+{% endif %}{{ "%.1f"|format(u.mese_corrente.delta) }}h</span>
+      </div>
+      {% else %}—{% endif %}
+    </td>
     <td style="text-align:right">
       <span class="bo-saldo {% if u.saldo > 0 %}bo-pos{% elif u.saldo < 0 %}bo-neg{% else %}bo-zero{% endif %}">
         {% if u.saldo > 0 %}+{% endif %}{{ "%.1f"|format(u.saldo) }} h
       </span>
+      {% if u.rettifiche_totali %}
+      <div class="mese-mini">incl. rettifiche: {% if u.rettifiche_totali > 0 %}+{% endif %}{{ "%.1f"|format(u.rettifiche_totali) }}h</div>
+      {% endif %}
     </td>
-    <td style="text-align:center;font-size:12px;color:var(--text-light)">{{ u.ultima_chiusura or '—' }}</td>
     <td style="text-align:right">
       <a href="/banca-ore/{{ u.id }}" class="btn btn-sm btn-secondary"><i class="fa fa-eye"></i> Dettaglio</a>
     </td>
@@ -15009,110 +15161,155 @@ BANCA_ORE_TMPL = """
 BANCA_ORE_DETTAGLIO_TMPL = """
 <div style="margin-bottom:16px"><a href="/banca-ore" class="btn btn-secondary btn-sm"><i class="fa fa-arrow-left"></i> Torna alla banca ore</a></div>
 
-<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px">
+<div style="display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:14px;margin-bottom:20px">
   <div class="bo-card">
     <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700">Dipendente</div>
     <div style="font-size:20px;font-weight:800;margin-top:4px">{{ u.nome }} {{ u.cognome }}</div>
-    <div style="font-size:12px;color:var(--text-light)">{{ u.titolo or '—' }}</div>
+    <div style="font-size:12px;color:var(--text-light)">{{ u.titolo or u.mansione or '—' }}</div>
   </div>
   <div class="bo-card">
-    <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700">Contratto mensile</div>
-    <div style="font-size:24px;font-weight:800;margin-top:4px">{{ "%.1f"|format(u.ore_contratto_mensili or 0) }} h</div>
+    <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700">Ore al giorno</div>
+    <div style="font-size:24px;font-weight:800;margin-top:4px">{{ "%.1f"|format(info.ore_giornaliere or 0) }} h</div>
+    <div style="font-size:11px;color:var(--text-light);margin-top:2px">da contratto</div>
   </div>
   <div class="bo-card">
-    <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700">Saldo attuale</div>
-    <div class="bo-saldo {% if saldo > 0 %}bo-pos{% elif saldo < 0 %}bo-neg{% else %}bo-zero{% endif %}" style="margin-top:4px">
-      {% if saldo > 0 %}+{% endif %}{{ "%.1f"|format(saldo) }} h
+    <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700">Totale lavorato vs dovuto</div>
+    <div style="font-size:18px;font-weight:800;margin-top:4px">
+      {{ "%.0f"|format(info.ore_lavorate_totali) }}h / {{ "%.0f"|format(info.monte_totale) }}h
     </div>
+    <div style="font-size:11px;color:var(--text-light)">dall'inizio storico</div>
+  </div>
+  <div class="bo-card">
+    <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700">Saldo banca (LIVE)</div>
+    <div class="bo-saldo {% if info.saldo > 0 %}bo-pos{% elif info.saldo < 0 %}bo-neg{% else %}bo-zero{% endif %}" style="margin-top:4px">
+      {% if info.saldo > 0 %}+{% endif %}{{ "%.1f"|format(info.saldo) }} h
+    </div>
+    {% if info.rettifiche_totali %}
+    <div style="font-size:11px;color:var(--text-light);margin-top:2px">incl. rettifiche: {% if info.rettifiche_totali > 0 %}+{% endif %}{{ "%.1f"|format(info.rettifiche_totali) }}h</div>
+    {% endif %}
   </div>
 </div>
 
 <div class="bo-card">
-  <h3 style="margin:0 0 14px;font-size:16px"><i class="fa fa-pen-to-square"></i> Rettifica manuale</h3>
-  <form action="/banca-ore/{{ u.id }}/rettifica" method="POST" style="display:grid;grid-template-columns:120px 1fr auto;gap:10px;align-items:end">
-    <div class="form-group" style="margin:0">
-      <label>Delta ore (±)</label>
-      <input type="number" name="delta" step="0.25" required placeholder="es. -4 o 8" style="font-weight:700">
-    </div>
-    <div class="form-group" style="margin:0">
-      <label>Descrizione / motivo</label>
-      <input name="descrizione" placeholder="es. Correzione presenze, compenso straordinario..." required>
-    </div>
-    <button type="submit" class="btn btn-primary"><i class="fa fa-plus"></i> Aggiungi</button>
-  </form>
-</div>
-
-<div class="bo-card" style="padding:0;overflow:hidden">
-  <div style="padding:14px 16px;border-bottom:1px solid var(--border)"><strong>Movimenti</strong></div>
-  {% if not movimenti %}
-  <div style="padding:24px;text-align:center;color:var(--text-light)">Nessun movimento.</div>
+  <h3 style="margin:0 0 8px;font-size:16px"><i class="fa fa-calendar"></i> Andamento mese per mese</h3>
+  <p style="font-size:12px;color:var(--text-light);margin:0 0 12px">Calcolato in tempo reale dalle presenze. Il mese corrente conta solo i giorni fino a oggi.</p>
+  {% if not info.mesi %}
+  <div style="padding:24px;text-align:center;color:var(--text-light)">Nessuno storico disponibile.</div>
   {% else %}
+  <div style="overflow-x:auto">
   <table class="bo-tab">
     <thead><tr>
-      <th>DATA</th><th>MESE</th><th>TIPO</th><th>DESCRIZIONE</th>
-      <th style="text-align:right">ORE LAV.</th>
-      <th style="text-align:right">CONTRATTO</th>
+      <th>MESE</th>
+      <th style="text-align:right">GIORNI LAV.</th>
+      <th style="text-align:right">MONTE DOVUTO</th>
+      <th style="text-align:right">ORE LAVORATE</th>
       <th style="text-align:right">DELTA</th>
-      <th></th>
+      <th style="text-align:right">SALDO PROGR.</th>
     </tr></thead>
     <tbody>
-    {% for m in movimenti %}
-    <tr>
-      <td style="font-family:monospace;font-size:11px">{{ m.creato_il[:10] if m.creato_il else '—' }}</td>
-      <td style="font-family:monospace;font-size:12px">{{ m.mese }}</td>
-      <td>
-        {% if m.tipo == 'chiusura_mensile' %}<span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">chiusura</span>
-        {% elif m.tipo == 'manuale' %}<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">manuale</span>
-        {% elif m.tipo == 'rettifica' %}<span style="background:#f3e8ff;color:#7c3aed;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">rettifica</span>
-        {% else %}<span style="padding:2px 8px;border-radius:4px;font-size:11px">{{ m.tipo }}</span>{% endif %}
+    {% for m in info.mesi %}
+    <tr {% if m.is_corrente %}style="background:#fef3c7"{% endif %}>
+      <td style="font-family:monospace;font-weight:700">
+        {{ m.mese }}
+        {% if m.is_corrente %}<span style="background:#f59e0b;color:#fff;padding:1px 8px;border-radius:4px;font-size:10px;margin-left:6px;font-weight:700">IN CORSO</span>{% endif %}
       </td>
-      <td style="font-size:12px">{{ m.descrizione or '' }}</td>
-      <td style="text-align:right;font-family:monospace;font-size:12px">{% if m.ore_lavorate %}{{ "%.1f"|format(m.ore_lavorate) }}{% else %}—{% endif %}</td>
-      <td style="text-align:right;font-family:monospace;font-size:12px">{% if m.ore_contratto %}{{ "%.1f"|format(m.ore_contratto) }}{% else %}—{% endif %}</td>
+      <td style="text-align:right;font-family:monospace">{{ m.giorni_lavorativi }}</td>
+      <td style="text-align:right;font-family:monospace;color:var(--text-light)">{{ "%.1f"|format(m.monte_dovuto) }} h</td>
+      <td style="text-align:right;font-family:monospace;font-weight:700">{{ "%.1f"|format(m.ore_lavorate) }} h</td>
       <td style="text-align:right;font-weight:800" class="{% if m.delta > 0 %}bo-pos{% elif m.delta < 0 %}bo-neg{% else %}bo-zero{% endif %}">
         {% if m.delta > 0 %}+{% endif %}{{ "%.2f"|format(m.delta) }} h
       </td>
-      <td style="text-align:right">
-        <a href="/banca-ore/movimento/{{ m.id }}/elimina" onclick="return confirm('Eliminare questo movimento?')" class="btn btn-sm btn-danger" title="Elimina"><i class="fa fa-trash"></i></a>
+      <td style="text-align:right;font-weight:800" class="{% if m.saldo_progressivo > 0 %}bo-pos{% elif m.saldo_progressivo < 0 %}bo-neg{% else %}bo-zero{% endif %}">
+        {% if m.saldo_progressivo > 0 %}+{% endif %}{{ "%.2f"|format(m.saldo_progressivo) }} h
       </td>
     </tr>
     {% endfor %}
     </tbody>
   </table>
+  </div>
   {% endif %}
 </div>
+
+<div class="bo-card">
+  <h3 style="margin:0 0 6px;font-size:16px"><i class="fa fa-pen-to-square"></i> Rettifica manuale</h3>
+  <p style="font-size:12px;color:var(--text-light);margin:0 0 12px">Usa per correzioni: pagamento straordinari, prelievo dalla banca per ferie/permessi, riconoscimento extra, ecc. Il saldo si aggiorna immediatamente.</p>
+  <form action="/banca-ore/{{ u.id }}/rettifica" method="POST" style="display:grid;grid-template-columns:140px 1fr auto;gap:10px;align-items:end">
+    <div class="form-group" style="margin:0">
+      <label>Delta ore (±)</label>
+      <input type="number" name="delta" step="0.25" required placeholder="es. -4 o 8" style="font-weight:700;text-align:right">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label>Descrizione / motivo</label>
+      <input name="descrizione" placeholder="es. Pagamento straordinari ottobre / Prelievo per giornata recupero..." required>
+    </div>
+    <button type="submit" class="btn btn-primary"><i class="fa fa-plus"></i> Aggiungi rettifica</button>
+  </form>
+</div>
+
+{% if rettifiche %}
+<div class="bo-card" style="padding:0;overflow:hidden">
+  <div style="padding:14px 16px;border-bottom:1px solid var(--border)"><strong>Rettifiche manuali</strong></div>
+  <table class="bo-tab">
+    <thead><tr>
+      <th>DATA</th><th>DESCRIZIONE</th>
+      <th style="text-align:right">DELTA</th>
+      <th></th>
+    </tr></thead>
+    <tbody>
+    {% for r in rettifiche %}
+    <tr>
+      <td style="font-family:monospace;font-size:11px">{{ r.creato_il[:10] if r.creato_il else '—' }}</td>
+      <td style="font-size:13px">{{ r.descrizione or '—' }}</td>
+      <td style="text-align:right;font-weight:800" class="{% if r.delta > 0 %}bo-pos{% elif r.delta < 0 %}bo-neg{% else %}bo-zero{% endif %}">
+        {% if r.delta > 0 %}+{% endif %}{{ "%.2f"|format(r.delta) }} h
+      </td>
+      <td style="text-align:right">
+        <a href="/banca-ore/movimento/{{ r.id }}/elimina" onclick="return confirm('Eliminare questa rettifica?')" class="btn btn-sm btn-danger" title="Elimina"><i class="fa fa-trash"></i></a>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
 """
 
 
 @app.route('/banca-ore')
 @admin_required
 def banca_ore():
-    from datetime import timedelta as _td
     db = get_db()
-    dip_raw = db.execute("""SELECT id, nome, cognome, titolo, ore_contratto_mensili 
-                             FROM utenti WHERE COALESCE(attivo,1)=1 AND ruolo != 'admin'
-                             ORDER BY cognome, nome""").fetchall()
+    dip_raw = db.execute("""SELECT id, nome, cognome, mansione as titolo,
+                                   ore_contratto_giornaliere, ore_contratto_mensili
+                            FROM utenti WHERE COALESCE(attivo,1)=1 AND ruolo != 'admin'
+                            ORDER BY cognome, nome""").fetchall()
     dipendenti = []
     senza_contratto = []
     for u in dip_raw:
         ud = dict(u)
-        if not u['ore_contratto_mensili'] or u['ore_contratto_mensili'] <= 0:
+        # Determino le ore giornaliere effettive (con fallback dalle mensili / 22)
+        ore_g = float(u['ore_contratto_giornaliere'] or 0)
+        if ore_g <= 0 and u['ore_contratto_mensili']:
+            ore_g = round(float(u['ore_contratto_mensili']) / 22.0, 2)
+        if ore_g <= 0:
             senza_contratto.append(ud)
             continue
-        ud['saldo'] = _banca_ore_saldo(db, u['id'])
-        last = db.execute("""SELECT mese FROM banca_ore_movimenti 
-                             WHERE utente_id=? AND tipo='chiusura_mensile' 
-                             ORDER BY mese DESC LIMIT 1""", (u['id'],)).fetchone()
-        ud['ultima_chiusura'] = last['mese'] if last else None
+        info = _banca_ore_info_completa(db, u['id'])
+        ud['ore_giornaliere'] = info['ore_giornaliere']
+        ud['saldo'] = info['saldo']
+        ud['ore_lavorate_totali'] = info['ore_lavorate_totali']
+        ud['monte_totale'] = info['monte_totale']
+        ud['rettifiche_totali'] = info['rettifiche_totali']
+        # Mese corrente per dettaglio rapido
+        if info['mesi']:
+            corr = next((m for m in info['mesi'] if m['is_corrente']), info['mesi'][-1])
+            ud['mese_corrente'] = corr
+        else:
+            ud['mese_corrente'] = None
         dipendenti.append(ud)
-    # Mese default = mese precedente
-    oggi = date.today()
-    primo = oggi.replace(day=1)
-    mese_prec_dt = (primo - _td(days=1))
-    mese_default = mese_prec_dt.strftime('%Y-%m')
     db.close()
     return render_page(BANCA_ORE_TMPL, page_title='Banca Ore', active='banca_ore',
-                       dipendenti=dipendenti, senza_contratto=senza_contratto, mese_default=mese_default)
+                       dipendenti=dipendenti, senza_contratto=senza_contratto)
 
 
 @app.route('/banca-ore/<int:uid>')
@@ -15122,13 +15319,16 @@ def banca_ore_dettaglio(uid):
     u = db.execute("SELECT * FROM utenti WHERE id=?", (uid,)).fetchone()
     if not u:
         db.close(); flash('Dipendente non trovato.','error'); return redirect(url_for('banca_ore'))
-    movimenti = db.execute("""SELECT * FROM banca_ore_movimenti 
-                              WHERE utente_id=? ORDER BY mese DESC, id DESC""", (uid,)).fetchall()
-    saldo = _banca_ore_saldo(db, uid)
+    info = _banca_ore_info_completa(db, uid)
+    # Solo rettifiche manuali (i mesi sono già nel breakdown live)
+    rettifiche = db.execute("""SELECT * FROM banca_ore_movimenti
+                               WHERE utente_id=? AND tipo IN ('rettifica','manuale')
+                               ORDER BY id DESC""", (uid,)).fetchall()
     db.close()
     return render_page(BANCA_ORE_DETTAGLIO_TMPL,
                        page_title=f"Banca Ore — {u['nome']} {u['cognome']}",
-                       active='banca_ore', u=dict(u), movimenti=[dict(m) for m in movimenti], saldo=saldo)
+                       active='banca_ore', u=dict(u),
+                       info=info, rettifiche=[dict(r) for r in rettifiche])
 
 
 @app.route('/banca-ore/<int:uid>/rettifica', methods=['POST'])
@@ -15154,36 +15354,12 @@ def banca_ore_rettifica(uid):
     return redirect(url_for('banca_ore_dettaglio', uid=uid))
 
 
-@app.route('/banca-ore/chiudi-mese', methods=['POST'])
+@app.route('/banca-ore/chiudi-mese', methods=['POST', 'GET'])
 @admin_required
 def banca_ore_chiudi_mese():
-    mese = request.form.get('mese','').strip()
-    if not mese or len(mese) != 7:
-        flash('Formato mese non valido.','error')
-        return redirect(url_for('banca_ore'))
-    db = get_db()
-    dipendenti = db.execute("""SELECT id, nome, cognome, ore_contratto_mensili 
-                                FROM utenti WHERE COALESCE(attivo,1)=1 
-                                AND ruolo != 'admin' AND COALESCE(ore_contratto_mensili,0)>0""").fetchall()
-    n_creati = 0
-    n_skip = 0
-    for u in dipendenti:
-        if _banca_ore_mese_gia_chiuso(db, u['id'], mese):
-            n_skip += 1
-            continue
-        calc = _banca_ore_calcola_chiusura_mese(db, u, mese)
-        if calc is None:
-            n_skip += 1
-            continue
-        ore_lav, ore_con, delta = calc
-        db.execute("""INSERT INTO banca_ore_movimenti
-            (utente_id, mese, tipo, ore_lavorate, ore_contratto, delta, descrizione, creato_da)
-            VALUES (?,?,?,?,?,?,?,?)""",
-            (u['id'], mese, 'chiusura_mensile', ore_lav, ore_con, delta,
-             f"Chiusura manuale mese {mese}", session.get('user_id')))
-        n_creati += 1
-    safe_commit(db); db.close()
-    flash(f'Chiusura mese {mese}: {n_creati} movimenti creati, {n_skip} già presenti/saltati.', 'success')
+    """Mantenuta per retrocompatibilità ma ora è no-op: nel nuovo sistema il saldo è
+    calcolato in tempo reale, non servono chiusure mensili."""
+    flash('Il saldo banca ore è ora calcolato in tempo reale: non serve più chiudere il mese manualmente. ✅', 'success')
     return redirect(url_for('banca_ore'))
 
 
@@ -15203,81 +15379,166 @@ def banca_ore_movimento_elimina(mid):
 
 def _banca_ore_report_data(db, dipendente_id, mese_da, mese_a):
     """Ritorna lista di dipendenti con breakdown mensile nell'intervallo [mese_da, mese_a].
-    Ogni dipendente: {id, nome, cognome, ore_contratto_mensili, saldo_iniziale, saldo_finale,
-                     mesi: [{mese, ore_lavorate, ore_contratto, delta_mese, rettifiche: [...], saldo_progressivo}]}
+    Usa la NUOVA logica live: monte = ore_giornaliere × giorni_lavorativi (lun-ven, no festivi).
+    Ogni dipendente: {id, nome, cognome, ore_giornaliere, saldo_iniziale, saldo_finale,
+                     mesi: [{mese, giorni_lavorativi, ore_lavorate, monte_dovuto,
+                             rettifiche: [...], delta_mese, saldo_progressivo}]}
     """
+    from datetime import date as _d
+    from calendar import monthrange
+
     # Dipendenti da includere
     if dipendente_id and dipendente_id != 'tutti':
         dip_rows = db.execute("""SELECT * FROM utenti WHERE id=? AND COALESCE(attivo,1)=1""",
                               (int(dipendente_id),)).fetchall()
     else:
-        dip_rows = db.execute("""SELECT * FROM utenti WHERE COALESCE(attivo,1)=1 
-                                 AND ruolo != 'admin' AND COALESCE(ore_contratto_mensili,0) > 0
+        dip_rows = db.execute("""SELECT * FROM utenti WHERE COALESCE(attivo,1)=1
+                                 AND ruolo != 'admin'
+                                 AND (COALESCE(ore_contratto_giornaliere,0) > 0
+                                      OR COALESCE(ore_contratto_mensili,0) > 0)
                                  ORDER BY cognome, nome""").fetchall()
 
     # Genera lista mesi nell'intervallo
-    from datetime import datetime as _dt
     y1, m1 = int(mese_da[:4]), int(mese_da[5:7])
     y2, m2 = int(mese_a[:4]),  int(mese_a[5:7])
     mesi = []
     y, m = y1, m1
     while (y, m) <= (y2, m2):
-        mesi.append(f"{y:04d}-{m:02d}")
+        mesi.append((y, m, f"{y:04d}-{m:02d}"))
         m += 1
-        if m > 12:
-            m = 1; y += 1
-        if len(mesi) > 120:
-            break
+        if m > 12: m = 1; y += 1
+        if len(mesi) > 120: break
 
+    oggi = _d.today()
     result = []
     for u in dip_rows:
         ud = dict(u)
-        # Saldo iniziale = somma delta PRIMA del primo mese nell'intervallo
-        saldo_iniziale = db.execute("""SELECT COALESCE(SUM(delta),0) as s FROM banca_ore_movimenti 
-                                       WHERE utente_id=? AND mese < ?""",
-                                    (u['id'], mesi[0])).fetchone()['s']
-        saldo_iniziale = round(float(saldo_iniziale or 0), 2)
+        # Ore al giorno (con fallback)
+        ore_g = float(u['ore_contratto_giornaliere'] or 0)
+        if ore_g <= 0 and u['ore_contratto_mensili']:
+            ore_g = round(float(u['ore_contratto_mensili']) / 22.0, 2)
+        if ore_g <= 0:
+            continue
+
+        # Calcolo saldo iniziale: somma dei delta live di TUTTI i mesi PRIMA del primo mese
+        # del range, + somma rettifiche manuali precedenti al primo mese del range
+        saldo_iniziale = 0.0
+        if mesi:
+            primo_y, primo_m, primo_str = mesi[0]
+            primo_d = _d(primo_y, primo_m, 1)
+            # Determino il "punto zero": data assunzione o prima presenza
+            partenza = None
+            if u['data_assunzione']:
+                try:
+                    partenza = _d.fromisoformat(u['data_assunzione']).replace(day=1)
+                except Exception:
+                    partenza = None
+            if not partenza:
+                p = db.execute("SELECT MIN(data) as d FROM presenze WHERE utente_id=?", (u['id'],)).fetchone()
+                if p and p['d']:
+                    try:
+                        partenza = _d.fromisoformat(p['d']).replace(day=1)
+                    except Exception:
+                        partenza = primo_d
+                else:
+                    partenza = primo_d
+            # Itera mesi PRIMA del range per accumulare il saldo iniziale
+            yy, mm = partenza.year, partenza.month
+            safety = 0
+            while (yy, mm) < (primo_y, primo_m) and safety < 240:
+                safety += 1
+                ms = f"{yy:04d}-{mm:02d}"
+                row = db.execute("""SELECT COALESCE(SUM(ore_totali),0) as ore FROM presenze
+                                    WHERE utente_id=? AND substr(data,1,7)=?""",
+                                 (u['id'], ms)).fetchone()
+                ore_lav_pre = float(row['ore'] or 0)
+                # Calcolo monte per questo mese pre-range
+                from datetime import timedelta as _td
+                festivi = _festivita_italiane(yy)
+                _, last_d = monthrange(yy, mm)
+                da = partenza if (yy == partenza.year and mm == partenza.month and u['data_assunzione']) else _d(yy, mm, 1)
+                fino = _d(yy, mm, last_d)
+                if fino > oggi: fino = oggi
+                giorni = 0
+                d_iter = da
+                while d_iter <= fino:
+                    if d_iter.weekday() < 5 and d_iter not in festivi:
+                        giorni += 1
+                    d_iter += _td(days=1)
+                monte_pre = giorni * ore_g
+                saldo_iniziale += round(ore_lav_pre - monte_pre, 2)
+                mm += 1
+                if mm > 12: mm = 1; yy += 1
+            # Aggiungo rettifiche manuali precedenti al primo mese del range
+            rett_pre = db.execute("""SELECT COALESCE(SUM(delta),0) as s FROM banca_ore_movimenti
+                                     WHERE utente_id=? AND tipo IN ('rettifica','manuale')
+                                     AND mese < ?""", (u['id'], primo_str)).fetchone()['s']
+            saldo_iniziale += float(rett_pre or 0)
+        saldo_iniziale = round(saldo_iniziale, 2)
 
         saldo_progressivo = saldo_iniziale
         righe_mesi = []
-        ore_contr_mens = float(u['ore_contratto_mensili'] or 0)
-        for mese in mesi:
-            # Presenze effettive del mese
+        for (yy, mm, mese_str) in mesi:
+            # Giorni lavorativi del mese (per il mese in corso conta solo fino a oggi)
+            from datetime import timedelta as _td
+            festivi = _festivita_italiane(yy)
+            _, last_d = monthrange(yy, mm)
+            da = _d(yy, mm, 1)
+            # Se il mese coincide con assunzione, parti dal giorno di assunzione
+            if u['data_assunzione']:
+                try:
+                    ass = _d.fromisoformat(u['data_assunzione'])
+                    if ass.year == yy and ass.month == mm:
+                        da = ass
+                except Exception: pass
+            fino = _d(yy, mm, last_d)
+            if fino > oggi: fino = oggi
+            if da > fino:
+                giorni_lav = 0
+            else:
+                giorni_lav = 0
+                d_iter = da
+                while d_iter <= fino:
+                    if d_iter.weekday() < 5 and d_iter not in festivi:
+                        giorni_lav += 1
+                    d_iter += _td(days=1)
+            monte = round(giorni_lav * ore_g, 2)
+
+            # Ore lavorate del mese
             row = db.execute("""SELECT COALESCE(SUM(ore_totali),0) as ore FROM presenze
                                 WHERE utente_id=? AND substr(data,1,7)=?""",
-                             (u['id'], mese)).fetchone()
+                             (u['id'], mese_str)).fetchone()
             ore_lav = round(float(row['ore'] or 0), 2)
-            # Movimenti in banca ore per questo mese
-            movs = db.execute("""SELECT id, tipo, delta, descrizione, creato_il
-                                 FROM banca_ore_movimenti
-                                 WHERE utente_id=? AND mese=? ORDER BY id""",
-                              (u['id'], mese)).fetchall()
-            chiusura = None
-            rettifiche = []
-            delta_mese = 0.0
-            for m in movs:
-                md = dict(m)
-                delta_mese += float(m['delta'] or 0)
-                if m['tipo'] == 'chiusura_mensile':
-                    chiusura = md
-                else:
-                    rettifiche.append(md)
-            delta_mese = round(delta_mese, 2)
+
+            # Rettifiche manuali del mese
+            rett_rows = db.execute("""SELECT id, tipo, delta, descrizione, creato_il
+                                      FROM banca_ore_movimenti
+                                      WHERE utente_id=? AND mese=?
+                                      AND tipo IN ('rettifica','manuale')
+                                      ORDER BY id""",
+                                   (u['id'], mese_str)).fetchall()
+            rettifiche = [dict(r) for r in rett_rows]
+            tot_rettifiche = sum(float(r['delta'] or 0) for r in rettifiche)
+
+            delta_mese = round((ore_lav - monte) + tot_rettifiche, 2)
             saldo_progressivo = round(saldo_progressivo + delta_mese, 2)
+            is_corrente = (yy == oggi.year and mm == oggi.month)
             righe_mesi.append({
-                'mese': mese,
+                'mese': mese_str,
+                'giorni_lavorativi': giorni_lav,
                 'ore_lavorate': ore_lav,
-                'ore_contratto': ore_contr_mens,
-                'chiusura': chiusura,
+                'monte_dovuto': monte,
                 'rettifiche': rettifiche,
                 'delta_mese': delta_mese,
                 'saldo_progressivo': saldo_progressivo,
+                'is_corrente': is_corrente,
             })
-        ud['saldo_iniziale'] = saldo_iniziale
-        ud['saldo_finale']   = saldo_progressivo
-        ud['mesi']           = righe_mesi
+        ud['ore_giornaliere']  = ore_g
+        ud['saldo_iniziale']   = saldo_iniziale
+        ud['saldo_finale']     = saldo_progressivo
+        ud['mesi']             = righe_mesi
         result.append(ud)
-    return result, mesi
+    return result, [m[2] for m in mesi]
 
 
 BANCA_ORE_REPORT_TMPL = """
@@ -15337,7 +15598,7 @@ BANCA_ORE_REPORT_TMPL = """
     <div>
       <div style="font-size:18px;font-weight:800">{{ u.nome }} {{ u.cognome }}</div>
       <div style="font-size:12px;opacity:.8">
-        Contratto: <strong>{{ "%.1f"|format(u.ore_contratto_mensili or 0) }}h/mese</strong>
+        Contratto: <strong>{{ "%.1f"|format(u.ore_giornaliere or 0) }}h/giorno</strong>
         &nbsp;·&nbsp; Periodo: {{ mese_da }} → {{ mese_a }}
       </div>
     </div>
@@ -15354,8 +15615,9 @@ BANCA_ORE_REPORT_TMPL = """
       <thead>
         <tr>
           <th>MESE</th>
+          <th style="text-align:right">GG.LAV.</th>
           <th style="text-align:right">ORE LAVORATE</th>
-          <th style="text-align:right">CONTRATTO</th>
+          <th style="text-align:right">MONTE DOVUTO</th>
           <th style="text-align:right">DELTA MESE</th>
           <th>NOTE / MOVIMENTI</th>
           <th style="text-align:right">SALDO PROGRESSIVO</th>
@@ -15363,20 +15625,24 @@ BANCA_ORE_REPORT_TMPL = """
       </thead>
       <tbody>
       {% for m in u.mesi %}
-      <tr class="m-riga">
-        <td style="font-family:monospace;font-weight:700">{{ m.mese }}</td>
-        <td style="text-align:right;font-family:monospace">{{ "%.2f"|format(m.ore_lavorate) }} h</td>
-        <td style="text-align:right;font-family:monospace;color:var(--text-light)">{{ "%.2f"|format(m.ore_contratto) }} h</td>
+      <tr class="m-riga" {% if m.is_corrente %}style="background:#fef3c7"{% endif %}>
+        <td style="font-family:monospace;font-weight:700">
+          {{ m.mese }}
+          {% if m.is_corrente %}<span style="background:#f59e0b;color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:4px;font-weight:700">IN CORSO</span>{% endif %}
+        </td>
+        <td style="text-align:right;font-family:monospace">{{ m.giorni_lavorativi }}</td>
+        <td style="text-align:right;font-family:monospace;font-weight:700">{{ "%.2f"|format(m.ore_lavorate) }} h</td>
+        <td style="text-align:right;font-family:monospace;color:var(--text-light)">{{ "%.2f"|format(m.monte_dovuto) }} h</td>
         <td style="text-align:right;font-weight:700" class="{% if m.delta_mese > 0 %}rep-pos{% elif m.delta_mese < 0 %}rep-neg{% else %}rep-zero{% endif %}">
           {% if m.delta_mese > 0 %}+{% endif %}{{ "%.2f"|format(m.delta_mese) }} h
         </td>
         <td style="font-size:12px;color:var(--text-light)">
-          {% if m.chiusura %}
-            <div><i class="fa fa-lock" style="color:#2563eb"></i> Chiusura mensile: {{ m.chiusura.descrizione or '' }}</div>
-          {% elif m.ore_lavorate > 0 %}
-            <span style="color:#f59e0b"><i class="fa fa-clock"></i> Mese non ancora chiuso</span>
-          {% else %}
+          {% if m.is_corrente %}
+            <span style="color:#f59e0b"><i class="fa fa-clock"></i> Mese in corso — dati fino a oggi</span>
+          {% elif m.ore_lavorate == 0 %}
             <span style="opacity:.5">—</span>
+          {% else %}
+            <span style="color:#16a34a"><i class="fa fa-check"></i> Calcolato in tempo reale</span>
           {% endif %}
         </td>
         <td style="text-align:right;font-weight:800" class="{% if m.saldo_progressivo > 0 %}rep-pos{% elif m.saldo_progressivo < 0 %}rep-neg{% else %}rep-zero{% endif %}">
@@ -15385,6 +15651,7 @@ BANCA_ORE_REPORT_TMPL = """
       </tr>
       {% for r in m.rettifiche %}
       <tr class="m-rett">
+        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -15447,7 +15714,8 @@ def banca_ore_report():
         mese_a = mese_da
 
     db = get_db()
-    tutti_dipendenti = db.execute("""SELECT id, nome, cognome, mansione as titolo, ore_contratto_mensili 
+    tutti_dipendenti = db.execute("""SELECT id, nome, cognome, mansione as titolo,
+                                            ore_contratto_giornaliere, ore_contratto_mensili
                                      FROM utenti WHERE COALESCE(attivo,1)=1 AND ruolo != 'admin'
                                      ORDER BY cognome, nome""").fetchall()
     report, _mesi = _banca_ore_report_data(db, dipendente_id, mese_da, mese_a)
@@ -15500,18 +15768,18 @@ def banca_ore_report_export():
     ws.cell(1, 1, f"Report Banca Ore · Periodo {mese_da} → {mese_a}").font = Font(bold=True, size=14, color="0F4C81")
     ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=7)
     ws.cell(2, 1, f"Generato il {date.today().isoformat()}").font = Font(italic=True, size=10, color="64748B")
-    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=7)
+    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=8)
 
     row_i = 4
     for u in report:
         # Intestazione dipendente
-        c = ws.cell(row_i, 1, f"{u['nome']} {u['cognome']} · Contratto: {u['ore_contratto_mensili']:.1f}h/mese · Saldo iniziale: {u['saldo_iniziale']:+.2f}h · Saldo finale: {u['saldo_finale']:+.2f}h")
+        c = ws.cell(row_i, 1, f"{u['nome']} {u['cognome']} · Contratto: {u['ore_giornaliere']:.1f}h/giorno · Saldo iniziale: {u['saldo_iniziale']:+.2f}h · Saldo finale: {u['saldo_finale']:+.2f}h")
         c.font = dip_font; c.fill = dip_fill; c.alignment = left
-        ws.merge_cells(start_row=row_i, start_column=1, end_row=row_i, end_column=7)
+        ws.merge_cells(start_row=row_i, start_column=1, end_row=row_i, end_column=8)
         row_i += 1
 
-        # Header colonne
-        headers = ['MESE', 'ORE LAV.', 'CONTRATTO', 'DELTA MESE', 'TIPO MOVIMENTO', 'DESCRIZIONE', 'SALDO PROGR.']
+        # Header colonne (8)
+        headers = ['MESE', 'GG.LAV.', 'ORE LAV.', 'MONTE DOVUTO', 'DELTA MESE', 'TIPO MOVIMENTO', 'DESCRIZIONE', 'SALDO PROGR.']
         for j, h in enumerate(headers, 1):
             c = ws.cell(row_i, j, h)
             c.font = header_font; c.fill = header_fill; c.alignment = center
@@ -15519,26 +15787,31 @@ def banca_ore_report_export():
 
         # Righe mesi
         for m in u['mesi']:
-            # Riga chiusura (o semplice riepilogo se non chiuso)
             mese_str = m['mese']
+            gg_lav   = m['giorni_lavorativi']
             ore_lav  = m['ore_lavorate']
-            ore_con  = m['ore_contratto']
+            monte    = m['monte_dovuto']
             delta    = m['delta_mese']
             saldo    = m['saldo_progressivo']
+            is_corr  = m.get('is_corrente', False)
 
             ws.cell(row_i, 1, mese_str).alignment = center
-            cell_ore = ws.cell(row_i, 2, ore_lav); cell_ore.number_format = '0.00" h"'; cell_ore.alignment = right
-            cell_con = ws.cell(row_i, 3, ore_con); cell_con.number_format = '0.00" h"'; cell_con.alignment = right
-            cell_dlt = ws.cell(row_i, 4, delta);   cell_dlt.number_format = '+0.00" h";-0.00" h";0.00" h"'; cell_dlt.alignment = right
+            ws.cell(row_i, 2, gg_lav).alignment = right
+            cell_ore = ws.cell(row_i, 3, ore_lav); cell_ore.number_format = '0.00" h"'; cell_ore.alignment = right
+            cell_mon = ws.cell(row_i, 4, monte);   cell_mon.number_format = '0.00" h"'; cell_mon.alignment = right
+            cell_dlt = ws.cell(row_i, 5, delta);   cell_dlt.number_format = '+0.00" h";-0.00" h";0.00" h"'; cell_dlt.alignment = right
             if delta > 0: cell_dlt.fill = pos_fill; cell_dlt.font = Font(bold=True, color="16A34A")
             elif delta < 0: cell_dlt.fill = neg_fill; cell_dlt.font = Font(bold=True, color="DC2626")
-            if m['chiusura']:
-                ws.cell(row_i, 5, 'Chiusura mensile').alignment = left
-                ws.cell(row_i, 6, m['chiusura']['descrizione'] or '').alignment = left
-            else:
-                ws.cell(row_i, 5, '— non chiuso —').font = Font(italic=True, color="F59E0B")
+            if is_corr:
+                c6 = ws.cell(row_i, 6, 'Mese in corso'); c6.font = Font(italic=True, color="F59E0B")
+                ws.cell(row_i, 7, 'Dati fino a oggi').alignment = left
+            elif ore_lav == 0:
                 ws.cell(row_i, 6, '').alignment = left
-            cell_sal = ws.cell(row_i, 7, saldo)
+                ws.cell(row_i, 7, '—').alignment = left
+            else:
+                ws.cell(row_i, 6, 'Calcolo LIVE').font = Font(italic=True, color="16A34A")
+                ws.cell(row_i, 7, 'Saldo calcolato in tempo reale').alignment = left
+            cell_sal = ws.cell(row_i, 8, saldo)
             cell_sal.number_format = '+0.00" h";-0.00" h";0.00" h"'
             cell_sal.alignment = right; cell_sal.font = Font(bold=True)
             row_i += 1
@@ -15548,22 +15821,23 @@ def banca_ore_report_export():
                 ws.cell(row_i, 1, f"  ↳ {mese_str}").font = Font(italic=True, size=10, color="64748B")
                 ws.cell(row_i, 2, '').alignment = right
                 ws.cell(row_i, 3, '').alignment = right
+                ws.cell(row_i, 4, '').alignment = right
                 d = float(r['delta'] or 0)
-                cell_d = ws.cell(row_i, 4, d)
+                cell_d = ws.cell(row_i, 5, d)
                 cell_d.number_format = '+0.00" h";-0.00" h";0.00" h"'; cell_d.alignment = right
                 cell_d.fill = rett_fill; cell_d.font = Font(bold=True, color="92400E")
                 tipo_lbl = 'Rettifica' if r['tipo'] == 'rettifica' else ('Manuale' if r['tipo'] == 'manuale' else r['tipo'])
                 if d < 0: tipo_lbl += ' (PRELIEVO)'
-                c5 = ws.cell(row_i, 5, tipo_lbl); c5.fill = rett_fill
-                c6 = ws.cell(row_i, 6, r['descrizione'] or ''); c6.fill = rett_fill
-                ws.cell(row_i, 7, '').fill = rett_fill
+                c6 = ws.cell(row_i, 6, tipo_lbl); c6.fill = rett_fill
+                c7 = ws.cell(row_i, 7, r['descrizione'] or ''); c7.fill = rett_fill
+                ws.cell(row_i, 8, '').fill = rett_fill
                 row_i += 1
 
         # Riga totale dipendente
         c = ws.cell(row_i, 1, f"SALDO FINALE {u['nome']} {u['cognome']}")
         c.font = Font(bold=True, size=11); c.alignment = right
-        ws.merge_cells(start_row=row_i, start_column=1, end_row=row_i, end_column=6)
-        cell_fin = ws.cell(row_i, 7, u['saldo_finale'])
+        ws.merge_cells(start_row=row_i, start_column=1, end_row=row_i, end_column=7)
+        cell_fin = ws.cell(row_i, 8, u['saldo_finale'])
         cell_fin.number_format = '+0.00" h";-0.00" h";0.00" h"'
         cell_fin.font = Font(bold=True, size=12, color="FFFFFF")
         if u['saldo_finale'] > 0: cell_fin.fill = PatternFill("solid", fgColor="16A34A")
@@ -15572,8 +15846,8 @@ def banca_ore_report_export():
         cell_fin.alignment = right
         row_i += 2
 
-    # Larghezze colonne
-    widths = [14, 12, 12, 14, 22, 40, 16]
+    # Larghezze colonne (8)
+    widths = [14, 10, 12, 14, 14, 22, 40, 16]
     for i, w in enumerate(widths, 1):
         ws.column_dimensions[openpyxl.utils.get_column_letter(i)].width = w
 
