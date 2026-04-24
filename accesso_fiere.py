@@ -16117,9 +16117,19 @@ REPORT_TMPL = """
 .rep-info strong{color:#1e40af}
 .rep-info ul{margin:8px 0 0 18px;padding:0}
 .rep-info li{margin:3px 0}
-.rep-card{background:#fff;border-radius:12px;border:1px solid var(--border);padding:22px}
+.rep-card{background:#fff;border-radius:12px;border:1px solid var(--border);padding:22px;margin-bottom:18px}
 .rep-card h3{margin:0 0 14px;font-size:16px;color:var(--text)}
 .rep-card h3 i{color:var(--accent);margin-right:6px}
+.tim-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.tim-stat{background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center}
+.tim-stat .v{font-size:22px;font-weight:800;color:var(--text)}
+.tim-stat .l{font-size:10px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.tim-tab{width:100%;border-collapse:collapse;font-size:13px}
+.tim-tab thead th{background:#0f172a;color:#fff;padding:10px 12px;text-align:left;font-size:11px;font-weight:700;white-space:nowrap}
+.tim-tab tbody td{padding:10px 12px;border-bottom:1px solid var(--border)}
+.tim-tab tbody tr:hover{background:#f8fafc}
+.dip-eliminato{background:#fef2f2}
+.dip-eliminato td:first-child::after{content:'ELIMINATO';margin-left:6px;background:#dc2626;color:#fff;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:700}
 </style>
 
 <div class="rep-info">
@@ -16163,23 +16173,186 @@ REPORT_TMPL = """
     <i class="fa fa-lightbulb"></i> Suggerimento: seleziona "Tutti i dipendenti" per avere un file con un foglio per ogni persona + un foglio di riepilogo generale.
   </p>
 </div>
+
+<div class="rep-card">
+  <h3 style="margin-bottom:4px"><i class="fa fa-list-check"></i> Elenco timbrature</h3>
+  <p style="font-size:12px;color:var(--text-light);margin:0 0 14px">Filtra per cantiere, dipendente, mese o intervallo di date. I dipendenti eliminati con timbrature nel periodo vengono inclusi.</p>
+
+  <form method="GET" action="/report" style="display:grid;grid-template-columns:1.5fr 1.5fr 1fr 1fr 1fr auto auto;gap:10px;align-items:end;margin-bottom:16px">
+    <div class="form-group" style="margin:0">
+      <label style="font-size:11px">Dipendente</label>
+      <select name="dipendente_id" style="width:100%">
+        <option value="">— Tutti —</option>
+        {% for d in dipendenti %}
+        <option value="{{ d.id }}" {{ 'selected' if filtro_dip == d.id|string }}>{{ d.cognome }} {{ d.nome }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:11px">Cantiere / Fiera</label>
+      <select name="cantiere_id" style="width:100%">
+        <option value="">— Tutti —</option>
+        {% for c in cantieri %}
+        <option value="{{ c.id }}" {{ 'selected' if filtro_can == c.id|string }}>{{ c.nome }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:11px">Mese</label>
+      <input type="month" name="mese" value="{{ filtro_mese }}" style="width:100%">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:11px">Dal</label>
+      <input type="date" name="data_da" value="{{ filtro_da }}" style="width:100%">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:11px">Al</label>
+      <input type="date" name="data_a" value="{{ filtro_a }}" style="width:100%">
+    </div>
+    <button type="submit" class="btn btn-primary btn-sm" style="white-space:nowrap"><i class="fa fa-filter"></i> Filtra</button>
+    <a href="/report" class="btn btn-secondary btn-sm" style="white-space:nowrap"><i class="fa fa-rotate-right"></i> Reset</a>
+  </form>
+
+  {% if timbrature %}
+  <div class="tim-stats">
+    <div class="tim-stat"><div class="v">{{ tot_giorni }}</div><div class="l">Timbrature</div></div>
+    <div class="tim-stat"><div class="v">{{ "%.1f"|format(tot_ore) }} h</div><div class="l">Ore totali</div></div>
+    <div class="tim-stat"><div class="v">{{ tot_dip_distinti }}</div><div class="l">Dipendenti distinti</div></div>
+  </div>
+  <div style="overflow-x:auto">
+  <table class="tim-tab">
+    <thead><tr>
+      <th>DATA</th>
+      <th>DIPENDENTE</th>
+      <th>CANTIERE / FIERA</th>
+      <th>ENTRATA</th>
+      <th>USCITA</th>
+      <th style="text-align:right">ORE</th>
+      <th>NOTE</th>
+    </tr></thead>
+    <tbody>
+    {% for t in timbrature %}
+    <tr {% if t.dip_eliminato %}class="dip-eliminato"{% endif %}>
+      <td style="font-family:monospace">{{ t.data }}</td>
+      <td><strong>{{ t.nome or '—' }} {{ t.cognome or '' }}</strong></td>
+      <td>{% if t.cantiere_nome %}<span style="background:#e0e7ff;color:#3730a3;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">{{ t.cantiere_nome }}</span>{% else %}<span style="color:var(--text-light)">—</span>{% endif %}</td>
+      <td style="font-family:monospace;font-size:12px">{{ t.ora_entrata or '—' }}</td>
+      <td style="font-family:monospace;font-size:12px">{{ t.ora_uscita or '—' }}</td>
+      <td style="text-align:right;font-weight:700;font-family:monospace">{{ "%.1f"|format(t.ore_totali or 0) }}</td>
+      <td style="font-size:12px;color:var(--text-light)">{{ t.note or '' }}</td>
+    </tr>
+    {% endfor %}
+    <tr style="background:#f8fafc;font-weight:800">
+      <td colspan="5" style="text-align:right;padding:12px">TOTALE {{ tot_giorni }} timbrature</td>
+      <td style="text-align:right;padding:12px;color:var(--accent);font-size:15px">{{ "%.1f"|format(tot_ore) }} h</td>
+      <td></td>
+    </tr>
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:34px;color:var(--text-light)">
+    <i class="fa fa-inbox" style="font-size:38px;opacity:.3"></i>
+    <p style="margin-top:12px;font-size:13px">Nessuna timbratura trovata con i filtri attuali.</p>
+  </div>
+  {% endif %}
+</div>
 """
 
 
 @app.route('/report')
 @admin_required
 def report_pagina():
+    """Pagina report con export Excel + elenco timbrature filtrabile per cantiere/dipendente/mese."""
     db = get_db()
+
+    # Elenco dipendenti per le <select> (attivi + eliminati che hanno presenze)
     dipendenti = db.execute("""SELECT id, nome, cognome, mansione FROM utenti
-                               WHERE COALESCE(attivo,1)=1 AND ruolo != 'admin'
-                               ORDER BY cognome, nome""").fetchall()
-    db.close()
+                               WHERE ruolo != 'admin'
+                               ORDER BY COALESCE(attivo,0) DESC, cognome, nome""").fetchall()
+    # Aggiungi eliminati con timbrature
+    eliminati = db.execute("""SELECT s.id, s.nome, s.cognome, s.mansione FROM utenti_storico s
+                              WHERE NOT EXISTS (SELECT 1 FROM utenti u WHERE u.id = s.id)
+                              AND EXISTS (SELECT 1 FROM presenze p WHERE p.utente_id = s.id)
+                              ORDER BY s.cognome, s.nome""").fetchall()
+    dipendenti_list = [dict(d) for d in dipendenti] + [dict(e) for e in eliminati]
+
+    # Elenco cantieri (tutti, anche archiviati, perché potrei voler filtrare storico)
+    cantieri = db.execute("SELECT id, nome FROM cantieri ORDER BY nome").fetchall()
+
+    # Filtri dall'URL
+    filtro_dip = (request.args.get('dipendente_id') or '').strip()
+    filtro_can = (request.args.get('cantiere_id') or '').strip()
+    filtro_mese = (request.args.get('mese') or '').strip()       # formato YYYY-MM
+    filtro_da   = (request.args.get('data_da') or '').strip()
+    filtro_a    = (request.args.get('data_a') or '').strip()
+
+    # Default mese corrente se nessun filtro date/mese è stato impostato
     oggi = date.today()
-    primo = oggi.replace(day=1)
+    primo_mese_corr = oggi.replace(day=1)
+    if not filtro_mese and not filtro_da and not filtro_a:
+        filtro_mese = oggi.strftime('%Y-%m')
+
+    # Determino il range effettivo di date da applicare
+    date_da_eff = filtro_da or None
+    date_a_eff  = filtro_a  or None
+    if filtro_mese and not date_da_eff and not date_a_eff:
+        # mese YYYY-MM → primo e ultimo giorno
+        try:
+            from datetime import datetime as _dt
+            y, m = filtro_mese.split('-')
+            y = int(y); m = int(m)
+            from calendar import monthrange
+            ultimo = monthrange(y, m)[1]
+            date_da_eff = f"{y:04d}-{m:02d}-01"
+            date_a_eff  = f"{y:04d}-{m:02d}-{ultimo:02d}"
+        except Exception:
+            date_da_eff = date_a_eff = None
+
+    # Query timbrature con filtri
+    sql = """SELECT p.id, p.data, p.ora_entrata, p.ora_uscita, p.ore_totali, p.note,
+                    COALESCE(p.nome_jolly, u.nome) as nome,
+                    COALESCE(p.cognome_jolly, u.cognome) as cognome,
+                    u.eliminato as dip_eliminato,
+                    c.nome as cantiere_nome, p.cantiere_id
+             FROM presenze p
+             LEFT JOIN utenti_full u ON u.id = p.utente_id
+             LEFT JOIN cantieri c ON c.id = p.cantiere_id
+             WHERE 1=1"""
+    params = []
+    if filtro_dip:
+        try:
+            sql += " AND p.utente_id = ?"; params.append(int(filtro_dip))
+        except Exception: pass
+    if filtro_can:
+        try:
+            sql += " AND p.cantiere_id = ?"; params.append(int(filtro_can))
+        except Exception: pass
+    if date_da_eff:
+        sql += " AND p.data >= ?"; params.append(date_da_eff)
+    if date_a_eff:
+        sql += " AND p.data <= ?"; params.append(date_a_eff)
+    sql += " ORDER BY p.data DESC, p.id DESC"
+
+    timbrature = db.execute(sql, params).fetchall()
+    timbrature = [dict(t) for t in timbrature]
+
+    # Totali di periodo
+    tot_ore = round(sum(float(t.get('ore_totali') or 0) for t in timbrature), 2)
+    tot_giorni = len(timbrature)
+    tot_dip_distinti = len(set(f"{t.get('nome')}|{t.get('cognome')}" for t in timbrature))
+
+    db.close()
+
     return render_page(REPORT_TMPL,
                        page_title='Report', active='report',
-                       dipendenti=[dict(d) for d in dipendenti],
-                       data_da=primo.isoformat(),
+                       dipendenti=dipendenti_list,
+                       cantieri=[dict(c) for c in cantieri],
+                       timbrature=timbrature,
+                       filtro_dip=filtro_dip, filtro_can=filtro_can,
+                       filtro_mese=filtro_mese, filtro_da=filtro_da, filtro_a=filtro_a,
+                       tot_ore=tot_ore, tot_giorni=tot_giorni, tot_dip_distinti=tot_dip_distinti,
+                       data_da=primo_mese_corr.isoformat(),
                        data_a=oggi.isoformat())
 
 
