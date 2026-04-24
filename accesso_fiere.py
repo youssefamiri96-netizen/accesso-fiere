@@ -2550,7 +2550,7 @@ def dashboard():
     }
 
     presenze_oggi = db.execute("""SELECT p.*,u.nome,u.cognome,c.nome as cantiere_nome
-        FROM presenze p JOIN utenti u ON u.id=p.utente_id
+        FROM presenze p LEFT JOIN utenti_full u ON u.id=p.utente_id
         LEFT JOIN cantieri c ON c.id=p.cantiere_id WHERE p.data=?""",(today,)).fetchall()
 
     # Ore ultimi 7 giorni (tutti i dipendenti, solo admin)
@@ -3356,7 +3356,7 @@ def presenze():
                COALESCE(p.cognome_jolly, u.cognome) as cognome,
                c.nome as cantiere_nome, p.cantiere_id
            FROM presenze p
-           LEFT JOIN utenti u ON u.id=p.utente_id
+           LEFT JOIN utenti_full u ON u.id=p.utente_id
            LEFT JOIN cantieri c ON c.id=p.cantiere_id
            WHERE 1=1"""
     params = []
@@ -3377,7 +3377,7 @@ def presenze():
     spese_filtrate = []
     if session['ruolo'] == 'admin':
         sq = """SELECT s.*, u.nome, u.cognome, v.targa as veicolo_targa
-                FROM spese_rimborso s JOIN utenti u ON u.id=s.utente_id
+                FROM spese_rimborso s LEFT JOIN utenti_full u ON u.id=s.utente_id
                 LEFT JOIN veicoli v ON v.id=s.veicolo_id
                 WHERE s.stato='approvata'"""
         sp = []
@@ -4004,7 +4004,7 @@ def export_presenze():
                COALESCE(p.cognome_jolly, u.cognome) as cognome,
                c.nome as cantiere_nome
            FROM presenze p
-           LEFT JOIN utenti u ON u.id=p.utente_id
+           LEFT JOIN utenti_full u ON u.id=p.utente_id
            LEFT JOIN cantieri c ON c.id=p.cantiere_id
            WHERE 1=1"""
     params = []
@@ -4017,7 +4017,7 @@ def export_presenze():
 
     # Spese approvate con gli stessi filtri utente/date
     sq = """SELECT s.*, u.nome, u.cognome, v.targa as veicolo_targa
-            FROM spese_rimborso s JOIN utenti u ON u.id=s.utente_id
+            FROM spese_rimborso s LEFT JOIN utenti_full u ON u.id=s.utente_id
             LEFT JOIN veicoli v ON v.id=s.veicolo_id
             WHERE s.stato='approvata'"""
     sp = []
@@ -4769,7 +4769,7 @@ def admin_report():
                        COALESCE(p.nome_jolly, u.nome) as nome,
                        COALESCE(p.cognome_jolly, u.cognome) as cognome
                    FROM presenze p
-                   LEFT JOIN utenti u ON u.id=p.utente_id
+                   LEFT JOIN utenti_full u ON u.id=p.utente_id
                    WHERE p.cantiere_id=? AND p.data LIKE ?""",
                 (c['id'], f'{mese_sel}%')).fetchall()
             giorni = len(rows)
@@ -4799,7 +4799,7 @@ def admin_report():
     if vista == 'dipendente':
         db2 = get_db()
         sq = """SELECT s.*, u.nome, u.cognome, v.targa as veicolo_targa
-                FROM spese_rimborso s JOIN utenti u ON u.id=s.utente_id
+                FROM spese_rimborso s LEFT JOIN utenti_full u ON u.id=s.utente_id
                 LEFT JOIN veicoli v ON v.id=s.veicolo_id
                 WHERE s.stato='approvata' AND substr(s.data,1,7)=?"""
         sp = [mese_sel]
@@ -4984,7 +4984,7 @@ def export_report():
                                    COALESCE(p.nome_jolly, u.nome) as nome,
                                    COALESCE(p.cognome_jolly, u.cognome) as cognome
                                FROM presenze p
-                               LEFT JOIN utenti u ON u.id=p.utente_id
+                               LEFT JOIN utenti_full u ON u.id=p.utente_id
                                WHERE p.cantiere_id=? AND p.data LIKE ?""",
                             (c['id'],f'{mese_sel}%')).fetchall()
             giorni=len(rows); ore=round(sum(r['ore_totali'] or 0 for r in rows),1)
@@ -5020,7 +5020,7 @@ def export_report():
               COALESCE(p.cognome_jolly, u.cognome) as cognome,
               c.nome as cnome
           FROM presenze p
-          LEFT JOIN utenti u ON u.id=p.utente_id
+          LEFT JOIN utenti_full u ON u.id=p.utente_id
           LEFT JOIN cantieri c ON c.id=p.cantiere_id
           WHERE p.data LIKE ?"""
     params2=[f'{mese_sel}%']
@@ -5054,7 +5054,7 @@ def export_report():
         ws3.column_dimensions['E'].width=14; ws3.column_dimensions['F'].width=14
         db3 = get_db()
         sq3 = """SELECT s.*, u.nome, u.cognome, v.targa as veicolo_targa
-                 FROM spese_rimborso s JOIN utenti u ON u.id=s.utente_id
+                 FROM spese_rimborso s LEFT JOIN utenti_full u ON u.id=s.utente_id
                  LEFT JOIN veicoli v ON v.id=s.veicolo_id
                  WHERE s.stato='approvata' AND substr(s.data,1,7)=?"""
         sp3 = [mese_sel]
@@ -12340,7 +12340,7 @@ def admin_spese():
     filtro_a     = request.args.get('a', '') or ''
 
     sql = """SELECT s.*, u.nome, u.cognome, v.targa as veicolo_targa
-             FROM spese_rimborso s JOIN utenti u ON u.id=s.utente_id
+             FROM spese_rimborso s LEFT JOIN utenti_full u ON u.id=s.utente_id
              LEFT JOIN veicoli v ON v.id=s.veicolo_id WHERE 1=1"""
     params = []
     if filtro_stato and filtro_stato != 'tutti':
@@ -12396,7 +12396,7 @@ def admin_spesa_gestisci(sid):
 
     db = get_db()
     spesa = db.execute("""SELECT s.*, u.email, u.nome as u_nome, u.cognome as u_cognome
-                          FROM spese_rimborso s LEFT JOIN utenti u ON u.id=s.utente_id
+                          FROM spese_rimborso s LEFT JOIN utenti_full u ON u.id=s.utente_id
                           WHERE s.id=?""", (sid,)).fetchone()
     if not spesa:
         db.close()
