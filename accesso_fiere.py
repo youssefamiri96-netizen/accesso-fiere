@@ -648,6 +648,27 @@ def init_db():
         # ── Banca ore ─────────────────────────────────────
         "ALTER TABLE utenti ADD COLUMN ore_contratto_mensili REAL DEFAULT 0",
         "ALTER TABLE utenti ADD COLUMN ore_contratto_giornaliere REAL DEFAULT 0",
+        # ── Storico dipendenti eliminati ──────────────────
+        # Preserva i dati anagrafici minimi per le JOIN quando l'utente viene rimosso
+        """CREATE TABLE IF NOT EXISTS utenti_storico (
+            id INTEGER PRIMARY KEY,
+            nome TEXT,
+            cognome TEXT,
+            email TEXT,
+            mansione TEXT,
+            data_assunzione TEXT,
+            data_eliminazione TEXT DEFAULT (datetime('now'))
+        )""",
+        # VIEW che unisce utenti attivi/disattivi e utenti_storico (eliminati).
+        # Utile per le JOIN nei report: così presenze/rimborsi di persone eliminate
+        # mantengono nome e cognome.
+        "DROP VIEW IF EXISTS utenti_full",
+        """CREATE VIEW IF NOT EXISTS utenti_full AS
+            SELECT id, nome, cognome, email, mansione, 0 AS eliminato FROM utenti
+            UNION ALL
+            SELECT s.id, s.nome, s.cognome, s.email, s.mansione, 1 AS eliminato
+              FROM utenti_storico s
+              WHERE NOT EXISTS (SELECT 1 FROM utenti u WHERE u.id = s.id)""",
         """CREATE TABLE IF NOT EXISTS banca_ore_movimenti (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             utente_id INTEGER NOT NULL,
@@ -881,6 +902,23 @@ def ensure_columns():
                 # Banca ore
                 "ALTER TABLE utenti ADD COLUMN ore_contratto_mensili REAL DEFAULT 0",
                 "ALTER TABLE utenti ADD COLUMN ore_contratto_giornaliere REAL DEFAULT 0",
+                # Storico dipendenti eliminati
+                """CREATE TABLE IF NOT EXISTS utenti_storico (
+                    id INTEGER PRIMARY KEY,
+                    nome TEXT,
+                    cognome TEXT,
+                    email TEXT,
+                    mansione TEXT,
+                    data_assunzione TEXT,
+                    data_eliminazione TEXT DEFAULT (datetime('now'))
+                )""",
+                "DROP VIEW IF EXISTS utenti_full",
+                """CREATE VIEW IF NOT EXISTS utenti_full AS
+                    SELECT id, nome, cognome, email, mansione, 0 AS eliminato FROM utenti
+                    UNION ALL
+                    SELECT s.id, s.nome, s.cognome, s.email, s.mansione, 1 AS eliminato
+                      FROM utenti_storico s
+                      WHERE NOT EXISTS (SELECT 1 FROM utenti u WHERE u.id = s.id)""",
                 """CREATE TABLE IF NOT EXISTS banca_ore_movimenti (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     utente_id INTEGER NOT NULL,
@@ -5129,6 +5167,12 @@ tr.riga-disattivo td{color:#94a3b8}
            class="btn btn-sm" style="background:#f0fdf4;color:#16a34a;border:1px solid #86efac" title="Riattiva account">
            <i class="fa fa-user-check"></i> Riattiva
         </a>
+        <form method="POST" action="/dipendenti/{{ d.id }}/elimina-definitivo" style="display:inline"
+              onsubmit="return confirmDeleteForever('{{ d.nome }} {{ d.cognome }}')">
+          <button type="submit" class="btn btn-sm" style="background:#dc2626;color:#fff;border:1px solid #991b1b" title="Elimina definitivamente (dati storici preservati)">
+            <i class="fa fa-trash"></i> Elimina
+          </button>
+        </form>
         {% endif %}
       </td>{% endif %}
     </tr>{% endfor %}</tbody>
@@ -5139,7 +5183,29 @@ tr.riga-disattivo td{color:#94a3b8}
     <p style="margin-top:12px">Nessun dipendente {% if mostra=='disattivati' %}disattivato{% else %}trovato{% endif %}.</p>
   </div>
   {% endif %}
-</div>"""
+</div>
+<script>
+function confirmDeleteForever(nomeCompleto) {
+  var primo = confirm(
+    '⚠️ ATTENZIONE: stai per eliminare DEFINITIVAMENTE ' + nomeCompleto + '.\n\n' +
+    '✓ Presenze, timbrature, rimborsi spese e movimenti banca ore RESTANO SALVATI (visibili nei report)\n' +
+    '✗ L\\'account verrà rimosso dall\\'elenco\n' +
+    '✗ L\\'operazione NON è reversibile\n\n' +
+    'Vuoi procedere?'
+  );
+  if (!primo) return false;
+  // Seconda conferma: digita il cognome
+  var cognome = (nomeCompleto.split(' ').slice(-1)[0] || '').trim();
+  var inserito = prompt('Per confermare, digita il COGNOME del dipendente: ' + cognome);
+  if (inserito == null) return false;
+  if (inserito.trim().toLowerCase() !== cognome.toLowerCase()) {
+    alert('Cognome non corrispondente. Eliminazione annullata.');
+    return false;
+  }
+  return true;
+}
+</script>
+"""
 
 DIP_FORM_TMPL = """
 <div class="card" style="max-width:640px;margin:0 auto">
@@ -5343,6 +5409,77 @@ def dipendente_riattiva(uid):
     safe_commit(db); db.close()
     flash(f'✅ Account di {dip["nome"]} {dip["cognome"]} riattivato. Potrà accedere nuovamente.', 'success')
     return redirect(url_for('dipendenti', mostra='attivi'))
+
+
+@app.route('/dipendenti/<int:uid>/elimina-definitivo', methods=['POST'])
+@admin_required
+def dipendente_elimina_definitivo(uid):
+    """Elimina DEFINITIVAMENTE il dipendente dalla tabella utenti.
+    Prima copia i dati anagrafici minimi in utenti_storico così le JOIN continuano a funzionare:
+    presenze, rimborsi spese, rettifiche banca ore restano salvati e visibili nei report."""
+    db = get_db()
+    dip = db.execute("SELECT id, nome, cognome, email, mansione, data_assunzione, attivo, ruolo FROM utenti WHERE id=?",
+                     (uid,)).fetchone()
+    if not dip:
+        db.close(); flash('Dipendente non trovato.', 'error')
+        return redirect(url_for('dipendenti'))
+
+    # Protezione: non eliminare admin
+    if dip['ruolo'] == 'admin':
+        db.close()
+        flash('Non puoi eliminare un amministratore.', 'error')
+        return redirect(url_for('dipendenti'))
+
+    # Protezione: solo dipendenti già disattivati possono essere eliminati definitivamente
+    if dip['attivo'] == 1:
+        db.close()
+        flash('Per sicurezza, prima devi disattivare il dipendente. Poi potrai eliminarlo definitivamente.', 'error')
+        return redirect(url_for('dipendenti'))
+
+    # Copio in utenti_storico (idempotente: se già presente, aggiorno)
+    try:
+        db.execute("""INSERT OR REPLACE INTO utenti_storico (id, nome, cognome, email, mansione, data_assunzione, data_eliminazione)
+                      VALUES (?,?,?,?,?,?,datetime('now'))""",
+                   (dip['id'], dip['nome'], dip['cognome'], dip['email'], dip['mansione'], dip['data_assunzione']))
+    except Exception as e:
+        print(f'[ELIMINA DEFINITIVO] errore storico: {e}')
+
+    # Conteggi per il messaggio
+    n_pres = db.execute("SELECT COUNT(*) FROM presenze WHERE utente_id=?", (uid,)).fetchone()[0]
+    n_spese = db.execute("SELECT COUNT(*) FROM spese_rimborso WHERE utente_id=?", (uid,)).fetchone()[0]
+    n_bo = db.execute("SELECT COUNT(*) FROM banca_ore_movimenti WHERE utente_id=?", (uid,)).fetchone()[0]
+
+    # Rimuovo documenti dipendente (sia file che record) — NON fanno parte dello storico ore
+    try:
+        docs = db.execute("SELECT nome_file FROM documenti_dipendente WHERE utente_id=?", (uid,)).fetchall()
+        for d_ in docs:
+            try:
+                if d_['nome_file']:
+                    fp = os.path.join(UPLOAD_DIR_DOCS, d_['nome_file'])
+                    if os.path.exists(fp):
+                        os.remove(fp)
+            except Exception: pass
+        db.execute("DELETE FROM documenti_dipendente WHERE utente_id=?", (uid,))
+    except Exception as e:
+        print(f'[ELIMINA DEFINITIVO] errore documenti: {e}')
+
+    # Rimuovo richieste/notifiche pendenti
+    for tbl in ('richieste_presenze', 'richieste_ferie', 'notifiche'):
+        try:
+            db.execute(f"DELETE FROM {tbl} WHERE utente_id=?", (uid,))
+        except Exception:
+            pass  # tabella potrebbe non esistere
+
+    # Elimino la riga da utenti — le presenze/spese/rettifiche NON vengono toccate,
+    # rimangono col loro utente_id e la JOIN userà utenti_storico.
+    db.execute("DELETE FROM utenti WHERE id=?", (uid,))
+    safe_commit(db); db.close()
+
+    flash(f'🗑️ {dip["nome"]} {dip["cognome"]} eliminato definitivamente. '
+          f'Conservati: {n_pres} presenze, {n_spese} rimborsi, {n_bo} movimenti banca ore (visibili nei report).',
+          'success')
+    return redirect(url_for('dipendenti', mostra='disattivati'))
+
 
 @app.route('/dipendenti/<int:uid>/reset-password')
 @admin_required
@@ -15968,15 +16105,41 @@ def report_export():
 
     db = get_db()
     if dipendente_id == 'tutti':
-        dips = db.execute("""SELECT id, nome, cognome, mansione, email,
-                                    ore_contratto_giornaliere, ore_contratto_mensili
+        # Dipendenti attivi + dipendenti eliminati che hanno attività nel periodo
+        dips_attivi = db.execute("""SELECT id, nome, cognome, mansione, email,
+                                    ore_contratto_giornaliere, ore_contratto_mensili,
+                                    0 AS eliminato
                              FROM utenti WHERE COALESCE(attivo,1)=1 AND ruolo != 'admin'
                              ORDER BY cognome, nome""").fetchall()
+        # Eliminati con almeno una presenza/spesa/rettifica nel periodo
+        dips_eliminati = db.execute("""
+            SELECT s.id, s.nome, s.cognome, s.mansione, s.email,
+                   0 AS ore_contratto_giornaliere, 0 AS ore_contratto_mensili,
+                   1 AS eliminato
+            FROM utenti_storico s
+            WHERE NOT EXISTS (SELECT 1 FROM utenti u WHERE u.id = s.id)
+            AND (
+              EXISTS (SELECT 1 FROM presenze WHERE utente_id = s.id AND data BETWEEN ? AND ?)
+              OR EXISTS (SELECT 1 FROM spese_rimborso WHERE utente_id = s.id AND data BETWEEN ? AND ?)
+              OR EXISTS (SELECT 1 FROM banca_ore_movimenti WHERE utente_id = s.id
+                         AND COALESCE(substr(creato_il,1,10),'') BETWEEN ? AND ?)
+            )
+            ORDER BY s.cognome, s.nome
+        """, (data_da, data_a, data_da, data_a, data_da, data_a)).fetchall()
+        dips = list(dips_attivi) + list(dips_eliminati)
     else:
         try:
-            dips = db.execute("""SELECT id, nome, cognome, mansione, email,
-                                        ore_contratto_giornaliere, ore_contratto_mensili
-                                 FROM utenti WHERE id=?""", (int(dipendente_id),)).fetchall()
+            # Prima cerco in utenti attivi, poi eventualmente in storico
+            row = db.execute("""SELECT id, nome, cognome, mansione, email,
+                                    ore_contratto_giornaliere, ore_contratto_mensili,
+                                    0 AS eliminato
+                                 FROM utenti WHERE id=?""", (int(dipendente_id),)).fetchone()
+            if row is None:
+                row = db.execute("""SELECT id, nome, cognome, mansione, email,
+                                    0 AS ore_contratto_giornaliere, 0 AS ore_contratto_mensili,
+                                    1 AS eliminato
+                                 FROM utenti_storico WHERE id=?""", (int(dipendente_id),)).fetchone()
+            dips = [row] if row else []
         except Exception:
             dips = []
 
@@ -16027,10 +16190,12 @@ def report_export():
             sheet_name = f"{base_sn[:28]}_{n}"; n += 1
         ws = wb.create_sheet(title=sheet_name)
 
-        ws['A1'] = nome_full
-        ws['A1'].font = Font(bold=True, size=16, color="0F4C81")
+        is_eliminato = bool(u['eliminato']) if 'eliminato' in u.keys() else False
+        ws['A1'] = nome_full + (' [ELIMINATO]' if is_eliminato else '')
+        ws['A1'].font = Font(bold=True, size=16, color=("DC2626" if is_eliminato else "0F4C81"))
         ws.merge_cells('A1:G1')
-        ws['A2'] = f"{u['mansione'] or '—'} · {u['email'] or ''} · Periodo: {data_da} → {data_a}"
+        ws['A2'] = f"{u['mansione'] or '—'} · {u['email'] or ''} · Periodo: {data_da} → {data_a}" + (
+                     ' · Dipendente eliminato (dati storici)' if is_eliminato else '')
         ws['A2'].font = Font(italic=True, size=10, color="64748B")
         ws.merge_cells('A2:G2')
         row = 4
