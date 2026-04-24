@@ -1272,6 +1272,16 @@ nav a{display:flex;align-items:center;gap:10px;padding:9px 20px;color:rgba(255,2
 nav a:hover{background:var(--sidebar-hover);color:#fff}
 nav a.active{background:rgba(15,76,129,.15);color:#fff;border-left-color:var(--accent)}
 nav a i{width:16px;text-align:center;font-size:13px}
+.nav-group{border:none;margin:0;padding:0}
+.nav-group>summary{display:flex;align-items:center;gap:10px;padding:9px 20px;color:rgba(255,255,255,.7);font-size:13.5px;font-weight:500;cursor:pointer;list-style:none;border-left:3px solid transparent;transition:all .18s;user-select:none}
+.nav-group>summary::-webkit-details-marker{display:none}
+.nav-group>summary:hover{background:var(--sidebar-hover);color:#fff}
+.nav-group>summary.active{color:#fff}
+.nav-group>summary i:first-child{width:16px;text-align:center;font-size:13px}
+.nav-group>summary .nav-chev{margin-left:auto;font-size:10px;opacity:.5;transition:transform .2s;width:auto}
+.nav-group[open]>summary .nav-chev{transform:rotate(180deg)}
+nav a.nav-sub{padding-left:48px;font-size:13px;opacity:.82}
+nav a.nav-sub i{font-size:11px}
 .sidebar-user{padding:14px 20px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:10px}
 .avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;flex-shrink:0}
 .sidebar-user .uname{font-size:12.5px;font-weight:600;color:#fff;line-height:1.2}
@@ -1375,9 +1385,15 @@ textarea{resize:vertical;min-height:80px}
     <a href="/ferie" class="{{ 'active' if active=='ferie' }}"><i class="fa fa-umbrella-beach"></i> Ferie & Permessi</a>
     <div class="nav-section">Fiere & Allestimenti</div>
     <a href="/cantieri" class="{{ 'active' if active=='cantieri' }}"><i class="fa fa-store"></i> Fiere & Stand</a>
-    <a href="/documenti" class="{{ 'active' if active=='documenti' }}"><i class="fa fa-file-alt"></i> Documenti</a>
-    <a href="/scadenze" class="{{ 'active' if active=='scadenze' }}" style="padding-left:32px;font-size:13px;opacity:.85"><i class="fa fa-calendar-exclamation" style="font-size:11px"></i> Scadenze dipendenti</a>
-    <a href="/documenti-azienda" class="{{ 'active' if active=='documenti_azienda' }}"><i class="fa fa-building-columns"></i> Documenti Azienda</a>
+    <details class="nav-group" {% if active in ['documenti','scadenze','documenti_azienda'] %}open{% endif %}>
+      <summary class="{{ 'active' if active in ['documenti','scadenze','documenti_azienda'] }}">
+        <i class="fa fa-folder"></i> Documenti
+        <i class="fa fa-chevron-down nav-chev"></i>
+      </summary>
+      <a href="/documenti" class="nav-sub {{ 'active' if active=='documenti' }}"><i class="fa fa-file-alt"></i> Documenti dipendenti</a>
+      <a href="/documenti-azienda" class="nav-sub {{ 'active' if active=='documenti_azienda' }}"><i class="fa fa-building-columns"></i> Documenti azienda</a>
+      <a href="/scadenze" class="nav-sub {{ 'active' if active=='scadenze' }}"><i class="fa fa-calendar-exclamation"></i> Scadenze documenti</a>
+    </details>
     <a href="/veicoli" class="{{ 'active' if active=='veicoli' }}"><i class="fa fa-truck"></i> Mezzi & Veicoli</a>
     <a href="/pos" class="{{ 'active' if active=='pos' }}"><i class="fa fa-file-shield"></i> PSAF</a>
     <a href="/clienti" class="{{ 'active' if active=='clienti' }}"><i class="fa fa-address-book"></i> Clienti</a>
@@ -1387,6 +1403,7 @@ textarea{resize:vertical;min-height:80px}
     <a href="/preventivi" class="{{ 'active' if active=='preventivi' }}"><i class="fa fa-file-invoice"></i> Preventivi</a>
     <a href="/calendario" class="{{ 'active' if active=='calendario' }}"><i class="fa fa-calendar"></i> Calendario</a>
     <a href="/contratti-clienti" class="{{ 'active' if active=='contratti_clienti' }}"><i class="fa fa-file-signature"></i> Contratti Clienti</a>
+    <a href="/report" class="{{ 'active' if active=='report' }}"><i class="fa fa-chart-column"></i> Report</a>
     {% if session.ruolo=='admin' %}
     <div class="nav-section">Admin</div>
     <a href="/admin/richieste" class="{{ 'active' if active=='richieste' }}">
@@ -15854,6 +15871,394 @@ def banca_ore_report_export():
 
 
 # ══════════════════════════════════════════════════════
+
+# ══════════════════════════════════════════════════════════
+#  REPORT GENERALE (Excel) — ore, presenze, rimborsi, banca
+# ══════════════════════════════════════════════════════════
+
+REPORT_TMPL = """
+<style>
+.rep-info{background:#eff6ff;border-left:4px solid #3b82f6;padding:16px 20px;border-radius:8px;font-size:13px;color:#1e3a8a;margin-bottom:18px;line-height:1.55}
+.rep-info strong{color:#1e40af}
+.rep-info ul{margin:8px 0 0 18px;padding:0}
+.rep-info li{margin:3px 0}
+.rep-card{background:#fff;border-radius:12px;border:1px solid var(--border);padding:22px}
+.rep-card h3{margin:0 0 14px;font-size:16px;color:var(--text)}
+.rep-card h3 i{color:var(--accent);margin-right:6px}
+</style>
+
+<div class="rep-info">
+  <strong><i class="fa fa-circle-info"></i> Report Excel completo</strong>
+  <p style="margin:6px 0 4px">
+    Scarica in un unico file Excel tutto lo storico di un dipendente (o di tutti) nel periodo selezionato:
+  </p>
+  <ul>
+    <li><strong>Presenze</strong> — date, orari, cantiere/fiera, note di ogni timbratura</li>
+    <li><strong>Rimborsi spese</strong> — date, categorie, importi, descrizioni, stato (approvato/rifiutato/in attesa) con nota admin</li>
+    <li><strong>Banca ore</strong> — rettifiche manuali del periodo (detrazioni/straordinari) e saldo LIVE attuale</li>
+    <li><strong>Riepilogo</strong> — un foglio con totali di periodo per tutti i dipendenti selezionati</li>
+  </ul>
+</div>
+
+<div class="rep-card">
+  <h3><i class="fa fa-file-excel"></i> Genera report Excel</h3>
+  <form method="GET" action="/report/export" style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:12px;align-items:end">
+    <div class="form-group" style="margin:0">
+      <label>Dipendente</label>
+      <select name="dipendente_id">
+        <option value="tutti">— Tutti i dipendenti attivi —</option>
+        {% for d in dipendenti %}
+        <option value="{{ d.id }}">{{ d.cognome }} {{ d.nome }}{% if d.mansione %} · {{ d.mansione }}{% endif %}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group" style="margin:0">
+      <label>Dal</label>
+      <input type="date" name="data_da" value="{{ data_da }}" required>
+    </div>
+    <div class="form-group" style="margin:0">
+      <label>Al</label>
+      <input type="date" name="data_a" value="{{ data_a }}" required>
+    </div>
+    <button type="submit" class="btn btn-primary" style="white-space:nowrap">
+      <i class="fa fa-download"></i> Scarica Excel
+    </button>
+  </form>
+  <p style="margin:14px 0 0;font-size:12px;color:var(--text-light)">
+    <i class="fa fa-lightbulb"></i> Suggerimento: seleziona "Tutti i dipendenti" per avere un file con un foglio per ogni persona + un foglio di riepilogo generale.
+  </p>
+</div>
+"""
+
+
+@app.route('/report')
+@admin_required
+def report_pagina():
+    db = get_db()
+    dipendenti = db.execute("""SELECT id, nome, cognome, mansione FROM utenti
+                               WHERE COALESCE(attivo,1)=1 AND ruolo != 'admin'
+                               ORDER BY cognome, nome""").fetchall()
+    db.close()
+    oggi = date.today()
+    primo = oggi.replace(day=1)
+    return render_page(REPORT_TMPL,
+                       page_title='Report', active='report',
+                       dipendenti=[dict(d) for d in dipendenti],
+                       data_da=primo.isoformat(),
+                       data_a=oggi.isoformat())
+
+
+@app.route('/report/export')
+@admin_required
+def report_export():
+    """File Excel multi-foglio: per ciascun dipendente presenze+rimborsi+banca ore, + foglio riepilogo."""
+    import openpyxl, io as _io
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+
+    dipendente_id = request.args.get('dipendente_id', 'tutti')
+    data_da = request.args.get('data_da', '')
+    data_a  = request.args.get('data_a', '')
+
+    try:
+        from datetime import datetime as _dt
+        _dt.fromisoformat(data_da); _dt.fromisoformat(data_a)
+    except Exception:
+        flash('Date non valide.', 'error')
+        return redirect(url_for('report_pagina'))
+
+    db = get_db()
+    if dipendente_id == 'tutti':
+        dips = db.execute("""SELECT id, nome, cognome, mansione, email,
+                                    ore_contratto_giornaliere, ore_contratto_mensili
+                             FROM utenti WHERE COALESCE(attivo,1)=1 AND ruolo != 'admin'
+                             ORDER BY cognome, nome""").fetchall()
+    else:
+        try:
+            dips = db.execute("""SELECT id, nome, cognome, mansione, email,
+                                        ore_contratto_giornaliere, ore_contratto_mensili
+                                 FROM utenti WHERE id=?""", (int(dipendente_id),)).fetchall()
+        except Exception:
+            dips = []
+
+    if not dips:
+        db.close()
+        flash('Nessun dipendente selezionato.', 'error')
+        return redirect(url_for('report_pagina'))
+
+    wb = openpyxl.Workbook()
+    ws_sum = wb.active
+    ws_sum.title = 'Riepilogo'
+    header_font = Font(bold=True, color="FFFFFF", size=11)
+    header_fill = PatternFill("solid", fgColor="0F4C81")
+    section_font = Font(bold=True, size=12, color="FFFFFF")
+    section_fill = PatternFill("solid", fgColor="1E3A5F")
+    tot_font = Font(bold=True, size=11)
+    tot_fill = PatternFill("solid", fgColor="F1F5F9")
+    pos_fill = PatternFill("solid", fgColor="DCFCE7")
+    neg_fill = PatternFill("solid", fgColor="FEE2E2")
+    center = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    left   = Alignment(horizontal='left',   vertical='center', wrap_text=True)
+    right  = Alignment(horizontal='right',  vertical='center')
+    thin = Side(border_style='thin', color='CBD5E1')
+    border_all = Border(top=thin, left=thin, right=thin, bottom=thin)
+
+    ws_sum['A1'] = f'REPORT COMPLESSIVO — Periodo {data_da} → {data_a}'
+    ws_sum['A1'].font = Font(bold=True, size=14, color="0F4C81")
+    ws_sum.merge_cells('A1:G1')
+    headers_sum = ['DIPENDENTE', 'RUOLO', 'PRESENZE', 'ORE LAVORATE',
+                   'RIMBORSI APPROVATI (€)', 'RETTIFICHE BANCA (h)', 'SALDO BANCA (h)']
+    for j, h in enumerate(headers_sum, 1):
+        c = ws_sum.cell(3, j, h)
+        c.font = header_font; c.fill = header_fill
+        c.alignment = center; c.border = border_all
+
+    riga_sum = 4
+    totali = {'presenze': 0, 'ore': 0.0, 'rimborsi': 0.0, 'rettifiche': 0.0}
+
+    for u in dips:
+        uid = u['id']
+        nome_full = f"{u['cognome']} {u['nome']}"
+
+        # Nome foglio univoco + safe
+        sheet_name = f"{u['cognome'][:12]} {u['nome'][:12]}".strip()
+        sheet_name = ''.join(c for c in sheet_name if c.isalnum() or c in ' _-')[:31] or f"Dip_{uid}"
+        base_sn = sheet_name; n = 2
+        while sheet_name in wb.sheetnames:
+            sheet_name = f"{base_sn[:28]}_{n}"; n += 1
+        ws = wb.create_sheet(title=sheet_name)
+
+        ws['A1'] = nome_full
+        ws['A1'].font = Font(bold=True, size=16, color="0F4C81")
+        ws.merge_cells('A1:G1')
+        ws['A2'] = f"{u['mansione'] or '—'} · {u['email'] or ''} · Periodo: {data_da} → {data_a}"
+        ws['A2'].font = Font(italic=True, size=10, color="64748B")
+        ws.merge_cells('A2:G2')
+        row = 4
+
+        # ═══════════ PRESENZE ═══════════
+        c = ws.cell(row, 1, 'PRESENZE')
+        c.font = section_font; c.fill = section_fill; c.alignment = left
+        ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=7)
+        row += 1
+        headers_pres = ['DATA', 'GIORNO', 'ENTRATA', 'USCITA', 'ORE', 'CANTIERE / FIERA', 'NOTE']
+        for j, h in enumerate(headers_pres, 1):
+            cl = ws.cell(row, j, h)
+            cl.font = header_font; cl.fill = header_fill
+            cl.alignment = center; cl.border = border_all
+        row += 1
+
+        presenze = db.execute("""SELECT p.data, p.ora_entrata, p.ora_uscita, p.ore_totali,
+                                        p.note, c.nome as cantiere
+                                 FROM presenze p
+                                 LEFT JOIN cantieri c ON c.id = p.cantiere_id
+                                 WHERE p.utente_id=? AND p.data BETWEEN ? AND ?
+                                 ORDER BY p.data""",
+                              (uid, data_da, data_a)).fetchall()
+        tot_ore = 0.0
+        giorni_it = ['Lun','Mar','Mer','Gio','Ven','Sab','Dom']
+        for p in presenze:
+            try:
+                from datetime import date as _dd
+                dw = _dd.fromisoformat(p['data']).weekday()
+                giorno = giorni_it[dw]
+            except Exception:
+                giorno = ''
+            ws.cell(row, 1, p['data']).alignment = center
+            ws.cell(row, 2, giorno).alignment = center
+            ws.cell(row, 3, p['ora_entrata'] or '').alignment = center
+            ws.cell(row, 4, p['ora_uscita'] or '').alignment = center
+            cell_ore = ws.cell(row, 5, p['ore_totali'] or 0)
+            cell_ore.number_format = '0.00'; cell_ore.alignment = right
+            ws.cell(row, 6, p['cantiere'] or '—').alignment = left
+            ws.cell(row, 7, p['note'] or '').alignment = left
+            tot_ore += float(p['ore_totali'] or 0)
+            row += 1
+        if presenze:
+            c = ws.cell(row, 1, f'TOTALE PRESENZE ({len(presenze)} giorni)')
+            c.font = tot_font; c.fill = tot_fill; c.alignment = right
+            ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=4)
+            cc = ws.cell(row, 5, tot_ore); cc.number_format = '0.00" h"'; cc.font = tot_font; cc.fill = tot_fill; cc.alignment = right
+            ws.cell(row, 6, '').fill = tot_fill; ws.cell(row, 7, '').fill = tot_fill
+            row += 1
+        else:
+            c = ws.cell(row, 1, 'Nessuna presenza nel periodo.')
+            c.alignment = left; c.font = Font(italic=True, color="94A3B8")
+            ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=7)
+            row += 1
+        row += 1
+
+        # ═══════════ RIMBORSI SPESE ═══════════
+        c = ws.cell(row, 1, 'RIMBORSI SPESE')
+        c.font = section_font; c.fill = section_fill; c.alignment = left
+        ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=7)
+        row += 1
+        headers_sp = ['DATA', 'CATEGORIA', 'DESCRIZIONE', 'IMPORTO (€)', 'STATO', 'NOTA ADMIN', '']
+        for j, h in enumerate(headers_sp, 1):
+            cl = ws.cell(row, j, h)
+            cl.font = header_font; cl.fill = header_fill
+            cl.alignment = center; cl.border = border_all
+        row += 1
+
+        spese = db.execute("""SELECT data, categoria, descrizione, importo, stato, note_admin
+                              FROM spese_rimborso
+                              WHERE utente_id=? AND data BETWEEN ? AND ?
+                              ORDER BY data""",
+                           (uid, data_da, data_a)).fetchall()
+        tot_approvati = 0.0; tot_attesa = 0.0; tot_rifiutati = 0.0
+        for s in spese:
+            ws.cell(row, 1, s['data']).alignment = center
+            ws.cell(row, 2, s['categoria'] or '').alignment = left
+            ws.cell(row, 3, s['descrizione'] or '').alignment = left
+            cimp = ws.cell(row, 4, float(s['importo'] or 0))
+            cimp.number_format = '#,##0.00" €"'; cimp.alignment = right
+            stato = s['stato'] or 'in_attesa'
+            stato_lbl = {'approvata':'✓ Approvata','rifiutata':'✗ Rifiutata','in_attesa':'⏳ In attesa'}.get(stato, stato)
+            cs = ws.cell(row, 5, stato_lbl); cs.alignment = center
+            if stato == 'approvata': cs.fill = pos_fill
+            elif stato == 'rifiutata': cs.fill = neg_fill
+            ws.cell(row, 6, s['note_admin'] or '').alignment = left
+            importo = float(s['importo'] or 0)
+            if stato == 'approvata': tot_approvati += importo
+            elif stato == 'rifiutata': tot_rifiutati += importo
+            else: tot_attesa += importo
+            row += 1
+        if spese:
+            c = ws.cell(row, 1, 'TOTALE APPROVATI')
+            c.font = tot_font; c.fill = tot_fill; c.alignment = right
+            ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=3)
+            cc = ws.cell(row, 4, tot_approvati); cc.number_format = '#,##0.00" €"'; cc.font = tot_font; cc.fill = pos_fill; cc.alignment = right
+            n_appr = sum(1 for s in spese if (s['stato'] or 'in_attesa') == 'approvata')
+            ws.cell(row, 5, f'{n_appr} rimborsi').fill = tot_fill
+            ws.cell(row, 6, '').fill = tot_fill; row += 1
+            if tot_attesa > 0:
+                c = ws.cell(row, 1, 'Di cui ancora in attesa')
+                c.font = Font(italic=True, size=10); c.alignment = right
+                ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=3)
+                ca = ws.cell(row, 4, tot_attesa); ca.number_format = '#,##0.00" €"'; ca.alignment = right
+                row += 1
+            if tot_rifiutati > 0:
+                c = ws.cell(row, 1, 'Di cui rifiutati')
+                c.font = Font(italic=True, size=10, color="94A3B8"); c.alignment = right
+                ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=3)
+                cx = ws.cell(row, 4, tot_rifiutati); cx.number_format = '#,##0.00" €"'
+                cx.alignment = right; cx.font = Font(italic=True, color="94A3B8"); row += 1
+        else:
+            c = ws.cell(row, 1, 'Nessun rimborso nel periodo.')
+            c.alignment = left; c.font = Font(italic=True, color="94A3B8")
+            ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=7)
+            row += 1
+        row += 1
+
+        # ═══════════ BANCA ORE ═══════════
+        c = ws.cell(row, 1, 'BANCA ORE — Rettifiche manuali / Detrazioni / Straordinari')
+        c.font = section_font; c.fill = section_fill; c.alignment = left
+        ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=7)
+        row += 1
+        headers_bo = ['DATA INS.', 'MESE', 'TIPO', 'DELTA ORE', 'DESCRIZIONE', '', '']
+        for j, h in enumerate(headers_bo, 1):
+            cl = ws.cell(row, j, h)
+            cl.font = header_font; cl.fill = header_fill
+            cl.alignment = center; cl.border = border_all
+        row += 1
+
+        rettifiche = db.execute("""SELECT creato_il, mese, tipo, delta, descrizione
+                                   FROM banca_ore_movimenti
+                                   WHERE utente_id=? AND tipo IN ('rettifica','manuale')
+                                   AND COALESCE(substr(creato_il,1,10),'') BETWEEN ? AND ?
+                                   ORDER BY creato_il""",
+                                (uid, data_da, data_a)).fetchall()
+        tot_rettifiche = 0.0
+        for r in rettifiche:
+            data_ins = (r['creato_il'] or '')[:10]
+            ws.cell(row, 1, data_ins).alignment = center
+            ws.cell(row, 2, r['mese'] or '').alignment = center
+            tipo_lbl = 'Straordinario / credito' if (r['delta'] or 0) > 0 else 'Detrazione / prelievo'
+            ws.cell(row, 3, tipo_lbl).alignment = left
+            d = float(r['delta'] or 0)
+            cd = ws.cell(row, 4, d)
+            cd.number_format = '+0.00" h";-0.00" h";0.00" h"'; cd.alignment = right
+            cd.font = Font(bold=True, color=("16A34A" if d > 0 else "DC2626"))
+            if d > 0: cd.fill = pos_fill
+            elif d < 0: cd.fill = neg_fill
+            ws.cell(row, 5, r['descrizione'] or '').alignment = left
+            tot_rettifiche += d
+            row += 1
+        if rettifiche:
+            c = ws.cell(row, 1, f'TOTALE RETTIFICHE ({len(rettifiche)})')
+            c.font = tot_font; c.fill = tot_fill; c.alignment = right
+            ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=3)
+            cc = ws.cell(row, 4, tot_rettifiche)
+            cc.number_format = '+0.00" h";-0.00" h";0.00" h"'; cc.font = tot_font; cc.fill = tot_fill; cc.alignment = right
+            ws.cell(row, 5, '').fill = tot_fill; row += 1
+        else:
+            c = ws.cell(row, 1, 'Nessuna rettifica nel periodo.')
+            c.alignment = left; c.font = Font(italic=True, color="94A3B8")
+            ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=7)
+            row += 1
+        row += 1
+
+        # Saldo banca ore LIVE
+        info = _banca_ore_info_completa(db, uid)
+        c = ws.cell(row, 1, 'SALDO BANCA ORE (LIVE, mese corrente)')
+        c.font = Font(bold=True, size=12); c.alignment = right
+        ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=3)
+        cs = ws.cell(row, 4, info['saldo'])
+        cs.number_format = '+0.00" h";-0.00" h";0.00" h"'
+        cs.font = Font(bold=True, size=13, color="FFFFFF")
+        if info['saldo'] > 0: cs.fill = PatternFill("solid", fgColor="16A34A")
+        elif info['saldo'] < 0: cs.fill = PatternFill("solid", fgColor="DC2626")
+        else: cs.fill = PatternFill("solid", fgColor="64748B")
+        cs.alignment = right
+        row += 1
+
+        widths = [13, 10, 22, 12, 16, 28, 40]
+        for i, w in enumerate(widths, 1):
+            ws.column_dimensions[openpyxl.utils.get_column_letter(i)].width = w
+
+        # Riga riepilogo
+        ws_sum.cell(riga_sum, 1, nome_full).alignment = left
+        ws_sum.cell(riga_sum, 2, u['mansione'] or '—').alignment = left
+        ws_sum.cell(riga_sum, 3, len(presenze)).alignment = center
+        c_ore = ws_sum.cell(riga_sum, 4, tot_ore); c_ore.number_format = '0.00'; c_ore.alignment = right
+        c_rim = ws_sum.cell(riga_sum, 5, tot_approvati); c_rim.number_format = '#,##0.00" €"'; c_rim.alignment = right
+        c_ret = ws_sum.cell(riga_sum, 6, tot_rettifiche); c_ret.number_format = '+0.00;-0.00;0.00'; c_ret.alignment = right
+        if tot_rettifiche > 0: c_ret.fill = pos_fill
+        elif tot_rettifiche < 0: c_ret.fill = neg_fill
+        c_sal = ws_sum.cell(riga_sum, 7, info['saldo']); c_sal.number_format = '+0.00;-0.00;0.00'; c_sal.alignment = right
+        if info['saldo'] > 0: c_sal.font = Font(bold=True, color="16A34A")
+        elif info['saldo'] < 0: c_sal.font = Font(bold=True, color="DC2626")
+        else: c_sal.font = Font(bold=True)
+        for col in range(1, 8):
+            ws_sum.cell(riga_sum, col).border = border_all
+        riga_sum += 1
+
+        totali['presenze']   += len(presenze)
+        totali['ore']         += tot_ore
+        totali['rimborsi']    += tot_approvati
+        totali['rettifiche']  += tot_rettifiche
+
+    if len(dips) > 1:
+        c = ws_sum.cell(riga_sum, 1, 'TOTALI GENERALI')
+        c.font = Font(bold=True, size=11, color="FFFFFF"); c.fill = section_fill; c.alignment = right
+        ws_sum.merge_cells(start_row=riga_sum, start_column=1, end_row=riga_sum, end_column=2)
+        cp = ws_sum.cell(riga_sum, 3, totali['presenze']); cp.font = Font(bold=True); cp.fill = tot_fill; cp.alignment = center
+        co = ws_sum.cell(riga_sum, 4, totali['ore']); co.number_format = '0.00'; co.font = Font(bold=True); co.fill = tot_fill; co.alignment = right
+        cr = ws_sum.cell(riga_sum, 5, totali['rimborsi']); cr.number_format = '#,##0.00" €"'; cr.font = Font(bold=True); cr.fill = tot_fill; cr.alignment = right
+        ct = ws_sum.cell(riga_sum, 6, totali['rettifiche']); ct.number_format = '+0.00;-0.00;0.00'; ct.font = Font(bold=True); ct.fill = tot_fill; ct.alignment = right
+        ws_sum.cell(riga_sum, 7, '').fill = tot_fill
+
+    widths_sum = [26, 20, 11, 14, 20, 18, 16]
+    for i, w in enumerate(widths_sum, 1):
+        ws_sum.column_dimensions[openpyxl.utils.get_column_letter(i)].width = w
+
+    db.close()
+
+    buf = _io.BytesIO(); wb.save(buf); buf.seek(0)
+    suffix = 'tutti' if dipendente_id == 'tutti' else f'dip{dipendente_id}'
+    fname = f"report_{suffix}_{data_da}_{data_a}.xlsx"
+    return Response(buf, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    headers={'Content-Disposition': f'attachment; filename={fname}'})
+
 
 # ══════════════════════════════════════════════════════════
 #  CONTRATTI CLIENTI
