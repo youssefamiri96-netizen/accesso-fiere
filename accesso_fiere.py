@@ -204,6 +204,24 @@ os.makedirs(UPLOAD_DIR_EVENTI,  exist_ok=True)
 os.makedirs(UPLOAD_DIR_DOCS,    exist_ok=True)
 os.makedirs(UPLOAD_DIR_LOGHI,   exist_ok=True)
 
+# ── Migrazione one-time: se esiste un vecchio logo_legacy.* lo assegno al tenant 1
+# (il primo admin storico) e poi via il fallback. I nuovi tenant partono senza logo.
+try:
+    _legacy_files = [f for f in os.listdir(UPLOAD_DIR_LOGHI) if f.startswith('logo_legacy.')]
+    for _legacy in _legacy_files:
+        _ext = _legacy.split('.', 1)[1] if '.' in _legacy else 'png'
+        _target = os.path.join(UPLOAD_DIR_LOGHI, f'logo_1.{_ext}')
+        _source = os.path.join(UPLOAD_DIR_LOGHI, _legacy)
+        if not os.path.exists(_target):
+            os.rename(_source, _target)
+            print(f'[LOGO MIGRATION] {_legacy} → logo_1.{_ext}')
+        else:
+            # Già migrato: rimuovo il legacy per evitare fallback accidentali
+            os.remove(_source)
+            print(f'[LOGO MIGRATION] rimosso duplicato {_legacy}')
+except Exception as _e:
+    print(f'[LOGO MIGRATION] skip: {_e}')
+
 # ── Logo aziendale helpers ────────────────────────────
 def _logo_tenant_key():
     """Ritorna la chiave-tenant da usare per il nome file del logo.
@@ -213,7 +231,8 @@ def _logo_tenant_key():
 
 
 def get_logo_azienda_path(tenant_id=None):
-    """Ritorna il path del logo aziendale se esiste (qualsiasi estensione), altrimenti None."""
+    """Ritorna il path del logo aziendale se esiste (qualsiasi estensione), altrimenti None.
+    Ogni tenant ha il suo logo isolato — niente fallback incrociati tra tenant."""
     if tenant_id is None:
         tid = _logo_tenant_key()
     else:
@@ -224,14 +243,6 @@ def get_logo_azienda_path(tenant_id=None):
                 return os.path.join(UPLOAD_DIR_LOGHI, fname)
     except Exception:
         pass
-    # Fallback backward-compat: vecchi upload salvati come logo_legacy.*
-    if tid != 'legacy':
-        try:
-            for fname in os.listdir(UPLOAD_DIR_LOGHI):
-                if fname.startswith('logo_legacy.'):
-                    return os.path.join(UPLOAD_DIR_LOGHI, fname)
-        except Exception:
-            pass
     return None
 
 
@@ -1202,12 +1213,7 @@ def render_page(tmpl, **ctx):
             if _fname.startswith(f'logo_{tid}.'):
                 logo_path = os.path.join(UPLOAD_DIR_LOGHI, _fname)
                 break
-        # Backward-compat: vecchi upload sotto 'logo_legacy.*'
-        if logo_path is None and tid != 'legacy':
-            for _fname in os.listdir(UPLOAD_DIR_LOGHI):
-                if _fname.startswith('logo_legacy.'):
-                    logo_path = os.path.join(UPLOAD_DIR_LOGHI, _fname)
-                    break
+        # NESSUN fallback legacy: ogni tenant ha il proprio logo isolato
         ctx.setdefault('ha_logo_az', logo_path is not None)
         ctx.setdefault('logo_az_ts', int(os.path.getmtime(logo_path)) if logo_path else 0)
     except Exception:
