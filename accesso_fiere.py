@@ -14954,23 +14954,9 @@ def _banca_ore_info_completa(db, utente_id):
     
     oggi = _d.today()
     
-    # Determino il primo mese da considerare: data assunzione, o prima presenza, o gennaio anno corrente
-    primo_mese = None
-    if u['data_assunzione']:
-        try:
-            ass = _d.fromisoformat(u['data_assunzione'])
-            primo_mese = ass.replace(day=1)
-        except Exception:
-            primo_mese = None
-    if not primo_mese:
-        prima_pres = db.execute("SELECT MIN(data) as d FROM presenze WHERE utente_id=?", (utente_id,)).fetchone()
-        if prima_pres and prima_pres['d']:
-            try:
-                primo_mese = _d.fromisoformat(prima_pres['d']).replace(day=1)
-            except Exception:
-                primo_mese = oggi.replace(month=1, day=1)
-        else:
-            primo_mese = oggi.replace(month=1, day=1)
+    # NUOVA POLITICA: la banca ore parte dal 1° del mese corrente.
+    # Tutto ciò che è stato fatto nei mesi precedenti non entra nel calcolo del saldo.
+    primo_mese = oggi.replace(day=1)
     
     # Itera i mesi
     mesi_data = []
@@ -14984,9 +14970,9 @@ def _banca_ore_info_completa(db, utente_id):
         safety += 1
         mese_str = f"{y:04d}-{m:02d}"
         
-        # Per il mese in corso: conta solo fino a oggi. Per la data assunzione: dal giorno di assunzione
+        # Per il mese in corso: conta solo fino a oggi. Per mesi passati: tutto il mese.
         fino_a = oggi if (y == oggi.year and m == oggi.month) else _d(y, m, monthrange(y, m)[1])
-        da = primo_mese if (y == primo_mese.year and m == primo_mese.month and u['data_assunzione']) else _d(y, m, 1)
+        da = _d(y, m, 1)
         
         # Calcolo giorni lavorativi nel range [da, fino_a]
         festivi = _festivita_italiane(y)
@@ -15024,11 +15010,13 @@ def _banca_ore_info_completa(db, utente_id):
         m += 1
         if m > 12: m = 1; y += 1
     
-    # Rettifiche manuali (movimenti di tipo 'rettifica' o 'manuale')
+    # Rettifiche manuali (solo del mese corrente in poi, per coerenza con la politica "banca ore parte dal mese corrente")
+    mese_corrente_str = oggi.strftime('%Y-%m')
     try:
         rett_row = db.execute("""SELECT COALESCE(SUM(delta),0) as s FROM banca_ore_movimenti
-                                 WHERE utente_id=? AND tipo IN ('rettifica','manuale')""",
-                              (utente_id,)).fetchone()
+                                 WHERE utente_id=? AND tipo IN ('rettifica','manuale')
+                                 AND COALESCE(mese,'') >= ?""",
+                              (utente_id, mese_corrente_str)).fetchone()
         rettifiche = round(float(rett_row['s'] or 0), 2)
     except Exception:
         rettifiche = 0.0
@@ -15091,7 +15079,7 @@ BANCA_ORE_TMPL = """
 
 <div class="bo-info">
   <strong><i class="fa fa-circle-info"></i> Come funziona la banca ore:</strong>
-  Ogni mese il sistema calcola il <strong>monte ore dovuto</strong> = ore contratto giornaliere × giorni lavorativi (lun-ven, esclusi festivi italiani).
+  Il sistema parte dal <strong>1° del mese corrente</strong>. Calcola il <strong>monte ore dovuto</strong> = ore contratto giornaliere × giorni lavorativi (lun-ven, esclusi festivi italiani).
   Confronta con le ore effettivamente lavorate dalle presenze: la differenza va in banca.
   <strong>Saldo positivo</strong> = il dipendente è in credito (ha lavorato di più). <strong>Saldo negativo</strong> = è in debito (ha lavorato meno).
   Per il mese in corso, conta solo i giorni fino a oggi.
@@ -15177,7 +15165,7 @@ BANCA_ORE_DETTAGLIO_TMPL = """
     <div style="font-size:18px;font-weight:800;margin-top:4px">
       {{ "%.0f"|format(info.ore_lavorate_totali) }}h / {{ "%.0f"|format(info.monte_totale) }}h
     </div>
-    <div style="font-size:11px;color:var(--text-light)">dall'inizio storico</div>
+    <div style="font-size:11px;color:var(--text-light)">da inizio mese corrente</div>
   </div>
   <div class="bo-card">
     <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700">Saldo banca (LIVE)</div>
