@@ -659,6 +659,12 @@ def init_db():
             data_assunzione TEXT,
             data_eliminazione TEXT DEFAULT (datetime('now'))
         )""",
+        # ── Layout dashboard personalizzato (1 riga per azienda) ──
+        """CREATE TABLE IF NOT EXISTS dashboard_layout (
+            id INTEGER PRIMARY KEY CHECK (id=1),
+            layout_json TEXT NOT NULL DEFAULT '{}',
+            aggiornato_il TEXT DEFAULT (datetime('now'))
+        )""",
         # VIEW che unisce utenti attivi/disattivi e utenti_storico (eliminati).
         # Utile per le JOIN nei report: così presenze/rimborsi di persone eliminate
         # mantengono nome e cognome.
@@ -911,6 +917,12 @@ def ensure_columns():
                     mansione TEXT,
                     data_assunzione TEXT,
                     data_eliminazione TEXT DEFAULT (datetime('now'))
+                )""",
+                # Layout dashboard personalizzato
+                """CREATE TABLE IF NOT EXISTS dashboard_layout (
+                    id INTEGER PRIMARY KEY CHECK (id=1),
+                    layout_json TEXT NOT NULL DEFAULT '{}',
+                    aggiornato_il TEXT DEFAULT (datetime('now'))
                 )""",
                 "DROP VIEW IF EXISTS utenti_full",
                 """CREATE VIEW IF NOT EXISTS utenti_full AS
@@ -2432,110 +2444,348 @@ def set_lang():
 #  DASHBOARD con GRAFICI
 # ══════════════════════════════════════════════════════════
 DASH_TMPL = """
-<div class="stats-grid">
+<style>
+.dash-header{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:14px}
+.dash-header .btn{font-size:13px}
+.stats-grid{transition:opacity .2s}
+.widget{position:relative;transition:all .2s}
+.widget.dragging{opacity:.5}
+.widget.drag-over{box-shadow:0 0 0 3px var(--accent)}
+.widget-drag-handle{display:none;position:absolute;top:8px;right:8px;z-index:5;background:var(--accent);color:#fff;padding:6px 10px;border-radius:6px;cursor:grab;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.widget-drag-handle:active{cursor:grabbing}
+body.customize-mode .widget-drag-handle{display:inline-flex;gap:5px;align-items:center}
+body.customize-mode .widget{border:2px dashed var(--accent);border-radius:12px;cursor:move}
+body.customize-mode .widget:hover{background:#f0f9ff}
+
+/* Modal */
+.cust-modal{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:1000;display:none;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto}
+.cust-modal.open{display:flex}
+.cust-box{background:#fff;border-radius:14px;max-width:520px;width:100%;padding:24px;box-shadow:0 20px 40px rgba(0,0,0,.2)}
+.cust-box h3{margin:0 0 6px;font-size:18px}
+.cust-box .sub{font-size:12px;color:var(--text-light);margin-bottom:16px}
+.cust-widget-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;background:#fff;cursor:grab;user-select:none;transition:all .15s}
+.cust-widget-item:active{cursor:grabbing}
+.cust-widget-item.dragging{opacity:.4}
+.cust-widget-item.drag-over{border-color:var(--accent);background:#eff6ff}
+.cust-widget-item.disabled{opacity:.5;background:#f8fafc}
+.cust-widget-item .grip{color:var(--text-light);font-size:14px}
+.cust-widget-item .label{flex:1;font-size:13px;font-weight:600}
+.cust-widget-item .label .cat{font-size:10px;font-weight:700;background:#e0e7ff;color:#3730a3;padding:1px 6px;border-radius:4px;margin-left:6px;text-transform:uppercase}
+.cust-widget-item .cat.r{background:#fee2e2;color:#991b1b}
+.cust-widget-item .cat.l{background:#dcfce7;color:#15803d}
+.cust-widget-item .cat.h{background:#f1f5f9;color:#64748b}
+.cust-widget-item input[type=checkbox]{width:16px;height:16px;cursor:pointer}
+.cust-actions{display:flex;gap:10px;justify-content:space-between;margin-top:18px;padding-top:14px;border-top:1px solid var(--border);flex-wrap:wrap}
+.cust-legend{font-size:11px;color:var(--text-light);margin:14px 0 6px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+</style>
+
+<div class="dash-header">
+  <button type="button" class="btn btn-secondary" onclick="openCustomizer()"><i class="fa fa-sliders"></i> Personalizza dashboard</button>
+  <button type="button" id="btn-save-layout" class="btn btn-primary" style="display:none" onclick="saveLayout()"><i class="fa fa-check"></i> Salva layout</button>
+  <button type="button" id="btn-exit-customize" class="btn btn-secondary" style="display:none" onclick="exitCustomize()"><i class="fa fa-times"></i> Annulla</button>
+</div>
+
+{# Widget: KPI Cards (stats-grid), sempre full-width #}
+{% macro w_stats() %}
+<div class="stats-grid widget" data-widget-id="stats" style="margin-bottom:16px">
+  <span class="widget-drag-handle"><i class="fa fa-grip-vertical"></i> KPI</span>
   <div class="stat-card"><div class="stat-icon blue"><i class="fa fa-users"></i></div><div><div class="stat-val">{{ s.dip }}</div><div class="stat-lbl">Dipendenti attivi</div></div></div>
   <div class="stat-card"><div class="stat-icon green"><i class="fa fa-clock"></i></div><div><div class="stat-val">{{ s.presenti }}</div><div class="stat-lbl">Presenti oggi</div></div></div>
   <div class="stat-card"><div class="stat-icon amber"><i class="fa fa-umbrella-beach"></i></div><div><div class="stat-val">{{ s.ferie }}</div><div class="stat-lbl">Ferie in attesa</div></div></div>
   <div class="stat-card"><div class="stat-icon red"><i class="fa fa-bell"></i></div><div><div class="stat-val">{{ s.richieste }}</div><div class="stat-lbl">Richieste in attesa</div></div></div>
   <div class="stat-card"><div class="stat-icon purple"><i class="fa fa-store"></i></div><div><div class="stat-val">{{ s.cantieri }}</div><div class="stat-lbl">Fiere attive</div></div></div>
 </div>
+{% endmacro %}
 
-<div class="grid-2" style="margin-bottom:20px">
-  <!-- Grafico ore settimanali -->
-  <div class="card">
-    <div class="card-header"><h3><i class="fa fa-chart-bar" style="color:var(--accent2);margin-right:8px"></i>Ore lavorate – ultimi 7 giorni</h3></div>
-    <div class="card-body"><canvas id="chartOre" height="200"></canvas></div>
+{% macro w_ore_settimana() %}
+<div class="card widget" data-widget-id="ore_settimana">
+  <span class="widget-drag-handle"><i class="fa fa-grip-vertical"></i> Sposta</span>
+  <div class="card-header"><h3><i class="fa fa-chart-bar" style="color:var(--accent2);margin-right:8px"></i>Ore lavorate – ultimi 7 giorni</h3></div>
+  <div class="card-body"><canvas id="chartOre" height="200"></canvas></div>
+</div>
+{% endmacro %}
+
+{% macro w_cantieri() %}
+<div class="card widget" data-widget-id="cantieri">
+  <span class="widget-drag-handle"><i class="fa fa-grip-vertical"></i> Sposta</span>
+  <div class="card-header"><h3><i class="fa fa-hard-hat" style="color:var(--warning);margin-right:8px"></i>Presenze per cantiere (mese corrente)</h3></div>
+  <div class="card-body"><canvas id="chartCantieri" height="200"></canvas></div>
+</div>
+{% endmacro %}
+
+{% macro w_presenze_oggi() %}
+<div class="card widget" data-widget-id="presenze_oggi">
+  <span class="widget-drag-handle"><i class="fa fa-grip-vertical"></i> Sposta</span>
+  <div class="card-header"><h3><i class="fa fa-clock" style="color:var(--accent);margin-right:8px"></i>Presenze oggi</h3><a href="/presenze" class="btn btn-secondary btn-sm">Vedi tutte</a></div>
+  <div class="table-wrap">
+  {% if presenze_oggi %}
+  <table><thead><tr><th>Dipendente</th><th>Fiera</th><th>Entrata</th><th>Stato</th></tr></thead><tbody>
+  {% for p in presenze_oggi %}
+  <tr>
+    <td><span class="avatar-sm">{{ (p.nome or '?')[0] }}{{ (p.cognome or '?')[0] }}</span>{{ p.nome }} {{ p.cognome }}</td>
+    <td><span class="tag">{{ p.cantiere_nome or '–' }}</span></td>
+    <td style="font-family:monospace;color:var(--success)">{{ p.ora_entrata }}</td>
+    <td>{% if p.ora_uscita %}<span class="badge badge-gray">Uscito</span>{% else %}<span class="badge badge-green">● In sede</span>{% endif %}</td>
+  </tr>{% endfor %}</tbody></table>
+  {% else %}<div class="empty-state"><i class="fa fa-calendar-day"></i><p>Nessuna presenza oggi</p></div>{% endif %}
   </div>
-  <!-- Grafico presenze per cantiere -->
-  <div class="card">
-    <div class="card-header"><h3><i class="fa fa-hard-hat" style="color:var(--warning);margin-right:8px"></i>Presenze per cantiere (mese corrente)</h3></div>
-    <div class="card-body"><canvas id="chartCantieri" height="200"></canvas></div>
+</div>
+{% endmacro %}
+
+{% macro w_scadenze() %}
+<div class="card widget" data-widget-id="scadenze">
+  <span class="widget-drag-handle"><i class="fa fa-grip-vertical"></i> Sposta</span>
+  <div class="card-header"><h3><i class="fa fa-calendar-exclamation" style="color:var(--warning);margin-right:8px"></i>Scadenze imminenti</h3></div>
+  <div class="card-body" style="padding:14px 22px">
+  {% for d in scadenze %}
+  <div class="scadenza-bar">
+    <div style="flex:1">
+      <div style="font-size:13.5px;font-weight:600">{{ d.titolo }}</div>
+      <div style="font-size:12px;color:var(--text-light)">
+        {% if d.categoria %}<span style="background:{% if d.categoria=='Veicolo' %}#e0e7ff;color:#3730a3{% elif d.categoria=='Documento dipendente' %}#fef3c7;color:#92400e{% elif d.categoria=='Documento azienda' %}#dbeafe;color:#1e40af{% elif d.categoria=='Documento veicolo' %}#e0e7ff;color:#4338ca{% elif d.categoria=='Contratto cliente' %}#dcfce7;color:#15803d{% else %}#f1f5f9;color:#475569{% endif %};padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;margin-right:6px">{{ d.categoria }}</span>{% endif %}
+        {{ d.data_scadenza }}{% if d.nome %} · {{ d.nome }} {{ d.cognome }}{% endif %}
+      </div>
+    </div>
+    {% if d.days_left <= 7 %}<span class="badge badge-red">{{ d.days_left }}gg</span>
+    {% elif d.days_left <= 30 %}<span class="badge badge-amber">{{ d.days_left }}gg</span>
+    {% else %}<span class="badge badge-green">OK</span>{% endif %}
+  </div>{% else %}<div class="empty-state" style="padding:20px"><i class="fa fa-check-circle"></i><p>Nessuna scadenza</p></div>{% endfor %}
+  </div>
+</div>
+{% endmacro %}
+
+{% macro w_ferie() %}
+<div class="card widget" data-widget-id="ferie">
+  <span class="widget-drag-handle"><i class="fa fa-grip-vertical"></i> Sposta</span>
+  <div class="card-header"><h3><i class="fa fa-umbrella-beach" style="color:#7c3aed;margin-right:8px"></i>Ferie in attesa</h3><a href="/ferie" class="btn btn-secondary btn-sm">Gestisci</a></div>
+  <div class="table-wrap">
+  {% if ferie_attesa %}
+  <table><thead><tr><th>Dipendente</th><th>Tipo</th><th>Dal</th><th>Al</th></tr></thead><tbody>
+  {% for f in ferie_attesa %}
+  <tr><td><span class="avatar-sm">{{ f.nome[0] }}{{ f.cognome[0] }}</span>{{ f.nome }} {{ f.cognome }}</td>
+  <td><span class="badge badge-purple">{{ f.tipo }}</span></td>
+  <td>{{ f.data_inizio }}</td><td>{{ f.data_fine }}</td></tr>{% endfor %}
+  </tbody></table>
+  {% else %}<div class="empty-state" style="padding:20px"><i class="fa fa-check-circle"></i><p>Nessuna richiesta</p></div>{% endif %}
+  </div>
+</div>
+{% endmacro %}
+
+{# ═══════ RENDERING DINAMICO ═══════ #}
+{# Widget KPI sempre in testa (fissi) #}
+{% if 'stats' not in layout.hidden %}{{ w_stats() }}{% endif %}
+
+{# Griglia 2 colonne con widget trascinabili #}
+<div class="grid-2" style="margin-bottom:20px;align-items:flex-start">
+  <div id="dash-col-left" class="dash-col" data-col="left" style="display:flex;flex-direction:column;gap:16px">
+    {% for wid in layout.left %}
+      {% if wid == 'ore_settimana' %}{{ w_ore_settimana() }}
+      {% elif wid == 'cantieri' %}{{ w_cantieri() }}
+      {% elif wid == 'presenze_oggi' %}{{ w_presenze_oggi() }}
+      {% elif wid == 'scadenze' %}{{ w_scadenze() }}
+      {% elif wid == 'ferie' %}{{ w_ferie() }}
+      {% endif %}
+    {% endfor %}
+  </div>
+  <div id="dash-col-right" class="dash-col" data-col="right" style="display:flex;flex-direction:column;gap:16px">
+    {% for wid in layout.right %}
+      {% if wid == 'ore_settimana' %}{{ w_ore_settimana() }}
+      {% elif wid == 'cantieri' %}{{ w_cantieri() }}
+      {% elif wid == 'presenze_oggi' %}{{ w_presenze_oggi() }}
+      {% elif wid == 'scadenze' %}{{ w_scadenze() }}
+      {% elif wid == 'ferie' %}{{ w_ferie() }}
+      {% endif %}
+    {% endfor %}
   </div>
 </div>
 
-<div class="grid-2">
-  <!-- Presenze oggi -->
-  <div class="card">
-    <div class="card-header"><h3><i class="fa fa-clock" style="color:var(--accent);margin-right:8px"></i>Presenze oggi</h3><a href="/presenze" class="btn btn-secondary btn-sm">Vedi tutte</a></div>
-    <div class="table-wrap">
-    {% if presenze_oggi %}
-    <table><thead><tr><th>Dipendente</th><th>Fiera</th><th>Entrata</th><th>Stato</th></tr></thead><tbody>
-    {% for p in presenze_oggi %}
-    <tr>
-      <td><span class="avatar-sm">{{ p.nome[0] }}{{ p.cognome[0] }}</span>{{ p.nome }} {{ p.cognome }}</td>
-      <td><span class="tag">{{ p.cantiere_nome or '–' }}</span></td>
-      <td style="font-family:monospace;color:var(--success)">{{ p.ora_entrata }}</td>
-      <td>{% if p.ora_uscita %}<span class="badge badge-gray">Uscito</span>{% else %}<span class="badge badge-green">● In sede</span>{% endif %}</td>
-    </tr>{% endfor %}</tbody></table>
-    {% else %}<div class="empty-state"><i class="fa fa-calendar-day"></i><p>Nessuna presenza oggi</p></div>{% endif %}
-    </div>
-  </div>
-  <!-- Scadenze + ferie -->
-  <div>
-    <div class="card" style="margin-bottom:16px">
-      <div class="card-header"><h3><i class="fa fa-calendar-exclamation" style="color:var(--warning);margin-right:8px"></i>Scadenze imminenti</h3></div>
-      <div class="card-body" style="padding:14px 22px">
-      {% for d in scadenze %}
-      <div class="scadenza-bar">
-        <div style="flex:1">
-          <div style="font-size:13.5px;font-weight:600">{{ d.titolo }}</div>
-          <div style="font-size:12px;color:var(--text-light)">
-            {% if d.categoria %}<span style="background:{% if d.categoria=='Veicolo' %}#e0e7ff;color:#3730a3{% elif d.categoria=='Documento dipendente' %}#fef3c7;color:#92400e{% elif d.categoria=='Documento azienda' %}#dbeafe;color:#1e40af{% elif d.categoria=='Documento veicolo' %}#e0e7ff;color:#4338ca{% elif d.categoria=='Contratto cliente' %}#dcfce7;color:#15803d{% else %}#f1f5f9;color:#475569{% endif %};padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;margin-right:6px">{{ d.categoria }}</span>{% endif %}
-            {{ d.data_scadenza }}{% if d.nome %} · {{ d.nome }} {{ d.cognome }}{% endif %}
-          </div>
-        </div>
-        {% if d.days_left <= 7 %}<span class="badge badge-red">{{ d.days_left }}gg</span>
-        {% elif d.days_left <= 30 %}<span class="badge badge-amber">{{ d.days_left }}gg</span>
-        {% else %}<span class="badge badge-green">OK</span>{% endif %}
-      </div>{% else %}<div class="empty-state" style="padding:20px"><i class="fa fa-check-circle"></i><p>Nessuna scadenza</p></div>{% endfor %}
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-header"><h3><i class="fa fa-umbrella-beach" style="color:#7c3aed;margin-right:8px"></i>Ferie in attesa</h3><a href="/ferie" class="btn btn-secondary btn-sm">Gestisci</a></div>
-      <div class="table-wrap">
-      {% if ferie_attesa %}
-      <table><thead><tr><th>Dipendente</th><th>Tipo</th><th>Dal</th><th>Al</th></tr></thead><tbody>
-      {% for f in ferie_attesa %}
-      <tr><td><span class="avatar-sm">{{ f.nome[0] }}{{ f.cognome[0] }}</span>{{ f.nome }} {{ f.cognome }}</td>
-      <td><span class="badge badge-purple">{{ f.tipo }}</span></td>
-      <td>{{ f.data_inizio }}</td><td>{{ f.data_fine }}</td></tr>{% endfor %}
-      </tbody></table>
-      {% else %}<div class="empty-state" style="padding:20px"><i class="fa fa-check-circle"></i><p>Nessuna richiesta</p></div>{% endif %}
+{# ═══════ MODAL PERSONALIZZAZIONE ═══════ #}
+<div id="cust-modal" class="cust-modal" onclick="if(event.target===this)closeCustomizer()">
+  <div class="cust-box" onclick="event.stopPropagation()">
+    <h3><i class="fa fa-sliders" style="color:var(--accent);margin-right:6px"></i>Personalizza dashboard</h3>
+    <p class="sub">Trascina i widget per riordinarli tra le colonne e toglierli dalla dashboard. Le preferenze sono <strong>condivise</strong> con tutti gli admin dell'azienda.</p>
+
+    <div class="cust-legend">Colonna sinistra</div>
+    <div id="cust-list-left" class="cust-list" data-col="left"></div>
+
+    <div class="cust-legend">Colonna destra</div>
+    <div id="cust-list-right" class="cust-list" data-col="right"></div>
+
+    <div class="cust-legend">Nascosti</div>
+    <div id="cust-list-hidden" class="cust-list" data-col="hidden"></div>
+
+    <div class="cust-actions">
+      <button type="button" class="btn btn-secondary btn-sm" onclick="resetLayout()"><i class="fa fa-rotate-left"></i> Ripristina default</button>
+      <div style="display:flex;gap:8px">
+        <button type="button" class="btn btn-secondary" onclick="closeCustomizer()">Chiudi</button>
+        <button type="button" class="btn btn-primary" onclick="applyCustomizer()"><i class="fa fa-check"></i> Applica</button>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-// Grafico ore settimanali
-const oreData = {{ ore_settimana | tojson }};
-new Chart(document.getElementById('chartOre'), {
-  type: 'bar',
-  data: {
-    labels: oreData.map(d => d.data),
-    datasets: [{
-      label: 'Ore lavorate',
-      data: oreData.map(d => d.ore),
-      backgroundColor: '#2196F320',
-      borderColor: '#2196F3',
-      borderWidth: 2, borderRadius: 6
-    }]
-  },
-  options: { responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
-});
-// Grafico cantieri
-const cantieriData = {{ presenze_cantiere | tojson }};
-new Chart(document.getElementById('chartCantieri'), {
-  type: 'doughnut',
-  data: {
-    labels: cantieriData.map(d => d.nome),
-    datasets: [{
-      data: cantieriData.map(d => d.count),
-      backgroundColor: ['#e63946','#2196F3','#22c55e','#f59e0b','#8b5cf6','#ec4899'],
-      borderWidth: 2, borderColor: '#fff'
-    }]
-  },
-  options: { responsive:true, plugins:{legend:{position:'bottom'}} }
+// ════════ Configurazione widget ════════
+const WIDGET_LABELS = {
+  'ore_settimana':  {lbl: 'Grafico ore ultimi 7 giorni', icon:'chart-bar'},
+  'cantieri':       {lbl: 'Grafico presenze per cantiere', icon:'hard-hat'},
+  'presenze_oggi':  {lbl: 'Presenze di oggi', icon:'clock'},
+  'scadenze':       {lbl: 'Scadenze imminenti', icon:'calendar-exclamation'},
+  'ferie':          {lbl: 'Ferie in attesa', icon:'umbrella-beach'}
+};
+const DEFAULT_LAYOUT = {left: ['ore_settimana','presenze_oggi'], right: ['cantieri','scadenze','ferie'], hidden: []};
+let currentLayout = {{ layout | tojson }};
+
+// ════════ Grafici ════════
+function renderCharts() {
+  const oreEl = document.getElementById('chartOre');
+  if (oreEl && !oreEl._rendered) {
+    oreEl._rendered = true;
+    const oreData = {{ ore_settimana | tojson }};
+    new Chart(oreEl, {
+      type:'bar',
+      data:{labels:oreData.map(d=>d.data),datasets:[{label:'Ore lavorate',data:oreData.map(d=>d.ore),backgroundColor:'#2196F320',borderColor:'#2196F3',borderWidth:2,borderRadius:6}]},
+      options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+    });
+  }
+  const canEl = document.getElementById('chartCantieri');
+  if (canEl && !canEl._rendered) {
+    canEl._rendered = true;
+    const d = {{ presenze_cantiere | tojson }};
+    new Chart(canEl, {
+      type:'doughnut',
+      data:{labels:d.map(x=>x.nome),datasets:[{data:d.map(x=>x.count),backgroundColor:['#e63946','#2196F3','#22c55e','#f59e0b','#8b5cf6','#ec4899'],borderWidth:2,borderColor:'#fff'}]},
+      options:{responsive:true,plugins:{legend:{position:'bottom'}}}
+    });
+  }
+}
+renderCharts();
+
+// ════════ Modal personalizzazione ════════
+function buildCustomizerList() {
+  const cols = {left: currentLayout.left || [], right: currentLayout.right || [], hidden: currentLayout.hidden || []};
+  // Widget non menzionati → vanno in hidden
+  const all = Object.keys(WIDGET_LABELS);
+  const menzionati = new Set([...cols.left, ...cols.right, ...cols.hidden]);
+  all.forEach(w => { if (!menzionati.has(w)) cols.hidden.push(w); });
+
+  ['left','right','hidden'].forEach(colKey => {
+    const el = document.getElementById('cust-list-' + colKey);
+    el.innerHTML = '';
+    cols[colKey].forEach(wid => {
+      if (!WIDGET_LABELS[wid]) return;
+      const info = WIDGET_LABELS[wid];
+      const catLbl = colKey === 'left' ? 'SX' : colKey === 'right' ? 'DX' : 'Off';
+      const catCls = colKey === 'left' ? 'l' : colKey === 'right' ? 'r' : 'h';
+      const item = document.createElement('div');
+      item.className = 'cust-widget-item' + (colKey==='hidden' ? ' disabled' : '');
+      item.draggable = true;
+      item.dataset.widget = wid;
+      item.dataset.col = colKey;
+      item.innerHTML = `
+        <span class="grip"><i class="fa fa-grip-vertical"></i></span>
+        <span class="label"><i class="fa fa-${info.icon}"></i> ${info.lbl} <span class="cat ${catCls}">${catLbl}</span></span>
+      `;
+      el.appendChild(item);
+      attachDnD(item);
+    });
+    attachListDnD(el);
+  });
+}
+
+function attachDnD(item) {
+  item.addEventListener('dragstart', e => {
+    item.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/widget', item.dataset.widget);
+    e.dataTransfer.setData('text/col', item.dataset.col);
+  });
+  item.addEventListener('dragend', () => {
+    item.classList.remove('dragging');
+    document.querySelectorAll('.cust-widget-item').forEach(i => i.classList.remove('drag-over'));
+  });
+  item.addEventListener('dragover', e => {
+    e.preventDefault();
+    const dragging = document.querySelector('.cust-widget-item.dragging');
+    if (dragging && dragging !== item) {
+      const rect = item.getBoundingClientRect();
+      const after = (e.clientY - rect.top) / rect.height > 0.5;
+      item.parentNode.insertBefore(dragging, after ? item.nextSibling : item);
+    }
+  });
+}
+function attachListDnD(list) {
+  list.addEventListener('dragover', e => { e.preventDefault(); });
+  list.addEventListener('drop', e => {
+    e.preventDefault();
+    const dragging = document.querySelector('.cust-widget-item.dragging');
+    if (dragging && !list.contains(dragging)) {
+      list.appendChild(dragging);
+    }
+    // Aggiorno classe visiva colonna
+    if (dragging) {
+      const col = list.dataset.col;
+      dragging.dataset.col = col;
+      dragging.classList.toggle('disabled', col === 'hidden');
+      const lbl = dragging.querySelector('.cat');
+      if (lbl) {
+        lbl.textContent = col === 'left' ? 'SX' : col === 'right' ? 'DX' : 'Off';
+        lbl.className = 'cat ' + (col === 'left' ? 'l' : col === 'right' ? 'r' : 'h');
+      }
+    }
+  });
+}
+
+function openCustomizer() {
+  buildCustomizerList();
+  document.getElementById('cust-modal').classList.add('open');
+}
+function closeCustomizer() {
+  document.getElementById('cust-modal').classList.remove('open');
+}
+function resetLayout() {
+  if (!confirm('Ripristinare il layout predefinito?')) return;
+  currentLayout = JSON.parse(JSON.stringify(DEFAULT_LAYOUT));
+  buildCustomizerList();
+}
+function applyCustomizer() {
+  const newLayout = {left:[], right:[], hidden:[]};
+  ['left','right','hidden'].forEach(col => {
+    document.querySelectorAll('#cust-list-' + col + ' .cust-widget-item').forEach(it => {
+      newLayout[col].push(it.dataset.widget);
+    });
+  });
+  saveLayoutToServer(newLayout, true);
+}
+
+function saveLayoutToServer(newLayout, reload) {
+  fetch('/dashboard/layout', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(newLayout)
+  }).then(r => r.json()).then(d => {
+    if (d.ok) {
+      closeCustomizer();
+      if (reload) location.reload();
+    } else {
+      alert('Errore: ' + (d.error || 'sconosciuto'));
+    }
+  }).catch(e => alert('Errore di rete: ' + e));
+}
+
+// ════════ Drag & drop inline sui widget della dashboard ════════
+// (attivo solo in customize-mode)
+function exitCustomize() {
+  document.body.classList.remove('customize-mode');
+  document.getElementById('btn-save-layout').style.display = 'none';
+  document.getElementById('btn-exit-customize').style.display = 'none';
+}
+// Drag & drop live sui widget (opzionale — riordina solo nella stessa colonna)
+document.querySelectorAll('.widget').forEach(w => {
+  w.addEventListener('dragover', e => {
+    if (!document.body.classList.contains('customize-mode')) return;
+    e.preventDefault();
+  });
 });
 </script>"""
 
@@ -2661,13 +2911,79 @@ def dashboard():
     ferie_attesa = db.execute("""SELECT f.*,u.nome,u.cognome FROM ferie_permessi f
         JOIN utenti u ON u.id=f.utente_id WHERE f.stato='in_attesa' LIMIT 5""").fetchall()
 
+    # Carico layout personalizzato (1 riga per azienda — condiviso fra admin)
+    layout = _default_dashboard_layout()
+    try:
+        row = db.execute("SELECT layout_json FROM dashboard_layout WHERE id=1").fetchone()
+        if row and row['layout_json']:
+            import json as _json
+            stored = _json.loads(row['layout_json'])
+            # Merge difensivo con default (se salviamo nuovi widget in futuro appaiono in 'hidden')
+            _norm = {'left': [], 'right': [], 'hidden': []}
+            _norm['left']  = [w for w in stored.get('left', []) if w in ALLOWED_WIDGETS]
+            _norm['right'] = [w for w in stored.get('right', []) if w in ALLOWED_WIDGETS]
+            _norm['hidden'] = [w for w in stored.get('hidden', []) if w in ALLOWED_WIDGETS]
+            mentioned = set(_norm['left'] + _norm['right'] + _norm['hidden'])
+            for w in ALLOWED_WIDGETS:
+                if w not in mentioned:
+                    _norm['hidden'].append(w)
+            layout = _norm
+    except Exception as _e:
+        print(f'[DASHBOARD LAYOUT] load error: {_e}')
+
     db.close()
     return render_page(DASH_TMPL, page_title='Dashboard', active='dashboard',
         s=s, presenze_oggi=presenze_oggi,
         ore_settimana=ore_settimana,
         presenze_cantiere=[dict(r) for r in presenze_cantiere],
         scadenze=[dict(r) for r in scadenze_raw],
-        ferie_attesa=ferie_attesa)
+        ferie_attesa=ferie_attesa,
+        layout=layout)
+
+
+# ══════════ Dashboard layout personalizzato ══════════
+ALLOWED_WIDGETS = {'ore_settimana','cantieri','presenze_oggi','scadenze','ferie'}
+
+def _default_dashboard_layout():
+    """Layout default: stessa disposizione storica."""
+    return {
+        'left':  ['ore_settimana', 'presenze_oggi'],
+        'right': ['cantieri', 'scadenze', 'ferie'],
+        'hidden': []
+    }
+
+
+@app.route('/dashboard/layout', methods=['POST'])
+@admin_required
+def dashboard_layout_save():
+    """Salva il layout dashboard condiviso dell'azienda (1 sola riga per tenant)."""
+    from flask import jsonify
+    import json as _json
+    try:
+        data = request.get_json(force=True, silent=True) or {}
+        left   = [w for w in (data.get('left')   or []) if w in ALLOWED_WIDGETS]
+        right  = [w for w in (data.get('right')  or []) if w in ALLOWED_WIDGETS]
+        hidden = [w for w in (data.get('hidden') or []) if w in ALLOWED_WIDGETS]
+        # Dedup: un widget può stare in una sola colonna
+        seen = set()
+        def _dedupe(lst):
+            out = []
+            for w in lst:
+                if w not in seen:
+                    seen.add(w); out.append(w)
+            return out
+        left = _dedupe(left); right = _dedupe(right); hidden = _dedupe(hidden)
+        payload = {'left': left, 'right': right, 'hidden': hidden}
+        db = get_db()
+        db.execute("""INSERT INTO dashboard_layout (id, layout_json, aggiornato_il)
+                      VALUES (1, ?, datetime('now'))
+                      ON CONFLICT(id) DO UPDATE SET layout_json=excluded.layout_json,
+                                                    aggiornato_il=datetime('now')""",
+                   (_json.dumps(payload),))
+        safe_commit(db); db.close()
+        return jsonify({'ok': True, 'layout': payload})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
 
 # ══════════════════════════════════════════════════════════
 #  CANTIERI
