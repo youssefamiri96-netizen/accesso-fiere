@@ -8102,8 +8102,37 @@ def mobile_calendario():
 TIPI_DOC_VEICOLO = ['Assicurazione','Revisione','Bollo','Manutenzione','Tagliando','Carta di circolazione','Collaudo','Altro']
 
 VEICOLI_TMPL = """
+<style>
+.veh-tab{width:100%;border-collapse:collapse;font-size:13px}
+.veh-tab thead th{background:#0f172a;color:#fff;padding:10px 12px;text-align:left;font-size:12px;font-weight:700}
+.veh-row{cursor:pointer;transition:background .15s;border-bottom:1px solid var(--border)}
+.veh-row:hover{background:#f8fafc}
+.veh-row.expanded{background:#eff6ff}
+.veh-row td{padding:12px}
+.veh-chev{transition:transform .2s;color:var(--text-light);width:14px;display:inline-block}
+.veh-row.expanded .veh-chev{transform:rotate(90deg);color:var(--accent)}
+.veh-detail-row{background:#f8fafc}
+.veh-detail-row td{padding:0 !important;border:none}
+.veh-detail-box{padding:18px 24px;border-bottom:2px solid var(--accent);animation:slidein .2s ease-out}
+@keyframes slidein{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.scad-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.scad-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px;border-left:4px solid #cbd5e1}
+.scad-card.ok{border-left-color:#16a34a}
+.scad-card.warn{border-left-color:#f59e0b;background:#fffbeb}
+.scad-card.expired{border-left-color:#dc2626;background:#fef2f2}
+.scad-card.none{border-left-color:#cbd5e1;background:#f8fafc}
+.scad-card .lbl{font-size:10px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px}
+.scad-card .dt{font-size:15px;font-weight:700;margin-top:2px;font-family:monospace}
+.scad-card.expired .dt{color:#dc2626}
+.scad-card.warn .dt{color:#b45309}
+.scad-card.ok .dt{color:#15803d}
+.scad-card .sub{font-size:11px;color:var(--text-light);margin-top:3px}
+.scad-card .note{font-size:11px;color:var(--text);margin-top:6px;padding-top:6px;border-top:1px dashed #e2e8f0;font-style:italic}
+.veh-row-actions{display:flex;gap:6px;margin-top:14px;padding-top:12px;border-top:1px dashed var(--border);flex-wrap:wrap}
+</style>
+
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-  <div></div>
+  <div><p style="color:var(--text-light);font-size:13px;margin:0">Clicca su una riga per vedere le scadenze del veicolo.</p></div>
   {% if session.ruolo==\'admin\' %}
   <a href="/veicoli/nuovo" class="btn btn-primary"><i class="fa fa-plus"></i> Nuovo Veicolo</a>
   {% endif %}
@@ -8113,38 +8142,107 @@ VEICOLI_TMPL = """
   <div class="stat-card"><div class="stat-icon" style="background:#fce4ec"><i class="fa fa-exclamation-triangle" style="color:#0f4c81"></i></div><div class="stat-info"><div class="stat-value">{{ scaduti }}</div><div class="stat-label">Documenti scaduti</div></div></div>
   <div class="stat-card"><div class="stat-icon" style="background:#fff8e1"><i class="fa fa-clock" style="color:#f59e0b"></i></div><div class="stat-info"><div class="stat-value">{{ in_scadenza }}</div><div class="stat-label">In scadenza (30gg)</div></div></div>
 </div>
-<div class="card">
-  <div class="table-wrap"><table>
-    <thead><tr><th>Targa</th><th>Veicolo</th><th>Tipo</th><th>Documenti</th><th>Prossima scadenza</th><th>Stato</th><th></th></tr></thead>
-    <tbody>{% for v in veicoli %}
-    <tr>
+<div class="card" style="padding:0;overflow:hidden">
+  <table class="veh-tab">
+    <thead><tr>
+      <th style="width:36px"></th>
+      <th>Targa</th>
+      <th>Veicolo</th>
+      <th>Tipo</th>
+      <th>Documenti</th>
+      <th>Prossima scadenza</th>
+      <th>Stato</th>
+    </tr></thead>
+    <tbody>
+    {% for v in veicoli %}
+    <tr class="veh-row" onclick="toggleVehRow(this, {{ v.id }})" data-veh-id="{{ v.id }}">
+      <td><i class="fa fa-chevron-right veh-chev"></i></td>
       <td><strong style="font-family:monospace;font-size:14px;color:var(--accent2)">{{ v.targa }}</strong></td>
       <td>{{ v.marca or \'\' }} {{ v.modello or \'\' }}{% if v.anno %} <span style="color:var(--text-light);font-size:12px">({{ v.anno }})</span>{% endif %}</td>
       <td><span class="tag">{{ v.tipo }}</span></td>
       <td>
-        <a href="/veicoli/{{ v.id }}/documenti" style="text-decoration:none">
-          <span style="background:#e3f2fd;color:#2196F3;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700">
-            <i class="fa fa-folder"></i> {{ v.n_docs }}
-          </span>
-        </a>
+        <span style="background:#e3f2fd;color:#2196F3;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700">
+          <i class="fa fa-folder"></i> {{ v.n_docs }}
+        </span>
       </td>
       <td style="font-family:monospace;font-size:12px">{{ v.prossima_scadenza or \'–\' }}</td>
       <td>{% if v.days_left is none %}<span class="badge badge-gray">–</span>
           {% elif v.days_left < 0 %}<span class="badge badge-red">⚠ Scaduto</span>
           {% elif v.days_left <= 30 %}<span class="badge badge-amber">{{ v.days_left }}gg</span>
           {% else %}<span class="badge badge-green">OK</span>{% endif %}</td>
-      <td style="display:flex;gap:6px">
-        <a href="/veicoli/{{ v.id }}/documenti" class="btn btn-primary btn-sm" title="Documenti"><i class="fa fa-folder-open"></i></a>
-        {% if session.ruolo==\'admin\' %}
-        <a href="/veicoli/{{ v.id }}/modifica" class="btn btn-secondary btn-sm"><i class="fa fa-pen"></i></a>
-        <a href="/veicoli/{{ v.id }}/elimina" class="btn btn-danger btn-sm" onclick="return confirm(\'Eliminare il veicolo e tutti i suoi documenti?\')"><i class="fa fa-trash"></i></a>
-        {% endif %}
+    </tr>
+    <tr class="veh-detail-row" id="veh-detail-{{ v.id }}" style="display:none">
+      <td colspan="7">
+        <div class="veh-detail-box">
+          <h4 style="margin:0 0 12px;font-size:14px;color:var(--text)"><i class="fa fa-calendar-days" style="color:var(--accent)"></i> Scadenze documenti</h4>
+          <div class="scad-grid">
+            {% set dl = v.dl_scad_assicurazione if v.dl_scad_assicurazione != 9999 else none %}
+            <div class="scad-card {% if dl is none %}none{% elif dl < 0 %}expired{% elif dl <= 30 %}warn{% else %}ok{% endif %}">
+              <div class="lbl"><i class="fa fa-shield-halved"></i> Assicurazione</div>
+              <div class="dt">{{ v.scad_assicurazione or \'—\' }}</div>
+              {% if dl is not none %}
+              <div class="sub">{% if dl < 0 %}⚠ scaduta da {{ -dl }} giorni{% elif dl == 0 %}⏰ scade oggi{% elif dl <= 30 %}⏰ scade tra {{ dl }} giorni{% else %}✓ valida per altri {{ dl }} giorni{% endif %}</div>
+              {% endif %}
+              {% if v.note_assicurazione %}<div class="note">{{ v.note_assicurazione }}</div>{% endif %}
+            </div>
+            {% set dl = v.dl_scad_revisione if v.dl_scad_revisione != 9999 else none %}
+            <div class="scad-card {% if dl is none %}none{% elif dl < 0 %}expired{% elif dl <= 30 %}warn{% else %}ok{% endif %}">
+              <div class="lbl"><i class="fa fa-wrench"></i> Revisione</div>
+              <div class="dt">{{ v.scad_revisione or \'—\' }}</div>
+              {% if dl is not none %}
+              <div class="sub">{% if dl < 0 %}⚠ scaduta da {{ -dl }} giorni{% elif dl == 0 %}⏰ scade oggi{% elif dl <= 30 %}⏰ scade tra {{ dl }} giorni{% else %}✓ valida per altri {{ dl }} giorni{% endif %}</div>
+              {% endif %}
+              {% if v.note_revisione %}<div class="note">{{ v.note_revisione }}</div>{% endif %}
+            </div>
+            {% set dl = v.dl_scad_bollo if v.dl_scad_bollo != 9999 else none %}
+            <div class="scad-card {% if dl is none %}none{% elif dl < 0 %}expired{% elif dl <= 30 %}warn{% else %}ok{% endif %}">
+              <div class="lbl"><i class="fa fa-receipt"></i> Bollo</div>
+              <div class="dt">{{ v.scad_bollo or \'—\' }}</div>
+              {% if dl is not none %}
+              <div class="sub">{% if dl < 0 %}⚠ scaduto da {{ -dl }} giorni{% elif dl == 0 %}⏰ scade oggi{% elif dl <= 30 %}⏰ scade tra {{ dl }} giorni{% else %}✓ valido per altri {{ dl }} giorni{% endif %}</div>
+              {% endif %}
+              {% if v.note_bollo %}<div class="note">{{ v.note_bollo }}</div>{% endif %}
+            </div>
+            {% set dl = v.dl_scad_tagliando if v.dl_scad_tagliando != 9999 else none %}
+            <div class="scad-card {% if dl is none %}none{% elif dl < 0 %}expired{% elif dl <= 30 %}warn{% else %}ok{% endif %}">
+              <div class="lbl"><i class="fa fa-screwdriver-wrench"></i> Tagliando</div>
+              <div class="dt">{{ v.scad_tagliando or \'—\' }}</div>
+              {% if dl is not none %}
+              <div class="sub">{% if dl < 0 %}⚠ scaduto da {{ -dl }} giorni{% elif dl == 0 %}⏰ scade oggi{% elif dl <= 30 %}⏰ scade tra {{ dl }} giorni{% else %}✓ valido per altri {{ dl }} giorni{% endif %}</div>
+              {% endif %}
+              {% if v.note_tagliando %}<div class="note">{{ v.note_tagliando }}</div>{% endif %}
+            </div>
+          </div>
+          <div class="veh-row-actions">
+            <a href="/veicoli/{{ v.id }}/documenti" class="btn btn-primary btn-sm"><i class="fa fa-folder-open"></i> Documenti ({{ v.n_docs }})</a>
+            {% if session.ruolo==\'admin\' %}
+            <a href="/veicoli/{{ v.id }}/modifica" class="btn btn-secondary btn-sm"><i class="fa fa-pen"></i> Modifica veicolo e scadenze</a>
+            <a href="/veicoli/{{ v.id }}/elimina" class="btn btn-danger btn-sm" onclick="return confirm(\'Eliminare il veicolo e tutti i suoi documenti?\')"><i class="fa fa-trash"></i> Elimina</a>
+            {% endif %}
+          </div>
+        </div>
       </td>
-    </tr>{% else %}
+    </tr>
+    {% else %}
     <tr><td colspan="7"><div class="empty-state"><i class="fa fa-car"></i><p>Nessun veicolo. <a href="/veicoli/nuovo">Aggiungi il primo!</a></p></div></td></tr>
-    {% endfor %}</tbody>
-  </table></div>
+    {% endfor %}
+    </tbody>
+  </table>
 </div>
+<script>
+function toggleVehRow(row, vid) {
+  var detail = document.getElementById(\'veh-detail-\' + vid);
+  if (!detail) return;
+  var open = row.classList.contains(\'expanded\');
+  if (open) {
+    row.classList.remove(\'expanded\');
+    detail.style.display = \'none\';
+  } else {
+    row.classList.add(\'expanded\');
+    detail.style.display = \'\';
+  }
+}
+</script>
 """
 
 VEICOLO_FORM_TMPL = """
