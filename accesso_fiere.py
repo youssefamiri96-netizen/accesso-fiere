@@ -2477,8 +2477,13 @@ DASH_TMPL = """
       <div class="card-body" style="padding:14px 22px">
       {% for d in scadenze %}
       <div class="scadenza-bar">
-        <div style="flex:1"><div style="font-size:13.5px;font-weight:600">{{ d.titolo }}</div>
-        <div style="font-size:12px;color:var(--text-light)">{{ d.data_scadenza }}{% if d.nome %} · {{ d.nome }} {{ d.cognome }}{% endif %}</div></div>
+        <div style="flex:1">
+          <div style="font-size:13.5px;font-weight:600">{{ d.titolo }}</div>
+          <div style="font-size:12px;color:var(--text-light)">
+            {% if d.categoria %}<span style="background:{% if d.categoria=='Veicolo' %}#e0e7ff;color:#3730a3{% elif d.categoria=='Documento dipendente' %}#fef3c7;color:#92400e{% elif d.categoria=='Documento azienda' %}#dbeafe;color:#1e40af{% elif d.categoria=='Documento veicolo' %}#e0e7ff;color:#4338ca{% elif d.categoria=='Contratto cliente' %}#dcfce7;color:#15803d{% else %}#f1f5f9;color:#475569{% endif %};padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;margin-right:6px">{{ d.categoria }}</span>{% endif %}
+            {{ d.data_scadenza }}{% if d.nome %} · {{ d.nome }} {{ d.cognome }}{% endif %}
+          </div>
+        </div>
         {% if d.days_left <= 7 %}<span class="badge badge-red">{{ d.days_left }}gg</span>
         {% elif d.days_left <= 30 %}<span class="badge badge-amber">{{ d.days_left }}gg</span>
         {% else %}<span class="badge badge-green">OK</span>{% endif %}
@@ -2565,17 +2570,93 @@ def dashboard():
         FROM presenze p LEFT JOIN cantieri c ON c.id=p.cantiere_id
         WHERE p.data LIKE ? GROUP BY p.cantiere_id""",(f'{mese}%',)).fetchall()
 
+    # Scadenze imminenti — da TUTTE le fonti (documenti azienda, documenti dipendenti,
+    # documenti veicoli, campi scadenza veicoli, contratti clienti)
     scadenze_raw = db.execute("""
-        SELECT titolo, data_scadenza, NULL as assegnato_a, NULL as nome, NULL as cognome,
+        -- Documenti azienda
+        SELECT titolo as titolo,
+               data_scadenza,
+               NULL as nome, NULL as cognome,
+               'Documento azienda' as categoria,
                CAST(julianday(data_scadenza)-julianday('now') AS INTEGER) as days_left
-        FROM documenti WHERE data_scadenza >= date('now')
+          FROM documenti
+         WHERE data_scadenza IS NOT NULL AND data_scadenza != ''
+           AND date(data_scadenza) >= date('now')
         UNION ALL
-        SELECT dd.nome_originale as titolo, dd.data_scadenza,
-               dd.utente_id as assegnato_a, u.nome, u.cognome,
+        -- Documenti dipendenti
+        SELECT dd.nome_originale as titolo,
+               dd.data_scadenza,
+               COALESCE(u.nome, us.nome) as nome,
+               COALESCE(u.cognome, us.cognome) as cognome,
+               'Documento dipendente' as categoria,
                CAST(julianday(dd.data_scadenza)-julianday('now') AS INTEGER) as days_left
-        FROM documenti_dipendente dd JOIN utenti u ON u.id=dd.utente_id
-        WHERE dd.data_scadenza >= date('now')
-        ORDER BY data_scadenza LIMIT 5""").fetchall()
+          FROM documenti_dipendente dd
+          LEFT JOIN utenti u ON u.id=dd.utente_id
+          LEFT JOIN utenti_storico us ON us.id=dd.utente_id
+         WHERE dd.data_scadenza IS NOT NULL AND dd.data_scadenza != ''
+           AND date(dd.data_scadenza) >= date('now')
+        UNION ALL
+        -- Assicurazione veicolo
+        SELECT ('Assicurazione ' || v.targa || COALESCE(' ' || v.marca, '') || COALESCE(' ' || v.modello, '')) as titolo,
+               v.scad_assicurazione as data_scadenza,
+               NULL as nome, NULL as cognome,
+               'Veicolo' as categoria,
+               CAST(julianday(v.scad_assicurazione)-julianday('now') AS INTEGER) as days_left
+          FROM veicoli v
+         WHERE COALESCE(v.attivo,1)=1
+           AND v.scad_assicurazione IS NOT NULL AND v.scad_assicurazione != ''
+           AND date(v.scad_assicurazione) >= date('now')
+        UNION ALL
+        -- Revisione veicolo
+        SELECT ('Revisione ' || v.targa || COALESCE(' ' || v.marca, '') || COALESCE(' ' || v.modello, '')) as titolo,
+               v.scad_revisione as data_scadenza,
+               NULL, NULL, 'Veicolo' as categoria,
+               CAST(julianday(v.scad_revisione)-julianday('now') AS INTEGER) as days_left
+          FROM veicoli v
+         WHERE COALESCE(v.attivo,1)=1
+           AND v.scad_revisione IS NOT NULL AND v.scad_revisione != ''
+           AND date(v.scad_revisione) >= date('now')
+        UNION ALL
+        -- Bollo veicolo
+        SELECT ('Bollo ' || v.targa || COALESCE(' ' || v.marca, '') || COALESCE(' ' || v.modello, '')) as titolo,
+               v.scad_bollo as data_scadenza,
+               NULL, NULL, 'Veicolo' as categoria,
+               CAST(julianday(v.scad_bollo)-julianday('now') AS INTEGER) as days_left
+          FROM veicoli v
+         WHERE COALESCE(v.attivo,1)=1
+           AND v.scad_bollo IS NOT NULL AND v.scad_bollo != ''
+           AND date(v.scad_bollo) >= date('now')
+        UNION ALL
+        -- Tagliando veicolo
+        SELECT ('Tagliando ' || v.targa || COALESCE(' ' || v.marca, '') || COALESCE(' ' || v.modello, '')) as titolo,
+               v.scad_tagliando as data_scadenza,
+               NULL, NULL, 'Veicolo' as categoria,
+               CAST(julianday(v.scad_tagliando)-julianday('now') AS INTEGER) as days_left
+          FROM veicoli v
+         WHERE COALESCE(v.attivo,1)=1
+           AND v.scad_tagliando IS NOT NULL AND v.scad_tagliando != ''
+           AND date(v.scad_tagliando) >= date('now')
+        UNION ALL
+        -- Documenti veicoli (quelli con scadenza esplicita)
+        SELECT (dv.nome_originale || ' (' || v.targa || ')') as titolo,
+               dv.data_scadenza,
+               NULL, NULL, 'Documento veicolo' as categoria,
+               CAST(julianday(dv.data_scadenza)-julianday('now') AS INTEGER) as days_left
+          FROM documenti_veicoli dv
+          JOIN veicoli v ON v.id=dv.veicolo_id
+         WHERE dv.data_scadenza IS NOT NULL AND dv.data_scadenza != ''
+           AND date(dv.data_scadenza) >= date('now')
+        UNION ALL
+        -- Contratti clienti
+        SELECT ('Contratto: ' || COALESCE(cc.oggetto, '(senza oggetto)')) as titolo,
+               cc.data_scadenza,
+               NULL, NULL, 'Contratto cliente' as categoria,
+               CAST(julianday(cc.data_scadenza)-julianday('now') AS INTEGER) as days_left
+          FROM contratti_clienti cc
+         WHERE COALESCE(cc.stato,'attivo')='attivo'
+           AND cc.data_scadenza IS NOT NULL AND cc.data_scadenza != ''
+           AND date(cc.data_scadenza) >= date('now')
+        ORDER BY data_scadenza ASC LIMIT 10""").fetchall()
 
     ferie_attesa = db.execute("""SELECT f.*,u.nome,u.cognome FROM ferie_permessi f
         JOIN utenti u ON u.id=f.utente_id WHERE f.stato='in_attesa' LIMIT 5""").fetchall()
