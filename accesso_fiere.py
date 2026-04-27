@@ -2571,6 +2571,44 @@ body.customize-mode .widget:hover{background:#f0f9ff}
 </div>
 {% endmacro %}
 
+{% macro w_richieste() %}
+<div class="card widget" data-widget-id="richieste">
+  <span class="widget-drag-handle"><i class="fa fa-grip-vertical"></i> Sposta</span>
+  <div class="card-header">
+    <h3><i class="fa fa-inbox" style="color:#dc2626;margin-right:8px"></i>Richieste in attesa
+      {% if richieste_attesa %}<span class="badge badge-red" style="margin-left:8px">{{ richieste_attesa|length }}</span>{% endif %}
+    </h3>
+  </div>
+  <div class="card-body" style="padding:10px 20px">
+  {% if richieste_attesa %}
+    {% for r in richieste_attesa %}
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <span style="background:{% if r.tipo=='presenza' %}#dbeafe;color:#1e40af{% else %}#dcfce7;color:#15803d{% endif %};padding:4px 9px;border-radius:6px;font-size:10px;font-weight:700;text-transform:uppercase;white-space:nowrap">
+        {% if r.tipo=='presenza' %}<i class="fa fa-clock"></i> Presenza{% else %}<i class="fa fa-receipt"></i> Rimborso{% endif %}
+      </span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600">{{ r.nome }} {{ r.cognome }}</div>
+        <div style="font-size:11.5px;color:var(--text-light);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          {{ r.data }} ·
+          {% if r.tipo=='presenza' %}{{ r.ora_entrata }}–{{ r.ora_uscita }} ({{ "%.1f"|format(r.ore_totali or 0) }}h){% if r.cantiere_nome %} · {{ r.cantiere_nome }}{% endif %}
+          {% else %}{{ r.categoria }} · € {{ "%.2f"|format(r.importo or 0) }}{% if r.descrizione %} · {{ r.descrizione[:40] }}{% endif %}{% endif %}
+        </div>
+      </div>
+      <a href="{% if r.tipo=='presenza' %}/admin/richieste{% else %}/admin/spese?stato=in_attesa{% endif %}"
+         class="btn btn-primary btn-sm" style="white-space:nowrap">Gestisci</a>
+    </div>
+    {% endfor %}
+    <div style="display:flex;gap:8px;margin-top:12px;padding-top:4px">
+      <a href="/admin/richieste" class="btn btn-secondary btn-sm" style="flex:1;text-align:center"><i class="fa fa-clock"></i> Tutte le presenze</a>
+      <a href="/admin/spese?stato=in_attesa" class="btn btn-secondary btn-sm" style="flex:1;text-align:center"><i class="fa fa-receipt"></i> Tutti i rimborsi</a>
+    </div>
+  {% else %}
+    <div class="empty-state" style="padding:20px"><i class="fa fa-check-circle"></i><p>Nessuna richiesta in attesa</p></div>
+  {% endif %}
+  </div>
+</div>
+{% endmacro %}
+
 {# ═══════ RENDERING DINAMICO ═══════ #}
 {# Widget KPI sempre in testa (fissi) #}
 {% if 'stats' not in layout.hidden %}{{ w_stats() }}{% endif %}
@@ -2584,6 +2622,7 @@ body.customize-mode .widget:hover{background:#f0f9ff}
       {% elif wid == 'presenze_oggi' %}{{ w_presenze_oggi() }}
       {% elif wid == 'scadenze' %}{{ w_scadenze() }}
       {% elif wid == 'ferie' %}{{ w_ferie() }}
+      {% elif wid == 'richieste' %}{{ w_richieste() }}
       {% endif %}
     {% endfor %}
   </div>
@@ -2594,6 +2633,7 @@ body.customize-mode .widget:hover{background:#f0f9ff}
       {% elif wid == 'presenze_oggi' %}{{ w_presenze_oggi() }}
       {% elif wid == 'scadenze' %}{{ w_scadenze() }}
       {% elif wid == 'ferie' %}{{ w_ferie() }}
+      {% elif wid == 'richieste' %}{{ w_richieste() }}
       {% endif %}
     {% endfor %}
   </div>
@@ -2631,7 +2671,8 @@ const WIDGET_LABELS = {
   'cantieri':       {lbl: 'Grafico presenze per cantiere', icon:'hard-hat'},
   'presenze_oggi':  {lbl: 'Presenze di oggi', icon:'clock'},
   'scadenze':       {lbl: 'Scadenze imminenti', icon:'calendar-exclamation'},
-  'ferie':          {lbl: 'Ferie in attesa', icon:'umbrella-beach'}
+  'ferie':          {lbl: 'Ferie in attesa', icon:'umbrella-beach'},
+  'richieste':      {lbl: 'Richieste in attesa (presenze + rimborsi)', icon:'inbox'}
 };
 const DEFAULT_LAYOUT = {left: ['ore_settimana','presenze_oggi'], right: ['cantieri','scadenze','ferie'], hidden: []};
 let currentLayout = {{ layout | tojson }};
@@ -2911,6 +2952,39 @@ def dashboard():
     ferie_attesa = db.execute("""SELECT f.*,u.nome,u.cognome FROM ferie_permessi f
         JOIN utenti u ON u.id=f.utente_id WHERE f.stato='in_attesa' LIMIT 5""").fetchall()
 
+    # Richieste in attesa: unificate (presenze + rimborsi) - ordine cronologico, max 8
+    richieste_attesa = db.execute("""
+        SELECT * FROM (
+          SELECT 'presenza' as tipo,
+                 rp.id as rid, rp.data,
+                 rp.ora_entrata, rp.ora_uscita, rp.ore_totali,
+                 NULL as categoria, NULL as importo, NULL as descrizione,
+                 c.nome as cantiere_nome,
+                 COALESCE(u.nome, us.nome) as nome,
+                 COALESCE(u.cognome, us.cognome) as cognome,
+                 rp.creato_il as cr
+            FROM richieste_presenze rp
+            LEFT JOIN utenti u ON u.id = rp.utente_id
+            LEFT JOIN utenti_storico us ON us.id = rp.utente_id
+            LEFT JOIN cantieri c ON c.id = rp.cantiere_id
+           WHERE rp.stato = 'in_attesa'
+          UNION ALL
+          SELECT 'rimborso' as tipo,
+                 sr.id as rid, sr.data,
+                 NULL as ora_entrata, NULL as ora_uscita, NULL as ore_totali,
+                 sr.categoria, sr.importo, sr.descrizione,
+                 NULL as cantiere_nome,
+                 COALESCE(u.nome, us.nome) as nome,
+                 COALESCE(u.cognome, us.cognome) as cognome,
+                 sr.creato_il as cr
+            FROM spese_rimborso sr
+            LEFT JOIN utenti u ON u.id = sr.utente_id
+            LEFT JOIN utenti_storico us ON us.id = sr.utente_id
+           WHERE sr.stato = 'in_attesa'
+        )
+        ORDER BY cr DESC LIMIT 8
+    """).fetchall()
+
     # Carico layout personalizzato (1 riga per azienda — condiviso fra admin)
     layout = _default_dashboard_layout()
     try:
@@ -2938,17 +3012,18 @@ def dashboard():
         presenze_cantiere=[dict(r) for r in presenze_cantiere],
         scadenze=[dict(r) for r in scadenze_raw],
         ferie_attesa=ferie_attesa,
+        richieste_attesa=[dict(r) for r in richieste_attesa],
         layout=layout)
 
 
 # ══════════ Dashboard layout personalizzato ══════════
-ALLOWED_WIDGETS = {'ore_settimana','cantieri','presenze_oggi','scadenze','ferie'}
+ALLOWED_WIDGETS = {'ore_settimana','cantieri','presenze_oggi','scadenze','ferie','richieste'}
 
 def _default_dashboard_layout():
-    """Layout default: stessa disposizione storica."""
+    """Layout default: richieste in alto a destra per massima visibilità."""
     return {
         'left':  ['ore_settimana', 'presenze_oggi'],
-        'right': ['cantieri', 'scadenze', 'ferie'],
+        'right': ['richieste', 'cantieri', 'scadenze', 'ferie'],
         'hidden': []
     }
 
