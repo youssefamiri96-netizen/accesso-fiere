@@ -422,6 +422,34 @@ def init_db():
         "ALTER TABLE cantieri ADD COLUMN responsabile TEXT",
         "ALTER TABLE cantieri ADD COLUMN tipo_allestimento TEXT DEFAULT 'standard'",
         "ALTER TABLE cantieri ADD COLUMN note_logistica TEXT",
+        # ── Sprint 1.1 — Schede fiera complete ──
+        "ALTER TABLE cantieri ADD COLUMN tipo_evento TEXT DEFAULT 'Fiera'",
+        "ALTER TABLE cantieri ADD COLUMN committente_id INTEGER",
+        "ALTER TABLE cantieri ADD COLUMN data_setup TEXT",
+        "ALTER TABLE cantieri ADD COLUMN data_live TEXT",
+        "ALTER TABLE cantieri ADD COLUMN data_dismantling TEXT",
+        "ALTER TABLE cantieri ADD COLUMN costo_previsto REAL DEFAULT 0",
+        "ALTER TABLE cantieri ADD COLUMN ricavo_previsto REAL DEFAULT 0",
+        "ALTER TABLE cantieri ADD COLUMN note_tecniche TEXT",
+        # ── Sprint 1.2 — Categorizzazione documenti ──
+        "ALTER TABLE documenti_dipendente ADD COLUMN categoria TEXT DEFAULT 'Altro'",
+        # ── Sprint 1.3 — Ruolo caposquadra: tabella squadre ──
+        """CREATE TABLE IF NOT EXISTS squadre (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL,
+            caposquadra_id INTEGER NOT NULL,
+            note TEXT,
+            attiva INTEGER DEFAULT 1,
+            creato_il TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY(caposquadra_id) REFERENCES utenti(id)
+        )""",
+        """CREATE TABLE IF NOT EXISTS squadre_membri (
+            squadra_id INTEGER NOT NULL,
+            utente_id INTEGER NOT NULL,
+            PRIMARY KEY (squadra_id, utente_id),
+            FOREIGN KEY(squadra_id) REFERENCES squadre(id) ON DELETE CASCADE,
+            FOREIGN KEY(utente_id) REFERENCES utenti(id)
+        )""",
         """CREATE TABLE IF NOT EXISTS veicoli (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             targa TEXT NOT NULL,
@@ -908,6 +936,34 @@ def ensure_columns():
                 # Banca ore
                 "ALTER TABLE utenti ADD COLUMN ore_contratto_mensili REAL DEFAULT 0",
                 "ALTER TABLE utenti ADD COLUMN ore_contratto_giornaliere REAL DEFAULT 0",
+                # ── Sprint 1.1 — Schede fiera complete ──
+                "ALTER TABLE cantieri ADD COLUMN tipo_evento TEXT DEFAULT 'Fiera'",
+                "ALTER TABLE cantieri ADD COLUMN committente_id INTEGER",
+                "ALTER TABLE cantieri ADD COLUMN data_setup TEXT",
+                "ALTER TABLE cantieri ADD COLUMN data_live TEXT",
+                "ALTER TABLE cantieri ADD COLUMN data_dismantling TEXT",
+                "ALTER TABLE cantieri ADD COLUMN costo_previsto REAL DEFAULT 0",
+                "ALTER TABLE cantieri ADD COLUMN ricavo_previsto REAL DEFAULT 0",
+                "ALTER TABLE cantieri ADD COLUMN note_tecniche TEXT",
+                # ── Sprint 1.2 — Categorizzazione documenti ──
+                "ALTER TABLE documenti_dipendente ADD COLUMN categoria TEXT DEFAULT 'Altro'",
+                # ── Sprint 1.3 — Squadre / Caposquadra ──
+                """CREATE TABLE IF NOT EXISTS squadre (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nome TEXT NOT NULL,
+                    caposquadra_id INTEGER NOT NULL,
+                    note TEXT,
+                    attiva INTEGER DEFAULT 1,
+                    creato_il TEXT DEFAULT (datetime('now')),
+                    FOREIGN KEY(caposquadra_id) REFERENCES utenti(id)
+                )""",
+                """CREATE TABLE IF NOT EXISTS squadre_membri (
+                    squadra_id INTEGER NOT NULL,
+                    utente_id INTEGER NOT NULL,
+                    PRIMARY KEY (squadra_id, utente_id),
+                    FOREIGN KEY(squadra_id) REFERENCES squadre(id) ON DELETE CASCADE,
+                    FOREIGN KEY(utente_id) REFERENCES utenti(id)
+                )""",
                 # Storico dipendenti eliminati
                 """CREATE TABLE IF NOT EXISTS utenti_storico (
                     id INTEGER PRIMARY KEY,
@@ -1028,10 +1084,10 @@ def login_required(f):
                     return redirect(url_for('login'))
             except Exception:
                 pass
-        # Dipendenti non-admin: blocca accesso a pagine admin
+        # Dipendenti non-admin/non-caposquadra: blocca accesso a pagine admin
         admin_pages = {'dashboard','dipendenti','presenze','ferie','cantieri',
                        'documenti','scadenze','calendario','richieste','impostazioni','fatturazione','preventivi','clienti','contratti_clienti'}
-        if session.get('ruolo') != 'admin' and f.__name__ in admin_pages:
+        if session.get('ruolo') not in ('admin','caposquadra') and f.__name__ in admin_pages:
             return redirect(url_for('mobile'))
         return f(*a,**k)
     return d
@@ -1058,6 +1114,26 @@ def admin_required(f):
             return redirect(url_for('mobile'))
         return f(*a,**k)
     return d
+
+def caposquadra_required(f):
+    """Permette accesso a admin OPPURE caposquadra."""
+    @wraps(f)
+    def d(*a,**k):
+        if 'user_id' not in session:
+            return redirect(url_for('login'))
+        if session.get('ruolo') not in ('admin', 'caposquadra'):
+            flash('Accesso riservato a admin o caposquadra.','error')
+            return redirect(url_for('mobile'))
+        return f(*a,**k)
+    return d
+
+def get_squadra_membri_ids(db, caposquadra_id):
+    """Restituisce gli id dei dipendenti delle squadre del caposquadra."""
+    rows = db.execute("""SELECT DISTINCT sm.utente_id FROM squadre_membri sm
+                         JOIN squadre s ON s.id = sm.squadra_id
+                         WHERE s.caposquadra_id = ? AND COALESCE(s.attiva,1)=1""",
+                      (caposquadra_id,)).fetchall()
+    return [r[0] for r in rows]
 
 def hash_pw(pw): return hashlib.sha256(pw.encode()).hexdigest()
 
@@ -1430,6 +1506,7 @@ textarea{resize:vertical;min-height:80px}
   <nav>   <div class="nav-section">Personale di Cantiere</div>
     <a href="/dashboard" class="{{ 'active' if active=='dashboard' }}"><i class="fa fa-house"></i> Dashboard</a>
     <a href="/dipendenti" class="{{ 'active' if active=='dipendenti' }}"><i class="fa fa-users"></i> Dipendenti</a>
+    <a href="/squadre" class="{{ 'active' if active=='squadre' }}"><i class="fa fa-users-line"></i> Squadre</a>
     <a href="/presenze" class="{{ 'active' if active=='presenze' }}"><i class="fa fa-clock"></i> Presenze</a>
     <a href="/banca-ore" class="{{ 'active' if active=='banca_ore' }}"><i class="fa fa-piggy-bank"></i> Banca Ore</a>
     <a href="/ferie" class="{{ 'active' if active=='ferie' }}"><i class="fa fa-umbrella-beach"></i> Ferie & Permessi</a>
@@ -1616,7 +1693,7 @@ input:focus,select:focus{outline:none;border-color:#0f4c81}
 def index():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    if session.get('ruolo') == 'admin':
+    if session.get('ruolo') in ('admin', 'caposquadra'):
         return redirect(url_for('dashboard'))
     return redirect(url_for('mobile'))
 
@@ -1731,7 +1808,7 @@ def login():
                 ensure_columns()
             except Exception:
                 pass
-            if utente_trovato['ruolo'] == 'admin':
+            if utente_trovato['ruolo'] in ('admin', 'caposquadra'):
                 return redirect(url_for('dashboard'))
             else:
                 return redirect(url_for('mobile'))
@@ -3064,50 +3141,72 @@ def dashboard_layout_save():
 #  CANTIERI
 # ══════════════════════════════════════════════════════════
 CANTIERI_TMPL = """
-<div style="display:flex;justify-content:flex-end;margin-bottom:20px">
-  <a href="/cantieri/nuovo" class="btn btn-primary"><i class="fa fa-plus"></i> Nuova fiera</a>
+<style>
+.tipo-badge{padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.tipo-fiera{background:#dbeafe;color:#1e40af}
+.tipo-evento{background:#dcfce7;color:#15803d}
+.tipo-congresso{background:#fef3c7;color:#92400e}
+.tipo-permanente{background:#e0e7ff;color:#3730a3}
+.tipo-retail{background:#fce7f3;color:#9d174d}
+.tipo-altro{background:#f1f5f9;color:#475569}
+.margine-pos{color:#15803d;font-weight:700}
+.margine-neg{color:#dc2626;font-weight:700}
+.margine-zero{color:var(--text-light)}
+</style>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+  <p style="color:var(--text-light);font-size:13px;margin:0">Tutte le fiere, eventi, congressi e allestimenti permanenti.</p>
+  <a href="/cantieri/nuovo" class="btn btn-primary"><i class="fa fa-plus"></i> Nuova fiera / evento</a>
 </div>
 <div class="card">
   <div class="table-wrap">
   <table>
     <thead><tr>
+      <th>Tipo</th>
       <th>Fiera / Evento</th>
-      <th>Ente Organizzatore</th>
-      <th>Città</th>
+      <th>Committente</th>
       <th>Padiglione / Stand</th>
-      <th>Superficie</th>
-      <th>Date</th>
-      <th>Tipo Allestimento</th>
+      <th>m²</th>
+      <th>Setup → Live → Smont.</th>
+      <th>Margine</th>
       <th>Stato</th>
       <th>Azioni</th>
     </tr></thead>
     <tbody>
     {% for c in cantieri %}
+    {% set te = c.tipo_evento or 'Fiera' %}
+    {% set te_cls = 'tipo-fiera' if te=='Fiera' else 'tipo-evento' if te=='Evento aziendale' else 'tipo-congresso' if te=='Congresso' else 'tipo-permanente' if te=='Allestimento permanente' else 'tipo-retail' if te=='Vetrina retail' else 'tipo-altro' %}
     <tr>
+      <td><span class="tipo-badge {{ te_cls }}">{{ te }}</span></td>
       <td>
-        <i class="fa fa-store" style="color:var(--accent);margin-right:8px"></i>
+        <i class="fa fa-store" style="color:var(--accent);margin-right:6px"></i>
         <strong>{{ c.nome }}</strong>
-        {% if c.indirizzo %}<div style="font-size:11px;color:var(--text-light);margin-top:2px">{{ c.indirizzo }}</div>{% endif %}
+        {% if c.ente_organizzatore %}<div style="font-size:11px;color:var(--text-light);margin-top:2px">{{ c.ente_organizzatore }}{% if c.citta %} · {{ c.citta }}{% endif %}</div>{% endif %}
       </td>
-      <td style="color:var(--text-light);font-size:13px">{{ c.ente_organizzatore or '–' }}</td>
-      <td style="font-size:13px">{{ c.citta or '–' }}</td>
+      <td style="font-size:13px">{{ c.committente_nome or '–' }}</td>
       <td>
         {% if c.padiglione %}<span class="tag">{{ c.padiglione }}</span>{% endif %}
         {% if c.numero_stand %}<span class="tag">Stand {{ c.numero_stand }}</span>{% endif %}
         {% if not c.padiglione and not c.numero_stand %}–{% endif %}
       </td>
-      <td style="font-size:13px">{% if c.superficie_mq %}{{ c.superficie_mq|int }} m²{% else %}–{% endif %}</td>
-      <td style="font-size:11px;font-family:monospace">
-        {% if c.data_inizio %}{{ c.data_inizio }}{% endif %}
-        {% if c.data_inizio and c.data_fine %} →<br>{% endif %}
-        {% if c.data_fine %}{{ c.data_fine }}{% endif %}
-        {% if not c.data_inizio and not c.data_fine %}–{% endif %}
+      <td style="font-size:13px">{% if c.superficie_mq %}{{ c.superficie_mq|int }}{% else %}–{% endif %}</td>
+      <td style="font-size:11px;font-family:monospace;line-height:1.5">
+        {% if c.data_setup %}<span style="color:#3b82f6">📦 {{ c.data_setup }}</span><br>{% endif %}
+        {% if c.data_live %}<span style="color:#16a34a">🔴 {{ c.data_live }}</span><br>{% endif %}
+        {% if c.data_dismantling %}<span style="color:#dc2626">📤 {{ c.data_dismantling }}</span>{% endif %}
+        {% if not c.data_setup and not c.data_live and not c.data_dismantling %}
+          {% if c.data_inizio %}{{ c.data_inizio }}{% endif %}
+          {% if c.data_inizio and c.data_fine %} →<br>{% endif %}
+          {% if c.data_fine %}{{ c.data_fine }}{% endif %}
+          {% if not c.data_inizio and not c.data_fine %}–{% endif %}
+        {% endif %}
       </td>
-      <td>
-        {% set tipi = {'standard':'Standard','doppio_piano':'Doppio piano','open_space':'Open space','isola':'Isola','peninsula':'Peninsula'} %}
-        <span class="tag">{{ tipi.get(c.tipo_allestimento, c.tipo_allestimento or 'Standard') }}</span>
+      <td style="font-family:monospace;font-size:13px">
+        {% set margine = (c.ricavo_previsto or 0) - (c.costo_previsto or 0) %}
+        {% if c.ricavo_previsto or c.costo_previsto %}
+          <span class="{% if margine > 0 %}margine-pos{% elif margine < 0 %}margine-neg{% else %}margine-zero{% endif %}">€ {{ '%.0f'|format(margine) }}</span>
+        {% else %}<span class="margine-zero">–</span>{% endif %}
       </td>
-      <td>{% if c.attivo %}<span class="badge badge-green">● Attivo</span>{% else %}<span class="badge badge-gray">Archiviato</span>{% endif %}</td>
+      <td>{% if c.attivo %}<span class="badge badge-green">● Attiva</span>{% else %}<span class="badge badge-gray">Archiviata</span>{% endif %}</td>
       <td>
         <a href="/cantieri/{{ c.id }}/modifica" class="btn btn-secondary btn-sm"><i class="fa fa-pen"></i></a>
         <a href="/cantieri/{{ c.id }}/toggle" class="btn btn-sm {{ 'btn-danger' if c.attivo else 'btn-green' }}" title="{{ 'Archivia' if c.attivo else 'Riattiva' }}">
@@ -3122,30 +3221,57 @@ CANTIERI_TMPL = """
 </div>"""
 
 CANTIERE_FORM_TMPL = """
-<div class="card" style="max-width:700px;margin:0 auto">
+<div class="card" style="max-width:880px;margin:0 auto">
   <div class="card-header">
-    <h3><i class="fa fa-store" style="color:var(--accent)"></i> {{ 'Modifica' if c else 'Nuova' }} Fiera / Stand</h3>
+    <h3><i class="fa fa-store" style="color:var(--accent)"></i> {{ 'Modifica' if c else 'Nuova' }} Fiera / Evento</h3>
   </div>
   <div class="card-body">
   <form method="POST">
+
+    <h4 style="margin:0 0 10px;font-size:13px;color:var(--accent2);text-transform:uppercase;letter-spacing:.5px"><i class="fa fa-circle-info"></i> Informazioni generali</h4>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Tipo evento *</label>
+        <select name="tipo_evento" required>
+          {% set te = c.tipo_evento if c else 'Fiera' %}
+          <option value="Fiera" {{ 'selected' if te=='Fiera' }}>Fiera</option>
+          <option value="Evento aziendale" {{ 'selected' if te=='Evento aziendale' }}>Evento aziendale</option>
+          <option value="Congresso" {{ 'selected' if te=='Congresso' }}>Congresso</option>
+          <option value="Allestimento permanente" {{ 'selected' if te=='Allestimento permanente' }}>Allestimento permanente</option>
+          <option value="Vetrina retail" {{ 'selected' if te=='Vetrina retail' }}>Vetrina retail</option>
+          <option value="Altro" {{ 'selected' if te=='Altro' }}>Altro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Committente</label>
+        <select name="committente_id">
+          <option value="">— Seleziona cliente —</option>
+          {% for cli in clienti %}
+          <option value="{{ cli.id }}" {{ 'selected' if c and c.committente_id == cli.id }}>{{ cli.nome }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
     <div class="form-group">
-      <label>Nome fiera / evento *</label>
-      <input name="nome" value="{{ c.nome if c else '' }}" required placeholder="es. EICMA 2025, HOST Milano, SANA Bologna">
+      <label>Nome evento / progetto *</label>
+      <input name="nome" value="{{ c.nome if c else '' }}" required placeholder="es. EICMA 2026, HOST Milano, SANA Bologna">
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>Ente organizzatore</label>
-        <input name="ente_organizzatore" value="{{ c.ente_organizzatore if c else '' }}" placeholder="es. Fiera Milano S.p.A.">
+        <label>Ente fieristico</label>
+        <input name="ente_organizzatore" value="{{ c.ente_organizzatore if c else '' }}" placeholder="es. Fiera Milano S.p.A., Bologna Fiere, Veronafiere">
       </div>
       <div class="form-group">
         <label>Città</label>
-        <input name="citta" value="{{ c.citta if c else '' }}" placeholder="es. Milano, Bologna, Roma">
+        <input name="citta" value="{{ c.citta if c else '' }}" placeholder="es. Milano, Bologna, Verona">
       </div>
     </div>
     <div class="form-group">
       <label>Indirizzo sede fieristica</label>
       <input name="indirizzo" value="{{ c.indirizzo if c else '' }}" placeholder="es. Fiera Milano, S.S. del Sempione 28, Rho (MI)">
     </div>
+
+    <h4 style="margin:24px 0 10px;font-size:13px;color:var(--accent2);text-transform:uppercase;letter-spacing:.5px"><i class="fa fa-store"></i> Stand</h4>
     <div class="form-row">
       <div class="form-group">
         <label>Padiglione</label>
@@ -3172,27 +3298,75 @@ CANTIERE_FORM_TMPL = """
         </select>
       </div>
     </div>
-    <div class="form-row">
+
+    <h4 style="margin:24px 0 10px;font-size:13px;color:var(--accent2);text-transform:uppercase;letter-spacing:.5px"><i class="fa fa-calendar"></i> Date — fasi del progetto</h4>
+    <div class="form-row" style="grid-template-columns:1fr 1fr 1fr">
       <div class="form-group">
-        <label>Data inizio allestimento</label>
-        <input name="data_inizio" type="date" value="{{ c.data_inizio if c else '' }}">
+        <label><i class="fa fa-truck-ramp-box" style="color:#3b82f6"></i> Setup / montaggio</label>
+        <input name="data_setup" type="date" value="{{ c.data_setup if c else '' }}">
+        <small style="font-size:11px;color:var(--text-light)">Inizio montaggio</small>
       </div>
       <div class="form-group">
-        <label>Data fine smontaggio</label>
-        <input name="data_fine" type="date" value="{{ c.data_fine if c else '' }}">
+        <label><i class="fa fa-bullhorn" style="color:#16a34a"></i> Live / fiera aperta</label>
+        <input name="data_live" type="date" value="{{ c.data_live if c else '' }}">
+        <small style="font-size:11px;color:var(--text-light)">Apertura al pubblico</small>
+      </div>
+      <div class="form-group">
+        <label><i class="fa fa-truck-arrow-right" style="color:#dc2626"></i> Smontaggio</label>
+        <input name="data_dismantling" type="date" value="{{ c.data_dismantling if c else '' }}">
+        <small style="font-size:11px;color:var(--text-light)">Inizio smontaggio</small>
       </div>
     </div>
+    <div class="form-row" style="margin-top:6px">
+      <div class="form-group">
+        <label>Data inizio commessa (legacy)</label>
+        <input name="data_inizio" type="date" value="{{ c.data_inizio if c else '' }}">
+        <small style="font-size:11px;color:var(--text-light)">Compilato auto = data setup, se vuoto</small>
+      </div>
+      <div class="form-group">
+        <label>Data fine commessa (legacy)</label>
+        <input name="data_fine" type="date" value="{{ c.data_fine if c else '' }}">
+        <small style="font-size:11px;color:var(--text-light)">Compilato auto = data smontaggio, se vuoto</small>
+      </div>
+    </div>
+
+    <h4 style="margin:24px 0 10px;font-size:13px;color:var(--accent2);text-transform:uppercase;letter-spacing:.5px"><i class="fa fa-euro-sign"></i> Costi e margine</h4>
+    <div class="form-row" style="grid-template-columns:1fr 1fr 1fr">
+      <div class="form-group">
+        <label>Costo previsto (€)</label>
+        <input name="costo_previsto" type="number" min="0" step="0.01" value="{{ '%.2f'|format(c.costo_previsto or 0) if c else '' }}" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label>Ricavo previsto (€)</label>
+        <input name="ricavo_previsto" type="number" min="0" step="0.01" value="{{ '%.2f'|format(c.ricavo_previsto or 0) if c else '' }}" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label>Margine atteso</label>
+        <div style="padding:10px 12px;background:#f0f9ff;border:1px solid var(--border);border-radius:8px;font-family:monospace;font-weight:700;font-size:14px;color:var(--accent)">
+          {% if c and (c.ricavo_previsto or c.costo_previsto) %}
+            € {{ '%.2f'|format((c.ricavo_previsto or 0) - (c.costo_previsto or 0)) }}
+          {% else %}— calcolato auto —{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <h4 style="margin:24px 0 10px;font-size:13px;color:var(--accent2);text-transform:uppercase;letter-spacing:.5px"><i class="fa fa-clipboard-list"></i> Operatività</h4>
     <div class="form-group">
-      <label>Responsabile cantiere</label>
-      <input name="responsabile" value="{{ c.responsabile if c else '' }}" placeholder="Nome del capo montaggio / responsabile">
+      <label>Responsabile cantiere / capo squadra</label>
+      <input name="responsabile" value="{{ c.responsabile if c else '' }}" placeholder="Nome del capo montaggio / responsabile in fiera">
+    </div>
+    <div class="form-group">
+      <label>Note tecniche stand</label>
+      <textarea name="note_tecniche" rows="2" placeholder="es. Allaccio elettrico 6 kW trifase, carico solaio 250 kg/m², altezza max 4m, presa rete...">{{ c.note_tecniche if c else '' }}</textarea>
     </div>
     <div class="form-group">
       <label>Note logistica / trasporti</label>
-      <textarea name="note_logistica" placeholder="es. Camion da 75 q, accesso dal cancello Sud, varco B...">{{ c.note_logistica if c else '' }}</textarea>
+      <textarea name="note_logistica" rows="2" placeholder="es. Camion da 75 q, accesso dal cancello Sud, varco B...">{{ c.note_logistica if c else '' }}</textarea>
     </div>
-    <div style="display:flex;gap:10px;justify-content:flex-end">
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:24px;padding-top:16px;border-top:1px solid var(--border)">
       <a href="/cantieri" class="btn btn-secondary">Annulla</a>
-      <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Salva fiera</button>
+      <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Salva</button>
     </div>
   </form>
   </div>
@@ -3202,7 +3376,10 @@ CANTIERE_FORM_TMPL = """
 @login_required
 def cantieri():
     db = get_db()
-    cs = db.execute("SELECT * FROM cantieri ORDER BY attivo DESC, data_inizio DESC, nome").fetchall()
+    cs = db.execute("""SELECT c.*, cli.nome as committente_nome
+                       FROM cantieri c
+                       LEFT JOIN clienti cli ON cli.id = c.committente_id
+                       ORDER BY c.attivo DESC, c.data_setup DESC, c.data_inizio DESC, c.nome""").fetchall()
     db.close()
     return render_page(CANTIERI_TMPL, page_title='Fiere & Stand', active='cantieri', cantieri=cs)
 
@@ -3211,42 +3388,79 @@ def cantieri():
 def cantiere_nuovo():
     if request.method == 'POST':
         db = get_db()
+        # Auto-fill dei campi legacy data_inizio/data_fine se non compilati
+        data_setup = request.form.get('data_setup') or None
+        data_dismantling = request.form.get('data_dismantling') or None
+        data_inizio = request.form.get('data_inizio') or data_setup
+        data_fine = request.form.get('data_fine') or data_dismantling
+        comm_id = request.form.get('committente_id') or None
+        try: comm_id = int(comm_id) if comm_id else None
+        except (ValueError, TypeError): comm_id = None
         db.execute("""INSERT INTO cantieri
             (nome, indirizzo, ente_organizzatore, citta, padiglione, numero_stand,
-             superficie_mq, tipo_allestimento, data_inizio, data_fine, responsabile, note_logistica)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+             superficie_mq, tipo_allestimento, data_inizio, data_fine, responsabile, note_logistica,
+             tipo_evento, committente_id, data_setup, data_live, data_dismantling,
+             costo_previsto, ricavo_previsto, note_tecniche)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (request.form['nome'], request.form.get('indirizzo',''),
              request.form.get('ente_organizzatore',''), request.form.get('citta',''),
              request.form.get('padiglione',''), request.form.get('numero_stand',''),
              request.form.get('superficie_mq') or None, request.form.get('tipo_allestimento','standard'),
-             request.form.get('data_inizio') or None, request.form.get('data_fine') or None,
-             request.form.get('responsabile',''), request.form.get('note_logistica','')))
+             data_inizio, data_fine,
+             request.form.get('responsabile',''), request.form.get('note_logistica',''),
+             request.form.get('tipo_evento','Fiera'), comm_id,
+             data_setup, request.form.get('data_live') or None, data_dismantling,
+             float(request.form.get('costo_previsto') or 0),
+             float(request.form.get('ricavo_previsto') or 0),
+             request.form.get('note_tecniche','')))
         safe_commit(db); db.close()
-        flash('Fiera aggiunta con successo!','success')
+        flash('Fiera/evento aggiunto con successo!','success')
         return redirect(url_for('cantieri'))
-    return render_page(CANTIERE_FORM_TMPL, page_title='Nuova Fiera', active='cantieri', c=None)
+    db = get_db()
+    clienti = db.execute("SELECT id, nome FROM clienti ORDER BY nome").fetchall()
+    db.close()
+    return render_page(CANTIERE_FORM_TMPL, page_title='Nuova Fiera', active='cantieri',
+                       c=None, clienti=[dict(x) for x in clienti])
 
 @app.route('/cantieri/<int:cid>/modifica', methods=['GET','POST'])
 @admin_required
 def cantiere_modifica(cid):
     db = get_db()
     c = db.execute("SELECT * FROM cantieri WHERE id=?",(cid,)).fetchone()
+    if not c:
+        db.close(); flash('Fiera non trovata.','error'); return redirect(url_for('cantieri'))
     if request.method == 'POST':
+        data_setup = request.form.get('data_setup') or None
+        data_dismantling = request.form.get('data_dismantling') or None
+        data_inizio = request.form.get('data_inizio') or data_setup
+        data_fine = request.form.get('data_fine') or data_dismantling
+        comm_id = request.form.get('committente_id') or None
+        try: comm_id = int(comm_id) if comm_id else None
+        except (ValueError, TypeError): comm_id = None
         db.execute("""UPDATE cantieri SET
             nome=?, indirizzo=?, ente_organizzatore=?, citta=?, padiglione=?, numero_stand=?,
-            superficie_mq=?, tipo_allestimento=?, data_inizio=?, data_fine=?, responsabile=?, note_logistica=?
+            superficie_mq=?, tipo_allestimento=?, data_inizio=?, data_fine=?, responsabile=?, note_logistica=?,
+            tipo_evento=?, committente_id=?, data_setup=?, data_live=?, data_dismantling=?,
+            costo_previsto=?, ricavo_previsto=?, note_tecniche=?
             WHERE id=?""",
             (request.form['nome'], request.form.get('indirizzo',''),
              request.form.get('ente_organizzatore',''), request.form.get('citta',''),
              request.form.get('padiglione',''), request.form.get('numero_stand',''),
              request.form.get('superficie_mq') or None, request.form.get('tipo_allestimento','standard'),
-             request.form.get('data_inizio') or None, request.form.get('data_fine') or None,
-             request.form.get('responsabile',''), request.form.get('note_logistica',''), cid))
+             data_inizio, data_fine,
+             request.form.get('responsabile',''), request.form.get('note_logistica',''),
+             request.form.get('tipo_evento','Fiera'), comm_id,
+             data_setup, request.form.get('data_live') or None, data_dismantling,
+             float(request.form.get('costo_previsto') or 0),
+             float(request.form.get('ricavo_previsto') or 0),
+             request.form.get('note_tecniche',''), cid))
         safe_commit(db); db.close()
         flash('Fiera aggiornata con successo.','success')
         return redirect(url_for('cantieri'))
+    clienti = db.execute("SELECT id, nome FROM clienti ORDER BY nome").fetchall()
     db.close()
-    return render_page(CANTIERE_FORM_TMPL, page_title='Modifica Fiera', active='cantieri', c=c)
+    return render_page(CANTIERE_FORM_TMPL, page_title='Modifica Fiera', active='cantieri',
+                       c=c, clienti=[dict(x) for x in clienti])
 
 @app.route('/cantieri/<int:cid>/toggle')
 @admin_required
@@ -5707,6 +5921,7 @@ DIP_FORM_TMPL = """
         <div class="form-group"><label>Ruolo nel sistema</label>
           <select name="ruolo">
             <option value="dipendente" {{ 'selected' if (not dip) or (dip and dip.ruolo=='dipendente') }}>Operatore / Dipendente</option>
+            <option value="caposquadra" {{ 'selected' if dip and dip.ruolo=='caposquadra' }}>Caposquadra</option>
             <option value="admin" {{ 'selected' if dip and dip.ruolo=='admin' }}>Amministratore</option>
           </select>
         </div>
@@ -6182,7 +6397,10 @@ def documenti():
     docs1 = [dict(d) for d in db.execute(q, params).fetchall()]
 
     # ── Tabella "documenti_dipendente" (con file fisico, caricati da Dipendenti) ──
-    q2 = """SELECT dd.id, dd.nome_originale as titolo, dd.tipo_doc as categoria,
+    # Usa la nuova colonna 'categoria' (ricca di categorie del settore allestimenti),
+    # con fallback su tipo_doc per compatibilità con record vecchi.
+    q2 = """SELECT dd.id, dd.nome_originale as titolo,
+                COALESCE(dd.categoria, dd.tipo_doc, 'Altro') as categoria,
                 dd.data_scadenza,
                 dd.note as descrizione,
                 u.nome||' '||u.cognome as dest_nome, dd.utente_id as assegnato_a,
@@ -6196,7 +6414,23 @@ def documenti():
 
     docs2 = [dict(d) for d in db.execute(q2, params2).fetchall()]
 
-    cats = ['UNILAV','Visita medica','Corso/Attestato','Documento identità','Contratto','Altro']
+    # Categorie estese: documenti generici (vecchi) + documenti specifici allestimenti fieristici
+    cats = [
+        'Contratto',
+        'Patente',
+        'Visita medica',
+        'Idoneità sanitaria',
+        'Formazione PSC',
+        'Lavori in altezza',
+        'Abilitazione muletto',
+        'Antincendio',
+        'Primo soccorso',
+        'DPI consegnati',
+        'UNILAV',
+        'Documento identità',
+        'Corso/Attestato',
+        'Altro'
+    ]
     tutti_utenti = db.execute("SELECT id,nome,cognome FROM utenti WHERE attivo=1 ORDER BY cognome").fetchall()
     db.close()
 
@@ -13806,6 +14040,25 @@ DOC_DIP_TMPL = """
             <option>Altro</option><option value="Auto">🤖 Analisi AI automatica</option>
           </select>
         </div>
+        <div class="form-group">
+          <label>Categoria specifica</label>
+          <select name="categoria">
+            <option value="Contratto">Contratto</option>
+            <option value="Patente">Patente</option>
+            <option value="Visita medica">Visita medica</option>
+            <option value="Idoneità sanitaria">Idoneità sanitaria</option>
+            <option value="Formazione PSC">Formazione PSC</option>
+            <option value="Lavori in altezza">Lavori in altezza</option>
+            <option value="Abilitazione muletto">Abilitazione muletto</option>
+            <option value="Antincendio">Antincendio</option>
+            <option value="Primo soccorso">Primo soccorso</option>
+            <option value="DPI consegnati">DPI consegnati</option>
+            <option value="UNILAV">UNILAV</option>
+            <option value="Documento identità">Documento identità</option>
+            <option value="Corso/Attestato">Corso/Attestato</option>
+            <option value="Altro" selected>Altro</option>
+          </select>
+        </div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>Note</label><input name="note" placeholder="Opzionale"></div>
@@ -13875,13 +14128,14 @@ def dip_doc_upload(uid):
     f.save(path)
     dim      = os.path.getsize(path)
     tipo_doc = request.form.get('tipo_doc','Altro')
+    categoria = request.form.get('categoria') or tipo_doc or 'Altro'
     note     = request.form.get('note','')
     data_sc  = request.form.get('data_scadenza','') or None
     analizza = request.form.get('analizza')
     db = get_db()
     doc_id = db.execute(
-        "INSERT INTO documenti_dipendente (utente_id,nome_originale,nome_file,tipo_doc,dimensione,note,data_scadenza) VALUES (?,?,?,?,?,?,?)",
-        (uid, f.filename, nome_file, tipo_doc, dim, note, data_sc)).lastrowid
+        "INSERT INTO documenti_dipendente (utente_id,nome_originale,nome_file,tipo_doc,categoria,dimensione,note,data_scadenza) VALUES (?,?,?,?,?,?,?,?)",
+        (uid, f.filename, nome_file, tipo_doc, categoria, dim, note, data_sc)).lastrowid
     safe_commit(db); db.close()
     flash(f'Documento "{f.filename}" caricato!','success')
     if analizza and AI_OK:
@@ -16578,6 +16832,235 @@ def banca_ore_report_export():
 
 
 # ══════════════════════════════════════════════════════
+
+# ══════════════════════════════════════════════════════════
+#  SQUADRE (Caposquadra)
+# ══════════════════════════════════════════════════════════
+
+SQUADRE_TMPL = """
+<style>
+.sq-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px;transition:all .15s}
+.sq-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.06)}
+.sq-card.archived{opacity:.55;background:#f8fafc}
+.sq-head{display:flex;justify-content:space-between;align-items:start;gap:10px;margin-bottom:12px}
+.sq-name{font-weight:700;font-size:15px;color:var(--text)}
+.sq-cs{font-size:12px;color:var(--text-light);margin-top:2px}
+.sq-cs i{color:var(--accent)}
+.sq-members{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.sq-member{background:#f1f5f9;color:var(--text);padding:4px 10px;border-radius:99px;font-size:11.5px;font-weight:600}
+.sq-empty-members{color:var(--text-light);font-size:12px;font-style:italic}
+.sq-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px dashed var(--border)}
+</style>
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+  <p style="color:var(--text-light);font-size:13px;margin:0">Organizza i dipendenti in squadre con un caposquadra. I capisquadra vedono solo le presenze dei membri.</p>
+  <a href="/squadre/nuova" class="btn btn-primary"><i class="fa fa-plus"></i> Nuova squadra</a>
+</div>
+
+{% if not capisquadra %}
+<div class="alert alert-error" style="margin-bottom:16px">
+  <i class="fa fa-info-circle"></i> Per creare una squadra serve almeno un dipendente con ruolo <strong>Caposquadra</strong>.
+  Vai in <a href="/dipendenti">Dipendenti</a>, modifica un dipendente e impostagli ruolo "Caposquadra".
+</div>
+{% endif %}
+
+<div class="grid-2">
+{% for s in squadre %}
+<div class="sq-card {{ 'archived' if not s.attiva }}">
+  <div class="sq-head">
+    <div>
+      <div class="sq-name"><i class="fa fa-users"></i> {{ s.nome }}</div>
+      <div class="sq-cs"><i class="fa fa-user-tie"></i> Caposquadra: <strong>{{ s.caposquadra_nome or '–' }}</strong></div>
+      {% if s.note %}<div style="font-size:12px;color:var(--text-light);margin-top:4px;font-style:italic">{{ s.note }}</div>{% endif %}
+    </div>
+    {% if not s.attiva %}<span class="badge badge-gray">Archiviata</span>{% endif %}
+  </div>
+  <div>
+    <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px">Membri ({{ s.membri|length }})</div>
+    <div class="sq-members">
+      {% for m in s.membri %}<span class="sq-member">{{ m.nome }} {{ m.cognome }}</span>{% else %}
+      <span class="sq-empty-members">Nessun membro assegnato.</span>{% endfor %}
+    </div>
+  </div>
+  <div class="sq-actions">
+    <a href="/squadre/{{ s.id }}/modifica" class="btn btn-secondary btn-sm"><i class="fa fa-pen"></i> Modifica</a>
+    <a href="/squadre/{{ s.id }}/toggle" class="btn btn-sm {{ 'btn-danger' if s.attiva else 'btn-green' }}">
+      {{ 'Archivia' if s.attiva else 'Riattiva' }}</a>
+  </div>
+</div>
+{% else %}
+<div class="empty-state" style="grid-column:span 2;padding:34px">
+  <i class="fa fa-users-line" style="font-size:42px;opacity:.3"></i>
+  <p style="margin-top:12px">Nessuna squadra creata. <a href="/squadre/nuova">Crea la prima</a>.</p>
+</div>
+{% endfor %}
+</div>
+"""
+
+SQUADRA_FORM_TMPL = """
+<div class="card" style="max-width:740px;margin:0 auto">
+  <div class="card-header">
+    <h3><i class="fa fa-users" style="color:var(--accent)"></i> {{ 'Modifica' if s else 'Nuova' }} Squadra</h3>
+  </div>
+  <div class="card-body">
+  <form method="POST">
+    <div class="form-group">
+      <label>Nome squadra *</label>
+      <input name="nome" value="{{ s.nome if s else '' }}" required placeholder="es. Squadra Nord, Team Allestimenti A, Carpenteria">
+    </div>
+    <div class="form-group">
+      <label>Caposquadra *</label>
+      <select name="caposquadra_id" required>
+        {% if not capisquadra %}
+        <option value="">— Nessun caposquadra disponibile, prima imposta il ruolo a un dipendente —</option>
+        {% endif %}
+        {% for cs in capisquadra %}
+        <option value="{{ cs.id }}" {{ 'selected' if s and s.caposquadra_id == cs.id }}>{{ cs.cognome }} {{ cs.nome }}{% if cs.mansione %} · {{ cs.mansione }}{% endif %}</option>
+        {% endfor %}
+      </select>
+      <small style="font-size:11px;color:var(--text-light)">Solo dipendenti con ruolo "Caposquadra" possono guidare una squadra.</small>
+    </div>
+
+    <div class="form-group">
+      <label>Membri della squadra</label>
+      <div style="border:1px solid var(--border);border-radius:8px;padding:10px;max-height:300px;overflow-y:auto;background:#f8fafc">
+        {% for d in dipendenti %}
+        <label style="display:flex;align-items:center;gap:10px;padding:6px 8px;cursor:pointer;border-radius:6px;font-size:13px" onmouseover="this.style.background='#fff'" onmouseout="this.style.background='transparent'">
+          <input type="checkbox" name="membri" value="{{ d.id }}" {{ 'checked' if d.id in membri_ids }}>
+          <strong>{{ d.cognome }} {{ d.nome }}</strong>
+          {% if d.mansione %}<span style="color:var(--text-light);font-size:12px">· {{ d.mansione }}</span>{% endif %}
+        </label>
+        {% else %}
+        <p style="color:var(--text-light);font-size:13px;text-align:center;padding:14px">Nessun dipendente disponibile.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Note (opzionale)</label>
+      <textarea name="note" rows="2" placeholder="es. Squadra dedicata fiere lombarde, specializzata in doppi piani...">{{ s.note if s else '' }}</textarea>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px">
+      <a href="/squadre" class="btn btn-secondary">Annulla</a>
+      <button type="submit" class="btn btn-primary"{% if not capisquadra %} disabled{% endif %}><i class="fa fa-save"></i> Salva squadra</button>
+    </div>
+  </form>
+  </div>
+</div>
+"""
+
+
+@app.route('/squadre')
+@admin_required
+def squadre_lista():
+    db = get_db()
+    sq = db.execute("""SELECT s.*, u.nome||' '||u.cognome as caposquadra_nome
+                       FROM squadre s
+                       LEFT JOIN utenti u ON u.id = s.caposquadra_id
+                       ORDER BY s.attiva DESC, s.nome""").fetchall()
+    risultato = []
+    for r in sq:
+        d = dict(r)
+        membri = db.execute("""SELECT u.id, u.nome, u.cognome FROM squadre_membri sm
+                               JOIN utenti u ON u.id = sm.utente_id
+                               WHERE sm.squadra_id = ? AND COALESCE(u.attivo,1)=1
+                               ORDER BY u.cognome, u.nome""",
+                            (r['id'],)).fetchall()
+        d['membri'] = [dict(m) for m in membri]
+        risultato.append(d)
+    capisquadra = db.execute("""SELECT id FROM utenti WHERE ruolo='caposquadra' AND COALESCE(attivo,1)=1""").fetchall()
+    db.close()
+    return render_page(SQUADRE_TMPL, page_title='Squadre', active='squadre',
+                       squadre=risultato, capisquadra=capisquadra)
+
+
+@app.route('/squadre/nuova', methods=['GET','POST'])
+@admin_required
+def squadra_nuova():
+    db = get_db()
+    capisquadra = db.execute("""SELECT id, nome, cognome, mansione FROM utenti
+                                WHERE ruolo='caposquadra' AND COALESCE(attivo,1)=1
+                                ORDER BY cognome""").fetchall()
+    dipendenti = db.execute("""SELECT id, nome, cognome, mansione FROM utenti
+                               WHERE ruolo IN ('dipendente','caposquadra') AND COALESCE(attivo,1)=1
+                               ORDER BY cognome""").fetchall()
+    if request.method == 'POST':
+        try:
+            cs_id = int(request.form.get('caposquadra_id'))
+        except (ValueError, TypeError):
+            db.close()
+            flash('Seleziona un caposquadra valido.', 'error')
+            return redirect(url_for('squadra_nuova'))
+        sid = db.execute("""INSERT INTO squadre (nome, caposquadra_id, note, attiva)
+                            VALUES (?,?,?,1)""",
+                         (request.form['nome'], cs_id, request.form.get('note',''))).lastrowid
+        for uid in request.form.getlist('membri'):
+            try:
+                db.execute("INSERT OR IGNORE INTO squadre_membri (squadra_id,utente_id) VALUES (?,?)",
+                           (sid, int(uid)))
+            except Exception: pass
+        safe_commit(db); db.close()
+        flash('Squadra creata!', 'success')
+        return redirect(url_for('squadre_lista'))
+    db.close()
+    return render_page(SQUADRA_FORM_TMPL, page_title='Nuova squadra', active='squadre',
+                       s=None, capisquadra=[dict(x) for x in capisquadra],
+                       dipendenti=[dict(x) for x in dipendenti],
+                       membri_ids=set())
+
+
+@app.route('/squadre/<int:sid>/modifica', methods=['GET','POST'])
+@admin_required
+def squadra_modifica(sid):
+    db = get_db()
+    s = db.execute("SELECT * FROM squadre WHERE id=?", (sid,)).fetchone()
+    if not s:
+        db.close(); flash('Squadra non trovata.','error'); return redirect(url_for('squadre_lista'))
+    if request.method == 'POST':
+        try:
+            cs_id = int(request.form.get('caposquadra_id'))
+        except (ValueError, TypeError):
+            db.close()
+            flash('Seleziona un caposquadra valido.', 'error')
+            return redirect(url_for('squadra_modifica', sid=sid))
+        db.execute("UPDATE squadre SET nome=?, caposquadra_id=?, note=? WHERE id=?",
+                   (request.form['nome'], cs_id, request.form.get('note',''), sid))
+        # Aggiorno membri
+        db.execute("DELETE FROM squadre_membri WHERE squadra_id=?", (sid,))
+        for uid in request.form.getlist('membri'):
+            try:
+                db.execute("INSERT OR IGNORE INTO squadre_membri (squadra_id,utente_id) VALUES (?,?)",
+                           (sid, int(uid)))
+            except Exception: pass
+        safe_commit(db); db.close()
+        flash('Squadra aggiornata.', 'success')
+        return redirect(url_for('squadre_lista'))
+    capisquadra = db.execute("""SELECT id, nome, cognome, mansione FROM utenti
+                                WHERE ruolo='caposquadra' AND COALESCE(attivo,1)=1
+                                ORDER BY cognome""").fetchall()
+    dipendenti = db.execute("""SELECT id, nome, cognome, mansione FROM utenti
+                               WHERE ruolo IN ('dipendente','caposquadra') AND COALESCE(attivo,1)=1
+                               ORDER BY cognome""").fetchall()
+    membri_ids = {r[0] for r in db.execute("SELECT utente_id FROM squadre_membri WHERE squadra_id=?",(sid,)).fetchall()}
+    db.close()
+    return render_page(SQUADRA_FORM_TMPL, page_title='Modifica squadra', active='squadre',
+                       s=s, capisquadra=[dict(x) for x in capisquadra],
+                       dipendenti=[dict(x) for x in dipendenti],
+                       membri_ids=membri_ids)
+
+
+@app.route('/squadre/<int:sid>/toggle')
+@admin_required
+def squadra_toggle(sid):
+    db = get_db()
+    s = db.execute("SELECT attiva FROM squadre WHERE id=?",(sid,)).fetchone()
+    if s:
+        db.execute("UPDATE squadre SET attiva=? WHERE id=?", (0 if s['attiva'] else 1, sid))
+        safe_commit(db)
+    db.close()
+    return redirect(url_for('squadre_lista'))
+
 
 # ══════════════════════════════════════════════════════════
 #  REPORT GENERALE (Excel) — ore, presenze, rimborsi, banca
