@@ -1460,6 +1460,11 @@ def render_page(tmpl, **ctx):
         ctx['notifiche_count'] = 0
         ctx['spese_attesa'] = 0
     ctx.setdefault('azienda_nome', get_setting('azienda','Accesso Fiere'))
+    # AI chat disponibile solo se la API key Anthropic è configurata
+    try:
+        ctx['ai_chat_abilitato'] = AI_OK and bool(get_setting('anthropic_api_key', '').strip())
+    except Exception:
+        ctx['ai_chat_abilitato'] = False
     full = BASE.replace('    {% block content %}{% endblock %}', tmpl)
     return render_template_string(full, **ctx)
 
@@ -1670,6 +1675,149 @@ textarea{resize:vertical;min-height:80px}
     {% block content %}{% endblock %}
   </div>
 </main>
+
+{% if session.ruolo == 'admin' and ai_chat_abilitato %}
+<!-- ══════ AI ASSISTANT CHAT WIDGET ══════ -->
+<div id="ai-chat-fab" onclick="toggleAiChat()" title="Assistente AI">
+  <i class="fa fa-robot"></i>
+  <span class="ai-fab-pulse"></span>
+</div>
+
+<div id="ai-chat-panel">
+  <div class="ai-chat-header">
+    <div class="ai-chat-title">
+      <i class="fa fa-robot"></i>
+      <div>
+        <div class="ai-chat-name">Assistente AI</div>
+        <div class="ai-chat-sub">Powered by Claude</div>
+      </div>
+    </div>
+    <button onclick="toggleAiChat()" class="ai-chat-close"><i class="fa fa-times"></i></button>
+  </div>
+  <div class="ai-chat-body" id="ai-chat-body">
+    <div class="ai-msg ai-msg-bot">
+      <i class="fa fa-robot"></i>
+      <div class="ai-bubble">
+        Ciao! Sono l'assistente AI del gestionale. Puoi chiedermi:<br>
+        <em>"Quante ore ha fatto Mario questo mese?"</em><br>
+        <em>"Qual è il margine attuale di EICMA?"</em><br>
+        <em>"Quanti documenti scadono nei prossimi 30 giorni?"</em><br>
+        <em>"Quante richieste presenze ho da approvare?"</em>
+      </div>
+    </div>
+  </div>
+  <div class="ai-chat-input">
+    <input type="text" id="ai-chat-input-field" placeholder="Scrivi una domanda..." onkeydown="if(event.key==='Enter') sendAiMessage()">
+    <button onclick="sendAiMessage()" id="ai-chat-send"><i class="fa fa-paper-plane"></i></button>
+  </div>
+</div>
+
+<style>
+#ai-chat-fab{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#7c3aed 0%,#3b82f6 100%);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;box-shadow:0 6px 20px rgba(124,58,237,.4);z-index:9998;transition:transform .15s}
+#ai-chat-fab:hover{transform:scale(1.08)}
+.ai-fab-pulse{position:absolute;width:56px;height:56px;border-radius:50%;background:#7c3aed;opacity:.4;animation:aiPulse 2s infinite;pointer-events:none}
+@keyframes aiPulse{0%{transform:scale(1);opacity:.4}100%{transform:scale(1.5);opacity:0}}
+#ai-chat-panel{position:fixed;bottom:90px;right:24px;width:380px;max-width:calc(100vw - 48px);height:540px;max-height:calc(100vh - 120px);background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.18);z-index:9999;display:none;flex-direction:column;overflow:hidden}
+#ai-chat-panel.open{display:flex}
+.ai-chat-header{background:linear-gradient(135deg,#7c3aed 0%,#3b82f6 100%);color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
+.ai-chat-title{display:flex;align-items:center;gap:10px}
+.ai-chat-title>i{font-size:22px}
+.ai-chat-name{font-weight:700;font-size:14px}
+.ai-chat-sub{font-size:11px;opacity:.8}
+.ai-chat-close{background:transparent;border:none;color:#fff;cursor:pointer;font-size:16px;padding:4px;opacity:.7}
+.ai-chat-close:hover{opacity:1}
+.ai-chat-body{flex:1;overflow-y:auto;padding:16px;background:#f8fafc;display:flex;flex-direction:column;gap:12px}
+.ai-msg{display:flex;gap:8px;align-items:flex-start;max-width:90%}
+.ai-msg-bot{align-self:flex-start}
+.ai-msg-user{align-self:flex-end;flex-direction:row-reverse}
+.ai-msg>i{width:28px;height:28px;background:linear-gradient(135deg,#7c3aed 0%,#3b82f6 100%);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.ai-msg-user>i{background:#0f4c81}
+.ai-bubble{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:10px 14px;font-size:13px;line-height:1.5;color:#1e293b;white-space:pre-wrap;word-break:break-word}
+.ai-msg-user .ai-bubble{background:#0f4c81;color:#fff;border-color:#0f4c81}
+.ai-bubble em{color:#7c3aed;font-style:normal;font-weight:600}
+.ai-msg-user .ai-bubble em{color:#fef08a}
+.ai-typing{font-style:italic;color:#94a3b8}
+.ai-typing::after{content:'...';animation:aiDots 1.4s infinite}
+@keyframes aiDots{0%,20%{content:'.'}40%{content:'..'}60%,100%{content:'...'}}
+.ai-chat-input{padding:10px 12px;border-top:1px solid #e2e8f0;background:#fff;display:flex;gap:8px}
+.ai-chat-input input{flex:1;padding:10px 14px;border:1px solid #e2e8f0;border-radius:20px;font-size:13px;outline:none;font-family:inherit}
+.ai-chat-input input:focus{border-color:#7c3aed}
+.ai-chat-input button{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#7c3aed 0%,#3b82f6 100%);color:#fff;border:none;cursor:pointer;font-size:14px;flex-shrink:0}
+.ai-chat-input button:disabled{opacity:.5;cursor:not-allowed}
+@media (max-width: 600px) {
+  #ai-chat-panel{bottom:80px;right:8px;left:8px;width:auto;height:70vh}
+}
+</style>
+
+<script>
+var AI_CHAT_HISTORY = [];
+
+function toggleAiChat() {
+  var p = document.getElementById('ai-chat-panel');
+  p.classList.toggle('open');
+  if (p.classList.contains('open')) {
+    setTimeout(function(){ document.getElementById('ai-chat-input-field').focus(); }, 100);
+  }
+}
+
+function appendAiMsg(role, text, isHtml) {
+  var body = document.getElementById('ai-chat-body');
+  var div = document.createElement('div');
+  div.className = 'ai-msg ai-msg-' + (role === 'user' ? 'user' : 'bot');
+  var icon = role === 'user' ? 'fa-user' : 'fa-robot';
+  div.innerHTML = '<i class="fa ' + icon + '"></i><div class="ai-bubble">' + (isHtml ? text : escapeAiHtml(text)) + '</div>';
+  body.appendChild(div);
+  body.scrollTop = body.scrollHeight;
+  return div;
+}
+
+function escapeAiHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/\\*\\*(.+?)\\*\\*/g, '<strong>$1</strong>')
+          .replace(/\\*(.+?)\\*/g, '<em>$1</em>')
+          .replace(/\\n/g, '<br>');
+}
+
+function sendAiMessage() {
+  var inp = document.getElementById('ai-chat-input-field');
+  var btn = document.getElementById('ai-chat-send');
+  var msg = (inp.value || '').trim();
+  if (!msg) return;
+
+  appendAiMsg('user', msg);
+  AI_CHAT_HISTORY.push({role: 'user', content: msg});
+  inp.value = '';
+  inp.disabled = true;
+  btn.disabled = true;
+
+  var typingDiv = appendAiMsg('bot', '<span class="ai-typing">Sto pensando</span>', true);
+
+  fetch('/api/ai-chat', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({message: msg, history: AI_CHAT_HISTORY.slice(0, -1)})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    typingDiv.remove();
+    if (data.error) {
+      appendAiMsg('bot', '⚠️ ' + data.error);
+    } else {
+      var reply = data.reply || '(nessuna risposta)';
+      appendAiMsg('bot', reply);
+      AI_CHAT_HISTORY.push({role: 'assistant', content: reply});
+    }
+    inp.disabled = false; btn.disabled = false; inp.focus();
+  })
+  .catch(function(err){
+    typingDiv.remove();
+    appendAiMsg('bot', '⚠️ Errore di rete: ' + err);
+    inp.disabled = false; btn.disabled = false;
+  });
+}
+</script>
+{% endif %}
+
 <script>
 function updateClock(){var e=document.getElementById('live-clock');if(e)e.textContent=new Date().toLocaleTimeString('it-IT');}
 setInterval(updateClock,1000);updateClock();
@@ -18868,6 +19016,370 @@ def report_export():
     fname = f"report_{suffix}_{data_da}_{data_a}.xlsx"
     return Response(buf, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                     headers={'Content-Disposition': f'attachment; filename={fname}'})
+
+
+# ══════════════════════════════════════════════════════════
+#  AI ASSISTANT — Chat con accesso ai dati del tenant via tool use
+# ══════════════════════════════════════════════════════════
+
+# Tool functions: ognuna è una query SQL sicura predefinita.
+# Claude (l'AI) potrà chiamarle ma NON può scrivere SQL libero.
+
+def _ai_tool_query_presenze_periodo(db, args):
+    """Restituisce somma ore lavorate per dipendente in un periodo."""
+    da = args.get('data_da')
+    a = args.get('data_a')
+    nome_dip = (args.get('nome_dipendente') or '').strip().lower()
+
+    sql = """SELECT u.nome||' '||u.cognome as dipendente,
+                    COALESCE(SUM(p.ore_totali),0) as ore_totali,
+                    COUNT(p.id) as giorni_lavorati
+             FROM presenze p JOIN utenti u ON u.id=p.utente_id
+             WHERE 1=1"""
+    params = []
+    if da:
+        sql += " AND p.data >= ?"; params.append(da)
+    if a:
+        sql += " AND p.data <= ?"; params.append(a)
+    if nome_dip:
+        sql += " AND (LOWER(u.nome) LIKE ? OR LOWER(u.cognome) LIKE ?)"
+        params += [f'%{nome_dip}%', f'%{nome_dip}%']
+    sql += " GROUP BY u.id ORDER BY ore_totali DESC LIMIT 30"
+    rows = db.execute(sql, params).fetchall()
+    return [dict(r) for r in rows]
+
+
+def _ai_tool_margine_fiera(db, args):
+    """Calcola margine LIVE per una specifica fiera (per nome) o per tutte."""
+    nome_fiera = (args.get('nome_fiera') or '').strip().lower()
+    if nome_fiera:
+        rows = db.execute("""SELECT id, nome, ricavo_previsto, costo_previsto,
+                                    data_setup, data_dismantling
+                             FROM cantieri
+                             WHERE LOWER(nome) LIKE ? AND COALESCE(attivo,1)=1
+                             ORDER BY id DESC LIMIT 5""",
+                          (f'%{nome_fiera}%',)).fetchall()
+    else:
+        rows = db.execute("""SELECT id, nome, ricavo_previsto, costo_previsto,
+                                    data_setup, data_dismantling
+                             FROM cantieri WHERE COALESCE(attivo,1)=1
+                             ORDER BY data_setup DESC LIMIT 10""").fetchall()
+    risultati = []
+    for r in rows:
+        d = dict(r)
+        costi = _calcola_costi_fiera(db, r['id'], r['data_setup'], r['data_dismantling'])
+        ricavo = float(r['ricavo_previsto'] or 0)
+        margine_real = ricavo - costi['totale']
+        margine_prev = ricavo - float(r['costo_previsto'] or 0)
+        risultati.append({
+            'fiera': r['nome'],
+            'ricavo_previsto_eur': round(ricavo, 2),
+            'costo_previsto_eur': round(float(r['costo_previsto'] or 0), 2),
+            'costi_reali_eur': costi['totale'],
+            'breakdown_costi': {
+                'manodopera': costi['manodopera'],
+                'rimborsi': costi['rimborsi'],
+                'incarichi': costi['incarichi'],
+            },
+            'margine_attuale_eur': round(margine_real, 2),
+            'margine_previsto_eur': round(margine_prev, 2),
+            'scostamento_eur': round(margine_real - margine_prev, 2),
+            'ore_totali_lavorate': costi['ore_totali'],
+        })
+    return risultati
+
+
+def _ai_tool_scadenze_documenti(db, args):
+    """Documenti dipendenti in scadenza nei prossimi N giorni (default 60)."""
+    try: giorni = int(args.get('giorni', 60))
+    except (ValueError, TypeError): giorni = 60
+    rows = db.execute("""SELECT u.nome||' '||u.cognome as dipendente,
+                                COALESCE(d.categoria, d.tipo_doc) as documento,
+                                d.data_scadenza,
+                                CAST(julianday(d.data_scadenza) - julianday('now') AS INTEGER) as giorni_alla_scadenza
+                         FROM documenti_dipendente d
+                         JOIN utenti u ON u.id=d.utente_id
+                         WHERE d.data_scadenza IS NOT NULL
+                           AND d.data_scadenza != ''
+                           AND CAST(julianday(d.data_scadenza) - julianday('now') AS INTEGER) <= ?
+                         ORDER BY d.data_scadenza
+                         LIMIT 50""", (giorni,)).fetchall()
+    return [dict(r) for r in rows]
+
+
+def _ai_tool_richieste_in_attesa(db, args):
+    """Richieste presenze in attesa di approvazione."""
+    rows = db.execute("""SELECT r.id, u.nome||' '||u.cognome as dipendente,
+                                r.data, r.ora_entrata, r.ora_uscita, r.ore_totali,
+                                c.nome as cantiere, r.note
+                         FROM richieste_presenze r
+                         JOIN utenti u ON u.id=r.utente_id
+                         LEFT JOIN cantieri c ON c.id=r.cantiere_id
+                         WHERE r.stato='in_attesa'
+                         ORDER BY r.data DESC LIMIT 30""").fetchall()
+    return [dict(r) for r in rows]
+
+
+def _ai_tool_rimborsi_periodo(db, args):
+    """Rimborsi spese in un periodo, eventualmente filtrati per stato."""
+    da = args.get('data_da')
+    a = args.get('data_a')
+    stato = (args.get('stato') or '').strip().lower()
+    sql = """SELECT s.data, u.nome||' '||u.cognome as dipendente, s.categoria,
+                    s.descrizione, s.importo, s.stato
+             FROM spese_rimborso s JOIN utenti u ON u.id=s.utente_id
+             WHERE 1=1"""
+    params = []
+    if da: sql += " AND s.data >= ?"; params.append(da)
+    if a: sql += " AND s.data <= ?"; params.append(a)
+    if stato in ('in_attesa','approvata','rifiutata'):
+        sql += " AND s.stato = ?"; params.append(stato)
+    sql += " ORDER BY s.data DESC LIMIT 50"
+    rows = db.execute(sql, params).fetchall()
+    out = [dict(r) for r in rows]
+    totale = sum(float(r['importo'] or 0) for r in out)
+    return {'records': out, 'totale_eur': round(totale, 2), 'numero': len(out)}
+
+
+def _ai_tool_dipendenti_attivi(db, args):
+    """Elenco dipendenti attivi con ruolo, mansione, costo orario."""
+    rows = db.execute("""SELECT u.nome||' '||u.cognome as dipendente,
+                                u.ruolo, u.mansione, u.email,
+                                COALESCE(u.costo_orario, 0) as costo_orario_eur_h,
+                                COALESCE(u.ore_contratto_giornaliere, 0) as ore_contratto_giorno
+                         FROM utenti u
+                         WHERE COALESCE(u.attivo,1)=1
+                         ORDER BY u.cognome, u.nome""").fetchall()
+    return [dict(r) for r in rows]
+
+
+def _ai_tool_fiere_attive(db, args):
+    """Tutte le fiere attive con info principali."""
+    rows = db.execute("""SELECT c.id, c.nome, c.tipo_evento,
+                                cli.nome as committente,
+                                c.padiglione, c.numero_stand,
+                                c.superficie_mq,
+                                c.data_setup, c.data_live, c.data_dismantling,
+                                c.geofence_modalita
+                         FROM cantieri c
+                         LEFT JOIN clienti cli ON cli.id=c.committente_id
+                         WHERE COALESCE(c.attivo,1)=1
+                         ORDER BY c.data_setup DESC LIMIT 30""").fetchall()
+    return [dict(r) for r in rows]
+
+
+def _ai_tool_banca_ore(db, args):
+    """Saldo banca ore per dipendente (somma delta dei movimenti)."""
+    nome_dip = (args.get('nome_dipendente') or '').strip().lower()
+    sql = """SELECT u.nome||' '||u.cognome as dipendente,
+                    COALESCE(SUM(bm.delta), 0) as saldo_ore
+             FROM utenti u
+             LEFT JOIN banca_ore_movimenti bm ON bm.utente_id = u.id
+             WHERE COALESCE(u.attivo,1)=1"""
+    params = []
+    if nome_dip:
+        sql += " AND (LOWER(u.nome) LIKE ? OR LOWER(u.cognome) LIKE ?)"
+        params += [f'%{nome_dip}%', f'%{nome_dip}%']
+    sql += " GROUP BY u.id ORDER BY u.cognome"
+    rows = db.execute(sql, params).fetchall()
+    return [dict(r) for r in rows]
+
+
+# Mappa nome tool → funzione (ordine usato anche nella schema definita per Claude)
+AI_TOOLS = {
+    'query_presenze_periodo': _ai_tool_query_presenze_periodo,
+    'margine_fiera': _ai_tool_margine_fiera,
+    'scadenze_documenti': _ai_tool_scadenze_documenti,
+    'richieste_in_attesa': _ai_tool_richieste_in_attesa,
+    'rimborsi_periodo': _ai_tool_rimborsi_periodo,
+    'dipendenti_attivi': _ai_tool_dipendenti_attivi,
+    'fiere_attive': _ai_tool_fiere_attive,
+    'banca_ore': _ai_tool_banca_ore,
+}
+
+AI_TOOLS_SCHEMA = [
+    {
+        "name": "query_presenze_periodo",
+        "description": "Ritorna le ore lavorate per ogni dipendente in un periodo. Usa formato date YYYY-MM-DD. Filtra opzionalmente per nome dipendente.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "data_da": {"type": "string", "description": "Data inizio (YYYY-MM-DD), opzionale"},
+                "data_a": {"type": "string", "description": "Data fine (YYYY-MM-DD), opzionale"},
+                "nome_dipendente": {"type": "string", "description": "Nome o cognome del dipendente, opzionale"}
+            }
+        }
+    },
+    {
+        "name": "margine_fiera",
+        "description": "Calcola il margine economico LIVE di una fiera (ricavo previsto - costi reali = manodopera + rimborsi + incarichi). Se nome_fiera non specificato ritorna le ultime 10 fiere.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "nome_fiera": {"type": "string", "description": "Nome o parte del nome della fiera, opzionale"}
+            }
+        }
+    },
+    {
+        "name": "scadenze_documenti",
+        "description": "Documenti dei dipendenti in scadenza nei prossimi N giorni (default 60). Include patenti, certificati medici, formazione PSC, lavori in altezza, abilitazione muletto, antincendio, primo soccorso, ecc.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "giorni": {"type": "integer", "description": "Numero di giorni nel futuro entro cui considerare scadenze (default 60)"}
+            }
+        }
+    },
+    {
+        "name": "richieste_in_attesa",
+        "description": "Richieste di inserimento presenze inviate dai dipendenti che attendono approvazione dell'admin.",
+        "input_schema": {"type": "object", "properties": {}}
+    },
+    {
+        "name": "rimborsi_periodo",
+        "description": "Rimborsi spese in un periodo (carburante, pranzo, parcheggio, hotel ecc), filtrabili per stato (in_attesa, approvata, rifiutata).",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "data_da": {"type": "string"},
+                "data_a": {"type": "string"},
+                "stato": {"type": "string", "description": "in_attesa, approvata o rifiutata"}
+            }
+        }
+    },
+    {
+        "name": "dipendenti_attivi",
+        "description": "Elenco di tutti i dipendenti attivi dell'azienda con ruolo, mansione, costo orario, ore contrattuali.",
+        "input_schema": {"type": "object", "properties": {}}
+    },
+    {
+        "name": "fiere_attive",
+        "description": "Tutte le fiere/eventi attivi con committente, padiglione, stand, superficie, date setup/live/dismantling.",
+        "input_schema": {"type": "object", "properties": {}}
+    },
+    {
+        "name": "banca_ore",
+        "description": "Saldo banca ore (accumulo - utilizzo) per dipendente.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "nome_dipendente": {"type": "string", "description": "Filtra per nome/cognome, opzionale"}
+            }
+        }
+    },
+]
+
+
+@app.route('/api/ai-chat', methods=['POST'])
+@admin_required
+def ai_chat():
+    """Endpoint chat AI assistente. Usa Claude API con tool use sui dati del tenant."""
+    if not AI_OK:
+        return jsonify({'error': "Libreria 'anthropic' non installata"}), 500
+
+    data = request.get_json(silent=True) or {}
+    messaggio_utente = (data.get('message') or '').strip()
+    storia = data.get('history') or []  # array di {role, content} delle interazioni precedenti
+    if not messaggio_utente:
+        return jsonify({'error': 'messaggio vuoto'}), 400
+
+    api_key = get_setting('anthropic_api_key', '').strip()
+    if not api_key:
+        return jsonify({'error': "Chiave API Anthropic non configurata. Impostazioni → AI."}), 400
+
+    nome_azienda = get_setting('nome_azienda', 'Accesso Fiere')
+    oggi = date.today().isoformat()
+
+    system_prompt = f"""Sei un assistente AI integrato nel gestionale "{nome_azienda}" per allestitori fieristici.
+Il tuo compito è rispondere alle domande dell'amministratore usando i dati reali dell'azienda.
+
+REGOLE:
+- Rispondi sempre in italiano
+- Usa i tool disponibili per recuperare dati reali — non inventare numeri
+- Sii conciso: vai al dunque, evita preamboli
+- Per importi usa il formato € 1.234,56
+- Per ore usa formato come "8.5h" o "8 ore e 30 minuti"
+- Se la domanda riguarda un periodo non specificato, usa l'ultimo mese (da {oggi})
+- Se non hai dati sufficienti per rispondere, dillo chiaramente
+- Quando mostri liste di più di 5 elementi, riassumi (es. "I primi 5 sono...")
+- Oggi è {oggi}"""
+
+    # Costruisci la conversazione per Claude
+    messages = []
+    for h in storia[-10:]:  # ultime 10 interazioni
+        if h.get('role') in ('user', 'assistant'):
+            content = h.get('content') or ''
+            if content:
+                messages.append({'role': h['role'], 'content': content})
+    messages.append({'role': 'user', 'content': messaggio_utente})
+
+    try:
+        client = anthropic.Anthropic(api_key=api_key)
+    except Exception as e:
+        return jsonify({'error': f'Errore Anthropic: {e}'}), 500
+
+    # Loop tool use: massimo 5 round di tool calls
+    db = get_db()
+    try:
+        for _ in range(5):
+            try:
+                response = client.messages.create(
+                    model="claude-sonnet-4-5",
+                    max_tokens=2048,
+                    system=system_prompt,
+                    tools=AI_TOOLS_SCHEMA,
+                    messages=messages,
+                )
+            except Exception as e:
+                db.close()
+                return jsonify({'error': f'Errore chiamata AI: {e}'}), 500
+
+            # Se Claude ha finito (no tool_use), break
+            if response.stop_reason != 'tool_use':
+                # Estrai il testo finale
+                testo = ''
+                for block in response.content:
+                    if hasattr(block, 'text'):
+                        testo += block.text
+                db.close()
+                return jsonify({
+                    'reply': testo.strip(),
+                    'usage': {
+                        'input_tokens': response.usage.input_tokens,
+                        'output_tokens': response.usage.output_tokens,
+                    }
+                })
+
+            # Esegui i tool richiesti
+            messages.append({'role': 'assistant', 'content': response.content})
+            tool_results = []
+            for block in response.content:
+                if block.type == 'tool_use':
+                    tool_name = block.name
+                    tool_args = block.input or {}
+                    func = AI_TOOLS.get(tool_name)
+                    if not func:
+                        result_str = f"Tool '{tool_name}' non riconosciuto"
+                    else:
+                        try:
+                            result = func(db, tool_args)
+                            import json as _json
+                            result_str = _json.dumps(result, ensure_ascii=False, default=str)
+                        except Exception as e:
+                            result_str = f"Errore: {e}"
+                    tool_results.append({
+                        'type': 'tool_result',
+                        'tool_use_id': block.id,
+                        'content': result_str
+                    })
+            messages.append({'role': 'user', 'content': tool_results})
+
+        # Se siamo qui, abbiamo superato i 5 round
+        db.close()
+        return jsonify({'reply': 'Mi spiace, la richiesta è troppo complessa. Prova a riformulare.'})
+    except Exception as e:
+        db.close()
+        return jsonify({'error': f'Errore inatteso: {e}'}), 500
 
 
 # ══════════════════════════════════════════════════════════
