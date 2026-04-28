@@ -360,7 +360,7 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         utente_id INTEGER NOT NULL,
         data TEXT NOT NULL,
-        ora_entrata TEXT NOT NULL, ora_uscita TEXT NOT NULL,
+        ora_entrata TEXT, ora_uscita TEXT,
         ore_totali REAL,
         cantiere_id INTEGER,
         note TEXT,
@@ -1080,6 +1080,36 @@ def ensure_columns():
             ]:
                 try: db.execute(sql)
                 except: pass
+            # Migration speciale: rimuovere NOT NULL da richieste_presenze.ora_entrata/ora_uscita
+            # (per consentire richieste in modalità "ore totali" senza orari precisi)
+            try:
+                cols = db.execute("PRAGMA table_info(richieste_presenze)").fetchall()
+                # cols[i] = (cid, name, type, notnull, dflt_value, pk)
+                ora_e_notnull = any(c[1]=='ora_entrata' and c[3]==1 for c in cols)
+                ora_u_notnull = any(c[1]=='ora_uscita' and c[3]==1 for c in cols)
+                if ora_e_notnull or ora_u_notnull:
+                    db.execute("""CREATE TABLE IF NOT EXISTS richieste_presenze_new (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        utente_id INTEGER NOT NULL,
+                        data TEXT NOT NULL,
+                        ora_entrata TEXT, ora_uscita TEXT,
+                        ore_totali REAL,
+                        cantiere_id INTEGER,
+                        note TEXT,
+                        stato TEXT DEFAULT 'in_attesa',
+                        nota_admin TEXT,
+                        creato_il TEXT DEFAULT (datetime('now')),
+                        gestito_il TEXT,
+                        FOREIGN KEY(utente_id) REFERENCES utenti(id)
+                    )""")
+                    db.execute("""INSERT INTO richieste_presenze_new
+                        (id, utente_id, data, ora_entrata, ora_uscita, ore_totali, cantiere_id, note, stato, nota_admin, creato_il, gestito_il)
+                        SELECT id, utente_id, data, ora_entrata, ora_uscita, ore_totali, cantiere_id, note, stato, nota_admin, creato_il, gestito_il
+                        FROM richieste_presenze""")
+                    db.execute("DROP TABLE richieste_presenze")
+                    db.execute("ALTER TABLE richieste_presenze_new RENAME TO richieste_presenze")
+            except Exception as _e:
+                print(f'[ensure_columns migration richieste_presenze] {_e}')
             safe_commit(db)
             db.close()
             return
@@ -2729,7 +2759,7 @@ body.customize-mode .widget:hover{background:#f0f9ff}
         <div style="font-size:13px;font-weight:600">{{ r.nome }} {{ r.cognome }}</div>
         <div style="font-size:11.5px;color:var(--text-light);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
           {{ r.data }} ·
-          {% if r.tipo=='presenza' %}{{ r.ora_entrata }}–{{ r.ora_uscita }} ({{ "%.1f"|format(r.ore_totali or 0) }}h){% if r.cantiere_nome %} · {{ r.cantiere_nome }}{% endif %}
+          {% if r.tipo=='presenza' %}{% if r.ora_entrata and r.ora_uscita %}{{ r.ora_entrata }}–{{ r.ora_uscita }} {% endif %}({{ "%.1f"|format(r.ore_totali or 0) }}h){% if r.cantiere_nome %} · {{ r.cantiere_nome }}{% endif %}
           {% else %}{{ r.categoria }} · € {{ "%.2f"|format(r.importo or 0) }}{% if r.descrizione %} · {{ r.descrizione[:40] }}{% endif %}{% endif %}
         </div>
       </div>
@@ -4552,32 +4582,83 @@ function toggleModModalita() {
 <div class="card" style="margin-top:20px">
   <div class="card-header"><h3><i class="fa fa-paper-plane" style="color:var(--accent2);margin-right:8px"></i>Invia richiesta ore mancanti</h3></div>
   <div class="card-body">
-    <form method="POST" action="/presenze/richiesta">
+    <form method="POST" action="/presenze/richiesta" id="form-richiesta-dip">
+      <!-- Modalità: ore totali oppure entrata/uscita -->
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:8px 16px;border-radius:8px;border:2px solid var(--accent);background:var(--accent);color:#fff;font-size:13px" id="lbl-dip-ore">
+          <input type="radio" name="modalita" value="ore" checked onchange="toggleModRichDip()" style="display:none"> ⏱ Ore totali
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:8px 16px;border-radius:8px;border:2px solid var(--accent);color:var(--accent);font-size:13px" id="lbl-dip-orari">
+          <input type="radio" name="modalita" value="orari" onchange="toggleModRichDip()" style="display:none"> 🕐 Entrata / Uscita
+        </label>
+      </div>
+
       <div class="form-row-4">
         <div class="form-group"><label>Data *</label><input type="date" name="data" required max="{{ oggi_iso }}"></div>
         <div class="form-group"><label>Fiera</label>
           <select name="cantiere_id"><option value="">— nessuno —</option>
           {% for c in cantieri %}<option value="{{ c.id }}">{{ c.nome }}</option>{% endfor %}
           </select></div>
-        <div class="form-group"><label>Entrata *</label><input type="time" name="ora_entrata" required></div>
-        <div class="form-group"><label>Uscita *</label><input type="time" name="ora_uscita" required></div>
+        <div class="form-group" id="grp-dip-ore-tot">
+          <label>Ore lavorate *</label>
+          <input type="number" name="ore_dirette" step="0.5" min="0.5" max="24" placeholder="Es. 9" style="font-size:18px;font-weight:700;color:var(--accent)">
+        </div>
+        <!-- Spaziatore per allineare la riga: il 4° slot resta vuoto in modalità ore -->
+        <div class="form-group" id="grp-dip-spacer"></div>
       </div>
+      <div class="form-row" id="grp-dip-orari" style="display:none">
+        <div class="form-group"><label>Entrata</label><input type="time" name="ora_entrata"></div>
+        <div class="form-group"><label>Uscita</label><input type="time" name="ora_uscita"></div>
+      </div>
+
       <div class="form-group"><label>Motivo *</label><input name="note" required placeholder="es. Ho dimenticato di timbrare..."></div>
       <button type="submit" class="btn btn-blue"><i class="fa fa-paper-plane"></i> Invia richiesta</button>
     </form>
   </div>
 </div>
+<script>
+function toggleModRichDip() {
+  var isOrari = document.querySelector('#form-richiesta-dip [name=modalita]:checked').value === 'orari';
+  document.getElementById('grp-dip-ore-tot').style.display = isOrari ? 'none' : '';
+  document.getElementById('grp-dip-spacer').style.display  = isOrari ? 'none' : '';
+  document.getElementById('grp-dip-orari').style.display   = isOrari ? '' : 'none';
+  // Stile pillole
+  var lblOre = document.getElementById('lbl-dip-ore');
+  var lblOrari = document.getElementById('lbl-dip-orari');
+  if (isOrari) {
+    lblOre.style.background = ''; lblOre.style.color = 'var(--accent)';
+    lblOrari.style.background = 'var(--accent)'; lblOrari.style.color = '#fff';
+  } else {
+    lblOre.style.background = 'var(--accent)'; lblOre.style.color = '#fff';
+    lblOrari.style.background = ''; lblOrari.style.color = 'var(--accent)';
+  }
+  // Aggiorna i required
+  var oreInp = document.querySelector('#form-richiesta-dip [name=ore_dirette]');
+  var oeInp = document.querySelector('#form-richiesta-dip [name=ora_entrata]');
+  var ouInp = document.querySelector('#form-richiesta-dip [name=ora_uscita]');
+  if (isOrari) {
+    if (oreInp) oreInp.required = false;
+    if (oeInp) oeInp.required = true;
+    if (ouInp) ouInp.required = true;
+  } else {
+    if (oreInp) oreInp.required = true;
+    if (oeInp) oeInp.required = false;
+    if (ouInp) ouInp.required = false;
+  }
+}
+</script>
 {% if mie_richieste %}
 <div class="card" style="margin-top:16px">
   <div class="card-header"><h3>Le mie richieste</h3></div>
   <div class="table-wrap"><table>
-    <thead><tr><th>Data</th><th>Fiera</th><th>Entrata</th><th>Uscita</th><th>Motivo</th><th>Stato</th><th>Risposta</th></tr></thead>
+    <thead><tr><th>Data</th><th>Fiera</th><th>Entrata</th><th>Uscita</th><th>Ore</th><th>Motivo</th><th>Stato</th><th>Risposta</th></tr></thead>
     <tbody>{% for r in mie_richieste %}
     <tr>
       <td>{{ r.data }}</td>
       <td>{% if r.cantiere_nome %}<span class="tag">{{ r.cantiere_nome }}</span>{% else %}–{% endif %}</td>
-      <td style="font-family:monospace;color:var(--success)">{{ r.ora_entrata }}</td>
-      <td style="font-family:monospace">{{ r.ora_uscita }}</td>
+      <td style="font-family:monospace;color:var(--success)">{{ r.ora_entrata or '–' }}</td>
+      <td style="font-family:monospace">{{ r.ora_uscita or '–' }}</td>
+      <td style="font-family:monospace;font-weight:700">{{ '%.1f'|format(r.ore_totali) if r.ore_totali else '–' }}</td>
       <td style="color:var(--text-light)">{{ r.note or '–' }}</td>
       <td>{% if r.stato=='in_attesa' %}<span class="badge badge-amber">⏳</span>
           {% elif r.stato=='approvata' %}<span class="badge badge-green">✅</span>
@@ -5281,22 +5362,56 @@ def presenze_import_salva():
 @app.route('/presenze/richiesta', methods=['POST'])
 @login_required
 def invia_richiesta_presenza():
-    data = request.form.get('data',''); oe = request.form.get('ora_entrata','')
-    ou   = request.form.get('ora_uscita',''); note = request.form.get('note','')
+    data = request.form.get('data','').strip()
+    note = request.form.get('note','').strip()
     cid  = request.form.get('cantiere_id') or None
-    if not data or not oe or not ou: flash('Compila tutti i campi.','error'); return redirect(url_for('presenze'))
-    if data >= date.today().isoformat(): flash('Solo giorni passati.','error'); return redirect(url_for('presenze'))
-    try:
-        diff = datetime.strptime(ou,'%H:%M') - datetime.strptime(oe,'%H:%M')
-        ore  = round(diff.total_seconds()/3600,2)
-        if ore <= 0: raise ValueError
-    except: flash("Orari non validi.",'error'); return redirect(url_for('presenze'))
+    modalita = request.form.get('modalita','orari')
+
+    if not data:
+        flash('Compila la data.','error'); return redirect(url_for('presenze'))
+    if data >= date.today().isoformat():
+        flash('Solo giorni passati.','error'); return redirect(url_for('presenze'))
+    if not note:
+        flash('Indica il motivo della richiesta.','error'); return redirect(url_for('presenze'))
+
+    oe = ou = None
+    ore = None
+
+    if modalita == 'ore':
+        # Modalità "ore totali"
+        try:
+            ore_dirette = float(request.form.get('ore_dirette','') or 0)
+            if not (0 < ore_dirette <= 24):
+                raise ValueError
+            ore = round(ore_dirette, 2)
+        except (ValueError, TypeError):
+            flash('Inserisci un numero di ore valido (0.5–24).', 'error')
+            return redirect(url_for('presenze'))
+    else:
+        # Modalità "entrata/uscita"
+        oe = request.form.get('ora_entrata','').strip()
+        ou = request.form.get('ora_uscita','').strip()
+        if not oe or not ou:
+            flash('Inserisci entrata e uscita.', 'error')
+            return redirect(url_for('presenze'))
+        try:
+            diff = datetime.strptime(ou,'%H:%M') - datetime.strptime(oe,'%H:%M')
+            ore  = round(diff.total_seconds()/3600, 2)
+            if ore <= 0:
+                raise ValueError
+        except Exception:
+            flash("Orari non validi.",'error'); return redirect(url_for('presenze'))
+
     db = get_db()
-    if db.execute("SELECT id FROM richieste_presenze WHERE utente_id=? AND data=? AND cantiere_id IS ? AND stato='in_attesa'",
+    if db.execute("""SELECT id FROM richieste_presenze
+                     WHERE utente_id=? AND data=? AND cantiere_id IS ? AND stato='in_attesa'""",
                   (session['user_id'], data, int(cid) if cid else None)).fetchone():
-        flash('Hai già una richiesta in attesa per questo giorno e cantiere.','error'); db.close(); return redirect(url_for('presenze'))
-    db.execute("INSERT INTO richieste_presenze (utente_id,data,ora_entrata,ora_uscita,ore_totali,cantiere_id,note) VALUES (?,?,?,?,?,?,?)",
-               (session['user_id'],data,oe,ou,ore,cid,note))
+        flash('Hai già una richiesta in attesa per questo giorno e cantiere.','error')
+        db.close(); return redirect(url_for('presenze'))
+    db.execute("""INSERT INTO richieste_presenze
+                  (utente_id, data, ora_entrata, ora_uscita, ore_totali, cantiere_id, note)
+                  VALUES (?,?,?,?,?,?,?)""",
+               (session['user_id'], data, oe, ou, ore, cid, note))
     safe_commit(db)
     db.close()
     # Email notifica in background
@@ -5304,13 +5419,17 @@ def invia_richiesta_presenza():
     _nome_d = f"{session.get('nome','')} {session.get('cognome','')}".strip()
     if email_admin:
         import threading
+        if modalita == 'ore':
+            riepilogo = f"<b>{ore:.1f} ore</b>"
+        else:
+            riepilogo = f"Ore: {oe}–{ou} ({ore:.1f}h)"
         def _send_desk():
             try:
                 send_email(email_admin, f'[ACCESSO FIERE] Nuova richiesta da {_nome_d}',
                     f'<p><b>{_nome_d}</b> ha inviato una richiesta di presenza per il <b>{data}</b>.<br>'
-                    f'Ore: {oe}–{ou} ({ore:.1f}h)<br>Motivo: {note}</p>'
+                    f'{riepilogo}<br>Motivo: {note}</p>'
                     f'<p><a href="/admin/richieste">Vai alle richieste</a></p>')
-            except: pass
+            except Exception: pass
         threading.Thread(target=_send_desk, daemon=True).start()
     flash('Richiesta inviata!','success'); return redirect(url_for('presenze'))
 
@@ -5727,11 +5846,12 @@ def gestisci_richiesta(rid):
             "SELECT id FROM presenze WHERE utente_id=? AND data=? AND cantiere_id IS ?",
             (r['utente_id'], r['data'], r['cantiere_id'])).fetchone()
         if ex:
-            db.execute("UPDATE presenze SET ore_totali=?, note=? WHERE id=?",
-                       (r['ore_totali'], note_p, ex['id']))
+            db.execute("""UPDATE presenze SET ore_totali=?, ora_entrata=?, ora_uscita=?, note=? WHERE id=?""",
+                       (r['ore_totali'], r['ora_entrata'], r['ora_uscita'], note_p, ex['id']))
         else:
-            db.execute("INSERT INTO presenze (utente_id,data,ore_totali,cantiere_id,note) VALUES (?,?,?,?,?)",
-                       (r['utente_id'], r['data'], r['ore_totali'], r['cantiere_id'], note_p))
+            db.execute("""INSERT INTO presenze (utente_id, data, ora_entrata, ora_uscita, ore_totali, cantiere_id, note)
+                          VALUES (?,?,?,?,?,?,?)""",
+                       (r['utente_id'], r['data'], r['ora_entrata'], r['ora_uscita'], r['ore_totali'], r['cantiere_id'], note_p))
         flash('✅ Approvata e presenza registrata!', 'success')
 
     else:  # rifiuta
@@ -12733,10 +12853,10 @@ def mobile_inserisci():
         flash('Hai già una richiesta in attesa per questo giorno e cantiere.', 'error')
         db.close(); return redirect(url_for('mobile'))
 
-    # ora_entrata e ora_uscita sono NOT NULL nel DB — usiamo valori simbolici per le richieste mobile
+    # Modalità "solo ore totali" — gli orari restano NULL nel DB
     db.execute(
         "INSERT INTO richieste_presenze (utente_id,data,ora_entrata,ora_uscita,ore_totali,cantiere_id,note) VALUES (?,?,?,?,?,?,?)",
-        (uid, data, '00:00', '00:00', ore_nette, int(cantiere_id), nota_completa))
+        (uid, data, None, None, ore_nette, int(cantiere_id), nota_completa))
     safe_commit(db)
 
     db.close()
