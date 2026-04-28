@@ -450,6 +450,24 @@ def init_db():
             FOREIGN KEY(squadra_id) REFERENCES squadre(id) ON DELETE CASCADE,
             FOREIGN KEY(utente_id) REFERENCES utenti(id)
         )""",
+        # ── Sprint 2.1 — Incarichi montatori ──
+        """CREATE TABLE IF NOT EXISTS incarichi (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            cantiere_id INTEGER NOT NULL,
+            utente_id INTEGER NOT NULL,
+            mansione TEXT DEFAULT 'Montatore',
+            data_da TEXT,
+            data_a TEXT,
+            tariffa_tipo TEXT DEFAULT 'giornaliera',
+            tariffa_importo REAL DEFAULT 0,
+            stato TEXT DEFAULT 'proposto',
+            note TEXT,
+            creato_il TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY(cantiere_id) REFERENCES cantieri(id) ON DELETE CASCADE,
+            FOREIGN KEY(utente_id) REFERENCES utenti(id)
+        )""",
+        # ── Sprint 2.2 — Costo orario dipendente ──
+        "ALTER TABLE utenti ADD COLUMN costo_orario REAL DEFAULT 0",
         """CREATE TABLE IF NOT EXISTS veicoli (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             targa TEXT NOT NULL,
@@ -964,6 +982,25 @@ def ensure_columns():
                     FOREIGN KEY(squadra_id) REFERENCES squadre(id) ON DELETE CASCADE,
                     FOREIGN KEY(utente_id) REFERENCES utenti(id)
                 )""",
+                # ── Sprint 2.1 — Incarichi montatori ──
+                # Lega un dipendente a una specifica fiera (cantiere) con periodo e tariffa
+                """CREATE TABLE IF NOT EXISTS incarichi (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    cantiere_id INTEGER NOT NULL,
+                    utente_id INTEGER NOT NULL,
+                    mansione TEXT DEFAULT 'Montatore',
+                    data_da TEXT,
+                    data_a TEXT,
+                    tariffa_tipo TEXT DEFAULT 'giornaliera',
+                    tariffa_importo REAL DEFAULT 0,
+                    stato TEXT DEFAULT 'proposto',
+                    note TEXT,
+                    creato_il TEXT DEFAULT (datetime('now')),
+                    FOREIGN KEY(cantiere_id) REFERENCES cantieri(id) ON DELETE CASCADE,
+                    FOREIGN KEY(utente_id) REFERENCES utenti(id)
+                )""",
+                # ── Sprint 2.2 — Costo orario dipendente (per margine commessa) ──
+                "ALTER TABLE utenti ADD COLUMN costo_orario REAL DEFAULT 0",
                 # Storico dipendenti eliminati
                 """CREATE TABLE IF NOT EXISTS utenti_storico (
                     id INTEGER PRIMARY KEY,
@@ -1512,6 +1549,7 @@ textarea{resize:vertical;min-height:80px}
     <a href="/ferie" class="{{ 'active' if active=='ferie' }}"><i class="fa fa-umbrella-beach"></i> Ferie & Permessi</a>
     <div class="nav-section">Fiere & Allestimenti</div>
     <a href="/cantieri" class="{{ 'active' if active=='cantieri' }}"><i class="fa fa-store"></i> Fiere & Stand</a>
+    <a href="/calendario-fiere" class="{{ 'active' if active=='calendario_fiere' }}"><i class="fa fa-calendar-days"></i> Calendario Fiere</a>
     <details class="nav-group" {% if active in ['documenti','scadenze','documenti_azienda'] %}open{% endif %}>
       <summary class="{{ 'active' if active in ['documenti','scadenze','documenti_azienda'] }}">
         <i class="fa fa-folder"></i> Documenti
@@ -3179,7 +3217,7 @@ CANTIERI_TMPL = """
       <td><span class="tipo-badge {{ te_cls }}">{{ te }}</span></td>
       <td>
         <i class="fa fa-store" style="color:var(--accent);margin-right:6px"></i>
-        <strong>{{ c.nome }}</strong>
+        <a href="/cantieri/{{ c.id }}" style="font-weight:700;color:var(--text);text-decoration:none">{{ c.nome }}</a>
         {% if c.ente_organizzatore %}<div style="font-size:11px;color:var(--text-light);margin-top:2px">{{ c.ente_organizzatore }}{% if c.citta %} · {{ c.citta }}{% endif %}</div>{% endif %}
       </td>
       <td style="font-size:13px">{{ c.committente_nome or '–' }}</td>
@@ -3208,6 +3246,7 @@ CANTIERI_TMPL = """
       </td>
       <td>{% if c.attivo %}<span class="badge badge-green">● Attiva</span>{% else %}<span class="badge badge-gray">Archiviata</span>{% endif %}</td>
       <td>
+        <a href="/cantieri/{{ c.id }}" class="btn btn-primary btn-sm" title="Dettaglio + incarichi + margine"><i class="fa fa-eye"></i></a>
         <a href="/cantieri/{{ c.id }}/modifica" class="btn btn-secondary btn-sm"><i class="fa fa-pen"></i></a>
         <a href="/cantieri/{{ c.id }}/toggle" class="btn btn-sm {{ 'btn-danger' if c.attivo else 'btn-green' }}" title="{{ 'Archivia' if c.attivo else 'Riattiva' }}">
           {{ 'Archivia' if c.attivo else 'Riattiva' }}</a>
@@ -3461,6 +3500,372 @@ def cantiere_modifica(cid):
     db.close()
     return render_page(CANTIERE_FORM_TMPL, page_title='Modifica Fiera', active='cantieri',
                        c=c, clienti=[dict(x) for x in clienti])
+
+# ══════════════════════════════════════════════════════════
+#  FIERA — Dettaglio con incarichi montatori e margine LIVE
+# ══════════════════════════════════════════════════════════
+
+FIERA_DETTAGLIO_TMPL = """
+<style>
+.fdt-grid{display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-bottom:18px}
+@media(max-width:900px){.fdt-grid{grid-template-columns:1fr}}
+.fdt-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px}
+.fdt-card h3{margin:0 0 12px;font-size:14px;color:var(--text);display:flex;align-items:center;gap:8px}
+.fdt-card h3 i{color:var(--accent)}
+.fdt-info-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed #e2e8f0;font-size:13px}
+.fdt-info-row:last-child{border-bottom:none}
+.fdt-info-row .lbl{color:var(--text-light);font-weight:600}
+.fdt-info-row .val{font-weight:600;text-align:right}
+.fdt-margine{padding:18px;border-radius:10px;margin-bottom:12px}
+.fdt-margine.pos{background:linear-gradient(135deg,#dcfce7 0%,#bbf7d0 100%);border-left:5px solid #16a34a}
+.fdt-margine.neg{background:linear-gradient(135deg,#fee2e2 0%,#fecaca 100%);border-left:5px solid #dc2626}
+.fdt-margine.neutral{background:linear-gradient(135deg,#f1f5f9 0%,#e2e8f0 100%);border-left:5px solid #64748b}
+.fdt-margine .big{font-size:32px;font-weight:800;font-family:monospace}
+.fdt-margine .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#475569;font-weight:700}
+.fdt-margine .sub{font-size:12px;color:#475569;margin-top:4px}
+.fdt-cost-line{display:flex;justify-content:space-between;font-size:13px;padding:5px 0}
+.fdt-cost-line .lbl{color:var(--text-light)}
+.fdt-cost-line .val{font-family:monospace;font-weight:700}
+.fdt-stato-badge{padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;text-transform:uppercase}
+.fdt-stato-proposto{background:#fef3c7;color:#92400e}
+.fdt-stato-accettato{background:#dcfce7;color:#15803d}
+.fdt-stato-completato{background:#dbeafe;color:#1e40af}
+.fdt-stato-rifiutato{background:#fee2e2;color:#991b1b}
+.fdt-incarico-form{background:#f8fafc;padding:14px;border-radius:10px;border:1px dashed var(--border);margin-bottom:14px}
+</style>
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+  <div>
+    <a href="/cantieri" style="font-size:12px;color:var(--text-light);text-decoration:none"><i class="fa fa-arrow-left"></i> Tutte le fiere</a>
+    <h2 style="margin:4px 0 0;font-size:22px"><i class="fa fa-store" style="color:var(--accent)"></i> {{ c.nome }}</h2>
+    <div style="font-size:12px;color:var(--text-light);margin-top:2px">
+      <span class="tipo-badge tipo-{{ 'fiera' if c.tipo_evento=='Fiera' else 'evento' if c.tipo_evento=='Evento aziendale' else 'congresso' if c.tipo_evento=='Congresso' else 'permanente' if c.tipo_evento=='Allestimento permanente' else 'retail' if c.tipo_evento=='Vetrina retail' else 'altro' }}" style="padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700">{{ c.tipo_evento or 'Fiera' }}</span>
+      {% if committente %}· Committente: <strong>{{ committente.nome }}</strong>{% endif %}
+    </div>
+  </div>
+  <a href="/cantieri/{{ c.id }}/modifica" class="btn btn-secondary btn-sm"><i class="fa fa-pen"></i> Modifica scheda</a>
+</div>
+
+<div class="fdt-grid">
+  <div>
+    <!-- Scheda informazioni -->
+    <div class="fdt-card">
+      <h3><i class="fa fa-circle-info"></i> Informazioni</h3>
+      {% if c.ente_organizzatore %}<div class="fdt-info-row"><span class="lbl">Ente</span><span class="val">{{ c.ente_organizzatore }}</span></div>{% endif %}
+      {% if c.citta %}<div class="fdt-info-row"><span class="lbl">Città</span><span class="val">{{ c.citta }}</span></div>{% endif %}
+      {% if c.indirizzo %}<div class="fdt-info-row"><span class="lbl">Sede</span><span class="val" style="font-size:12px">{{ c.indirizzo }}</span></div>{% endif %}
+      {% if c.padiglione %}<div class="fdt-info-row"><span class="lbl">Padiglione</span><span class="val">{{ c.padiglione }}</span></div>{% endif %}
+      {% if c.numero_stand %}<div class="fdt-info-row"><span class="lbl">Stand n°</span><span class="val">{{ c.numero_stand }}</span></div>{% endif %}
+      {% if c.superficie_mq %}<div class="fdt-info-row"><span class="lbl">Superficie</span><span class="val">{{ c.superficie_mq|int }} m²</span></div>{% endif %}
+      {% if c.responsabile %}<div class="fdt-info-row"><span class="lbl">Responsabile</span><span class="val">{{ c.responsabile }}</span></div>{% endif %}
+    </div>
+
+    <!-- Date -->
+    {% if c.data_setup or c.data_live or c.data_dismantling %}
+    <div class="fdt-card">
+      <h3><i class="fa fa-calendar"></i> Calendario</h3>
+      {% if c.data_setup %}<div class="fdt-info-row"><span class="lbl">📦 Setup</span><span class="val">{{ c.data_setup }}</span></div>{% endif %}
+      {% if c.data_live %}<div class="fdt-info-row"><span class="lbl">🔴 Live</span><span class="val">{{ c.data_live }}</span></div>{% endif %}
+      {% if c.data_dismantling %}<div class="fdt-info-row"><span class="lbl">📤 Smontaggio</span><span class="val">{{ c.data_dismantling }}</span></div>{% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Note -->
+    {% if c.note_tecniche or c.note_logistica %}
+    <div class="fdt-card">
+      <h3><i class="fa fa-clipboard-list"></i> Note</h3>
+      {% if c.note_tecniche %}<div style="margin-bottom:10px"><strong style="font-size:11px;color:var(--text-light);text-transform:uppercase">Tecniche</strong><div style="font-size:13px;margin-top:3px">{{ c.note_tecniche }}</div></div>{% endif %}
+      {% if c.note_logistica %}<div><strong style="font-size:11px;color:var(--text-light);text-transform:uppercase">Logistica</strong><div style="font-size:13px;margin-top:3px">{{ c.note_logistica }}</div></div>{% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <div>
+    <!-- Margine LIVE -->
+    {% set margine_real = (c.ricavo_previsto or 0) - costi.totale %}
+    {% set margine_prev = (c.ricavo_previsto or 0) - (c.costo_previsto or 0) %}
+    {% set margine_cls = 'pos' if margine_real > 0 else 'neg' if margine_real < 0 else 'neutral' %}
+    <div class="fdt-card" style="padding:14px">
+      <h3><i class="fa fa-chart-line"></i> Margine LIVE</h3>
+      <div class="fdt-margine {{ margine_cls }}">
+        <div class="lbl">Margine attuale</div>
+        <div class="big">€ {{ '%.0f'|format(margine_real) }}</div>
+        <div class="sub">
+          Previsto: € {{ '%.0f'|format(margine_prev) }}
+          {% if margine_prev != 0 %}({% if margine_real >= margine_prev %}+{% endif %}{{ '%.0f'|format(margine_real - margine_prev) }}){% endif %}
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Ricavi</div>
+        <div class="fdt-cost-line"><span class="lbl">Previsti</span><span class="val">€ {{ '%.2f'|format(c.ricavo_previsto or 0) }}</span></div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Costi reali</div>
+        <div class="fdt-cost-line"><span class="lbl">Ore lavorate × costo orario</span><span class="val">€ {{ '%.2f'|format(costi.manodopera) }}</span></div>
+        <div class="fdt-cost-line" style="font-size:11px;color:var(--text-light);padding-top:0"><span class="lbl">&nbsp;&nbsp;{{ '%.1f'|format(costi.ore_totali) }}h × media €{{ '%.2f'|format(costi.media_oraria) }}/h</span><span class="val"></span></div>
+        <div class="fdt-cost-line"><span class="lbl">Rimborsi spese approvati</span><span class="val">€ {{ '%.2f'|format(costi.rimborsi) }}</span></div>
+        <div class="fdt-cost-line"><span class="lbl">Tariffe incarichi montatori</span><span class="val">€ {{ '%.2f'|format(costi.incarichi) }}</span></div>
+        <div class="fdt-cost-line" style="border-top:1px solid var(--border);margin-top:6px;padding-top:8px"><span class="lbl"><strong>Totale costi</strong></span><span class="val"><strong>€ {{ '%.2f'|format(costi.totale) }}</strong></span></div>
+        <div class="fdt-cost-line" style="font-size:11px;color:var(--text-light)"><span class="lbl">Previsti: € {{ '%.2f'|format(c.costo_previsto or 0) }}</span><span class="val">{% if c.costo_previsto and c.costo_previsto > 0 %}{{ '%.0f'|format(costi.totale / c.costo_previsto * 100) }}%{% endif %}</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Incarichi montatori -->
+<div class="fdt-card">
+  <h3 style="display:flex;justify-content:space-between"><span><i class="fa fa-user-tie"></i> Incarichi montatori ({{ incarichi|length }})</span></h3>
+
+  <div class="fdt-incarico-form">
+    <strong style="font-size:13px;display:block;margin-bottom:10px"><i class="fa fa-plus"></i> Nuovo incarico</strong>
+    <form method="POST" action="/cantieri/{{ c.id }}/incarichi/nuovo" style="display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr 1fr 1fr auto;gap:8px;align-items:end">
+      <div class="form-group" style="margin:0">
+        <label style="font-size:11px">Dipendente *</label>
+        <select name="utente_id" required>
+          <option value="">— Seleziona —</option>
+          {% for d in dipendenti %}
+          <option value="{{ d.id }}">{{ d.cognome }} {{ d.nome }}{% if d.mansione %} · {{ d.mansione }}{% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group" style="margin:0">
+        <label style="font-size:11px">Mansione</label>
+        <input name="mansione" value="Montatore" placeholder="Montatore">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label style="font-size:11px">Dal</label>
+        <input type="date" name="data_da" value="{{ c.data_setup or '' }}">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label style="font-size:11px">Al</label>
+        <input type="date" name="data_a" value="{{ c.data_dismantling or '' }}">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label style="font-size:11px">Tipo tariffa</label>
+        <select name="tariffa_tipo">
+          <option value="giornaliera">€/giorno</option>
+          <option value="oraria">€/ora</option>
+          <option value="forfait">Forfait</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin:0">
+        <label style="font-size:11px">Importo (€)</label>
+        <input type="number" name="tariffa_importo" step="0.01" min="0" placeholder="0.00">
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm" style="white-space:nowrap"><i class="fa fa-plus"></i> Aggiungi</button>
+    </form>
+  </div>
+
+  {% if incarichi %}
+  <div class="table-wrap">
+  <table style="width:100%">
+    <thead><tr style="background:#f8fafc">
+      <th style="padding:8px;text-align:left;font-size:11px">Dipendente</th>
+      <th style="padding:8px;text-align:left;font-size:11px">Mansione</th>
+      <th style="padding:8px;text-align:left;font-size:11px">Periodo</th>
+      <th style="padding:8px;text-align:right;font-size:11px">Tariffa</th>
+      <th style="padding:8px;text-align:right;font-size:11px">Costo totale</th>
+      <th style="padding:8px;text-align:center;font-size:11px">Stato</th>
+      <th style="padding:8px;text-align:center;font-size:11px">Azioni</th>
+    </tr></thead>
+    <tbody>
+    {% for i in incarichi %}
+    <tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:10px;font-size:13px"><strong>{{ i.cognome }} {{ i.nome }}</strong></td>
+      <td style="padding:10px;font-size:12px">{{ i.mansione }}</td>
+      <td style="padding:10px;font-size:11px;font-family:monospace">
+        {% if i.data_da %}{{ i.data_da }}{% endif %}
+        {% if i.data_da and i.data_a %} → {% endif %}
+        {% if i.data_a %}{{ i.data_a }}{% endif %}
+        {% if i.giorni %}<div style="color:var(--text-light)">({{ i.giorni }} {{ 'gg' if i.giorni > 1 else 'g' }})</div>{% endif %}
+      </td>
+      <td style="padding:10px;text-align:right;font-family:monospace;font-size:12px">€ {{ '%.2f'|format(i.tariffa_importo or 0) }}/{% if i.tariffa_tipo=='giornaliera' %}gg{% elif i.tariffa_tipo=='oraria' %}h{% else %}forf.{% endif %}</td>
+      <td style="padding:10px;text-align:right;font-family:monospace;font-weight:700">€ {{ '%.2f'|format(i.costo_totale) }}</td>
+      <td style="padding:10px;text-align:center"><span class="fdt-stato-badge fdt-stato-{{ i.stato }}">{{ i.stato }}</span></td>
+      <td style="padding:10px;text-align:center;white-space:nowrap">
+        <form method="POST" action="/cantieri/{{ c.id }}/incarichi/{{ i.id }}/stato" style="display:inline">
+          <select name="stato" onchange="this.form.submit()" style="font-size:11px;padding:2px 4px">
+            <option value="proposto" {{ 'selected' if i.stato=='proposto' }}>Proposto</option>
+            <option value="accettato" {{ 'selected' if i.stato=='accettato' }}>Accettato</option>
+            <option value="completato" {{ 'selected' if i.stato=='completato' }}>Completato</option>
+            <option value="rifiutato" {{ 'selected' if i.stato=='rifiutato' }}>Rifiutato</option>
+          </select>
+        </form>
+        <a href="/cantieri/{{ c.id }}/incarichi/{{ i.id }}/elimina" class="btn btn-danger btn-sm" onclick="return confirm('Eliminare questo incarico?')" style="margin-left:4px"><i class="fa fa-trash"></i></a>
+      </td>
+    </tr>
+    {% endfor %}
+    <tr style="background:#f8fafc;font-weight:700">
+      <td colspan="4" style="padding:10px;text-align:right">TOTALE incarichi accettati/completati</td>
+      <td style="padding:10px;text-align:right;font-family:monospace;color:var(--accent)">€ {{ '%.2f'|format(costi.incarichi) }}</td>
+      <td colspan="2"></td>
+    </tr>
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <div class="empty-state" style="padding:24px"><i class="fa fa-user-plus"></i><p>Nessun incarico assegnato. Aggiungi il primo qui sopra.</p></div>
+  {% endif %}
+</div>
+"""
+
+
+def _calcola_costi_fiera(db, cantiere_id, data_da=None, data_a=None):
+    """Calcola i costi reali di una fiera/cantiere.
+    Funziona anche se db non ha row_factory impostato (accede ai campi per indice).
+    """
+    # Manodopera: presenze del cantiere × costo orario
+    res = db.execute("""SELECT COALESCE(SUM(p.ore_totali),0) as ore,
+                               COALESCE(SUM(p.ore_totali * COALESCE(u.costo_orario, 0)),0) as costo
+                        FROM presenze p
+                        LEFT JOIN utenti u ON u.id = p.utente_id
+                        WHERE p.cantiere_id = ?""", (cantiere_id,)).fetchone()
+    ore_totali = float(res[0] or 0)
+    manodopera = float(res[1] or 0)
+    media = (manodopera / ore_totali) if ore_totali > 0 else 0
+
+    if data_da and data_a:
+        rimborsi = db.execute("""SELECT COALESCE(SUM(s.importo),0) FROM spese_rimborso s
+                                 WHERE s.stato='approvata'
+                                   AND s.data BETWEEN ? AND ?
+                                   AND s.utente_id IN (
+                                     SELECT DISTINCT utente_id FROM presenze WHERE cantiere_id=?
+                                   )""", (data_da, data_a, cantiere_id)).fetchone()
+        rimborsi_val = float(rimborsi[0] or 0)
+    else:
+        rimborsi_val = 0.0
+
+    inc = db.execute("""SELECT id, tariffa_tipo, COALESCE(tariffa_importo,0),
+                               data_da, data_a, stato
+                        FROM incarichi WHERE cantiere_id=? AND stato IN ('accettato','completato')""",
+                     (cantiere_id,)).fetchall()
+    incarichi_val = 0.0
+    for r in inc:
+        gg = _giorni_periodo(r[3], r[4])
+        tariffa = float(r[2] or 0)
+        if r[1] == 'giornaliera':
+            incarichi_val += tariffa * gg
+        elif r[1] == 'oraria':
+            incarichi_val += tariffa * gg * 8
+        else:  # forfait
+            incarichi_val += tariffa
+
+    totale = manodopera + rimborsi_val + incarichi_val
+    return {
+        'totale': round(totale, 2),
+        'manodopera': round(manodopera, 2),
+        'rimborsi': round(rimborsi_val, 2),
+        'incarichi': round(incarichi_val, 2),
+        'ore_totali': round(ore_totali, 1),
+        'media_oraria': round(media, 2),
+    }
+
+
+def _giorni_periodo(data_da, data_a):
+    """Calcola giorni di un periodo (estremi inclusi). Se manca un estremo, ritorna 1."""
+    if not data_da or not data_a:
+        return 1
+    try:
+        from datetime import datetime as _dt
+        d1 = _dt.fromisoformat(data_da)
+        d2 = _dt.fromisoformat(data_a)
+        return max(1, (d2 - d1).days + 1)
+    except Exception:
+        return 1
+
+
+@app.route('/cantieri/<int:cid>')
+@login_required
+def cantiere_dettaglio(cid):
+    db = get_db()
+    c = db.execute("SELECT * FROM cantieri WHERE id=?", (cid,)).fetchone()
+    if not c:
+        db.close(); flash('Fiera non trovata.','error'); return redirect(url_for('cantieri'))
+
+    committente = None
+    if c['committente_id']:
+        committente = db.execute("SELECT * FROM clienti WHERE id=?",(c['committente_id'],)).fetchone()
+
+    # Dipendenti per il form
+    dipendenti = db.execute("""SELECT id, nome, cognome, mansione FROM utenti
+                               WHERE COALESCE(attivo,1)=1 AND ruolo IN ('dipendente','caposquadra')
+                               ORDER BY cognome, nome""").fetchall()
+
+    # Incarichi
+    inc_raw = db.execute("""SELECT i.*, u.nome, u.cognome FROM incarichi i
+                            LEFT JOIN utenti u ON u.id=i.utente_id
+                            WHERE i.cantiere_id=?
+                            ORDER BY i.data_da, i.id""", (cid,)).fetchall()
+    incarichi = []
+    for r in inc_raw:
+        d = dict(r)
+        d['giorni'] = _giorni_periodo(r['data_da'], r['data_a'])
+        if r['tariffa_tipo'] == 'giornaliera':
+            d['costo_totale'] = float(r['tariffa_importo'] or 0) * d['giorni']
+        elif r['tariffa_tipo'] == 'oraria':
+            d['costo_totale'] = float(r['tariffa_importo'] or 0) * d['giorni'] * 8
+        else:
+            d['costo_totale'] = float(r['tariffa_importo'] or 0)
+        incarichi.append(d)
+
+    # Costi LIVE
+    data_da = c['data_setup'] or c['data_inizio']
+    data_a = c['data_dismantling'] or c['data_fine']
+    costi = _calcola_costi_fiera(db, cid, data_da, data_a)
+
+    db.close()
+    return render_page(FIERA_DETTAGLIO_TMPL, page_title=c['nome'], active='cantieri',
+                       c=c, committente=committente, dipendenti=[dict(x) for x in dipendenti],
+                       incarichi=incarichi, costi=costi)
+
+
+@app.route('/cantieri/<int:cid>/incarichi/nuovo', methods=['POST'])
+@admin_required
+def incarico_nuovo(cid):
+    db = get_db()
+    try:
+        utente_id = int(request.form.get('utente_id'))
+    except (ValueError, TypeError):
+        db.close(); flash('Seleziona un dipendente.', 'error')
+        return redirect(url_for('cantiere_dettaglio', cid=cid))
+    db.execute("""INSERT INTO incarichi (cantiere_id, utente_id, mansione, data_da, data_a,
+                                          tariffa_tipo, tariffa_importo, note, stato)
+                  VALUES (?,?,?,?,?,?,?,?,'proposto')""",
+               (cid, utente_id,
+                request.form.get('mansione','Montatore'),
+                request.form.get('data_da') or None,
+                request.form.get('data_a') or None,
+                request.form.get('tariffa_tipo','giornaliera'),
+                float(request.form.get('tariffa_importo') or 0),
+                request.form.get('note','')))
+    safe_commit(db); db.close()
+    flash('Incarico aggiunto.', 'success')
+    return redirect(url_for('cantiere_dettaglio', cid=cid))
+
+
+@app.route('/cantieri/<int:cid>/incarichi/<int:iid>/stato', methods=['POST'])
+@admin_required
+def incarico_cambia_stato(cid, iid):
+    db = get_db()
+    nuovo = request.form.get('stato', 'proposto')
+    if nuovo not in ('proposto','accettato','completato','rifiutato'):
+        nuovo = 'proposto'
+    db.execute("UPDATE incarichi SET stato=? WHERE id=? AND cantiere_id=?", (nuovo, iid, cid))
+    safe_commit(db); db.close()
+    return redirect(url_for('cantiere_dettaglio', cid=cid))
+
+
+@app.route('/cantieri/<int:cid>/incarichi/<int:iid>/elimina')
+@admin_required
+def incarico_elimina(cid, iid):
+    db = get_db()
+    db.execute("DELETE FROM incarichi WHERE id=? AND cantiere_id=?", (iid, cid))
+    safe_commit(db); db.close()
+    flash('Incarico eliminato.', 'success')
+    return redirect(url_for('cantiere_dettaglio', cid=cid))
+
 
 @app.route('/cantieri/<int:cid>/toggle')
 @admin_required
@@ -5945,11 +6350,16 @@ DIP_FORM_TMPL = """
                  value="{{ '%.2f'|format(ore_g_iniziali) if ore_g_iniziali else '' }}"
                  placeholder="Es. 8 (full-time)">
         </div>
-        <div class="form-group" style="display:flex;align-items:flex-end">
-          <div style="font-size:12px;color:#16a34a;padding:8px 12px;background:#fff;border-radius:6px;border:1px dashed #86efac">
-            <strong>Esempi:</strong> Full-time = 8h/g &nbsp;·&nbsp; Part-time 30h/sett = 6h/g &nbsp;·&nbsp; Part-time 20h/sett = 4h/g
-          </div>
+        <div class="form-group">
+          <label>Costo orario aziendale (€/h)</label>
+          <input type="number" name="costo_orario" step="0.50" min="0"
+                 value="{{ '%.2f'|format(dip.costo_orario) if dip and dip.costo_orario else '' }}"
+                 placeholder="Es. 22.50">
+          <small style="font-size:11px;color:var(--text-light)">Usato per calcolare il margine commessa. Comprende lordo + contributi.</small>
         </div>
+      </div>
+      <div style="font-size:12px;color:#16a34a;padding:8px 12px;background:#fff;border-radius:6px;border:1px dashed #86efac;margin-top:6px">
+        <strong>Esempi ore:</strong> Full-time = 8h/g · Part-time 30h/sett = 6h/g · Part-time 20h/sett = 4h/g
       </div>
     </div>
 
@@ -6040,10 +6450,12 @@ def dipendente_nuovo():
             except: ore_g = 0
             # Per retrocompatibilità salvo anche ore_contratto_mensili (= ore_g * 22)
             ore_m = round(ore_g * 22, 2) if ore_g > 0 else 0
-            db.execute("INSERT INTO utenti (nome,cognome,email,password,mansione,telefono,data_assunzione,ruolo,ore_contratto_giornaliere,ore_contratto_mensili) VALUES (?,?,?,?,?,?,?,?,?,?)",
+            try: costo_orario = float(request.form.get('costo_orario', '') or 0)
+            except: costo_orario = 0
+            db.execute("INSERT INTO utenti (nome,cognome,email,password,mansione,telefono,data_assunzione,ruolo,ore_contratto_giornaliere,ore_contratto_mensili,costo_orario) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                 (request.form['nome'],request.form['cognome'],request.form['email'].lower(),hash_pw(request.form['password']),
                  request.form.get('mansione'),request.form.get('telefono'),request.form.get('data_assunzione'),request.form.get('ruolo','dipendente'),
-                 ore_g, ore_m))
+                 ore_g, ore_m, costo_orario))
             safe_commit(db);flash('Dipendente aggiunto!','success')
         except Exception as e:
             if 'UNIQUE' in str(e):
@@ -6063,10 +6475,12 @@ def dipendente_modifica(uid):
         try: ore_g = float(ore_g)
         except: ore_g = 0
         ore_m = round(ore_g * 22, 2) if ore_g > 0 else 0
-        db.execute("UPDATE utenti SET nome=?,cognome=?,email=?,mansione=?,telefono=?,data_assunzione=?,ruolo=?,ore_contratto_giornaliere=?,ore_contratto_mensili=? WHERE id=?",
+        try: costo_orario = float(request.form.get('costo_orario', '') or 0)
+        except: costo_orario = 0
+        db.execute("UPDATE utenti SET nome=?,cognome=?,email=?,mansione=?,telefono=?,data_assunzione=?,ruolo=?,ore_contratto_giornaliere=?,ore_contratto_mensili=?,costo_orario=? WHERE id=?",
             (request.form['nome'],request.form['cognome'],request.form['email'].lower(),
              request.form.get('mansione'),request.form.get('telefono'),request.form.get('data_assunzione'),
-             request.form.get('ruolo','dipendente'),ore_g,ore_m,uid))
+             request.form.get('ruolo','dipendente'),ore_g,ore_m,costo_orario,uid))
         safe_commit(db);db.close();flash('Aggiornato.','success');return redirect(url_for('dipendenti'))
     db.close()
     return render_page(DIP_FORM_TMPL,page_title='Modifica Dipendente',active='dipendenti',dip=dip)
@@ -16832,6 +17246,214 @@ def banca_ore_report_export():
 
 
 # ══════════════════════════════════════════════════════
+
+# ══════════════════════════════════════════════════════════
+#  CALENDARIO FIERE — vista mensile/annuale visuale
+# ══════════════════════════════════════════════════════════
+
+CALENDARIO_FIERE_TMPL = """
+<style>
+.cal-controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px}
+.cal-nav{display:flex;align-items:center;gap:10px}
+.cal-nav h2{margin:0;font-size:20px;min-width:200px;text-align:center}
+.cal-legend{display:flex;gap:14px;font-size:11px;color:var(--text-light)}
+.cal-legend-dot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.cal-table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+.cal-table th{background:#0f172a;color:#fff;padding:8px 6px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.cal-day{height:100px;border:1px solid var(--border);vertical-align:top;padding:4px;position:relative;font-size:11px}
+.cal-day.outside{background:#f8fafc;color:#cbd5e1}
+.cal-day.today{background:#fef3c7}
+.cal-day.weekend{background:#fafafa}
+.cal-day .num{font-weight:700;color:var(--text-light);margin-bottom:2px}
+.cal-day.today .num{color:#dc2626}
+.cal-bar{display:block;padding:2px 5px;margin-bottom:2px;border-radius:3px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff;font-weight:600;cursor:pointer;text-decoration:none}
+.cal-bar.setup{background:#3b82f6}
+.cal-bar.live{background:#16a34a}
+.cal-bar.dismantling{background:#dc2626}
+.cal-bar.legacy{background:#64748b}
+.cal-bar:hover{filter:brightness(1.15)}
+.cal-events-list{margin-top:14px;background:#fff;border-radius:12px;padding:14px}
+.cal-event-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.cal-event-row:last-child{border-bottom:none}
+.cal-event-name{flex:1;font-weight:600}
+.cal-event-name a{color:var(--text);text-decoration:none}
+.cal-event-name a:hover{color:var(--accent)}
+.cal-empty{color:var(--text-light);font-style:italic;text-align:center;padding:14px}
+</style>
+
+<div class="cal-controls">
+  <div class="cal-nav">
+    <a href="/calendario-fiere?anno={{ anno_prev }}&mese={{ mese_prev }}" class="btn btn-secondary btn-sm"><i class="fa fa-chevron-left"></i></a>
+    <h2>{{ mese_nome }} {{ anno }}</h2>
+    <a href="/calendario-fiere?anno={{ anno_next }}&mese={{ mese_next }}" class="btn btn-secondary btn-sm"><i class="fa fa-chevron-right"></i></a>
+    <a href="/calendario-fiere" class="btn btn-secondary btn-sm" style="margin-left:8px">Oggi</a>
+  </div>
+  <div class="cal-legend">
+    <span><span class="cal-legend-dot" style="background:#3b82f6"></span>📦 Setup</span>
+    <span><span class="cal-legend-dot" style="background:#16a34a"></span>🔴 Live</span>
+    <span><span class="cal-legend-dot" style="background:#dc2626"></span>📤 Smontaggio</span>
+  </div>
+</div>
+
+<table class="cal-table">
+  <thead><tr>
+    <th>Lun</th><th>Mar</th><th>Mer</th><th>Gio</th><th>Ven</th><th>Sab</th><th>Dom</th>
+  </tr></thead>
+  <tbody>
+    {% for week in settimane %}
+    <tr>
+      {% for day in week %}
+      <td class="cal-day {{ 'outside' if not day.in_month }} {{ 'today' if day.is_today }} {{ 'weekend' if day.weekday >= 5 }}">
+        <div class="num">{{ day.day_num }}</div>
+        {% for ev in day.events %}
+        <a href="/cantieri/{{ ev.cantiere_id }}" class="cal-bar {{ ev.fase }}" title="{{ ev.titolo }}">{{ ev.titolo }}</a>
+        {% endfor %}
+      </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="cal-events-list">
+  <h3 style="margin:0 0 10px;font-size:14px"><i class="fa fa-list" style="color:var(--accent)"></i> Fiere del mese ({{ fiere_mese|length }})</h3>
+  {% if fiere_mese %}
+    {% for f in fiere_mese %}
+    <div class="cal-event-row">
+      <span class="tipo-badge tipo-{{ 'fiera' if f.tipo_evento=='Fiera' else 'evento' if f.tipo_evento=='Evento aziendale' else 'congresso' if f.tipo_evento=='Congresso' else 'altro' }}" style="padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700">{{ f.tipo_evento or 'Fiera' }}</span>
+      <div class="cal-event-name"><a href="/cantieri/{{ f.id }}">{{ f.nome }}</a></div>
+      <div style="font-size:11px;color:var(--text-light);font-family:monospace">
+        {% if f.data_setup %}📦{{ f.data_setup }}{% endif %}
+        {% if f.data_live %} • 🔴{{ f.data_live }}{% endif %}
+        {% if f.data_dismantling %} • 📤{{ f.data_dismantling }}{% endif %}
+      </div>
+      {% if f.committente_nome %}<div style="font-size:11px;color:var(--text-light)">{{ f.committente_nome }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="cal-empty">Nessuna fiera in questo mese.</div>
+  {% endif %}
+</div>
+"""
+
+
+@app.route('/calendario-fiere')
+@login_required
+def calendario_fiere():
+    """Calendario mensile con tutte le fiere e le loro 3 fasi (setup/live/dismantling)."""
+    from calendar import monthrange, month_name
+    from datetime import date as _d, timedelta as _td
+
+    try:
+        anno = int(request.args.get('anno', date.today().year))
+        mese = int(request.args.get('mese', date.today().month))
+    except ValueError:
+        anno, mese = date.today().year, date.today().month
+
+    if mese < 1: mese = 12; anno -= 1
+    if mese > 12: mese = 1; anno += 1
+
+    primo_giorno = _d(anno, mese, 1)
+    ultimo_giorno_mese = monthrange(anno, mese)[1]
+
+    # Trova tutte le fiere che si sovrappongono al mese visualizzato
+    db = get_db()
+    inizio_mese = primo_giorno.isoformat()
+    fine_mese = _d(anno, mese, ultimo_giorno_mese).isoformat()
+    fiere = db.execute("""
+        SELECT c.*, cli.nome as committente_nome
+        FROM cantieri c
+        LEFT JOIN clienti cli ON cli.id = c.committente_id
+        WHERE COALESCE(c.attivo,1)=1
+          AND (
+            (c.data_setup IS NOT NULL AND c.data_setup <= ? AND COALESCE(c.data_dismantling, c.data_live, c.data_setup) >= ?)
+            OR (c.data_inizio IS NOT NULL AND c.data_inizio <= ? AND COALESCE(c.data_fine, c.data_inizio) >= ?)
+          )
+        ORDER BY COALESCE(c.data_setup, c.data_inizio)
+    """, (fine_mese, inizio_mese, fine_mese, inizio_mese)).fetchall()
+    db.close()
+
+    # Costruzione griglia settimane: parto dal lunedì che contiene il 1° del mese
+    primo_weekday = primo_giorno.weekday()  # lunedì=0
+    primo_giorno_grid = primo_giorno - _td(days=primo_weekday)
+    # Genero 6 settimane (max possibili in un mese)
+    settimane = []
+    today_iso = date.today().isoformat()
+    for w in range(6):
+        week = []
+        for d in range(7):
+            cur = primo_giorno_grid + _td(days=w*7 + d)
+            cur_iso = cur.isoformat()
+            # Trova eventi per questo giorno
+            events = []
+            for f in fiere:
+                # Determina la fase del giorno corrente
+                ds = f['data_setup']
+                dl = f['data_live']
+                dd = f['data_dismantling']
+                di = f['data_inizio']
+                df_ = f['data_fine']
+                fase = None
+                titolo = f['nome']
+                # Se le 3 date sono definite uso quelle, altrimenti fallback su legacy
+                if ds and dl and dd:
+                    if ds <= cur_iso < dl:
+                        fase = 'setup'; titolo = f"📦 {f['nome']}"
+                    elif dl <= cur_iso <= dd:
+                        # da dl a dd-1 = live, dd = dismantling
+                        if cur_iso < dd:
+                            fase = 'live'; titolo = f"🔴 {f['nome']}"
+                        else:
+                            fase = 'dismantling'; titolo = f"📤 {f['nome']}"
+                elif ds and dl:
+                    if ds <= cur_iso < dl:
+                        fase = 'setup'; titolo = f"📦 {f['nome']}"
+                    elif cur_iso == dl:
+                        fase = 'live'; titolo = f"🔴 {f['nome']}"
+                elif ds and dd:
+                    if ds <= cur_iso <= dd:
+                        if cur_iso == ds:
+                            fase = 'setup'; titolo = f"📦 {f['nome']}"
+                        elif cur_iso == dd:
+                            fase = 'dismantling'; titolo = f"📤 {f['nome']}"
+                        else:
+                            fase = 'live'; titolo = f"🔴 {f['nome']}"
+                elif di and df_ and di <= cur_iso <= df_:
+                    fase = 'legacy'; titolo = f['nome']
+                elif di and not df_ and di == cur_iso:
+                    fase = 'legacy'; titolo = f['nome']
+                if fase:
+                    events.append({
+                        'cantiere_id': f['id'],
+                        'fase': fase,
+                        'titolo': titolo[:30]
+                    })
+            week.append({
+                'day_num': cur.day,
+                'in_month': cur.month == mese,
+                'is_today': cur_iso == today_iso,
+                'weekday': cur.weekday(),
+                'events': events,
+            })
+        settimane.append(week)
+        # Stop se siamo già usciti dal mese
+        if w*7 + 6 >= 27 and (primo_giorno_grid + _td(days=(w+1)*7)).month != mese:
+            break
+
+    mesi_it = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
+               'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre']
+
+    return render_page(CALENDARIO_FIERE_TMPL,
+                       page_title='Calendario Fiere', active='calendario_fiere',
+                       anno=anno, mese=mese,
+                       mese_nome=mesi_it[mese-1],
+                       anno_prev=anno if mese > 1 else anno-1,
+                       mese_prev=mese-1 if mese > 1 else 12,
+                       anno_next=anno if mese < 12 else anno+1,
+                       mese_next=mese+1 if mese < 12 else 1,
+                       settimane=settimane,
+                       fiere_mese=[dict(f) for f in fiere])
+
 
 # ══════════════════════════════════════════════════════════
 #  SQUADRE (Caposquadra)
