@@ -468,6 +468,19 @@ def init_db():
         )""",
         # ── Sprint 2.2 — Costo orario dipendente ──
         "ALTER TABLE utenti ADD COLUMN costo_orario REAL DEFAULT 0",
+        # ── Sprint 3.1 — Geofencing per timbratura mobile ──
+        "ALTER TABLE cantieri ADD COLUMN lat REAL",
+        "ALTER TABLE cantieri ADD COLUMN lng REAL",
+        "ALTER TABLE cantieri ADD COLUMN raggio_geofence_metri INTEGER DEFAULT 200",
+        "ALTER TABLE cantieri ADD COLUMN geofence_modalita TEXT DEFAULT 'disattivato'",
+        # Geofencing: tracciamento delle timbrature con coordinate
+        "ALTER TABLE presenze ADD COLUMN entrata_lat REAL",
+        "ALTER TABLE presenze ADD COLUMN entrata_lng REAL",
+        "ALTER TABLE presenze ADD COLUMN entrata_distanza_m INTEGER",
+        "ALTER TABLE presenze ADD COLUMN entrata_geofence_ok INTEGER DEFAULT 1",
+        "ALTER TABLE presenze ADD COLUMN uscita_lat REAL",
+        "ALTER TABLE presenze ADD COLUMN uscita_lng REAL",
+        "ALTER TABLE presenze ADD COLUMN uscita_distanza_m INTEGER",
         """CREATE TABLE IF NOT EXISTS veicoli (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             targa TEXT NOT NULL,
@@ -983,7 +996,6 @@ def ensure_columns():
                     FOREIGN KEY(utente_id) REFERENCES utenti(id)
                 )""",
                 # ── Sprint 2.1 — Incarichi montatori ──
-                # Lega un dipendente a una specifica fiera (cantiere) con periodo e tariffa
                 """CREATE TABLE IF NOT EXISTS incarichi (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     cantiere_id INTEGER NOT NULL,
@@ -999,8 +1011,20 @@ def ensure_columns():
                     FOREIGN KEY(cantiere_id) REFERENCES cantieri(id) ON DELETE CASCADE,
                     FOREIGN KEY(utente_id) REFERENCES utenti(id)
                 )""",
-                # ── Sprint 2.2 — Costo orario dipendente (per margine commessa) ──
+                # ── Sprint 2.2 — Costo orario dipendente ──
                 "ALTER TABLE utenti ADD COLUMN costo_orario REAL DEFAULT 0",
+                # ── Sprint 3.1 — Geofencing ──
+                "ALTER TABLE cantieri ADD COLUMN lat REAL",
+                "ALTER TABLE cantieri ADD COLUMN lng REAL",
+                "ALTER TABLE cantieri ADD COLUMN raggio_geofence_metri INTEGER DEFAULT 200",
+                "ALTER TABLE cantieri ADD COLUMN geofence_modalita TEXT DEFAULT 'disattivato'",
+                "ALTER TABLE presenze ADD COLUMN entrata_lat REAL",
+                "ALTER TABLE presenze ADD COLUMN entrata_lng REAL",
+                "ALTER TABLE presenze ADD COLUMN entrata_distanza_m INTEGER",
+                "ALTER TABLE presenze ADD COLUMN entrata_geofence_ok INTEGER DEFAULT 1",
+                "ALTER TABLE presenze ADD COLUMN uscita_lat REAL",
+                "ALTER TABLE presenze ADD COLUMN uscita_lng REAL",
+                "ALTER TABLE presenze ADD COLUMN uscita_distanza_m INTEGER",
                 # Storico dipendenti eliminati
                 """CREATE TABLE IF NOT EXISTS utenti_storico (
                     id INTEGER PRIMARY KEY,
@@ -3389,6 +3413,71 @@ CANTIERE_FORM_TMPL = """
       </div>
     </div>
 
+    <h4 style="margin:24px 0 10px;font-size:13px;color:var(--accent2);text-transform:uppercase;letter-spacing:.5px"><i class="fa fa-location-dot"></i> Geofencing — controllo presenze GPS</h4>
+    <div class="form-row" style="grid-template-columns:1fr 1fr 1fr">
+      <div class="form-group">
+        <label>Modalità geofencing</label>
+        <select name="geofence_modalita">
+          {% set gm = c.geofence_modalita if c else 'disattivato' %}
+          <option value="disattivato" {{ 'selected' if gm=='disattivato' }}>🔓 Disattivato (no controllo)</option>
+          <option value="avviso" {{ 'selected' if gm=='avviso' }}>⚠️ Solo avviso (non blocca)</option>
+          <option value="obbligatorio" {{ 'selected' if gm=='obbligatorio' }}>🔒 Obbligatorio (blocca timbratura fuori raggio)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Raggio (metri)</label>
+        <input type="number" name="raggio_geofence_metri" value="{{ c.raggio_geofence_metri if c else 200 }}" min="20" max="5000" step="10">
+        <small style="font-size:11px;color:var(--text-light)">Tipico: 100-300m</small>
+      </div>
+      <div class="form-group" style="display:flex;align-items:flex-end">
+        <button type="button" class="btn btn-secondary btn-sm" style="width:100%" onclick="impostaPosizioneAttuale()">
+          <i class="fa fa-crosshairs"></i> Imposta su mia posizione
+        </button>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Latitudine</label>
+        <input type="number" name="lat" id="cant-lat" step="0.000001" value="{{ c.lat if c else '' }}" placeholder="Es. 45.4642">
+      </div>
+      <div class="form-group">
+        <label>Longitudine</label>
+        <input type="number" name="lng" id="cant-lng" step="0.000001" value="{{ c.lng if c else '' }}" placeholder="Es. 9.1900">
+      </div>
+    </div>
+    {% if c and c.lat and c.lng %}
+    <div style="background:#eff6ff;padding:10px 14px;border-radius:8px;margin-top:6px;font-size:12px;color:#1e40af">
+      <i class="fa fa-map-pin"></i> Posizione corrente:
+      <a href="https://www.google.com/maps?q={{ c.lat }},{{ c.lng }}" target="_blank" style="font-family:monospace;color:#1e40af;text-decoration:underline">{{ c.lat }},{{ c.lng }}</a>
+      → vedi su Google Maps
+    </div>
+    {% endif %}
+    <script>
+    function impostaPosizioneAttuale() {
+      if (!navigator.geolocation) {
+        alert('Il browser non supporta la geolocalizzazione.');
+        return;
+      }
+      var btn = event.target.closest('button');
+      var orig = btn.innerHTML;
+      btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Rilevamento...';
+      btn.disabled = true;
+      navigator.geolocation.getCurrentPosition(
+        function(pos) {
+          document.getElementById('cant-lat').value = pos.coords.latitude.toFixed(6);
+          document.getElementById('cant-lng').value = pos.coords.longitude.toFixed(6);
+          btn.innerHTML = '<i class="fa fa-check"></i> Posizione impostata';
+          setTimeout(function(){ btn.innerHTML = orig; btn.disabled = false; }, 2000);
+        },
+        function(err) {
+          alert('Impossibile ottenere la posizione: ' + err.message);
+          btn.innerHTML = orig; btn.disabled = false;
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+    </script>
+
     <h4 style="margin:24px 0 10px;font-size:13px;color:var(--accent2);text-transform:uppercase;letter-spacing:.5px"><i class="fa fa-clipboard-list"></i> Operatività</h4>
     <div class="form-group">
       <label>Responsabile cantiere / capo squadra</label>
@@ -3435,12 +3524,22 @@ def cantiere_nuovo():
         comm_id = request.form.get('committente_id') or None
         try: comm_id = int(comm_id) if comm_id else None
         except (ValueError, TypeError): comm_id = None
+        # Geofencing fields
+        try: lat = float(request.form.get('lat')) if request.form.get('lat') else None
+        except (ValueError, TypeError): lat = None
+        try: lng = float(request.form.get('lng')) if request.form.get('lng') else None
+        except (ValueError, TypeError): lng = None
+        try: raggio = int(request.form.get('raggio_geofence_metri', 200))
+        except (ValueError, TypeError): raggio = 200
+        gf_mod = request.form.get('geofence_modalita', 'disattivato')
+        if gf_mod not in ('disattivato','avviso','obbligatorio'): gf_mod = 'disattivato'
         db.execute("""INSERT INTO cantieri
             (nome, indirizzo, ente_organizzatore, citta, padiglione, numero_stand,
              superficie_mq, tipo_allestimento, data_inizio, data_fine, responsabile, note_logistica,
              tipo_evento, committente_id, data_setup, data_live, data_dismantling,
-             costo_previsto, ricavo_previsto, note_tecniche)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+             costo_previsto, ricavo_previsto, note_tecniche,
+             lat, lng, raggio_geofence_metri, geofence_modalita)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (request.form['nome'], request.form.get('indirizzo',''),
              request.form.get('ente_organizzatore',''), request.form.get('citta',''),
              request.form.get('padiglione',''), request.form.get('numero_stand',''),
@@ -3451,7 +3550,8 @@ def cantiere_nuovo():
              data_setup, request.form.get('data_live') or None, data_dismantling,
              float(request.form.get('costo_previsto') or 0),
              float(request.form.get('ricavo_previsto') or 0),
-             request.form.get('note_tecniche','')))
+             request.form.get('note_tecniche',''),
+             lat, lng, raggio, gf_mod))
         safe_commit(db); db.close()
         flash('Fiera/evento aggiunto con successo!','success')
         return redirect(url_for('cantieri'))
@@ -3476,11 +3576,20 @@ def cantiere_modifica(cid):
         comm_id = request.form.get('committente_id') or None
         try: comm_id = int(comm_id) if comm_id else None
         except (ValueError, TypeError): comm_id = None
+        try: lat = float(request.form.get('lat')) if request.form.get('lat') else None
+        except (ValueError, TypeError): lat = None
+        try: lng = float(request.form.get('lng')) if request.form.get('lng') else None
+        except (ValueError, TypeError): lng = None
+        try: raggio = int(request.form.get('raggio_geofence_metri', 200))
+        except (ValueError, TypeError): raggio = 200
+        gf_mod = request.form.get('geofence_modalita', 'disattivato')
+        if gf_mod not in ('disattivato','avviso','obbligatorio'): gf_mod = 'disattivato'
         db.execute("""UPDATE cantieri SET
             nome=?, indirizzo=?, ente_organizzatore=?, citta=?, padiglione=?, numero_stand=?,
             superficie_mq=?, tipo_allestimento=?, data_inizio=?, data_fine=?, responsabile=?, note_logistica=?,
             tipo_evento=?, committente_id=?, data_setup=?, data_live=?, data_dismantling=?,
-            costo_previsto=?, ricavo_previsto=?, note_tecniche=?
+            costo_previsto=?, ricavo_previsto=?, note_tecniche=?,
+            lat=?, lng=?, raggio_geofence_metri=?, geofence_modalita=?
             WHERE id=?""",
             (request.form['nome'], request.form.get('indirizzo',''),
              request.form.get('ente_organizzatore',''), request.form.get('citta',''),
@@ -3492,7 +3601,8 @@ def cantiere_modifica(cid):
              data_setup, request.form.get('data_live') or None, data_dismantling,
              float(request.form.get('costo_previsto') or 0),
              float(request.form.get('ricavo_previsto') or 0),
-             request.form.get('note_tecniche',''), cid))
+             request.form.get('note_tecniche',''),
+             lat, lng, raggio, gf_mod, cid))
         safe_commit(db); db.close()
         flash('Fiera aggiornata con successo.','success')
         return redirect(url_for('cantieri'))
@@ -3776,6 +3886,22 @@ def _giorni_periodo(data_da, data_a):
         return 1
 
 
+def _haversine_metri(lat1, lng1, lat2, lng2):
+    """Distanza in metri tra due punti GPS (formula di Haversine)."""
+    import math
+    R = 6371000  # raggio Terra in metri
+    try:
+        lat1, lng1, lat2, lng2 = float(lat1), float(lng1), float(lat2), float(lng2)
+    except (TypeError, ValueError):
+        return None
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
+    dphi = math.radians(lat2 - lat1)
+    dlam = math.radians(lng2 - lng1)
+    a = math.sin(dphi/2)**2 + math.cos(phi1)*math.cos(phi2)*math.sin(dlam/2)**2
+    return int(R * 2 * math.atan2(math.sqrt(a), math.sqrt(1-a)))
+
+
 @app.route('/cantieri/<int:cid>')
 @login_required
 def cantiere_dettaglio(cid):
@@ -4003,21 +4129,26 @@ function applicaMese(val) {
     <div class="clock-time" id="live-clock">--:--:--</div>
     <div style="font-size:13px;opacity:.7;margin-bottom:16px">{{ oggi }}</div>
     {% if not presenza_oggi %}
-    <form method="POST" action="/presenze/entrata">
+    <form method="POST" action="/presenze/entrata" id="entrata-form" onsubmit="return submitConGPS(this, event)">
       <div class="form-group" style="margin-bottom:12px">
-        <select name="cantiere_id" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:8px 12px;width:100%;font-size:13px">
+        <select name="cantiere_id" id="entrata-cantiere" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:8px 12px;width:100%;font-size:13px">
           <option value="">📍 Seleziona fiera (opzionale)</option>
-          {% for c in cantieri %}<option value="{{ c.id }}">{{ c.nome }}</option>{% endfor %}
+          {% for c in cantieri %}<option value="{{ c.id }}" data-gf="{{ c.geofence_modalita or 'disattivato' }}">{{ c.nome }}{% if c.geofence_modalita == 'obbligatorio' %} 🔒{% elif c.geofence_modalita == 'avviso' %} ⚠️{% endif %}</option>{% endfor %}
         </select>
+        <div id="gps-status" style="font-size:11px;color:rgba(255,255,255,.7);margin-top:6px;min-height:14px"></div>
       </div>
-      <button class="btn" style="background:var(--success);color:#fff;width:100%;font-size:14px;padding:12px"><i class="fa fa-sign-in-alt"></i> Registra Entrata</button>
+      <input type="hidden" name="lat" id="entrata-lat">
+      <input type="hidden" name="lng" id="entrata-lng">
+      <button id="btn-entrata" class="btn" style="background:var(--success);color:#fff;width:100%;font-size:14px;padding:12px"><i class="fa fa-sign-in-alt"></i> Registra Entrata</button>
     </form>
     {% elif not presenza_oggi.ora_uscita %}
     <div style="background:rgba(34,197,94,.15);border-radius:8px;padding:10px;margin-bottom:12px">
       <div style="color:#22c55e;font-size:13px">● In sede dalle <strong>{{ presenza_oggi.ora_entrata }}</strong></div>
       {% if presenza_oggi.cantiere_nome %}<div style="color:rgba(255,255,255,.6);font-size:12px;margin-top:4px">📍 {{ presenza_oggi.cantiere_nome }}</div>{% endif %}
     </div>
-    <form method="POST" action="/presenze/uscita">
+    <form method="POST" action="/presenze/uscita" onsubmit="return submitConGPS(this, event)">
+      <input type="hidden" name="lat">
+      <input type="hidden" name="lng">
       <button class="btn" style="background:var(--accent);color:#fff;width:100%;font-size:14px;padding:12px"><i class="fa fa-sign-out-alt"></i> Registra Uscita</button>
     </form>
     {% else %}
@@ -4039,6 +4170,52 @@ function applicaMese(val) {
   </div>
 </div>
 {% endif %}
+
+<script>
+// GPS-aware form submit per timbratura. Se il select ha cantiere obbligatorio o avviso,
+// chiediamo la posizione PRIMA di submit. Se permesso, popoliamo i campi nascosti.
+window.submitConGPS = function(form, ev) {
+  // Cerca campi nascosti lat/lng nel form
+  var latIn = form.querySelector('input[name="lat"]');
+  var lngIn = form.querySelector('input[name="lng"]');
+  if (!latIn || !lngIn) return true;
+  // Se gia' popolati, lascia partire
+  if (latIn.value && lngIn.value) return true;
+  if (!navigator.geolocation) {
+    // No GPS support - submit comunque (server gestirà obbligatori bloccando)
+    return true;
+  }
+  ev.preventDefault();
+  var btn = form.querySelector('button[type="submit"], button:not([type])');
+  var origText = btn ? btn.innerHTML : '';
+  if (btn) { btn.innerHTML = '<i class="fa fa-location-crosshairs"></i> Rilevamento posizione...'; btn.disabled = true; }
+  var statusEl = document.getElementById('gps-status');
+  if (statusEl) statusEl.textContent = '📍 Acquisizione GPS in corso...';
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      latIn.value = pos.coords.latitude.toFixed(6);
+      lngIn.value = pos.coords.longitude.toFixed(6);
+      if (statusEl) statusEl.textContent = '✓ Posizione rilevata (precisione ~' + Math.round(pos.coords.accuracy) + 'm)';
+      form.submit();
+    },
+    function(err) {
+      if (statusEl) statusEl.textContent = '⚠️ GPS non disponibile (' + err.message + ')';
+      if (btn) { btn.innerHTML = origText; btn.disabled = false; }
+      // Se la fiera è obbligatoria, blocco; altrimenti submit senza coordinate
+      var sel = form.querySelector('select[name="cantiere_id"]');
+      var gf = sel && sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].dataset.gf : 'disattivato';
+      if (gf === 'obbligatorio') {
+        alert('Per questa fiera la posizione GPS è obbligatoria. Abilita la geolocalizzazione e riprova.');
+        return;
+      }
+      // Submit senza coordinate
+      form.submit();
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+  );
+  return false;
+};
+</script>
 
 <div class="card">
   <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
@@ -4511,17 +4688,66 @@ def presenze():
 def presenza_entrata():
     uid = session['user_id']; today = date.today().isoformat(); now = datetime.now().strftime('%H:%M:%S')
     cid = request.form.get('cantiere_id') or None
+    # Coordinate GPS dal client (opzionali)
+    try: lat = float(request.form.get('lat')) if request.form.get('lat') else None
+    except (ValueError, TypeError): lat = None
+    try: lng = float(request.form.get('lng')) if request.form.get('lng') else None
+    except (ValueError, TypeError): lng = None
+
     db = get_db()
-    if not db.execute("SELECT id FROM presenze WHERE utente_id=? AND data=?",(uid,today)).fetchone():
-        db.execute("INSERT INTO presenze (utente_id,data,ora_entrata,cantiere_id) VALUES (?,?,?,?)",(uid,today,now,cid))
-        safe_commit(db); flash(f'Entrata alle {now} ✅','success')
-    else: flash("Entrata già registrata oggi.",'error')
-    db.close(); return redirect(url_for('presenze'))
+    if db.execute("SELECT id FROM presenze WHERE utente_id=? AND data=?",(uid,today)).fetchone():
+        db.close()
+        flash("Entrata già registrata oggi.",'error')
+        return redirect(url_for('presenze'))
+
+    # Geofencing: se la fiera ha coordinate e modalità non disattivata, calcolo distanza
+    distanza = None
+    geofence_ok = 1
+    if cid:
+        try: cid_int = int(cid)
+        except (ValueError, TypeError): cid_int = None
+        if cid_int:
+            cant = db.execute("""SELECT lat, lng, raggio_geofence_metri, geofence_modalita, nome
+                                 FROM cantieri WHERE id=?""", (cid_int,)).fetchone()
+            if cant and cant['geofence_modalita'] != 'disattivato' and cant['lat'] is not None and cant['lng'] is not None:
+                if lat is None or lng is None:
+                    if cant['geofence_modalita'] == 'obbligatorio':
+                        db.close()
+                        flash(f'⚠️ Per timbrare in "{cant["nome"]}" è richiesta la posizione GPS. Abilita la geolocalizzazione e riprova.', 'error')
+                        return redirect(url_for('presenze'))
+                    else:
+                        geofence_ok = 0  # avviso
+                else:
+                    distanza = _haversine_metri(lat, lng, cant['lat'], cant['lng'])
+                    raggio = cant['raggio_geofence_metri'] or 200
+                    if distanza is not None and distanza > raggio:
+                        geofence_ok = 0
+                        if cant['geofence_modalita'] == 'obbligatorio':
+                            db.close()
+                            flash(f'⛔ Sei a {distanza}m dalla fiera "{cant["nome"]}" (raggio massimo {raggio}m). Timbratura rifiutata.', 'error')
+                            return redirect(url_for('presenze'))
+                        else:
+                            flash(f'⚠️ Sei a {distanza}m dalla fiera (raggio {raggio}m). Timbratura registrata con avviso.', 'success')
+
+    db.execute("""INSERT INTO presenze (utente_id, data, ora_entrata, cantiere_id,
+                  entrata_lat, entrata_lng, entrata_distanza_m, entrata_geofence_ok)
+                  VALUES (?,?,?,?,?,?,?,?)""",
+               (uid, today, now, cid, lat, lng, distanza, geofence_ok))
+    safe_commit(db); db.close()
+    if geofence_ok and distanza is not None:
+        flash(f'Entrata alle {now} ✅ ({distanza}m dalla fiera)', 'success')
+    elif geofence_ok:
+        flash(f'Entrata alle {now} ✅', 'success')
+    return redirect(url_for('presenze'))
 
 @app.route('/presenze/uscita', methods=['POST'])
 @login_required
 def presenza_uscita():
     uid = session['user_id']; today = date.today().isoformat(); now = datetime.now().strftime('%H:%M:%S')
+    try: lat = float(request.form.get('lat')) if request.form.get('lat') else None
+    except (ValueError, TypeError): lat = None
+    try: lng = float(request.form.get('lng')) if request.form.get('lng') else None
+    except (ValueError, TypeError): lng = None
     db = get_db()
     p = db.execute("SELECT * FROM presenze WHERE utente_id=? AND data=?",(uid,today)).fetchone()
     if p and not p['ora_uscita']:
@@ -4529,7 +4755,15 @@ def presenza_uscita():
             diff = datetime.strptime(now,'%H:%M:%S') - datetime.strptime(p['ora_entrata'],'%H:%M:%S')
             ore  = round(diff.total_seconds()/3600,2)
         except: ore = None
-        db.execute("UPDATE presenze SET ora_uscita=?,ore_totali=? WHERE id=?",(now,ore,p['id']))
+        # Calcolo distanza uscita (solo per log, non blocca)
+        distanza = None
+        if p['cantiere_id'] and lat is not None and lng is not None:
+            cant = db.execute("SELECT lat, lng FROM cantieri WHERE id=?", (p['cantiere_id'],)).fetchone()
+            if cant and cant['lat'] is not None and cant['lng'] is not None:
+                distanza = _haversine_metri(lat, lng, cant['lat'], cant['lng'])
+        db.execute("""UPDATE presenze SET ora_uscita=?, ore_totali=?,
+                      uscita_lat=?, uscita_lng=?, uscita_distanza_m=? WHERE id=?""",
+                   (now, ore, lat, lng, distanza, p['id']))
         safe_commit(db); flash(f'Uscita alle {now} — {ore:.1f}h ✅','success')
     db.close(); return redirect(url_for('presenze'))
 
