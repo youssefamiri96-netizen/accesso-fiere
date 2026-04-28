@@ -12431,6 +12431,15 @@ select option{background:#1e293b}
 .ore-nette-preview{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);border-radius:10px;padding:10px 14px;text-align:center;font-size:13px;color:#93c5fd;margin-top:10px;display:none}
 .switch-link{text-align:center;padding:8px 0 20px;font-size:13px;color:rgba(255,255,255,.3)}
 .switch-link a{color:#60a5fa;text-decoration:none}
+/* Toggle ore/orari modalità */
+.mob-mod-toggle{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.mob-mod-pill{flex:1;min-width:130px;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;padding:10px 14px;border-radius:10px;border:2px solid rgba(96,165,250,.4);color:#93c5fd;font-size:13px;font-weight:600;transition:all .15s}
+.mob-mod-pill input{display:none}
+.mob-mod-pill.mob-mod-active{background:#3b82f6;border-color:#3b82f6;color:#fff}
+.mob-mod-pill:active{transform:scale(.97)}
+.gps-status{font-size:11px;color:rgba(255,255,255,.6);margin-top:6px;text-align:center;min-height:14px}
+.gps-status.gps-ok{color:#22c55e}
+.gps-status.gps-error{color:#f87171}
 </style>
 </head>
 <body>
@@ -12462,7 +12471,11 @@ select option{background:#1e293b}
   {% endif %}
 
   <!-- Form inserimento ore -->
-  <form method="POST" action="/mobile/inserisci" id="form-ore">
+  <form method="POST" action="/mobile/inserisci" id="form-ore" onsubmit="return prepareSubmitMobile(event)">
+    <!-- Campi GPS nascosti, popolati dal JS prima del submit -->
+    <input type="hidden" name="lat" id="mob-lat">
+    <input type="hidden" name="lng" id="mob-lng">
+
     <div class="card">
       <div class="card-title"><i class="fa fa-calendar-day"></i> {{ t.day_label }}</div>
       <div class="date-display">{{ oggi_display }}</div>
@@ -12472,34 +12485,84 @@ select option{background:#1e293b}
 
     <div class="card">
       <div class="card-title"><i class="fa fa-store"></i> {{ t.site }}</div>
-      <select name="cantiere_id" required>
+      <select name="cantiere_id" required id="mob-cantiere-sel" onchange="aggiornaGeofenceInfo()">
         <option value="">{{ t.select_site }}</option>
         {% for c in cantieri %}
-        <option value="{{ c.id }}">{{ c.nome }}</option>
+        <option value="{{ c.id }}"
+                data-gf="{{ c.geofence_modalita or 'disattivato' }}"
+                data-lat="{{ c.lat or '' }}"
+                data-lng="{{ c.lng or '' }}"
+                data-raggio="{{ c.raggio_geofence_metri or 200 }}">{{ c.nome }}{% if c.geofence_modalita == 'obbligatorio' %} 🔒{% elif c.geofence_modalita == 'avviso' %} ⚠️{% endif %}</option>
         {% endfor %}
       </select>
+      <div class="gps-status" id="mob-gps-status"></div>
     </div>
 
     <div class="card">
       <div class="card-title"><i class="fa fa-clock"></i> {{ t.work_hours }}</div>
-      <div class="ore-row">
-        <div>
-          <label class="field-label">{{ t.total_hours }}</label>
-          <div class="ore-input-wrap">
-            <input type="number" name="ore" id="ore-input" min="0" max="24" step="0.5"
-                   placeholder="8" inputmode="decimal" onchange="calcolaOreNette()" oninput="calcolaOreNette()">
-            <span class="ore-suffix">h</span>
+
+      <!-- Toggle modalità: Ore totali / Entrata-Uscita -->
+      <div class="mob-mod-toggle">
+        <label class="mob-mod-pill mob-mod-active" id="mob-lbl-ore">
+          <input type="radio" name="modalita" value="ore" checked onchange="toggleModalitaMobile()"> ⏱ Ore totali
+        </label>
+        <label class="mob-mod-pill" id="mob-lbl-orari">
+          <input type="radio" name="modalita" value="orari" onchange="toggleModalitaMobile()"> 🕐 Entrata / Uscita
+        </label>
+      </div>
+
+      <!-- Modalità ORE TOTALI -->
+      <div id="mob-grp-ore">
+        <div class="ore-row">
+          <div>
+            <label class="field-label">{{ t.total_hours }}</label>
+            <div class="ore-input-wrap">
+              <input type="number" name="ore" id="ore-input" min="0" max="24" step="0.5"
+                     placeholder="8" inputmode="decimal" onchange="calcolaOreNette()" oninput="calcolaOreNette()">
+              <span class="ore-suffix">h</span>
+            </div>
+            <div class="quick-btns">
+              {% for h in [6,7,8,9,10] %}
+              <button type="button" class="quick-btn" onclick="setOre({{ h }})">{{ h }}h</button>
+              {% endfor %}
+            </div>
           </div>
-          <div class="quick-btns">
-            {% for h in [6,7,8,9,10] %}
-            <button type="button" class="quick-btn" onclick="setOre({{ h }})">{{ h }}h</button>
-            {% endfor %}
+          <div>
+            <label class="field-label">{{ t.break }}</label>
+            <div class="ore-input-wrap">
+              <select name="pausa" id="pausa-input" onchange="calcolaOreNette()">
+                <option value="0">{{ t.no_break }}</option>
+                <option value="0.5">30 min</option>
+                <option value="1" selected>1 ora</option>
+                <option value="1.5">1h 30m</option>
+                <option value="2">2 ore</option>
+              </select>
+            </div>
           </div>
         </div>
-        <div>
+        <div id="ore-nette-preview" class="ore-nette-preview"></div>
+      </div>
+
+      <!-- Modalità ENTRATA / USCITA -->
+      <div id="mob-grp-orari" style="display:none">
+        <div class="ore-row">
+          <div>
+            <label class="field-label">Entrata</label>
+            <div class="ore-input-wrap">
+              <input type="time" name="ora_entrata" id="mob-ora-entrata" onchange="calcolaOreDaOrari()">
+            </div>
+          </div>
+          <div>
+            <label class="field-label">Uscita</label>
+            <div class="ore-input-wrap">
+              <input type="time" name="ora_uscita" id="mob-ora-uscita" onchange="calcolaOreDaOrari()">
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:10px">
           <label class="field-label">{{ t.break }}</label>
           <div class="ore-input-wrap">
-            <select name="pausa" id="pausa-input" onchange="calcolaOreNette()">
+            <select name="pausa_orari" id="mob-pausa-orari" onchange="calcolaOreDaOrari()">
               <option value="0">{{ t.no_break }}</option>
               <option value="0.5">30 min</option>
               <option value="1" selected>1 ora</option>
@@ -12508,8 +12571,8 @@ select option{background:#1e293b}
             </select>
           </div>
         </div>
+        <div id="orari-preview" class="ore-nette-preview"></div>
       </div>
-      <div id="ore-nette-preview" class="ore-nette-preview"></div>
     </div>
 
     <div class="card">
@@ -12517,7 +12580,7 @@ select option{background:#1e293b}
       <textarea name="note" rows="2" placeholder="{{ t.note_ph }}" style="resize:none"></textarea>
     </div>
 
-    <button type="submit" class="submit-btn" id="submit-btn" onclick="this.disabled=true;this.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> Invio...';this.closest('form').submit()">
+    <button type="submit" class="submit-btn" id="submit-btn">
       <i class="fa fa-check-circle"></i> {{ t.submit_hours }}
     </button>
   </form>
@@ -12603,11 +12666,134 @@ function calcolaOreNette() {
   }
 }
 
-// Prevent double submit
-document.getElementById('form-ore').addEventListener('submit', function() {
-  document.getElementById('submit-btn').disabled = true;
-  document.getElementById('submit-btn').innerHTML = '<i class="fa fa-spinner fa-spin"></i> {{ t.sending }}';
-});
+function toggleModalitaMobile() {
+  var isOrari = document.querySelector('input[name=modalita]:checked').value === 'orari';
+  document.getElementById('mob-grp-ore').style.display   = isOrari ? 'none' : '';
+  document.getElementById('mob-grp-orari').style.display = isOrari ? '' : 'none';
+  // Aggiorna pillole
+  document.getElementById('mob-lbl-ore').classList.toggle('mob-mod-active', !isOrari);
+  document.getElementById('mob-lbl-orari').classList.toggle('mob-mod-active', isOrari);
+  // Aggiorna required
+  var oreInp = document.getElementById('ore-input');
+  var oeInp = document.getElementById('mob-ora-entrata');
+  var ouInp = document.getElementById('mob-ora-uscita');
+  if (isOrari) {
+    oreInp.required = false;
+    oeInp.required = true;
+    ouInp.required = true;
+  } else {
+    oreInp.required = true;
+    oeInp.required = false;
+    ouInp.required = false;
+  }
+}
+
+function calcolaOreDaOrari() {
+  var oe = document.getElementById('mob-ora-entrata').value;
+  var ou = document.getElementById('mob-ora-uscita').value;
+  var pausa = parseFloat(document.getElementById('mob-pausa-orari').value) || 0;
+  var el = document.getElementById('orari-preview');
+  if (!oe || !ou) { el.style.display = 'none'; return; }
+  var [h1,m1] = oe.split(':').map(Number);
+  var [h2,m2] = ou.split(':').map(Number);
+  var diff = (h2*60+m2) - (h1*60+m1);
+  if (diff <= 0) { el.style.display = 'none'; return; }
+  var ore = diff / 60;
+  var nette = Math.max(0, ore - pausa);
+  el.style.display = 'block';
+  el.innerHTML = '<i class="fa fa-info-circle"></i> Lavoro: <strong>' + ore.toFixed(1) + 'h</strong>' +
+    (pausa > 0 ? ' - ' + pausa + 'h pausa = <strong>' + nette.toFixed(1) + 'h nette</strong>' : '');
+}
+
+// Aggiorna l'info geofence quando l'utente cambia fiera
+function aggiornaGeofenceInfo() {
+  var sel = document.getElementById('mob-cantiere-sel');
+  var opt = sel.options[sel.selectedIndex];
+  var status = document.getElementById('mob-gps-status');
+  if (!opt || !opt.value) { status.textContent = ''; status.className = 'gps-status'; return; }
+  var gf = opt.dataset.gf;
+  if (gf === 'obbligatorio') {
+    status.innerHTML = '🔒 Geolocalizzazione <strong>obbligatoria</strong> per questa fiera';
+    status.className = 'gps-status';
+  } else if (gf === 'avviso') {
+    status.innerHTML = '⚠️ Posizione GPS richiesta (modalità avviso)';
+    status.className = 'gps-status';
+  } else {
+    status.textContent = '';
+    status.className = 'gps-status';
+  }
+}
+
+// Submit "intelligente": se la fiera scelta richiede GPS, chiediamo la posizione
+// PRIMA di fare submit. È la chiave del blocco geofencing lato client.
+var _submitInProgress = false;
+function prepareSubmitMobile(ev) {
+  if (_submitInProgress) return false;
+  var sel = document.getElementById('mob-cantiere-sel');
+  var opt = sel.options[sel.selectedIndex];
+  var gf = opt && opt.dataset ? opt.dataset.gf : 'disattivato';
+  var btn = document.getElementById('submit-btn');
+  var status = document.getElementById('mob-gps-status');
+
+  // Se geofencing disattivato, submit normale
+  if (gf === 'disattivato' || !gf) {
+    _submitInProgress = true;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Invio...';
+    return true;
+  }
+
+  // Geofencing avviso/obbligatorio: serve GPS
+  ev.preventDefault();
+  if (!navigator.geolocation) {
+    if (gf === 'obbligatorio') {
+      alert('Il tuo browser non supporta la geolocalizzazione. Per questa fiera è obbligatoria.');
+      return false;
+    }
+    // Modalità avviso: submit senza GPS
+    _submitInProgress = true;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Invio...';
+    document.getElementById('form-ore').submit();
+    return false;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa fa-location-crosshairs"></i> Acquisizione GPS...';
+  status.innerHTML = '📍 Rilevamento posizione in corso...';
+  status.className = 'gps-status';
+
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      document.getElementById('mob-lat').value = pos.coords.latitude.toFixed(6);
+      document.getElementById('mob-lng').value = pos.coords.longitude.toFixed(6);
+      status.innerHTML = '✓ Posizione rilevata (~' + Math.round(pos.coords.accuracy) + 'm precisione)';
+      status.className = 'gps-status gps-ok';
+      btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Invio...';
+      _submitInProgress = true;
+      document.getElementById('form-ore').submit();
+    },
+    function(err) {
+      status.innerHTML = '⚠️ GPS non disponibile: ' + err.message;
+      status.className = 'gps-status gps-error';
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-check-circle"></i> {{ t.submit_hours }}';
+      if (gf === 'obbligatorio') {
+        alert('Per questa fiera la posizione GPS è obbligatoria. Abilita la geolocalizzazione del browser e riprova.');
+        return;
+      }
+      // Modalità avviso: chiedi conferma e submit senza GPS
+      if (confirm('GPS non disponibile. Vuoi inviare comunque la richiesta?')) {
+        _submitInProgress = true;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Invio...';
+        document.getElementById('form-ore').submit();
+      }
+    },
+    { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 }
+  );
+  return false;
+}
 </script>
 </body>
 </html>"""
@@ -12765,7 +12951,8 @@ def mobile():
     db = get_db()
     uid = session['user_id']
     cantieri = db.execute(
-        "SELECT id, nome FROM cantieri WHERE attivo=1 ORDER BY nome").fetchall()
+        """SELECT id, nome, lat, lng, raggio_geofence_metri, geofence_modalita
+           FROM cantieri WHERE attivo=1 ORDER BY nome""").fetchall()
     storico_raw = db.execute(
         """SELECT p.*, c.nome as cantiere_nome
            FROM presenze p LEFT JOIN cantieri c ON c.id=p.cantiere_id
@@ -12819,33 +13006,88 @@ def mobile_inserisci():
     uid = session['user_id']
     data = request.form.get('data') or date.today().isoformat()
     cantiere_id = request.form.get('cantiere_id') or None
-    ore_str = request.form.get('ore', '').strip()
-    pausa_str = request.form.get('pausa', '0')
     note = request.form.get('note', '').strip()
+    modalita = request.form.get('modalita', 'ore')
 
-    try:
-        ore = float(ore_str) if ore_str else 0
-        pausa = float(pausa_str) if pausa_str else 0
-        ore_nette = max(0, ore - pausa)
-    except ValueError:
-        flash('Inserisci un valore valido per le ore.', 'error')
-        return redirect(url_for('mobile'))
-
-    if ore <= 0:
-        flash('Inserisci le ore lavorate.', 'error')
-        return redirect(url_for('mobile'))
+    # Coordinate GPS (opzionali, ma obbligatorie se la fiera lo richiede)
+    try: lat = float(request.form.get('lat')) if request.form.get('lat') else None
+    except (ValueError, TypeError): lat = None
+    try: lng = float(request.form.get('lng')) if request.form.get('lng') else None
+    except (ValueError, TypeError): lng = None
 
     if not cantiere_id:
         flash('Seleziona la fiera.', 'error')
         return redirect(url_for('mobile'))
 
-    nota_completa = f"Pausa: {pausa}h — Ore nette: {ore_nette}h"
+    # === GEOFENCING CHECK ===
+    db = get_db()
+    cant = db.execute("""SELECT lat, lng, raggio_geofence_metri, geofence_modalita, nome
+                         FROM cantieri WHERE id=?""", (int(cantiere_id),)).fetchone()
+    geofence_warning = None
+    if cant and cant['geofence_modalita'] != 'disattivato' and cant['lat'] is not None and cant['lng'] is not None:
+        if lat is None or lng is None:
+            if cant['geofence_modalita'] == 'obbligatorio':
+                db.close()
+                flash(f'⛔ Per registrare le ore in "{cant["nome"]}" è richiesta la posizione GPS. Abilita la geolocalizzazione del browser e riprova.', 'error')
+                return redirect(url_for('mobile'))
+            else:
+                geofence_warning = '⚠️ GPS non disponibile (modalità avviso)'
+        else:
+            distanza = _haversine_metri(lat, lng, cant['lat'], cant['lng'])
+            raggio = cant['raggio_geofence_metri'] or 200
+            if distanza is not None and distanza > raggio:
+                if cant['geofence_modalita'] == 'obbligatorio':
+                    db.close()
+                    flash(f'⛔ Sei a {distanza}m dalla fiera "{cant["nome"]}" (raggio massimo {raggio}m). Registrazione rifiutata.', 'error')
+                    return redirect(url_for('mobile'))
+                else:
+                    geofence_warning = f'⚠️ Sei a {distanza}m dalla fiera (raggio {raggio}m)'
+
+    ora_e = ora_u = None
+    ore_nette = 0
+    pausa = 0
+
+    if modalita == 'orari':
+        ora_e = request.form.get('ora_entrata', '').strip()
+        ora_u = request.form.get('ora_uscita', '').strip()
+        if not ora_e or not ora_u:
+            db.close()
+            flash('Inserisci entrata e uscita.', 'error')
+            return redirect(url_for('mobile'))
+        try:
+            pausa = float(request.form.get('pausa_orari', '0') or 0)
+            diff = datetime.strptime(ora_u, '%H:%M') - datetime.strptime(ora_e, '%H:%M')
+            ore_lordi = round(diff.total_seconds() / 3600, 2)
+            if ore_lordi <= 0:
+                raise ValueError
+            ore_nette = max(0, round(ore_lordi - pausa, 2))
+        except (ValueError, TypeError):
+            db.close()
+            flash("Orari non validi.", 'error')
+            return redirect(url_for('mobile'))
+        nota_completa = f"Entrata {ora_e} - Uscita {ora_u} | Pausa: {pausa}h - Ore nette: {ore_nette}h"
+    else:
+        # Modalità "ore totali"
+        ore_str = request.form.get('ore', '').strip()
+        pausa_str = request.form.get('pausa', '0')
+        try:
+            ore = float(ore_str) if ore_str else 0
+            pausa = float(pausa_str) if pausa_str else 0
+            ore_nette = max(0, ore - pausa)
+        except ValueError:
+            db.close()
+            flash('Inserisci un valore valido per le ore.', 'error')
+            return redirect(url_for('mobile'))
+        if ore <= 0:
+            db.close()
+            flash('Inserisci le ore lavorate.', 'error')
+            return redirect(url_for('mobile'))
+        nota_completa = f"Pausa: {pausa}h — Ore nette: {ore_nette}h"
+
     if note:
         nota_completa += f" | {note}"
 
-    db = get_db()
     # Tutti i dipendenti (anche supervisori) mandano la richiesta — l'admin approva sempre
-    # Permetti più richieste per lo stesso giorno se cantieri diversi
     gia_pendente = db.execute(
         "SELECT id FROM richieste_presenze WHERE utente_id=? AND data=? AND cantiere_id=? AND stato='in_attesa'",
         (uid, data, int(cantiere_id))).fetchone()
@@ -12853,12 +13095,10 @@ def mobile_inserisci():
         flash('Hai già una richiesta in attesa per questo giorno e cantiere.', 'error')
         db.close(); return redirect(url_for('mobile'))
 
-    # Modalità "solo ore totali" — gli orari restano NULL nel DB
     db.execute(
         "INSERT INTO richieste_presenze (utente_id,data,ora_entrata,ora_uscita,ore_totali,cantiere_id,note) VALUES (?,?,?,?,?,?,?)",
-        (uid, data, None, None, ore_nette, int(cantiere_id), nota_completa))
+        (uid, data, ora_e, ora_u, ore_nette, int(cantiere_id), nota_completa))
     safe_commit(db)
-
     db.close()
     # Notifica email admin — in background per non bloccare la risposta
     email_admin = get_setting('email_notifiche', '')
@@ -12875,7 +13115,10 @@ def mobile_inserisci():
                     f'<p><a href="{_base}/admin/richieste" style="background:#2563eb;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:700">Approva o rifiuta →</a></p>')
             except: pass
         threading.Thread(target=_send, daemon=True).start()
-    flash(f'✅ Richiesta inviata per {data} ({ore_nette}h) — in attesa di approvazione.', 'success')
+    success_msg = f'✅ Richiesta inviata per {data} ({ore_nette}h) — in attesa di approvazione.'
+    if geofence_warning:
+        success_msg += f' {geofence_warning}'
+    flash(success_msg, 'success')
     return redirect(url_for('mobile'))
 
 
