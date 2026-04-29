@@ -280,27 +280,121 @@ def get_upload_path_evento(eid):
 
 
 def analizza_documento_ai(file_path, nome_file, tipo_doc_hint='', uid=None):
-    """Analizza documento dipendente con AI e restituisce dati estratti."""
+    """Analizza documento dipendente con AI e restituisce dati estratti.
+    Supporta PDF e immagini (jpg, jpeg, png, webp). Estrae:
+    - tipo_doc, categoria (settore allestimenti), nome_cognome,
+    - data_emissione, data_scadenza, ente_rilascio, note
+    """
     api_key = get_setting('anthropic_api_key', '')
     if not api_key:
-        return {}
+        return {'_error': 'API key Anthropic non configurata. Vai in Impostazioni → AI.'}
+    if not os.path.exists(file_path):
+        return {'_error': f'File non trovato: {file_path}'}
+
+    ext = os.path.splitext(file_path)[1].lower()
+    media_types = {
+        '.pdf': 'application/pdf',
+        '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+        '.png': 'image/png', '.webp': 'image/webp', '.gif': 'image/gif',
+    }
+    if ext not in media_types:
+        return {'_error': f'Formato {ext} non supportato dall\'AI. Usa PDF o immagine.'}
+
     try:
         import anthropic, base64 as _b64
         client = anthropic.Anthropic(api_key=api_key)
         with open(file_path, 'rb') as fh:
-            pdf_data = _b64.standard_b64encode(fh.read()).decode()
-        cb = {"type": "document", "source": {"type": "base64", "media_type": "application/pdf", "data": pdf_data}}
-        prompt = """Analizza questo documento di un dipendente e rispondi SOLO con JSON valido, senza markdown.
-Estrai: tipo_doc (una tra: Carta d'identità, Passaporto, Patente, Permesso di soggiorno, Codice fiscale, Contratto, Certificato medico, Attestato formazione, DURC, Altro), data_scadenza (YYYY-MM-DD se presente), nome_cognome (nome e cognome se visibili), note (breve descrizione 1 frase).
-Formato esatto: {"tipo_doc":"","data_scadenza":"","nome_cognome":"","note":""}
-Se un campo non esiste metti "". Date in formato YYYY-MM-DD."""
+            file_data = _b64.standard_b64encode(fh.read()).decode()
+        # Per PDF usa "document", per immagini usa "image"
+        if ext == '.pdf':
+            content_block = {
+                "type": "document",
+                "source": {"type": "base64", "media_type": media_types[ext], "data": file_data}
+            }
+        else:
+            content_block = {
+                "type": "image",
+                "source": {"type": "base64", "media_type": media_types[ext], "data": file_data}
+            }
+
+        prompt = """Analizza questo documento (di un dipendente di un'azienda di allestimenti fieristici) ed estrai i dati richiesti.
+
+Rispondi SOLO con un oggetto JSON valido, senza markdown, senza testo aggiuntivo.
+
+Schema JSON da restituire:
+{
+  "tipo_doc": "...",
+  "categoria": "...",
+  "nome_cognome": "...",
+  "data_emissione": "YYYY-MM-DD",
+  "data_scadenza": "YYYY-MM-DD",
+  "ente_rilascio": "...",
+  "note": "..."
+}
+
+REGOLE:
+- "tipo_doc" è una breve etichetta libera (es. "Patente B", "Certificato medico idoneità", "Attestato corso muletto")
+- "categoria" DEVE essere ESATTAMENTE una di queste 14 stringhe (rispetta maiuscole/spazi):
+  Contratto, Patente, Visita medica, Idoneità sanitaria, Formazione PSC, Lavori in altezza, Abilitazione muletto, Antincendio, Primo soccorso, DPI consegnati, UNILAV, Documento identità, Corso/Attestato, Altro
+- Le categorie specifiche per allestimenti vanno preferite quando applicabili (es. un attestato per uso del carrello elevatore → "Abilitazione muletto", non "Corso/Attestato")
+- "nome_cognome" è il nome del titolare se chiaramente leggibile
+- "data_emissione" e "data_scadenza" in formato ISO YYYY-MM-DD; usa "" (stringa vuota) se non presenti/leggibili
+- "ente_rilascio" è chi ha emesso il documento (es. "Motorizzazione Civile", "ASL", "Studio Medico XYZ")
+- "note" è una breve descrizione di una frase
+
+Se un campo non è leggibile o non presente, usa stringa vuota "". NON inventare dati.
+"""
+
         resp = client.messages.create(
-            model="claude-haiku-4-5-20251001", max_tokens=512,
-            messages=[{"role": "user", "content": [cb, {"type": "text", "text": prompt}]}])
-        raw = resp.content[0].text.strip().strip('`').lstrip('json').strip()
-        return json.loads(raw)
+            model="claude-haiku-4-5-20251001",
+            max_tokens=600,
+            messages=[{"role": "user", "content": [content_block, {"type": "text", "text": prompt}]}])
+
+        # Estrai testo dalla risposta (gestisce sia ContentBlock che TextBlock)
+        raw = ''
+        for blk in resp.content:
+            if hasattr(blk, 'text'):
+                raw += blk.text
+        raw = raw.strip()
+        # Rimuovi eventuali markdown code fences
+        if raw.startswith('```'):
+            raw = raw.split('```')[1] if len(raw.split('```')) > 1 else raw
+            if raw.startswith('json\n'): raw = raw[5:]
+            raw = raw.strip()
+        # A volte Claude mette ancora "json" davanti
+        if raw.lower().startswith('json'):
+            raw = raw[4:].strip()
+        result = json.loads(raw)
+
+        # Validazione e sanitizzazione
+        categorie_valide = {
+            'Contratto','Patente','Visita medica','Idoneità sanitaria','Formazione PSC',
+            'Lavori in altezza','Abilitazione muletto','Antincendio','Primo soccorso',
+            'DPI consegnati','UNILAV','Documento identità','Corso/Attestato','Altro'
+        }
+        if result.get('categoria') not in categorie_valide:
+            result['categoria'] = 'Altro'
+        # Trim stringhe troppo lunghe
+        for key in ('tipo_doc','nome_cognome','ente_rilascio','note'):
+            if isinstance(result.get(key), str):
+                result[key] = result[key].strip()[:200]
+        # Validazione date (forzo formato ISO o stringa vuota)
+        for date_key in ('data_emissione','data_scadenza'):
+            v = result.get(date_key, '')
+            if v:
+                # Se non matcha YYYY-MM-DD, svuota
+                import re
+                if not re.match(r'^\d{4}-\d{2}-\d{2}$', v):
+                    result[date_key] = ''
+            else:
+                result[date_key] = ''
+
+        return result
+
+    except json.JSONDecodeError as e:
+        return {'_error': f'AI ha restituito un JSON non valido: {str(e)[:120]}'}
     except Exception as e:
-        return {'_error': str(e)}
+        return {'_error': f'Errore AI: {str(e)[:200]}'}
 
 # ─────────────────────────────────────────────
 #  DATABASE
@@ -15205,15 +15299,17 @@ DOC_DIP_TMPL = """
     <h3><i class="fa fa-file-alt" style="color:var(--accent2)"></i> Documenti — {{ dip.nome }} {{ dip.cognome }}</h3>
   </div>
   <div class="card-body">
-    <form method="POST" action="/dipendenti/{{ dip.id }}/documenti/upload" enctype="multipart/form-data" style="background:#f8fafc;padding:16px;border-radius:10px;margin-bottom:20px;border:1px solid var(--border)">
+    <form method="POST" action="/dipendenti/{{ dip.id }}/documenti/upload" enctype="multipart/form-data"
+          id="form-upload-doc"
+          style="background:#f8fafc;padding:16px;border-radius:10px;margin-bottom:20px;border:1px solid var(--border)">
       <div class="form-row">
         <div class="form-group">
           <label>File *</label>
-          <input type="file" name="file" required accept=".pdf,.png,.jpg,.jpeg,.gif,.webp">
+          <input type="file" name="file" id="doc-file-input" required accept=".pdf,.png,.jpg,.jpeg,.gif,.webp">
         </div>
         <div class="form-group">
           <label>Tipo documento</label>
-          <select name="tipo_doc">
+          <select name="tipo_doc" id="doc-tipo-input">
             <option>Carta identità</option><option>Passaporto</option><option>Patente</option>
             <option>Contratto</option><option>UNILAV</option><option>Corso/Attestato</option>
             <option>Altro</option><option value="Auto">🤖 Analisi AI automatica</option>
@@ -15221,7 +15317,7 @@ DOC_DIP_TMPL = """
         </div>
         <div class="form-group">
           <label>Categoria specifica</label>
-          <select name="categoria">
+          <select name="categoria" id="doc-cat-input">
             <option value="Contratto">Contratto</option>
             <option value="Patente">Patente</option>
             <option value="Visita medica">Visita medica</option>
@@ -15240,16 +15336,152 @@ DOC_DIP_TMPL = """
         </div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>Note</label><input name="note" placeholder="Opzionale"></div>
-        <div class="form-group"><label>Scadenza</label><input type="date" name="data_scadenza"></div>
+        <div class="form-group"><label>Note</label><input name="note" id="doc-note-input" placeholder="Opzionale"></div>
+        <div class="form-group"><label>Scadenza</label><input type="date" name="data_scadenza" id="doc-scad-input"></div>
       </div>
-      <div style="display:flex;align-items:center;gap:14px">
-        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
-          <input type="checkbox" name="analizza" value="1"> Analizza con AI
-        </label>
-        <button type="submit" class="btn btn-primary"><i class="fa fa-upload"></i> Carica</button>
+
+      <!-- Box anteprima AI (nascosto di default) -->
+      <div id="ai-preview-box" style="display:none;background:linear-gradient(135deg,#f3e8ff 0%,#dbeafe 100%);border:2px solid #a78bfa;border-radius:10px;padding:14px;margin:12px 0">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <strong style="color:#6d28d9;font-size:13px"><i class="fa fa-robot"></i> Analisi AI completata</strong>
+          <button type="button" onclick="chiudiPreviewAi()" style="background:none;border:none;color:#6d28d9;cursor:pointer;font-size:14px"><i class="fa fa-times"></i></button>
+        </div>
+        <div id="ai-preview-content" style="font-size:13px;color:#1e293b"></div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="btn btn-primary btn-sm" onclick="applicaDatiAi()">
+            <i class="fa fa-magic-wand-sparkles"></i> Applica al form
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="chiudiPreviewAi()">Ignora</button>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <button type="button" id="btn-analizza-ai" class="btn btn-sm" style="background:linear-gradient(135deg,#7c3aed 0%,#3b82f6 100%);color:#fff" onclick="analizzaConAi()">
+          <i class="fa fa-robot"></i> Analizza con AI
+        </button>
+        <span style="font-size:11px;color:var(--text-light)">— riempie automaticamente i campi leggendo il file</span>
+        <span style="flex:1"></span>
+        <button type="submit" class="btn btn-primary"><i class="fa fa-upload"></i> Carica documento</button>
       </div>
     </form>
+
+<script>
+var aiResultData = null;
+
+function analizzaConAi() {
+  var fileInput = document.getElementById('doc-file-input');
+  if (!fileInput.files || !fileInput.files[0]) {
+    alert('Seleziona prima un file da analizzare.');
+    return;
+  }
+  var f = fileInput.files[0];
+  // Validazione client-side
+  var ext = f.name.split('.').pop().toLowerCase();
+  if (!['pdf','jpg','jpeg','png','webp'].includes(ext)) {
+    alert('Formato non supportato dall\\'AI. Usa PDF o immagine (jpg/png/webp).');
+    return;
+  }
+  if (f.size > 10 * 1024 * 1024) {
+    alert('File troppo grande (max 10 MB).');
+    return;
+  }
+
+  var btn = document.getElementById('btn-analizza-ai');
+  var origHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Analisi in corso...';
+
+  var fd = new FormData();
+  fd.append('file', f);
+
+  fetch('/api/ai-analyze-document', {method: 'POST', body: fd})
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      btn.disabled = false;
+      btn.innerHTML = origHtml;
+      if (data.error) {
+        alert('Errore AI: ' + data.error);
+        return;
+      }
+      aiResultData = data.data || {};
+      mostraPreviewAi(aiResultData);
+    })
+    .catch(function(err){
+      btn.disabled = false;
+      btn.innerHTML = origHtml;
+      alert('Errore di rete: ' + err);
+    });
+}
+
+function mostraPreviewAi(d) {
+  var box = document.getElementById('ai-preview-box');
+  var ct = document.getElementById('ai-preview-content');
+  function row(lbl, val) {
+    if (!val) return '';
+    return '<div style="display:flex;gap:8px;padding:3px 0"><strong style="min-width:130px;color:#475569">' + lbl + ':</strong><span>' + escapeHtml(val) + '</span></div>';
+  }
+  ct.innerHTML =
+    row('Tipo documento', d.tipo_doc) +
+    row('Categoria', d.categoria) +
+    row('Titolare', d.nome_cognome) +
+    row('Data emissione', d.data_emissione) +
+    row('Data scadenza', d.data_scadenza) +
+    row('Ente di rilascio', d.ente_rilascio) +
+    row('Note', d.note);
+  if (!ct.innerHTML) {
+    ct.innerHTML = '<em style="color:#64748b">Nessun dato significativo estratto. Compila i campi manualmente.</em>';
+  }
+  box.style.display = 'block';
+}
+
+function applicaDatiAi() {
+  if (!aiResultData) return;
+  if (aiResultData.tipo_doc) {
+    var sel = document.getElementById('doc-tipo-input');
+    // Cerco match esatto, altrimenti seleziono "Altro" e metto il valore in note
+    var matched = false;
+    for (var i = 0; i < sel.options.length; i++) {
+      if (sel.options[i].text === aiResultData.tipo_doc || sel.options[i].value === aiResultData.tipo_doc) {
+        sel.selectedIndex = i; matched = true; break;
+      }
+    }
+    if (!matched) {
+      sel.value = 'Altro';
+    }
+  }
+  if (aiResultData.categoria) {
+    document.getElementById('doc-cat-input').value = aiResultData.categoria;
+  }
+  if (aiResultData.data_scadenza) {
+    document.getElementById('doc-scad-input').value = aiResultData.data_scadenza;
+  }
+  // Componi note automatiche
+  var noteParts = [];
+  if (aiResultData.tipo_doc) noteParts.push(aiResultData.tipo_doc);
+  if (aiResultData.nome_cognome) noteParts.push('Titolare: ' + aiResultData.nome_cognome);
+  if (aiResultData.data_emissione) noteParts.push('Emessa: ' + aiResultData.data_emissione);
+  if (aiResultData.ente_rilascio) noteParts.push('Ente: ' + aiResultData.ente_rilascio);
+  if (aiResultData.note) noteParts.push(aiResultData.note);
+  if (noteParts.length) {
+    document.getElementById('doc-note-input').value = noteParts.join(' · ');
+  }
+  chiudiPreviewAi();
+  // Feedback visivo
+  var msg = document.createElement('div');
+  msg.style.cssText = 'background:#dcfce7;color:#15803d;padding:10px 14px;border-radius:8px;margin-top:10px;font-size:13px';
+  msg.innerHTML = '<i class="fa fa-check-circle"></i> Dati AI applicati al form. Verifica e clicca <strong>Carica documento</strong>.';
+  document.getElementById('form-upload-doc').appendChild(msg);
+  setTimeout(function(){ msg.remove(); }, 5000);
+}
+
+function chiudiPreviewAi() {
+  document.getElementById('ai-preview-box').style.display = 'none';
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
     {% if docs %}
     <table class="table">
       <thead><tr><th>Tipo</th><th>File</th><th>Note</th><th>Scadenza</th><th>Data</th><th>Azioni</th></tr></thead>
@@ -19633,6 +19865,54 @@ AI_TOOLS_SCHEMA = [
         }
     },
 ]
+
+
+@app.route('/api/ai-analyze-document', methods=['POST'])
+@login_required
+def ai_analyze_document():
+    """Endpoint AI per analisi documento PRIMA del salvataggio.
+    Riceve un file via multipart upload e restituisce JSON con i campi estratti.
+    Il file viene salvato in tmp e cancellato subito dopo l'analisi.
+    """
+    if not AI_OK:
+        return jsonify({'error': "Libreria 'anthropic' non installata"}), 500
+
+    api_key = get_setting('anthropic_api_key', '').strip()
+    if not api_key:
+        return jsonify({'error': "Chiave API Anthropic non configurata. Impostazioni → AI."}), 400
+
+    if 'file' not in request.files:
+        return jsonify({'error': 'Nessun file inviato'}), 400
+    f = request.files['file']
+    if not f or not f.filename:
+        return jsonify({'error': 'File vuoto'}), 400
+
+    # Validazione formato
+    ext = os.path.splitext(f.filename)[1].lower()
+    if ext not in ('.pdf', '.jpg', '.jpeg', '.png', '.webp'):
+        return jsonify({'error': f'Formato {ext} non supportato (usa PDF o immagine)'}), 400
+
+    # Limite dimensione: 10 MB (la API ha limiti propri ma evitiamo upload assurdi)
+    f.seek(0, 2)  # vai alla fine
+    size = f.tell()
+    f.seek(0)
+    if size > 10 * 1024 * 1024:
+        return jsonify({'error': 'File troppo grande (max 10 MB)'}), 400
+
+    # Salva in temp file
+    import tempfile
+    with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
+        f.save(tmp.name)
+        tmp_path = tmp.name
+
+    try:
+        result = analizza_documento_ai(tmp_path, f.filename)
+        if '_error' in result:
+            return jsonify({'error': result['_error']}), 500
+        return jsonify({'ok': True, 'data': result})
+    finally:
+        try: os.unlink(tmp_path)
+        except Exception: pass
 
 
 @app.route('/api/ai-chat', methods=['POST'])
