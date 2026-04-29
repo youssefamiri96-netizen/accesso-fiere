@@ -1289,11 +1289,17 @@ def login_required(f):
                     return redirect(url_for('login'))
             except Exception:
                 pass
-        # Dipendenti non-admin/non-caposquadra: blocca accesso a pagine admin
+        # Solo admin vedono le pagine admin. Caposquadra → mobile-cs, dipendenti → mobile
         admin_pages = {'dashboard','dipendenti','presenze','ferie','cantieri',
-                       'documenti','scadenze','calendario','richieste','impostazioni','fatturazione','preventivi','clienti','contratti_clienti'}
-        if session.get('ruolo') not in ('admin','caposquadra') and f.__name__ in admin_pages:
-            return redirect(url_for('mobile'))
+                       'documenti','scadenze','calendario','richieste','impostazioni','fatturazione','preventivi','clienti','contratti_clienti',
+                       'banca_ore','banca_ore_dettaglio','squadre_lista','calendario_fiere',
+                       'cantiere_dettaglio','cantieri','spese_admin'}
+        if f.__name__ in admin_pages:
+            ruolo = session.get('ruolo')
+            if ruolo == 'caposquadra':
+                return redirect(url_for('mobile_cs'))
+            elif ruolo != 'admin':
+                return redirect(url_for('mobile'))
         return f(*a,**k)
     return d
 
@@ -1316,6 +1322,8 @@ def admin_required(f):
                 pass
         if session.get('ruolo') != 'admin':
             flash('Accesso riservato agli amministratori.','error')
+            if session.get('ruolo') == 'caposquadra':
+                return redirect(url_for('mobile_cs'))
             return redirect(url_for('mobile'))
         return f(*a,**k)
     return d
@@ -2047,8 +2055,10 @@ input:focus,select:focus{outline:none;border-color:#0f4c81}
 def index():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    if session.get('ruolo') in ('admin', 'caposquadra'):
+    if session.get('ruolo') == 'admin':
         return redirect(url_for('dashboard'))
+    if session.get('ruolo') == 'caposquadra':
+        return redirect(url_for('mobile_cs'))
     return redirect(url_for('mobile'))
 
 @app.route('/login', methods=['GET','POST'])
@@ -2162,8 +2172,10 @@ def login():
                 ensure_columns()
             except Exception:
                 pass
-            if utente_trovato['ruolo'] in ('admin', 'caposquadra'):
+            if utente_trovato['ruolo'] == 'admin':
                 return redirect(url_for('dashboard'))
+            elif utente_trovato['ruolo'] == 'caposquadra':
+                return redirect(url_for('mobile_cs'))
             else:
                 return redirect(url_for('mobile'))
         return render_template_string(LOGIN_TMPL, error=t['login_error'], **lang_ctx)
@@ -13207,9 +13219,768 @@ def mobile_cambia_password():
     return redirect(url_for('mobile_profilo'))
 
 
+# ══════════════════════════════════════════════════════════
+#  MOBILE CAPOSQUADRA — versione potenziata per chi gestisce squadre
+# ══════════════════════════════════════════════════════════
+
+MOBILE_CS_TMPL = """<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f172a">
+<title>Caposquadra · {{ azienda }}</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;color:#fff;padding-bottom:80px}
+.header{background:linear-gradient(135deg,#7c3aed 0%,#3b82f6 100%);padding:14px 18px;color:#fff;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.header-top{display:flex;justify-content:space-between;align-items:center}
+.logo{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.logo i{font-size:18px}
+.logout-btn{color:rgba(255,255,255,.8);background:rgba(255,255,255,.15);border-radius:6px;padding:5px 10px;font-size:12px;text-decoration:none}
+.user-name{font-size:18px;font-weight:700;margin-top:6px}
+.user-sub{font-size:11px;opacity:.8;margin-top:2px}
+.flash{padding:12px 18px;font-size:13px;display:flex;align-items:center;gap:8px;margin:14px;border-radius:10px}
+.flash.success{background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.3)}
+.flash.error{background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.3)}
+.flash.info{background:rgba(59,130,246,.15);color:#3b82f6;border:1px solid rgba(59,130,246,.3)}
+.tabs{background:#1e293b;display:flex;justify-content:space-around;padding:4px 0;position:sticky;top:74px;z-index:99;border-bottom:1px solid rgba(255,255,255,.1)}
+.tab{flex:1;text-align:center;padding:10px 4px;color:rgba(255,255,255,.55);font-size:11px;font-weight:600;cursor:pointer;border-top:3px solid transparent;text-transform:uppercase;letter-spacing:.5px}
+.tab.active{color:#fff;border-top-color:#7c3aed}
+.tab i{display:block;font-size:18px;margin-bottom:4px}
+.content{padding:14px}
+.card{background:#1e293b;border-radius:12px;padding:14px 16px;margin-bottom:12px;border:1px solid rgba(255,255,255,.05)}
+.card-title{font-size:13px;color:rgba(255,255,255,.55);margin-bottom:10px;font-weight:600;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.4px}
+.card-title i{color:#a78bfa}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+
+/* Squadra membri */
+.member-list{display:flex;flex-direction:column;gap:8px}
+.member{background:rgba(255,255,255,.04);border-radius:10px;padding:12px;display:flex;align-items:center;gap:12px}
+.member-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#3b82f6);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;color:#fff}
+.member-info{flex:1;min-width:0}
+.member-name{font-weight:700;font-size:14px}
+.member-meta{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px}
+.member-actions{display:flex;gap:6px;flex-shrink:0}
+.icon-btn{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.08);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:13px}
+.icon-btn:active{transform:scale(.92)}
+.icon-btn.primary{background:#3b82f6}
+.icon-btn.green{background:#22c55e}
+
+/* Fiere assegnate */
+.fiera-card{background:rgba(255,255,255,.04);border-radius:10px;padding:12px;margin-bottom:8px;border-left:3px solid #3b82f6}
+.fiera-card.fiera-live{border-left-color:#22c55e;background:rgba(34,197,94,.05)}
+.fiera-card.fiera-setup{border-left-color:#3b82f6}
+.fiera-card.fiera-dismantling{border-left-color:#ef4444}
+.fiera-name{font-weight:700;font-size:14px}
+.fiera-meta{font-size:11px;color:rgba(255,255,255,.55);margin-top:3px;line-height:1.5}
+.fiera-status{display:inline-block;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;text-transform:uppercase;margin-top:6px}
+.fs-setup{background:rgba(59,130,246,.2);color:#60a5fa}
+.fs-live{background:rgba(34,197,94,.2);color:#4ade80}
+.fs-dismantling{background:rgba(239,68,68,.2);color:#f87171}
+.fs-future{background:rgba(255,255,255,.08);color:rgba(255,255,255,.6)}
+.fs-past{background:rgba(255,255,255,.06);color:rgba(255,255,255,.4)}
+
+/* Form timbratura squadra */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.field-label{display:block;font-size:11px;color:rgba(255,255,255,.55);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+input[type="text"],input[type="number"],input[type="date"],input[type="time"],select,textarea{width:100%;padding:11px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#fff;font-size:14px;font-family:inherit;-webkit-appearance:none}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#7c3aed;background:rgba(124,58,237,.08)}
+.submit-btn{width:100%;padding:14px;background:linear-gradient(135deg,#7c3aed 0%,#3b82f6 100%);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px}
+.submit-btn:disabled{opacity:.5}
+.submit-btn:active{transform:scale(.98)}
+
+/* Toggle modalità ore/orari */
+.mod-toggle{display:flex;gap:6px;margin-bottom:12px}
+.mod-pill{flex:1;text-align:center;padding:9px;border-radius:8px;border:2px solid rgba(124,58,237,.3);color:rgba(255,255,255,.6);font-size:12px;font-weight:600;cursor:pointer;background:transparent}
+.mod-pill input{display:none}
+.mod-pill.active{background:#7c3aed;border-color:#7c3aed;color:#fff}
+
+/* Empty states */
+.empty{text-align:center;padding:30px 14px;color:rgba(255,255,255,.4)}
+.empty i{font-size:36px;opacity:.3;display:block;margin-bottom:10px}
+.empty p{font-size:13px}
+
+/* Stats riepilogo */
+.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.stat-mini{background:rgba(255,255,255,.04);padding:12px 8px;border-radius:10px;text-align:center}
+.stat-val{font-size:22px;font-weight:800}
+.stat-lbl{font-size:10px;color:rgba(255,255,255,.5);margin-top:3px;text-transform:uppercase;letter-spacing:.3px}
+
+/* GPS status */
+.gps-status{font-size:11px;color:rgba(255,255,255,.5);text-align:center;margin-top:8px;min-height:14px}
+.gps-status.ok{color:#22c55e}
+.gps-status.err{color:#f87171}
+
+/* Storico timbrature recenti */
+.timb-list{display:flex;flex-direction:column;gap:6px}
+.timb-row{background:rgba(255,255,255,.04);padding:10px 12px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;font-size:12px}
+.timb-info strong{color:#fff;font-size:13px;display:block}
+.timb-info span{color:rgba(255,255,255,.5);font-size:11px}
+.timb-stato{padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;text-transform:uppercase}
+.ts-attesa{background:rgba(245,158,11,.2);color:#fbbf24}
+.ts-approvata{background:rgba(34,197,94,.2);color:#4ade80}
+.ts-rifiutata{background:rgba(239,68,68,.2);color:#f87171}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-top">
+    <div class="logo"><i class="fa fa-user-tie"></i> Caposquadra</div>
+    <a href="/logout" class="logout-btn"><i class="fa fa-sign-out-alt"></i> Esci</a>
+  </div>
+  <div class="user-name">{{ nome }} {{ cognome }}</div>
+  <div class="user-sub">{{ azienda }} · {{ n_membri }} membri · {{ n_fiere }} fiere assegnate</div>
+</div>
+
+{% if flash_msg %}
+<div class="flash {{ flash_type }}"><i class="fa {{ 'fa-check-circle' if flash_type=='success' else 'fa-exclamation-circle' if flash_type=='error' else 'fa-info-circle' }}"></i><span>{{ flash_msg }}</span></div>
+{% endif %}
+
+<div class="tabs">
+  <div class="tab active" onclick="apriTab(event,'tab-home')"><i class="fa fa-house"></i>Home</div>
+  <div class="tab" onclick="apriTab(event,'tab-squadra')"><i class="fa fa-users"></i>Squadra</div>
+  <div class="tab" onclick="apriTab(event,'tab-timbra')"><i class="fa fa-clock"></i>Timbra</div>
+  <div class="tab" onclick="apriTab(event,'tab-fiere')"><i class="fa fa-store"></i>Fiere</div>
+</div>
+
+<div class="content">
+
+<!-- ═══════════ TAB HOME ═══════════ -->
+<div id="tab-home" class="tab-pane active">
+  <div class="card">
+    <div class="card-title"><i class="fa fa-chart-simple"></i> Riepilogo del mese</div>
+    <div class="stats-row">
+      <div class="stat-mini"><div class="stat-val" style="color:#a78bfa">{{ mie_ore|round(0)|int }}</div><div class="stat-lbl">Mie ore</div></div>
+      <div class="stat-mini"><div class="stat-val" style="color:#60a5fa">{{ ore_squadra|round(0)|int }}</div><div class="stat-lbl">Ore squadra</div></div>
+      <div class="stat-mini"><div class="stat-val" style="color:#4ade80">{{ n_timbrature_squadra }}</div><div class="stat-lbl">Timbrature</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="fa fa-calendar-day"></i> Fiere in corso oggi</div>
+    {% if fiere_oggi %}
+      {% for f in fiere_oggi %}
+      <div class="fiera-card fiera-{{ f.fase or 'live' }}">
+        <div class="fiera-name"><i class="fa fa-store"></i> {{ f.nome }}</div>
+        <div class="fiera-meta">
+          {% if f.padiglione %}<i class="fa fa-map-marker-alt"></i> {{ f.padiglione }}{% if f.numero_stand %} · Stand {{ f.numero_stand }}{% endif %}<br>{% endif %}
+          {% if f.committente %}<i class="fa fa-handshake"></i> {{ f.committente }}{% endif %}
+        </div>
+        <span class="fiera-status fs-{{ f.fase }}">
+          {% if f.fase=='setup' %}📦 Setup{% elif f.fase=='live' %}🔴 Live{% elif f.fase=='dismantling' %}📤 Smontaggio{% endif %}
+        </span>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty"><i class="fa fa-calendar-xmark"></i><p>Nessuna fiera oggi</p></div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="fa fa-history"></i> Ultime timbrature squadra</div>
+    {% if timbrature_recenti %}
+    <div class="timb-list">
+      {% for t in timbrature_recenti %}
+      <div class="timb-row">
+        <div class="timb-info">
+          <strong>{{ t.dipendente }}</strong>
+          <span>{{ t.data }} · {{ t.cantiere or '—' }} · {{ "%.1f"|format(t.ore_totali or 0) }}h</span>
+        </div>
+        <span class="timb-stato ts-{{ t.stato }}">{{ t.stato_label }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+      <div class="empty"><i class="fa fa-clock"></i><p>Nessuna timbratura recente</p></div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ═══════════ TAB SQUADRA ═══════════ -->
+<div id="tab-squadra" class="tab-pane">
+  {% for sq in squadre %}
+  <div class="card">
+    <div class="card-title"><i class="fa fa-users"></i> {{ sq.nome }} · {{ sq.membri|length }} membri</div>
+    {% if sq.note %}<div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:10px;font-style:italic">{{ sq.note }}</div>{% endif %}
+    {% if sq.membri %}
+    <div class="member-list">
+      {% for m in sq.membri %}
+      <div class="member">
+        <div class="member-avatar">{{ m.nome[0] }}{{ m.cognome[0] }}</div>
+        <div class="member-info">
+          <div class="member-name">{{ m.nome }} {{ m.cognome }}</div>
+          <div class="member-meta">{{ m.mansione or 'Operatore' }}{% if m.email %} · {{ m.email }}{% endif %}</div>
+        </div>
+        <div class="member-actions">
+          {% if m.telefono %}
+          <a href="tel:{{ m.telefono }}" class="icon-btn green" title="Chiama"><i class="fa fa-phone"></i></a>
+          <a href="https://wa.me/{{ m.telefono|replace('+','')|replace(' ','') }}" class="icon-btn" style="background:#25D366" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+          {% endif %}
+          <button class="icon-btn primary" onclick="timbraPer({{ m.id }}, '{{ m.nome }} {{ m.cognome }}')" title="Timbra ore"><i class="fa fa-clock"></i></button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty"><i class="fa fa-user-slash"></i><p>Nessun membro nella squadra</p></div>
+    {% endif %}
+  </div>
+  {% else %}
+  <div class="card">
+    <div class="empty"><i class="fa fa-users-slash"></i><p>Non ti è ancora stata assegnata nessuna squadra.<br>Chiedi all'amministratore.</p></div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- ═══════════ TAB TIMBRA ═══════════ -->
+<div id="tab-timbra" class="tab-pane">
+  <div class="card">
+    <div class="card-title"><i class="fa fa-clock"></i> Inserisci timbratura</div>
+    <p style="font-size:12px;color:rgba(255,255,255,.55);margin-bottom:14px;line-height:1.5">
+      Registra le ore per te o per un membro della tua squadra. La richiesta va all'admin per approvazione.
+    </p>
+    <form method="POST" action="/mobile/cs/timbra" id="form-timb-cs" onsubmit="return submitTimbCs(event)">
+      <input type="hidden" name="lat" id="cs-lat">
+      <input type="hidden" name="lng" id="cs-lng">
+
+      <div style="margin-bottom:10px">
+        <label class="field-label">Per chi</label>
+        <select name="utente_id" id="cs-utente" required>
+          <option value="{{ uid }}" data-name="{{ nome }} {{ cognome }} (me)">👤 Me stesso ({{ nome }} {{ cognome }})</option>
+          {% for sq in squadre %}{% for m in sq.membri %}
+          <option value="{{ m.id }}" data-name="{{ m.nome }} {{ m.cognome }}">👥 {{ m.nome }} {{ m.cognome }}{% if m.mansione %} · {{ m.mansione }}{% endif %}</option>
+          {% endfor %}{% endfor %}
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label class="field-label">Data</label>
+          <input type="date" name="data" required value="{{ oggi }}" max="{{ oggi }}">
+        </div>
+        <div>
+          <label class="field-label">Fiera</label>
+          <select name="cantiere_id" id="cs-cantiere" required onchange="aggiornaGfCs()">
+            <option value="">— Seleziona —</option>
+            {% for c in cantieri %}
+            <option value="{{ c.id }}" data-gf="{{ c.geofence_modalita or 'disattivato' }}" data-name="{{ c.nome }}">{{ c.nome }}{% if c.geofence_modalita == 'obbligatorio' %} 🔒{% elif c.geofence_modalita == 'avviso' %} ⚠️{% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <!-- Toggle modalità -->
+      <div class="mod-toggle">
+        <label class="mod-pill active" id="cs-pill-ore">
+          <input type="radio" name="modalita" value="ore" checked onchange="toggleModCs()"> ⏱ Ore totali
+        </label>
+        <label class="mod-pill" id="cs-pill-orari">
+          <input type="radio" name="modalita" value="orari" onchange="toggleModCs()"> 🕐 Entrata/Uscita
+        </label>
+      </div>
+
+      <!-- Modalità ore -->
+      <div id="cs-grp-ore">
+        <div class="form-row">
+          <div>
+            <label class="field-label">Ore lavorate</label>
+            <input type="number" name="ore" id="cs-ore" min="0" max="24" step="0.5" placeholder="8" inputmode="decimal">
+          </div>
+          <div>
+            <label class="field-label">Pausa (h)</label>
+            <select name="pausa">
+              <option value="0">Nessuna</option>
+              <option value="0.5">30 min</option>
+              <option value="1" selected>1 ora</option>
+              <option value="1.5">1h 30m</option>
+              <option value="2">2 ore</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modalità orari -->
+      <div id="cs-grp-orari" style="display:none">
+        <div class="form-row">
+          <div>
+            <label class="field-label">Entrata</label>
+            <input type="time" name="ora_entrata" id="cs-oe">
+          </div>
+          <div>
+            <label class="field-label">Uscita</label>
+            <input type="time" name="ora_uscita" id="cs-ou">
+          </div>
+        </div>
+        <div style="margin-bottom:10px">
+          <label class="field-label">Pausa (h)</label>
+          <select name="pausa_orari">
+            <option value="0">Nessuna</option>
+            <option value="0.5">30 min</option>
+            <option value="1" selected>1 ora</option>
+            <option value="1.5">1h 30m</option>
+            <option value="2">2 ore</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-bottom:10px">
+        <label class="field-label">Note (opzionale)</label>
+        <textarea name="note" rows="2" placeholder="Es. lavorazione doppi piani, montaggio truss..."></textarea>
+      </div>
+
+      <div class="gps-status" id="cs-gps-status"></div>
+      <button type="submit" class="submit-btn" id="cs-submit-btn"><i class="fa fa-paper-plane"></i> Invia richiesta</button>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════ TAB FIERE ═══════════ -->
+<div id="tab-fiere" class="tab-pane">
+  <div class="card">
+    <div class="card-title"><i class="fa fa-store"></i> Fiere assegnate</div>
+    {% if fiere %}
+      {% for f in fiere %}
+      <div class="fiera-card fiera-{{ f.fase or 'future' }}">
+        <div class="fiera-name">{{ f.nome }}</div>
+        <div class="fiera-meta">
+          {% if f.committente %}<i class="fa fa-handshake"></i> {{ f.committente }}<br>{% endif %}
+          {% if f.padiglione %}<i class="fa fa-map-marker-alt"></i> {{ f.padiglione }}{% if f.numero_stand %} · Stand {{ f.numero_stand }}{% endif %}<br>{% endif %}
+          {% if f.citta %}<i class="fa fa-city"></i> {{ f.citta }}<br>{% endif %}
+          {% if f.data_setup %}<i class="fa fa-truck-ramp-box" style="color:#60a5fa"></i> Setup: {{ f.data_setup }}<br>{% endif %}
+          {% if f.data_live %}<i class="fa fa-bullhorn" style="color:#4ade80"></i> Live: {{ f.data_live }}<br>{% endif %}
+          {% if f.data_dismantling %}<i class="fa fa-truck-arrow-right" style="color:#f87171"></i> Smontaggio: {{ f.data_dismantling }}{% endif %}
+        </div>
+        {% if f.fase %}
+        <span class="fiera-status fs-{{ f.fase }}">
+          {% if f.fase=='setup' %}📦 In setup{% elif f.fase=='live' %}🔴 Live oggi{% elif f.fase=='dismantling' %}📤 Smontaggio{% elif f.fase=='future' %}📅 Futura{% else %}✓ Conclusa{% endif %}
+        </span>
+        {% endif %}
+        {% if f.note_tecniche or f.note_logistica %}
+        <details style="margin-top:8px">
+          <summary style="cursor:pointer;font-size:11px;color:rgba(255,255,255,.6)">Mostra note</summary>
+          {% if f.note_tecniche %}<div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:6px"><strong>Tecniche:</strong> {{ f.note_tecniche }}</div>{% endif %}
+          {% if f.note_logistica %}<div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:4px"><strong>Logistica:</strong> {{ f.note_logistica }}</div>{% endif %}
+        </details>
+        {% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty"><i class="fa fa-store-slash"></i><p>Nessuna fiera assegnata.<br>L'admin ti assegnerà a una fiera tramite incarichi.</p></div>
+    {% endif %}
+  </div>
+</div>
+
+</div>
+
+<script>
+function apriTab(ev, id) {
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.tab-pane').forEach(function(p){ p.classList.remove('active'); });
+  ev.currentTarget.classList.add('active');
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function timbraPer(uid, nome) {
+  // Cambia tab e preseleziona il dipendente
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.tab-pane').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.tab')[2].classList.add('active');  // tab Timbra (index 2)
+  document.getElementById('tab-timbra').classList.add('active');
+  var sel = document.getElementById('cs-utente');
+  for (var i = 0; i < sel.options.length; i++) {
+    if (sel.options[i].value == uid) { sel.selectedIndex = i; break; }
+  }
+  window.scrollTo(0, 0);
+}
+
+function toggleModCs() {
+  var isOrari = document.querySelector('input[name=modalita]:checked').value === 'orari';
+  document.getElementById('cs-grp-ore').style.display = isOrari ? 'none' : '';
+  document.getElementById('cs-grp-orari').style.display = isOrari ? '' : 'none';
+  document.getElementById('cs-pill-ore').classList.toggle('active', !isOrari);
+  document.getElementById('cs-pill-orari').classList.toggle('active', isOrari);
+}
+
+function aggiornaGfCs() {
+  var sel = document.getElementById('cs-cantiere');
+  var opt = sel.options[sel.selectedIndex];
+  var status = document.getElementById('cs-gps-status');
+  if (!opt || !opt.value) { status.textContent = ''; status.className = 'gps-status'; return; }
+  var gf = opt.dataset.gf;
+  if (gf === 'obbligatorio') {
+    status.innerHTML = '🔒 GPS <strong>obbligatorio</strong> per questa fiera';
+  } else if (gf === 'avviso') {
+    status.innerHTML = '⚠️ GPS richiesto (modalità avviso)';
+  } else {
+    status.textContent = '';
+  }
+}
+
+var _csSubmitting = false;
+function submitTimbCs(ev) {
+  if (_csSubmitting) return false;
+  var sel = document.getElementById('cs-cantiere');
+  var opt = sel.options[sel.selectedIndex];
+  var gf = opt && opt.dataset ? opt.dataset.gf : 'disattivato';
+  var btn = document.getElementById('cs-submit-btn');
+  var status = document.getElementById('cs-gps-status');
+
+  if (gf === 'disattivato' || !gf) {
+    _csSubmitting = true;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Invio...';
+    return true;
+  }
+
+  // Serve GPS
+  ev.preventDefault();
+  if (!navigator.geolocation) {
+    if (gf === 'obbligatorio') {
+      alert('GPS obbligatorio ma il browser non lo supporta.');
+      return false;
+    }
+    _csSubmitting = true;
+    btn.disabled = true;
+    document.getElementById('form-timb-cs').submit();
+    return false;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa fa-location-crosshairs"></i> GPS...';
+  status.innerHTML = '📍 Acquisizione posizione...';
+  status.className = 'gps-status';
+
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      document.getElementById('cs-lat').value = pos.coords.latitude.toFixed(6);
+      document.getElementById('cs-lng').value = pos.coords.longitude.toFixed(6);
+      status.innerHTML = '✓ Posizione rilevata';
+      status.className = 'gps-status ok';
+      _csSubmitting = true;
+      btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Invio...';
+      document.getElementById('form-timb-cs').submit();
+    },
+    function(err) {
+      status.innerHTML = '⚠️ GPS non disponibile';
+      status.className = 'gps-status err';
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-paper-plane"></i> Invia richiesta';
+      if (gf === 'obbligatorio') {
+        alert('GPS obbligatorio per questa fiera. Abilita la geolocalizzazione e riprova.');
+        return;
+      }
+      if (confirm('GPS non disponibile. Inviare comunque?')) {
+        _csSubmitting = true;
+        btn.disabled = true;
+        document.getElementById('form-timb-cs').submit();
+      }
+    },
+    { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 }
+  );
+  return false;
+}
+</script>
+
+</body>
+</html>"""
+
+
+@app.route('/mobile/cs')
+@login_required
+def mobile_cs():
+    """Pagina mobile dedicata al caposquadra: home, squadra, timbrature, fiere assegnate."""
+    if session.get('ruolo') == 'admin':
+        return redirect(url_for('dashboard'))
+    if session.get('ruolo') != 'caposquadra':
+        return redirect(url_for('mobile'))
+
+    uid = session['user_id']
+    db = get_db()
+
+    # Squadre del caposquadra
+    sq_raw = db.execute("""SELECT id, nome, note FROM squadre
+                           WHERE caposquadra_id=? AND COALESCE(attiva,1)=1
+                           ORDER BY nome""", (uid,)).fetchall()
+    squadre = []
+    membri_ids = set()
+    for sq in sq_raw:
+        sd = dict(sq)
+        members = db.execute("""SELECT u.id, u.nome, u.cognome, u.mansione, u.email, u.telefono
+                                FROM squadre_membri sm
+                                JOIN utenti u ON u.id = sm.utente_id
+                                WHERE sm.squadra_id=? AND COALESCE(u.attivo,1)=1
+                                ORDER BY u.cognome, u.nome""",
+                             (sq['id'],)).fetchall()
+        sd['membri'] = [dict(m) for m in members]
+        for m in members:
+            membri_ids.add(m['id'])
+        squadre.append(sd)
+
+    # Cantieri attivi (per il form timbratura)
+    cantieri = db.execute("""SELECT id, nome, lat, lng, raggio_geofence_metri, geofence_modalita
+                             FROM cantieri WHERE COALESCE(attivo,1)=1
+                             ORDER BY data_setup DESC, nome""").fetchall()
+
+    # Fiere assegnate al caposquadra (via incarichi accettati/completati)
+    fiere_raw = db.execute("""SELECT DISTINCT c.id, c.nome, c.padiglione, c.numero_stand, c.citta,
+                                     c.data_setup, c.data_live, c.data_dismantling,
+                                     c.note_tecniche, c.note_logistica,
+                                     cli.nome as committente
+                              FROM incarichi i
+                              JOIN cantieri c ON c.id = i.cantiere_id
+                              LEFT JOIN clienti cli ON cli.id = c.committente_id
+                              WHERE i.utente_id=? AND i.stato IN ('accettato','completato')
+                                AND COALESCE(c.attivo,1)=1
+                              ORDER BY COALESCE(c.data_setup, c.data_inizio) DESC""",
+                           (uid,)).fetchall()
+
+    oggi_iso = date.today().isoformat()
+    fiere = []
+    fiere_oggi = []
+    for f in fiere_raw:
+        fd = dict(f)
+        ds, dl, dd = f['data_setup'], f['data_live'], f['data_dismantling']
+        fase = None
+        if ds and dl and dd:
+            if ds <= oggi_iso < dl:
+                fase = 'setup'
+            elif dl <= oggi_iso < dd:
+                fase = 'live'
+            elif oggi_iso == dd:
+                fase = 'dismantling'
+            elif oggi_iso < ds:
+                fase = 'future'
+            else:
+                fase = 'past'
+        elif ds and oggi_iso < ds:
+            fase = 'future'
+        fd['fase'] = fase
+        fiere.append(fd)
+        if fase in ('setup', 'live', 'dismantling'):
+            fiere_oggi.append(fd)
+
+    # Stats riepilogo del mese corrente
+    mese_str = date.today().strftime('%Y-%m')
+    mie_ore_row = db.execute("""SELECT COALESCE(SUM(ore_totali),0) FROM presenze
+                                WHERE utente_id=? AND substr(data,1,7)=?""",
+                             (uid, mese_str)).fetchone()
+    mie_ore = float(mie_ore_row[0] or 0)
+
+    if membri_ids:
+        placeholders = ','.join('?' * len(membri_ids))
+        ore_sq_row = db.execute(f"""SELECT COALESCE(SUM(ore_totali),0), COUNT(id)
+                                     FROM presenze
+                                     WHERE utente_id IN ({placeholders})
+                                       AND substr(data,1,7)=?""",
+                                 list(membri_ids) + [mese_str]).fetchone()
+        ore_squadra = float(ore_sq_row[0] or 0)
+        n_timb_squadra = int(ore_sq_row[1] or 0)
+    else:
+        ore_squadra = 0.0
+        n_timb_squadra = 0
+
+    # Ultime timbrature della squadra (e mie) — ultime 8
+    member_ids_with_self = list(membri_ids) + [uid]
+    placeholders = ','.join('?' * len(member_ids_with_self))
+    timb_recenti_raw = db.execute(f"""
+        SELECT 'presenza' as origine, p.data, p.ora_entrata, p.ora_uscita, p.ore_totali,
+               u.nome||' '||u.cognome as dipendente,
+               c.nome as cantiere,
+               'approvata' as stato, 'approvata' as stato_label
+        FROM presenze p
+        JOIN utenti u ON u.id=p.utente_id
+        LEFT JOIN cantieri c ON c.id=p.cantiere_id
+        WHERE p.utente_id IN ({placeholders})
+        UNION ALL
+        SELECT 'richiesta' as origine, r.data, r.ora_entrata, r.ora_uscita, r.ore_totali,
+               u.nome||' '||u.cognome as dipendente,
+               c.nome as cantiere,
+               r.stato as stato,
+               CASE r.stato WHEN 'in_attesa' THEN 'attesa' WHEN 'approvata' THEN 'OK' WHEN 'rifiutata' THEN 'KO' ELSE r.stato END as stato_label
+        FROM richieste_presenze r
+        JOIN utenti u ON u.id=r.utente_id
+        LEFT JOIN cantieri c ON c.id=r.cantiere_id
+        WHERE r.utente_id IN ({placeholders})
+        ORDER BY data DESC LIMIT 8""",
+        member_ids_with_self * 2).fetchall()
+    timbrature_recenti = []
+    for t in timb_recenti_raw:
+        td = dict(t)
+        # Mappa stato → ts_attesa/ts_approvata/ts_rifiutata
+        st = td['stato']
+        if st == 'in_attesa': td['stato'] = 'attesa'
+        elif st == 'approvata': td['stato'] = 'approvata'
+        elif st == 'rifiutata': td['stato'] = 'rifiutata'
+        else: td['stato'] = 'approvata'
+        timbrature_recenti.append(td)
+
+    db.close()
+
+    # Flash messaggi
+    msgs = session.get('_flashes', [])
+    flash_msg = flash_type = None
+    if msgs:
+        flash_type, flash_msg = msgs[-1]
+        session['_flashes'] = []
+
+    return render_template_string(MOBILE_CS_TMPL,
+                                  azienda=get_setting('nome_azienda', 'Accesso Fiere'),
+                                  uid=uid,
+                                  nome=session.get('nome', ''),
+                                  cognome=session.get('cognome', ''),
+                                  squadre=squadre,
+                                  cantieri=[dict(c) for c in cantieri],
+                                  fiere=fiere,
+                                  fiere_oggi=fiere_oggi,
+                                  mie_ore=mie_ore,
+                                  ore_squadra=ore_squadra,
+                                  n_timbrature_squadra=n_timb_squadra,
+                                  timbrature_recenti=timbrature_recenti,
+                                  n_membri=len(membri_ids),
+                                  n_fiere=len(fiere),
+                                  oggi=date.today().isoformat(),
+                                  flash_msg=flash_msg, flash_type=flash_type)
+
+
+@app.route('/mobile/cs/timbra', methods=['POST'])
+@login_required
+def mobile_cs_timbra():
+    """Caposquadra inserisce una richiesta presenza per sé o per un membro della sua squadra."""
+    if session.get('ruolo') != 'caposquadra':
+        flash('Operazione non consentita.', 'error')
+        return redirect(url_for('login'))
+
+    cs_id = session['user_id']
+    try:
+        target_uid = int(request.form.get('utente_id'))
+    except (ValueError, TypeError):
+        flash('Seleziona per chi inserire la timbratura.', 'error')
+        return redirect(url_for('mobile_cs'))
+
+    db = get_db()
+    membri_ids = get_squadra_membri_ids(db, cs_id)
+    # Il cs può timbrare per se stesso O per un membro della sua squadra
+    if target_uid != cs_id and target_uid not in membri_ids:
+        db.close()
+        flash('Puoi timbrare solo per te o per un membro della tua squadra.', 'error')
+        return redirect(url_for('mobile_cs'))
+
+    data = request.form.get('data') or date.today().isoformat()
+    cantiere_id = request.form.get('cantiere_id') or None
+    note = request.form.get('note', '').strip()
+    modalita = request.form.get('modalita', 'ore')
+
+    try: lat = float(request.form.get('lat')) if request.form.get('lat') else None
+    except (ValueError, TypeError): lat = None
+    try: lng = float(request.form.get('lng')) if request.form.get('lng') else None
+    except (ValueError, TypeError): lng = None
+
+    if not cantiere_id:
+        db.close()
+        flash('Seleziona la fiera.', 'error')
+        return redirect(url_for('mobile_cs'))
+
+    # Geofencing check (solo se sta timbrando per se stesso — per i membri non ha senso)
+    if target_uid == cs_id:
+        cant = db.execute("""SELECT lat, lng, raggio_geofence_metri, geofence_modalita, nome
+                             FROM cantieri WHERE id=?""", (int(cantiere_id),)).fetchone()
+        if cant and cant['geofence_modalita'] != 'disattivato' and cant['lat'] is not None and cant['lng'] is not None:
+            if lat is None or lng is None:
+                if cant['geofence_modalita'] == 'obbligatorio':
+                    db.close()
+                    flash(f'⛔ GPS richiesto per "{cant["nome"]}". Abilita la geolocalizzazione.', 'error')
+                    return redirect(url_for('mobile_cs'))
+            else:
+                distanza = _haversine_metri(lat, lng, cant['lat'], cant['lng'])
+                raggio = cant['raggio_geofence_metri'] or 200
+                if distanza is not None and distanza > raggio and cant['geofence_modalita'] == 'obbligatorio':
+                    db.close()
+                    flash(f'⛔ Sei a {distanza}m da "{cant["nome"]}" (max {raggio}m). Rifiutata.', 'error')
+                    return redirect(url_for('mobile_cs'))
+
+    ora_e = ora_u = None
+    ore_nette = 0
+    pausa = 0
+
+    if modalita == 'orari':
+        ora_e = request.form.get('ora_entrata', '').strip()
+        ora_u = request.form.get('ora_uscita', '').strip()
+        if not ora_e or not ora_u:
+            db.close()
+            flash('Inserisci entrata e uscita.', 'error')
+            return redirect(url_for('mobile_cs'))
+        try:
+            pausa = float(request.form.get('pausa_orari', '0') or 0)
+            diff = datetime.strptime(ora_u, '%H:%M') - datetime.strptime(ora_e, '%H:%M')
+            ore_lordi = round(diff.total_seconds() / 3600, 2)
+            if ore_lordi <= 0:
+                raise ValueError
+            ore_nette = max(0, round(ore_lordi - pausa, 2))
+        except (ValueError, TypeError):
+            db.close()
+            flash('Orari non validi.', 'error')
+            return redirect(url_for('mobile_cs'))
+        nota_completa = f"Entrata {ora_e} - Uscita {ora_u} | Pausa: {pausa}h - Nette: {ore_nette}h"
+    else:
+        try:
+            ore = float(request.form.get('ore', 0) or 0)
+            pausa = float(request.form.get('pausa', '0') or 0)
+            ore_nette = max(0, ore - pausa)
+        except (ValueError, TypeError):
+            db.close()
+            flash('Inserisci un valore valido per le ore.', 'error')
+            return redirect(url_for('mobile_cs'))
+        if ore <= 0:
+            db.close()
+            flash('Inserisci le ore lavorate.', 'error')
+            return redirect(url_for('mobile_cs'))
+        nota_completa = f"Pausa: {pausa}h - Nette: {ore_nette}h"
+
+    # Marca se timbratura inserita dal caposquadra per un membro
+    if target_uid != cs_id:
+        cs_nome = f"{session.get('nome','')} {session.get('cognome','')}".strip()
+        nota_completa = f"[Inserita dal caposquadra {cs_nome}] {nota_completa}"
+    if note:
+        nota_completa += f" | {note}"
+
+    # Anti-duplicato
+    gia = db.execute("""SELECT id FROM richieste_presenze
+                        WHERE utente_id=? AND data=? AND cantiere_id=? AND stato='in_attesa'""",
+                     (target_uid, data, int(cantiere_id))).fetchone()
+    if gia:
+        db.close()
+        flash('Esiste già una richiesta in attesa per questo giorno e fiera.', 'error')
+        return redirect(url_for('mobile_cs'))
+
+    db.execute("""INSERT INTO richieste_presenze
+                  (utente_id, data, ora_entrata, ora_uscita, ore_totali, cantiere_id, note)
+                  VALUES (?,?,?,?,?,?,?)""",
+               (target_uid, data, ora_e, ora_u, ore_nette, int(cantiere_id), nota_completa))
+    safe_commit(db)
+
+    # Recupera nome del target per messaggio
+    targ = db.execute("SELECT nome, cognome FROM utenti WHERE id=?", (target_uid,)).fetchone()
+    targ_nome = f"{targ['nome']} {targ['cognome']}" if targ else 'dipendente'
+    db.close()
+
+    if target_uid == cs_id:
+        flash(f'✅ Richiesta inviata ({ore_nette}h) — in attesa di approvazione.', 'success')
+    else:
+        flash(f'✅ Richiesta per {targ_nome} inviata ({ore_nette}h).', 'success')
+    return redirect(url_for('mobile_cs'))
+
+
 @app.route('/mobile')
 @login_required
 def mobile():
+    # Caposquadra ha la sua pagina dedicata
+    if session.get('ruolo') == 'caposquadra':
+        return redirect(url_for('mobile_cs'))
     db = get_db()
     uid = session['user_id']
     cantieri = db.execute(
