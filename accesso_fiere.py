@@ -17231,29 +17231,56 @@ BANCA_ORE_TMPL = """
 .bo-pos{color:#16a34a}.bo-neg{color:#dc2626}.bo-zero{color:#64748b}
 .bo-tab{width:100%;border-collapse:collapse;font-size:13px}
 .bo-tab th{background:#0f172a;color:#fff;padding:10px 12px;text-align:left;font-size:12px}
-.bo-tab td{padding:10px 12px;border-bottom:1px solid var(--border)}
+.bo-tab td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
 .bo-info{background:#eff6ff;border-left:4px solid #3b82f6;padding:14px 18px;border-radius:8px;margin-bottom:18px;font-size:13px;color:#1e3a8a}
 .bo-info strong{color:#1e40af}
 .mese-mini{font-size:11px;color:var(--text-light);font-family:monospace}
+.bo-mese-bar{display:flex;justify-content:space-between;align-items:center;background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:18px;flex-wrap:wrap;gap:10px}
+.bo-mese-nav{display:flex;align-items:center;gap:8px}
+.bo-mese-label{font-size:18px;font-weight:800;color:var(--text);min-width:170px;text-align:center}
+.bo-monte-input{width:80px;text-align:right;border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-family:monospace;font-size:13px;background:#fff;font-weight:700}
+.bo-monte-input:focus{border-color:var(--accent);outline:none;background:#fffbeb}
+.bo-monte-input.bo-empty{background:#fef3c7;border-color:#f59e0b;color:#92400e}
+.bo-actions-btn{position:relative;display:inline-block}
+.bo-actions-menu{position:absolute;right:0;top:100%;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.1);min-width:200px;z-index:50;display:none;overflow:hidden}
+.bo-actions-menu.open{display:block}
+.bo-actions-menu a{display:block;padding:10px 14px;font-size:13px;color:var(--text);text-decoration:none;border-bottom:1px solid var(--border)}
+.bo-actions-menu a:last-child{border-bottom:none}
+.bo-actions-menu a:hover{background:#f1f5f9;color:var(--accent)}
+.bo-actions-menu i{width:16px;margin-right:6px;color:var(--accent)}
+.bo-rett-form{background:#fef9e7;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;margin-top:8px;display:none}
+.bo-rett-form.open{display:block}
+.bo-rett-form input{padding:5px 8px;border:1px solid #fcd34d;border-radius:5px;font-size:12px}
+.bo-chart-row{background:#f8fafc;display:none}
+.bo-chart-row.open{display:table-row}
+.bo-chart-row td{padding:0}
+.bo-chart-wrap{padding:14px 16px}
+.bo-chart-canvas{max-height:260px}
 </style>
 
-<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:18px">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:14px">
   <div style="flex:1;min-width:280px">
     <p style="color:var(--text-light);font-size:13px;margin:4px 0 0">
-      <strong style="color:var(--text)">Ore lavorate</strong> sono prese dalle presenze. <strong style="color:var(--text)">Monte ore</strong> e <strong>rettifiche</strong> li gestisci tu manualmente nel dettaglio del dipendente.
+      <strong style="color:var(--text)">Ore lavorate</strong> sono prese dalle presenze. <strong style="color:var(--text)">Monte ore</strong> e <strong>rettifiche</strong> li gestisci tu manualmente.
     </p>
   </div>
-  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-    <a href="/banca-ore/report" class="btn btn-blue btn-sm" style="white-space:nowrap"><i class="fa fa-chart-line"></i> Report & Export</a>
-  </div>
+  <a href="/banca-ore/report" class="btn btn-blue btn-sm" style="white-space:nowrap"><i class="fa fa-chart-line"></i> Report & Export</a>
 </div>
 
-<div class="bo-info">
-  <strong><i class="fa fa-circle-info"></i> Come funziona la banca ore:</strong>
-  Per ogni dipendente, mese per mese, il sistema mostra automaticamente le <strong>ore lavorate</strong> dalle presenze.
-  Tu inserisci manualmente il <strong>monte ore</strong> del mese (es. 168h, 80h part-time, ecc.).
-  Il <strong>delta del mese</strong> = ore lavorate − monte ore.
-  Il <strong>saldo finale</strong> include anche il <strong>riporto</strong> automatico dal mese precedente e le tue eventuali <strong>rettifiche manuali</strong> (pagamento straordinari, recuperi, ecc.).
+<!-- Filtro mese -->
+<div class="bo-mese-bar">
+  <div class="bo-mese-nav">
+    <a href="/banca-ore?mese={{ mese_prev }}" class="btn btn-secondary btn-sm" title="Mese precedente"><i class="fa fa-chevron-left"></i></a>
+    <span class="bo-mese-label">{{ mese_label }}</span>
+    <a href="/banca-ore?mese={{ mese_next }}" class="btn btn-secondary btn-sm" title="Mese successivo"><i class="fa fa-chevron-right"></i></a>
+    {% if mese_sel != mese_oggi %}
+    <a href="/banca-ore" class="btn btn-secondary btn-sm" style="margin-left:6px">Oggi</a>
+    {% endif %}
+  </div>
+  <form method="GET" action="/banca-ore" style="display:flex;align-items:center;gap:8px">
+    <label style="font-size:12px;color:var(--text-light);font-weight:600">Vai al mese:</label>
+    <input type="month" name="mese" value="{{ mese_sel }}" onchange="this.form.submit()" style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+  </form>
 </div>
 
 {% if not dipendenti %}
@@ -17262,46 +17289,102 @@ BANCA_ORE_TMPL = """
   <p style="margin-top:12px">Nessun dipendente attivo.</p>
 </div>
 {% else %}
-<div class="bo-card" style="padding:0;overflow:hidden">
+<div class="bo-card" style="padding:0;overflow:visible">
 <table class="bo-tab">
   <thead><tr>
     <th>DIPENDENTE</th>
-    <th style="text-align:right">ORE LAVORATE (mese corrente)</th>
-    <th style="text-align:right">MONTE ORE (mese corrente)</th>
+    <th style="text-align:right">ORE LAVORATE</th>
+    <th style="text-align:right">MONTE ORE</th>
+    <th style="text-align:right">DELTA</th>
+    <th style="text-align:right">RETTIFICHE</th>
+    <th style="text-align:right">RIPORTO</th>
+    <th style="text-align:right">SALDO MESE</th>
     <th style="text-align:right">SALDO BANCA</th>
-    <th></th>
+    <th style="text-align:right">AZIONI</th>
   </tr></thead>
   <tbody>
   {% for u in dipendenti %}
+  {% set m = u.mese_data %}
   <tr>
-    <td><strong>{{ u.nome }} {{ u.cognome }}</strong>{% if u.titolo %}<div style="font-size:11px;color:var(--text-light)">{{ u.titolo }}</div>{% endif %}</td>
-    <td style="text-align:right">
-      {% if u.mese_corrente %}
-      <div style="font-family:monospace;font-weight:700">{{ "%.1f"|format(u.mese_corrente.ore_lavorate) }} h</div>
-      {% else %}—{% endif %}
+    <td>
+      <strong>{{ u.nome }} {{ u.cognome }}</strong>
+      {% if u.titolo %}<div style="font-size:11px;color:var(--text-light)">{{ u.titolo }}</div>{% endif %}
+    </td>
+    <td style="text-align:right;font-family:monospace;font-weight:700">
+      {{ "%.1f"|format(m.ore_lavorate) }} h
     </td>
     <td style="text-align:right">
-      {% if u.mese_corrente %}
-      <div style="font-family:monospace;{% if u.mese_corrente.monte_ore == 0 %}color:var(--warning)" title="Monte ore non impostato{% endif %}">
-        {{ "%.1f"|format(u.mese_corrente.monte_ore) }} h
-        {% if u.mese_corrente.monte_ore == 0 %}<i class="fa fa-triangle-exclamation" style="margin-left:4px" title="Imposta il monte ore"></i>{% endif %}
-      </div>
-      <div class="mese-mini">delta
-        <span class="{% if u.mese_corrente.delta_mese > 0 %}bo-pos{% elif u.mese_corrente.delta_mese < 0 %}bo-neg{% else %}bo-zero{% endif %}" style="font-weight:700">
-        {% if u.mese_corrente.delta_mese > 0 %}+{% endif %}{{ "%.1f"|format(u.mese_corrente.delta_mese) }}h</span>
-      </div>
-      {% else %}—{% endif %}
+      <form action="/banca-ore/{{ u.id }}/monte" method="POST" style="display:inline-flex;align-items:center;gap:4px">
+        <input type="hidden" name="mese" value="{{ m.mese }}">
+        <input type="hidden" name="redirect_mese" value="{{ mese_sel }}">
+        <input type="number" name="monte_ore" value="{{ '%.1f'|format(m.monte_ore) if m.monte_ore else '' }}"
+               step="0.5" min="0" max="744"
+               placeholder="—"
+               onblur="this.form.submit()"
+               class="bo-monte-input {% if not m.monte_ore %}bo-empty{% endif %}"
+               title="Inserisci il monte ore per questo mese">
+        <span style="color:var(--text-light);font-size:11px">h</span>
+      </form>
+    </td>
+    <td style="text-align:right;font-weight:800" class="{% if m.delta_mese > 0 %}bo-pos{% elif m.delta_mese < 0 %}bo-neg{% else %}bo-zero{% endif %}">
+      {% if m.delta_mese > 0 %}+{% endif %}{{ "%.1f"|format(m.delta_mese) }} h
+    </td>
+    <td style="text-align:right;font-family:monospace;font-size:13px" class="{% if m.rettifiche > 0 %}bo-pos{% elif m.rettifiche < 0 %}bo-neg{% else %}bo-zero{% endif %}">
+      {% if m.rettifiche %}{% if m.rettifiche > 0 %}+{% endif %}{{ "%.1f"|format(m.rettifiche) }}{% else %}—{% endif %}
+    </td>
+    <td style="text-align:right;font-family:monospace;font-size:13px;color:var(--text-light)">
+      {% if m.riporto %}{% if m.riporto > 0 %}+{% endif %}{{ "%.1f"|format(m.riporto) }}{% else %}—{% endif %}
+    </td>
+    <td style="text-align:right;font-weight:800;font-size:14px" class="{% if m.saldo_finale > 0 %}bo-pos{% elif m.saldo_finale < 0 %}bo-neg{% else %}bo-zero{% endif %}">
+      {% if m.saldo_finale > 0 %}+{% endif %}{{ "%.1f"|format(m.saldo_finale) }} h
     </td>
     <td style="text-align:right">
-      <span class="bo-saldo {% if u.saldo > 0 %}bo-pos{% elif u.saldo < 0 %}bo-neg{% else %}bo-zero{% endif %}">
-        {% if u.saldo > 0 %}+{% endif %}{{ "%.1f"|format(u.saldo) }} h
+      <span class="bo-saldo {% if u.saldo_corrente > 0 %}bo-pos{% elif u.saldo_corrente < 0 %}bo-neg{% else %}bo-zero{% endif %}" style="font-size:18px">
+        {% if u.saldo_corrente > 0 %}+{% endif %}{{ "%.1f"|format(u.saldo_corrente) }}h
       </span>
-      {% if u.rettifiche_totali %}
-      <div class="mese-mini">incl. rettifiche: {% if u.rettifiche_totali > 0 %}+{% endif %}{{ "%.1f"|format(u.rettifiche_totali) }}h</div>
-      {% endif %}
     </td>
     <td style="text-align:right">
-      <a href="/banca-ore/{{ u.id }}" class="btn btn-sm btn-secondary"><i class="fa fa-eye"></i> Dettaglio</a>
+      <div class="bo-actions-btn">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAzioni({{ u.id }}, event)">
+          <i class="fa fa-ellipsis-vertical"></i> Azioni
+        </button>
+        <div class="bo-actions-menu" id="azioni-{{ u.id }}">
+          <a href="javascript:void(0)" onclick="apriRettifica({{ u.id }})"><i class="fa fa-pen-to-square"></i> Rettifica manuale</a>
+          <a href="javascript:void(0)" onclick="toggleGrafico({{ u.id }})"><i class="fa fa-chart-line"></i> Grafico 12 mesi</a>
+          <a href="/banca-ore/{{ u.id }}"><i class="fa fa-eye"></i> Dettaglio completo</a>
+        </div>
+      </div>
+    </td>
+  </tr>
+  <!-- Riga rettifica (collassabile) -->
+  <tr id="rett-row-{{ u.id }}" style="display:none;background:#fef9e7">
+    <td colspan="9" style="padding:12px 16px">
+      <form action="/banca-ore/{{ u.id }}/rettifica" method="POST" style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
+        <input type="hidden" name="redirect_mese" value="{{ mese_sel }}">
+        <div class="form-group" style="margin:0;min-width:130px">
+          <label style="font-size:11px">Mese applicazione</label>
+          <input type="month" name="mese" value="{{ m.mese }}" required style="padding:5px 8px;border:1px solid #fcd34d;border-radius:5px;font-size:12px">
+        </div>
+        <div class="form-group" style="margin:0;min-width:120px">
+          <label style="font-size:11px">Delta ore (±)</label>
+          <input type="number" name="delta" step="0.25" required placeholder="es. -4 o 8" style="text-align:right;font-weight:700;padding:5px 8px;border:1px solid #fcd34d;border-radius:5px;font-size:12px">
+        </div>
+        <div class="form-group" style="margin:0;flex:1;min-width:200px">
+          <label style="font-size:11px">Descrizione *</label>
+          <input name="descrizione" required placeholder="es. Pagamento straordinari, recupero ferie..." style="padding:5px 8px;border:1px solid #fcd34d;border-radius:5px;font-size:12px;width:100%">
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> Aggiungi rettifica</button>
+        <button type="button" onclick="apriRettifica({{ u.id }})" class="btn btn-secondary btn-sm">Annulla</button>
+      </form>
+    </td>
+  </tr>
+  <!-- Riga grafico 12 mesi (collassabile) -->
+  <tr id="chart-row-{{ u.id }}" class="bo-chart-row">
+    <td colspan="9">
+      <div class="bo-chart-wrap">
+        <div style="font-size:12px;color:var(--text-light);margin-bottom:6px">📊 Andamento ultimi 12 mesi: <strong>{{ u.nome }} {{ u.cognome }}</strong></div>
+        <canvas id="chart-{{ u.id }}" class="bo-chart-canvas"></canvas>
+      </div>
     </td>
   </tr>
   {% endfor %}
@@ -17309,6 +17392,129 @@ BANCA_ORE_TMPL = """
 </table>
 </div>
 {% endif %}
+
+<div class="bo-info">
+  <strong><i class="fa fa-circle-info"></i> Come funziona:</strong>
+  Le <strong>ore lavorate</strong> e i <strong>riporti</strong> sono automatici. Il <strong>monte ore</strong> di ogni mese lo inserisci tu cliccando direttamente nella cella (👈 prova!).
+  Per rettifiche manuali (es. pagamento straordinari) usa "Azioni → Rettifica". Per il grafico storico usa "Azioni → Grafico 12 mesi".
+  Il <strong>SALDO BANCA</strong> è il saldo cumulativo aggiornato a oggi (riporto fino al mese corrente).
+</div>
+
+<!-- Dati grafici (JSON, letti da JS) -->
+<script type="application/json" id="bo-chart-data">
+{
+  "labels": {{ mesi_grafico|tojson }},
+  "dipendenti": {
+    {% for u in dipendenti %}
+    "{{ u.id }}": {
+      "nome": "{{ u.nome }} {{ u.cognome }}",
+      "lavorate": {{ u.serie_lavorate|tojson }},
+      "monte": {{ u.serie_monte|tojson }},
+      "saldo": {{ u.serie_saldo|tojson }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  }
+}
+</script>
+
+<script>
+// Chiude i menu Azioni cliccando fuori
+document.addEventListener('click', function(ev) {
+  if (!ev.target.closest('.bo-actions-btn')) {
+    document.querySelectorAll('.bo-actions-menu.open').forEach(function(m){ m.classList.remove('open'); });
+  }
+});
+
+function toggleAzioni(id, ev) {
+  ev.stopPropagation();
+  // Chiudi tutti gli altri menu prima
+  document.querySelectorAll('.bo-actions-menu.open').forEach(function(m){
+    if (m.id !== 'azioni-' + id) m.classList.remove('open');
+  });
+  document.getElementById('azioni-' + id).classList.toggle('open');
+}
+
+function apriRettifica(id) {
+  // Chiudi menu azioni
+  document.getElementById('azioni-' + id).classList.remove('open');
+  var row = document.getElementById('rett-row-' + id);
+  row.style.display = (row.style.display === 'table-row') ? 'none' : 'table-row';
+}
+
+var charts = {};
+function toggleGrafico(id) {
+  document.getElementById('azioni-' + id).classList.remove('open');
+  var row = document.getElementById('chart-row-' + id);
+  var isOpen = row.classList.contains('open');
+  if (isOpen) {
+    row.classList.remove('open');
+    return;
+  }
+  row.classList.add('open');
+  if (charts[id]) return;  // già renderizzato
+
+  var data = JSON.parse(document.getElementById('bo-chart-data').textContent);
+  var d = data.dipendenti[id];
+  if (!d) return;
+  var ctx = document.getElementById('chart-' + id).getContext('2d');
+  charts[id] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: data.labels,
+      datasets: [
+        {
+          type: 'bar',
+          label: 'Ore lavorate',
+          data: d.lavorate,
+          backgroundColor: 'rgba(59, 130, 246, .65)',
+          borderColor: '#3b82f6',
+          borderWidth: 1,
+          order: 2
+        },
+        {
+          type: 'bar',
+          label: 'Monte ore',
+          data: d.monte,
+          backgroundColor: 'rgba(245, 158, 11, .55)',
+          borderColor: '#f59e0b',
+          borderWidth: 1,
+          order: 2
+        },
+        {
+          type: 'line',
+          label: 'Saldo finale (cumulativo)',
+          data: d.saldo,
+          borderColor: '#16a34a',
+          backgroundColor: 'rgba(22, 163, 74, .12)',
+          tension: 0.3,
+          pointRadius: 4,
+          borderWidth: 2,
+          fill: true,
+          order: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11 } } },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              return ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(1) + 'h';
+            }
+          }
+        }
+      },
+      scales: {
+        y: { beginAtZero: false, ticks: { callback: function(v){ return v + 'h'; } } }
+      }
+    }
+  });
+}
+</script>
 
 {% if senza_contratto %}
 <div class="bo-card" style="background:#fef3c7;border-color:#fbbf24;margin-top:20px">
@@ -17480,29 +17686,77 @@ function apriRettifica(mese) {
 @app.route('/banca-ore')
 @admin_required
 def banca_ore():
+    from datetime import date as _d
+    # Mese selezionato dal filtro (default: mese corrente)
+    mese_sel = (request.args.get('mese') or _d.today().strftime('%Y-%m')).strip()
+    if len(mese_sel) != 7 or mese_sel[4] != '-':
+        mese_sel = _d.today().strftime('%Y-%m')
+
+    # Calcolo i 12 mesi precedenti (incluso mese_sel) per il grafico
+    try:
+        sy, sm = int(mese_sel[:4]), int(mese_sel[5:7])
+    except (ValueError, IndexError):
+        sy, sm = _d.today().year, _d.today().month
+
+    mesi_grafico = []
+    y, m = sy, sm
+    for _ in range(12):
+        mesi_grafico.append(f"{y:04d}-{m:02d}")
+        m -= 1
+        if m < 1: m = 12; y -= 1
+    mesi_grafico.reverse()  # dal più vecchio al più recente
+
     db = get_db()
-    dip_raw = db.execute("""SELECT id, nome, cognome, mansione as titolo,
-                                   ore_contratto_giornaliere, ore_contratto_mensili
+    dip_raw = db.execute("""SELECT id, nome, cognome, mansione as titolo
                             FROM utenti WHERE COALESCE(attivo,1)=1 AND ruolo != 'admin'
                             ORDER BY cognome, nome""").fetchall()
     dipendenti = []
     for u in dip_raw:
         ud = dict(u)
         info = _banca_ore_info_completa(db, u['id'])
-        ud['saldo'] = info['saldo']
-        ud['ore_lavorate_totali'] = info['ore_lavorate_totali']
-        ud['monte_totale'] = info['monte_totale']
-        ud['rettifiche_totali'] = info['rettifiche_totali']
-        # Mese corrente per dettaglio rapido
-        if info['mesi']:
-            corr = next((m for m in info['mesi'] if m['is_corrente']), info['mesi'][-1])
-            ud['mese_corrente'] = corr
+        ud['saldo_corrente'] = info['saldo']  # saldo banca attuale
+        # Trovo il mese selezionato nel breakdown
+        m_sel = next((x for x in info['mesi'] if x['mese'] == mese_sel), None)
+        if m_sel:
+            ud['mese_data'] = m_sel
         else:
-            ud['mese_corrente'] = None
+            # Mese non ancora generato (es. fuori range): metto valori vuoti
+            ud['mese_data'] = {
+                'mese': mese_sel, 'ore_lavorate': 0.0, 'monte_ore': 0.0,
+                'delta_mese': 0.0, 'rettifiche': 0.0, 'riporto': 0.0,
+                'saldo_finale': 0.0, 'is_corrente': False,
+            }
+        # Storico ultimi 12 mesi per grafico (lista parallela ai mesi_grafico)
+        serie_lavorate = []
+        serie_monte = []
+        serie_saldo = []
+        for mg in mesi_grafico:
+            mr = next((x for x in info['mesi'] if x['mese'] == mg), None)
+            serie_lavorate.append(mr['ore_lavorate'] if mr else 0)
+            serie_monte.append(mr['monte_ore'] if mr else 0)
+            serie_saldo.append(mr['saldo_finale'] if mr else 0)
+        ud['serie_lavorate'] = serie_lavorate
+        ud['serie_monte'] = serie_monte
+        ud['serie_saldo'] = serie_saldo
         dipendenti.append(ud)
     db.close()
+
+    # Mese precedente/successivo per navigazione
+    py, pm = sy, sm - 1
+    if pm < 1: pm = 12; py -= 1
+    ny, nm = sy, sm + 1
+    if nm > 12: nm = 1; ny += 1
+    mesi_it = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
+               'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre']
+    mese_label = f"{mesi_it[sm-1]} {sy}"
+
     return render_page(BANCA_ORE_TMPL, page_title='Banca Ore', active='banca_ore',
-                       dipendenti=dipendenti, senza_contratto=[])
+                       dipendenti=dipendenti, senza_contratto=[],
+                       mese_sel=mese_sel, mese_label=mese_label,
+                       mese_prev=f"{py:04d}-{pm:02d}",
+                       mese_next=f"{ny:04d}-{nm:02d}",
+                       mesi_grafico=mesi_grafico,
+                       mese_oggi=_d.today().strftime('%Y-%m'))
 
 
 @app.route('/banca-ore/<int:uid>')
@@ -17530,17 +17784,18 @@ def banca_ore_dettaglio(uid):
 def banca_ore_monte_set(uid):
     """Inserisce o aggiorna il monte ore manuale per un mese."""
     mese = (request.form.get('mese') or '').strip()
+    redirect_mese = (request.form.get('redirect_mese') or '').strip()
     try:
-        monte_ore = float(request.form.get('monte_ore', 0))
+        monte_ore = float(request.form.get('monte_ore', 0) or 0)
     except (ValueError, TypeError):
         monte_ore = 0
     # Validazione formato mese: YYYY-MM
     if not mese or len(mese) != 7 or mese[4] != '-':
         flash('Formato mese non valido.', 'error')
-        return redirect(url_for('banca_ore_dettaglio', uid=uid))
+        return redirect(url_for('banca_ore'))
     if monte_ore < 0 or monte_ore > 744:
         flash('Monte ore deve essere tra 0 e 744.', 'error')
-        return redirect(url_for('banca_ore_dettaglio', uid=uid))
+        return redirect(url_for('banca_ore', mese=redirect_mese) if redirect_mese else url_for('banca_ore_dettaglio', uid=uid))
     db = get_db()
     if monte_ore == 0:
         # 0 = elimina riga
@@ -17554,21 +17809,25 @@ def banca_ore_monte_set(uid):
                    (uid, mese, monte_ore))
     safe_commit(db); db.close()
     flash(f"Monte ore {mese}: {monte_ore:.1f}h salvato.", 'success')
+    # Se chiamato dall'elenco con filtro mese, torna lì; altrimenti vai al dettaglio
+    if redirect_mese:
+        return redirect(url_for('banca_ore', mese=redirect_mese))
     return redirect(url_for('banca_ore_dettaglio', uid=uid))
 
 
 @app.route('/banca-ore/<int:uid>/rettifica', methods=['POST'])
 @admin_required
 def banca_ore_rettifica(uid):
+    redirect_mese = (request.form.get('redirect_mese') or '').strip()
     try:
         delta = float(request.form.get('delta', 0))
     except ValueError:
         flash('Valore delta non valido.','error')
-        return redirect(url_for('banca_ore_dettaglio', uid=uid))
+        return redirect(url_for('banca_ore', mese=redirect_mese) if redirect_mese else url_for('banca_ore_dettaglio', uid=uid))
     descrizione = request.form.get('descrizione','').strip()
     if not descrizione:
         flash('Descrizione obbligatoria.','error')
-        return redirect(url_for('banca_ore_dettaglio', uid=uid))
+        return redirect(url_for('banca_ore', mese=redirect_mese) if redirect_mese else url_for('banca_ore_dettaglio', uid=uid))
     # Mese specificato dal form (default mese corrente per retrocompatibilità)
     mese = (request.form.get('mese') or date.today().strftime('%Y-%m')).strip()
     if len(mese) != 7 or mese[4] != '-':
@@ -17580,6 +17839,8 @@ def banca_ore_rettifica(uid):
         (uid, mese, 'rettifica', delta, descrizione, session.get('user_id')))
     safe_commit(db); db.close()
     flash(f'Rettifica {mese} registrata: {delta:+.2f}h', 'success')
+    if redirect_mese:
+        return redirect(url_for('banca_ore', mese=redirect_mese))
     return redirect(url_for('banca_ore_dettaglio', uid=uid))
 
 
