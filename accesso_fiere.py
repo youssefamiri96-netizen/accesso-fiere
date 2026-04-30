@@ -11,7 +11,7 @@ Avvio:     python gestionale.py
 
 from flask import (Flask, render_template_string, request,
                    redirect, url_for, session, jsonify, flash, Response, send_file,
-                   get_flashed_messages)
+                   get_flashed_messages, abort)
 from datetime import datetime, date, timedelta
 import sqlite3, hashlib, os, json, smtplib, io, zipfile, base64, mimetypes, threading, time
 from functools import wraps
@@ -198,11 +198,13 @@ UPLOAD_DIR_VEICOLI = os.path.join(DATA_DIR, 'uploads_veicoli')
 UPLOAD_DIR_EVENTI  = os.path.join(DATA_DIR, 'uploads_eventi')
 UPLOAD_DIR_DOCS    = os.path.join(DATA_DIR, 'uploads_documenti')
 UPLOAD_DIR_LOGHI   = os.path.join(DATA_DIR, 'uploads_loghi_aziende')
+UPLOAD_DIR_FOTOTESSERE = os.path.join(DATA_DIR, 'uploads_fototessere')
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(UPLOAD_DIR_VEICOLI, exist_ok=True)
 os.makedirs(UPLOAD_DIR_EVENTI,  exist_ok=True)
 os.makedirs(UPLOAD_DIR_DOCS,    exist_ok=True)
 os.makedirs(UPLOAD_DIR_LOGHI,   exist_ok=True)
+os.makedirs(UPLOAD_DIR_FOTOTESSERE, exist_ok=True)
 
 # ── Migrazione one-time: se esiste un vecchio logo_legacy.* lo assegno al tenant 1
 # (il primo admin storico) e poi via il fallback. I nuovi tenant partono senza logo.
@@ -971,6 +973,9 @@ def init_db():
             FOREIGN KEY(cliente_id) REFERENCES clienti(id),
             FOREIGN KEY(cantiere_id) REFERENCES cantieri(id)
         )""",
+        # ── Fototessera dipendente (per tesserino di riconoscimento) ──
+        "ALTER TABLE utenti ADD COLUMN fototessera_filename TEXT",
+        "ALTER TABLE utenti ADD COLUMN tesserino_codice TEXT",
     ]
     for sql in migrations:
         try: db.execute(sql)
@@ -7332,6 +7337,7 @@ tr.riga-disattivo td{color:#94a3b8}
       </td>
       {% if session.ruolo=='admin' %}<td style="display:flex;gap:6px">
         <a href="/dipendenti/{{ d.id }}/modifica" class="btn btn-secondary btn-sm" title="Modifica"><i class="fa fa-pen"></i></a>
+        <a href="/dipendenti/{{ d.id }}/tesserino" class="btn btn-secondary btn-sm" title="Tesserino di servizio"><i class="fa fa-id-badge"></i></a>
         {% if d.attivo %}
         <a href="/dipendenti/{{ d.id }}/elimina"
            onclick="return confirm('Disattivare l&#39;account di {{ d.nome }} {{ d.cognome }}?\\n\\n✓ Le presenze, ore e documenti restano salvati nel portale\\n✗ {{ d.nome }} non potrà più accedere al sistema')"
@@ -7487,6 +7493,63 @@ DIP_FORM_TMPL = """
       <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Salva dipendente</button>
     </div>
   </form>
+
+  {% if dip %}
+  <!-- ─── Fototessera & Tesserino (form separato perché multipart) ─── -->
+  <div style="background:#f8fafc;border-radius:10px;padding:18px;margin-top:24px;border:1px solid var(--border)">
+    <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px;display:flex;align-items:center;gap:8px">
+      <i class="fa fa-id-card"></i> Fototessera & Tesserino di servizio
+    </div>
+
+    <div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap">
+      <!-- Preview foto -->
+      <div style="flex-shrink:0">
+        <div id="foto-preview" style="width:130px;height:160px;border-radius:10px;border:2px dashed #cbd5e1;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden">
+          {% if dip.fototessera_filename %}
+            <img src="/dipendenti/{{ dip.id }}/fototessera/serve?t={{ dip.fototessera_filename }}" style="width:100%;height:100%;object-fit:cover" alt="fototessera">
+          {% else %}
+            <div style="text-align:center;color:#94a3b8">
+              <i class="fa fa-camera" style="font-size:32px;display:block;margin-bottom:6px"></i>
+              <div style="font-size:10.5px;font-weight:600">Nessuna foto</div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Controlli -->
+      <div style="flex:1;min-width:240px">
+        {% if dip.fototessera_filename %}
+        <div style="font-size:13px;color:var(--text);margin-bottom:8px">
+          <i class="fa fa-circle-check" style="color:#16a34a"></i>
+          Fototessera caricata
+          {% if dip.tesserino_codice %}<br><span style="font-size:11.5px;color:var(--text-light)">Codice tesserino: <strong style="color:var(--accent);font-family:monospace">{{ dip.tesserino_codice }}</strong></span>{% endif %}
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+          <a href="/dipendenti/{{ dip.id }}/tesserino" class="btn btn-primary btn-sm"><i class="fa fa-id-badge"></i> Visualizza tesserino</a>
+          <a href="/dipendenti/{{ dip.id }}/fototessera/scarica" class="btn btn-secondary btn-sm"><i class="fa fa-download"></i> Scarica foto</a>
+          <form method="POST" action="/dipendenti/{{ dip.id }}/fototessera/elimina" style="margin:0" onsubmit="return confirm('Rimuovere la fototessera di {{ dip.nome }}?')">
+            <button type="submit" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i> Rimuovi foto</button>
+          </form>
+        </div>
+        <div style="font-size:11.5px;color:var(--text-light);margin-bottom:6px">Sostituisci la fototessera caricandone una nuova:</div>
+        {% else %}
+        <div style="font-size:13px;color:var(--text-light);margin-bottom:10px;line-height:1.5">
+          Carica una fototessera del dipendente per generare il <strong style="color:var(--text)">tesserino di riconoscimento</strong> stampabile (formato carta di credito 54×85.6mm) e digitale.
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/dipendenti/{{ dip.id }}/fototessera/upload" enctype="multipart/form-data" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input type="file" name="fototessera" accept="image/jpeg,image/png,image/webp" required onchange="previewFoto(event)" style="font-size:12px;flex:1;min-width:200px">
+          <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-upload"></i> Carica</button>
+        </form>
+        <div style="font-size:10.5px;color:var(--text-light);margin-top:8px">
+          <i class="fa fa-circle-info"></i> Formati ammessi: JPG, PNG, WEBP. Max 5 MB. Consigliato: ritratto verticale, sfondo neutro.
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
   </div>
 </div>
 <script>
@@ -7496,6 +7559,18 @@ function generatePwd() {
   for (let i = 0; i < 8; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
   document.getElementById('pwd_field').value = pwd;
   document.getElementById('pwd_field').type = 'text';
+}
+function previewFoto(ev){
+  var f = ev.target.files[0];
+  if(!f) return;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var box = document.getElementById('foto-preview');
+    box.innerHTML = '<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover">';
+    box.style.borderStyle = 'solid';
+    box.style.borderColor = 'var(--accent)';
+  };
+  reader.readAsDataURL(f);
 }
 </script>"""
 
@@ -7680,6 +7755,391 @@ def dipendente_reset_password(uid):
     safe_commit(db); db.close()
     flash(f'✅ Password di {dip["nome"]} {dip["cognome"]} resettata. Nuova password temporanea: <strong>{new_pwd}</strong> — comunicala al dipendente.', 'success')
     return redirect(url_for('dipendente_modifica', uid=uid))
+
+# ══════════════════════════════════════════════════════════
+#  FOTOTESSERA & TESSERINO DIGITALE
+# ══════════════════════════════════════════════════════════
+ALLOWED_FOTOTESSERA_EXT = {'jpg', 'jpeg', 'png', 'webp'}
+MAX_FOTOTESSERA_SIZE = 5 * 1024 * 1024  # 5 MB
+
+def _fototessera_path(azienda_id, uid, ext):
+    """Path canonico fototessera. Una sola foto per dipendente."""
+    return os.path.join(UPLOAD_DIR_FOTOTESSERE, f'foto_{azienda_id}_{uid}.{ext}')
+
+def _trova_fototessera(azienda_id, uid):
+    """Trova path della fototessera di un dipendente, ritorna None se non esiste."""
+    for ext in ALLOWED_FOTOTESSERA_EXT:
+        p = _fototessera_path(azienda_id, uid, ext)
+        if os.path.exists(p):
+            return p
+    return None
+
+def _genera_codice_tesserino(uid):
+    """Codice univoco visibile sul tesserino: TS-{azienda}{uid}-{random4}"""
+    import random, string
+    az_id = session.get('azienda_id', 1)
+    rand = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+    return f'TS-{az_id}{uid:04d}-{rand}'
+
+@app.route('/dipendenti/<int:uid>/fototessera/upload', methods=['POST'])
+@admin_required
+def fototessera_upload(uid):
+    az_id = session['azienda_id']
+    db = get_db()
+    dip = db.execute("SELECT id FROM utenti WHERE id=?", (uid,)).fetchone()
+    if not dip:
+        db.close()
+        flash('Dipendente non trovato.', 'error')
+        return redirect(url_for('dipendenti'))
+
+    f = request.files.get('fototessera')
+    if not f or not f.filename:
+        db.close()
+        flash('Nessun file caricato.', 'error')
+        return redirect(url_for('dipendente_modifica', uid=uid))
+
+    ext = (f.filename.rsplit('.', 1)[-1] if '.' in f.filename else '').lower()
+    if ext not in ALLOWED_FOTOTESSERA_EXT:
+        db.close()
+        flash(f'Formato non valido. Sono ammessi: {", ".join(ALLOWED_FOTOTESSERA_EXT)}', 'error')
+        return redirect(url_for('dipendente_modifica', uid=uid))
+
+    # Controllo dimensione
+    f.seek(0, os.SEEK_END)
+    size = f.tell()
+    f.seek(0)
+    if size > MAX_FOTOTESSERA_SIZE:
+        db.close()
+        flash('File troppo grande. Massimo 5 MB.', 'error')
+        return redirect(url_for('dipendente_modifica', uid=uid))
+
+    # Rimuovi eventuali fototessere precedenti (con altre estensioni)
+    for old_ext in ALLOWED_FOTOTESSERA_EXT:
+        old_path = _fototessera_path(az_id, uid, old_ext)
+        if os.path.exists(old_path):
+            try: os.remove(old_path)
+            except: pass
+
+    dest = _fototessera_path(az_id, uid, ext)
+    f.save(dest)
+
+    # Salva nome file in DB + genera codice tesserino se non esiste
+    fname = f'foto_{az_id}_{uid}.{ext}'
+    codice = db.execute("SELECT tesserino_codice FROM utenti WHERE id=?", (uid,)).fetchone()['tesserino_codice']
+    if not codice:
+        codice = _genera_codice_tesserino(uid)
+        db.execute("UPDATE utenti SET fototessera_filename=?, tesserino_codice=? WHERE id=?", (fname, codice, uid))
+    else:
+        db.execute("UPDATE utenti SET fototessera_filename=? WHERE id=?", (fname, uid))
+    safe_commit(db); db.close()
+
+    flash('✅ Fototessera caricata correttamente.', 'success')
+    return redirect(url_for('dipendente_modifica', uid=uid))
+
+
+@app.route('/dipendenti/<int:uid>/fototessera/serve')
+@login_required
+def fototessera_serve(uid):
+    """Mostra la fototessera (per <img src=...>). Accessibile a admin e al dipendente stesso."""
+    if session.get('ruolo') != 'admin' and session.get('user_id') != uid:
+        return abort(403)
+    az_id = session['azienda_id']
+    p = _trova_fototessera(az_id, uid)
+    if not p:
+        return abort(404)
+    ext = p.rsplit('.', 1)[-1].lower()
+    mime_map = {'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png', 'webp': 'image/webp'}
+    return send_file(p, mimetype=mime_map.get(ext, 'image/jpeg'))
+
+
+@app.route('/dipendenti/<int:uid>/fototessera/scarica')
+@admin_required
+def fototessera_scarica(uid):
+    az_id = session['azienda_id']
+    db = get_db()
+    dip = db.execute("SELECT nome, cognome FROM utenti WHERE id=?", (uid,)).fetchone()
+    db.close()
+    if not dip:
+        return abort(404)
+    p = _trova_fototessera(az_id, uid)
+    if not p:
+        flash('Nessuna fototessera caricata per questo dipendente.', 'error')
+        return redirect(url_for('dipendente_modifica', uid=uid))
+    ext = p.rsplit('.', 1)[-1].lower()
+    nome_safe = f"{dip['cognome']}_{dip['nome']}".replace(' ', '_')
+    return send_file(p, as_attachment=True, download_name=f'fototessera_{nome_safe}.{ext}')
+
+
+@app.route('/dipendenti/<int:uid>/fototessera/elimina', methods=['POST'])
+@admin_required
+def fototessera_elimina(uid):
+    az_id = session['azienda_id']
+    p = _trova_fototessera(az_id, uid)
+    if p:
+        try: os.remove(p)
+        except: pass
+    db = get_db()
+    db.execute("UPDATE utenti SET fototessera_filename=NULL WHERE id=?", (uid,))
+    safe_commit(db); db.close()
+    flash('Fototessera rimossa.', 'success')
+    return redirect(url_for('dipendente_modifica', uid=uid))
+
+
+@app.route('/dipendenti/<int:uid>/tesserino')
+@admin_required
+def tesserino_digitale(uid):
+    """Tesserino di riconoscimento — visualizzazione + stampa."""
+    az_id = session['azienda_id']
+    db = get_db()
+    dip = db.execute("""SELECT id, nome, cognome, email, mansione, titolo,
+                               data_assunzione, fototessera_filename, tesserino_codice
+                        FROM utenti WHERE id=?""", (uid,)).fetchone()
+    if not dip:
+        db.close()
+        return abort(404)
+    azienda = db.execute("SELECT nome FROM master.aziende WHERE id=?", (az_id,)).fetchone() if False else None
+    # Master è in DB separato — leggo da impostazioni o da master DB diretto
+    azienda_nome = ''
+    try:
+        mdb = get_master_db()
+        row = mdb.execute("SELECT nome FROM aziende WHERE id=?", (az_id,)).fetchone()
+        if row: azienda_nome = row['nome']
+        mdb.close()
+    except Exception:
+        pass
+
+    # Codice tesserino: genera se mancante
+    if not dip['tesserino_codice']:
+        codice = _genera_codice_tesserino(uid)
+        db.execute("UPDATE utenti SET tesserino_codice=? WHERE id=?", (codice, uid))
+        safe_commit(db)
+    else:
+        codice = dip['tesserino_codice']
+
+    # Verifica se ha logo aziendale
+    ha_logo_az = False
+    for fname in os.listdir(UPLOAD_DIR_LOGHI):
+        if fname.startswith(f'logo_{az_id}.'):
+            ha_logo_az = True
+            break
+
+    ha_foto = bool(_trova_fototessera(az_id, uid))
+    db.close()
+
+    return render_page(TESSERINO_TMPL,
+                       page_title=f'Tesserino - {dip["nome"]} {dip["cognome"]}',
+                       active='dipendenti',
+                       dip=dip, codice=codice, azienda_nome=azienda_nome,
+                       ha_logo_az=ha_logo_az, ha_foto=ha_foto)
+
+
+TESSERINO_TMPL = """
+<style>
+/* Layout pagina admin */
+.tess-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.tess-toolbar .actions{display:flex;gap:8px;flex-wrap:wrap}
+.tess-stage{display:flex;justify-content:center;align-items:flex-start;gap:30px;flex-wrap:wrap;padding:30px 0}
+.tess-stage .label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-light);text-align:center;margin-bottom:10px;display:block}
+
+/* ───────── BADGE FORMATO CARTA DI CREDITO (85.6×54mm in landscape, ma noi facciamo verticale) ───────── */
+/* Usiamo formato verticale 54×85.6mm (badge da collo, formato tessera) */
+.tess-card{
+  width:204px;height:323px; /* 54mm × 85.6mm @ ~96dpi */
+  background:linear-gradient(160deg,#0f4c81 0%,#1e3a8a 50%,#312e81 100%);
+  border-radius:14px;
+  box-shadow:0 18px 40px -12px rgba(15,23,42,.45),0 6px 14px rgba(0,0,0,.12);
+  padding:14px;
+  position:relative;overflow:hidden;
+  color:#fff;font-family:'DM Sans',sans-serif;
+  display:flex;flex-direction:column;
+}
+.tess-card::before{
+  content:"";position:absolute;top:-50%;right:-30%;width:280px;height:280px;
+  background:radial-gradient(circle,rgba(0,180,216,.28) 0%,transparent 65%);
+  pointer-events:none;
+}
+.tess-card::after{
+  content:"";position:absolute;bottom:-20%;left:-30%;width:200px;height:200px;
+  background:radial-gradient(circle,rgba(0,180,216,.15) 0%,transparent 60%);
+  pointer-events:none;
+}
+
+.tess-header{display:flex;align-items:center;gap:8px;position:relative;z-index:1;border-bottom:1px solid rgba(255,255,255,.18);padding-bottom:8px;margin-bottom:10px}
+.tess-logo{width:30px;height:30px;background:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:2px}
+.tess-logo img{max-width:100%;max-height:100%;object-fit:contain}
+.tess-logo i{color:#0f4c81;font-size:15px}
+.tess-corp{flex:1;min-width:0}
+.tess-corp .name{font-size:10.5px;font-weight:800;line-height:1.1;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tess-corp .sub{font-size:8px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.7px;font-weight:600;margin-top:2px}
+
+.tess-photo{
+  width:130px;height:160px;
+  margin:8px auto 12px;
+  border-radius:8px;background:rgba(255,255,255,.1);
+  display:flex;align-items:center;justify-content:center;
+  border:2.5px solid rgba(255,255,255,.85);
+  overflow:hidden;position:relative;z-index:1;
+  box-shadow:0 6px 16px rgba(0,0,0,.18);
+}
+.tess-photo img{width:100%;height:100%;object-fit:cover}
+.tess-photo .ph-empty{font-size:48px;color:rgba(255,255,255,.4)}
+
+.tess-name{font-size:13px;font-weight:800;text-align:center;line-height:1.15;letter-spacing:-.2px;position:relative;z-index:1;padding:0 4px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tess-role{font-size:9.5px;text-align:center;color:rgba(255,255,255,.78);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;position:relative;z-index:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px}
+
+.tess-footer{margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:6px;position:relative;z-index:1;padding-top:8px;border-top:1px solid rgba(255,255,255,.18)}
+.tess-meta{flex:1;min-width:0;font-size:7.5px;color:rgba(255,255,255,.7);font-weight:500;line-height:1.35;letter-spacing:.2px}
+.tess-meta strong{color:#fff;font-weight:700;letter-spacing:.4px;display:block;font-size:8.5px}
+.tess-qr{width:46px;height:46px;background:#fff;border-radius:5px;padding:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.tess-qr canvas,.tess-qr img{width:100%;height:100%;display:block}
+
+/* ───────── RETRO TESSERINO ───────── */
+.tess-card-back{
+  width:204px;height:323px;
+  background:#fff;border-radius:14px;
+  box-shadow:0 18px 40px -12px rgba(15,23,42,.45),0 6px 14px rgba(0,0,0,.12);
+  padding:14px;
+  position:relative;overflow:hidden;
+  font-family:'DM Sans',sans-serif;
+  display:flex;flex-direction:column;
+  border:1px solid #e2e8f0;
+}
+.tess-back-stripe{position:absolute;top:30px;left:0;right:0;height:32px;background:#0f172a}
+.tess-back-title{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text-light);margin-bottom:4px}
+.tess-back-spacer{height:50px}
+.tess-back-info{font-size:11px;color:var(--text);line-height:1.55;font-weight:500;margin-bottom:14px}
+.tess-back-info strong{color:var(--accent);display:block;font-size:11.5px;margin-bottom:1px}
+.tess-back-rules{font-size:9px;color:var(--text-light);line-height:1.5;border-top:1px solid var(--border);padding-top:10px;margin-top:auto}
+.tess-back-rules .head{font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;font-size:8.5px;margin-bottom:5px}
+.tess-back-emerg{background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:6px 8px;font-size:9px;color:#7f1d1d;text-align:center;margin-top:8px}
+
+/* ═══════════ STAMPA ═══════════ */
+@media print{
+  /* Nasconde tutto tranne il tesserino */
+  body * { visibility:hidden !important; }
+  .tess-print-area, .tess-print-area * { visibility:visible !important; }
+  .tess-print-area { position:absolute !important; top:0; left:0; width:100%; padding:20mm 0 0 0; }
+  .tess-stage{padding:0;gap:8mm;justify-content:center}
+  .tess-stage .label{display:none}
+  .tess-toolbar,.sidebar,.topbar,.dash-customize-tray{display:none !important}
+  /* Mantieni dimensioni precise per stampa fisica */
+  .tess-card,.tess-card-back{
+    width:54mm !important;height:85.6mm !important;
+    box-shadow:none !important;
+    border-radius:3mm !important;
+    page-break-inside:avoid;
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+  }
+}
+</style>
+
+<div class="page-header">
+  <div class="page-header-info">
+    <div class="page-breadcrumb">
+      <a href="/dashboard"><i class="fa fa-house"></i> Dashboard</a>
+      <i class="fa fa-chevron-right"></i>
+      <a href="/dipendenti">Dipendenti</a>
+      <i class="fa fa-chevron-right"></i>
+      <a href="/dipendenti/{{ dip.id }}/modifica">{{ dip.nome }} {{ dip.cognome }}</a>
+      <i class="fa fa-chevron-right"></i>
+      <span>Tesserino</span>
+    </div>
+    <div class="page-title">Tesserino di riconoscimento</div>
+    <div class="page-desc">Tesserino digitale e stampabile (formato carta di credito 54×85.6mm). Usa "Stampa" per stampare su carta o cartoncino.</div>
+  </div>
+  <div class="page-actions">
+    <a href="/dipendenti/{{ dip.id }}/modifica" class="btn btn-secondary"><i class="fa fa-arrow-left"></i> Torna al profilo</a>
+    {% if ha_foto %}
+    <button onclick="window.print()" class="btn btn-primary"><i class="fa fa-print"></i> Stampa tesserino</button>
+    {% endif %}
+  </div>
+</div>
+
+{% if not ha_foto %}
+<div class="alert alert-info">
+  <i class="fa fa-circle-info"></i>
+  Per generare un tesserino completo è consigliato caricare una <strong>fototessera</strong>. <a href="/dipendenti/{{ dip.id }}/modifica" style="color:inherit;text-decoration:underline">Carica ora la fototessera →</a>
+</div>
+{% endif %}
+
+<div class="tess-print-area">
+<div class="tess-stage">
+  <!-- FRONT -->
+  <div>
+    <span class="label">Fronte</span>
+    <div class="tess-card">
+      <div class="tess-header">
+        <div class="tess-logo">
+          {% if ha_logo_az %}
+            <img src="/admin/logo/serve" alt="logo">
+          {% else %}
+            <i class="fa fa-id-badge"></i>
+          {% endif %}
+        </div>
+        <div class="tess-corp">
+          <div class="name">{{ azienda_nome or 'Azienda' }}</div>
+          <div class="sub">Tesserino di servizio</div>
+        </div>
+      </div>
+      <div class="tess-photo">
+        {% if ha_foto %}
+          <img src="/dipendenti/{{ dip.id }}/fototessera/serve" alt="foto">
+        {% else %}
+          <i class="fa fa-user ph-empty"></i>
+        {% endif %}
+      </div>
+      <div class="tess-name">{{ dip.nome }} {{ dip.cognome }}</div>
+      <div class="tess-role">{{ dip.mansione or dip.titolo or 'Dipendente' }}</div>
+      <div class="tess-footer">
+        <div class="tess-meta">
+          <strong>{{ codice }}</strong>
+          {% if dip.data_assunzione %}Dal {{ dip.data_assunzione[8:10] }}/{{ dip.data_assunzione[5:7] }}/{{ dip.data_assunzione[0:4] }}{% endif %}
+        </div>
+        <div class="tess-qr"><canvas id="qrcode"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BACK -->
+  <div>
+    <span class="label">Retro</span>
+    <div class="tess-card-back">
+      <div class="tess-back-title">Tesserino di servizio</div>
+      <div class="tess-back-stripe"></div>
+      <div class="tess-back-spacer"></div>
+      <div class="tess-back-info">
+        <strong>{{ dip.nome }} {{ dip.cognome }}</strong>
+        {% if dip.email %}{{ dip.email }}<br>{% endif %}
+        Codice: {{ codice }}
+      </div>
+      <div class="tess-back-rules">
+        <div class="head">In caso di smarrimento</div>
+        Restituire al datore di lavoro o contattare la sede dell'azienda. Tesserino strettamente personale, non cedibile a terzi.
+      </div>
+      <div class="tess-back-emerg">
+        <i class="fa fa-shield-halved"></i> Documento di riconoscimento aziendale
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- QR Code library (CDN) - genera QR con il codice tesserino -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+(function(){
+  var canvas = document.getElementById('qrcode');
+  if(canvas && typeof QRCode !== 'undefined'){
+    var data = '{{ codice }}|{{ dip.nome }} {{ dip.cognome }}|{{ azienda_nome }}';
+    QRCode.toCanvas(canvas, data, {
+      width: 100, margin: 0,
+      color: { dark: '#0f172a', light: '#ffffff' }
+    }, function(err){ if(err) console.error(err); });
+  }
+})();
+</script>
+"""
 
 # ══════════════════════════════════════════════════════════
 #  DOCUMENTI & SCADENZE
