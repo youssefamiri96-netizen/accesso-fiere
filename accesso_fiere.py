@@ -1635,10 +1635,11 @@ nav a.nav-sub i{font-size:11px}
 .topbar h1{font-size:18px;font-weight:700}
 .topbar-actions{display:flex;gap:10px;align-items:center}
 .content{padding:28px;flex:1}
-.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden}
-.card-header{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.card-header h3{font-size:14px;font-weight:600}
-.card-body{padding:22px}
+.card{background:var(--card);border-radius:14px;box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden;transition:box-shadow .2s,border-color .2s}
+.card:hover{box-shadow:0 8px 24px -8px rgba(15,76,129,.15)}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(180deg,#fafbfc 0%,#fff 100%)}
+.card-header h3{font-size:14px;font-weight:700;letter-spacing:-.2px}
+.card-body{padding:20px}
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px;margin-bottom:24px}
 .stat-card{background:var(--white);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);border:1px solid var(--border);display:flex;align-items:center;gap:14px}
 .stat-icon{width:46px;height:46px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
@@ -2922,23 +2923,247 @@ body.customize-mode .widget:hover{background:#f0f9ff}
 .cust-legend{font-size:11px;color:var(--text-light);margin:14px 0 6px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
 </style>
 
-<div class="dash-header">
-  <button type="button" class="btn btn-secondary" onclick="openCustomizer()"><i class="fa fa-sliders"></i> Personalizza dashboard</button>
+<!-- Floating tray per modalità personalizza (visibile solo in customize-mode) -->
+<div class="dash-customize-tray">
+  <button type="button" class="btn btn-link-soft" onclick="openCustomizer()" title="Personalizza widget"><i class="fa fa-sliders"></i></button>
   <button type="button" id="btn-save-layout" class="btn btn-primary" style="display:none" onclick="saveLayout()"><i class="fa fa-check"></i> Salva layout</button>
   <button type="button" id="btn-exit-customize" class="btn btn-secondary" style="display:none" onclick="exitCustomize()"><i class="fa fa-times"></i> Annulla</button>
 </div>
 
-{# Widget: KPI Cards (stats-grid), sempre full-width #}
+<style>
+.dash-customize-tray{position:fixed;bottom:24px;left:24px;z-index:90;display:flex;gap:8px}
+.btn-link-soft{
+  background:#fff;color:var(--text-light);border:1px solid var(--border);
+  width:40px;height:40px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 12px rgba(0,0,0,.08);cursor:pointer;
+  transition:all .15s;font-size:14px;
+}
+.btn-link-soft:hover{color:var(--accent);border-color:var(--accent);transform:rotate(45deg)}
+body.customize-mode .btn-link-soft{display:none}
+</style>
+
+{# Widget: Hero + KPI Cards moderni — sempre full-width, in cima #}
 {% macro w_stats() %}
-<div class="stats-grid widget" data-widget-id="stats" style="margin-bottom:16px">
-  <span class="widget-drag-handle"><i class="fa fa-grip-vertical"></i> KPI</span>
-  <div class="stat-card"><div class="stat-icon blue"><i class="fa fa-users"></i></div><div><div class="stat-val">{{ s.dip }}</div><div class="stat-lbl">Dipendenti attivi</div></div></div>
-  <div class="stat-card"><div class="stat-icon green"><i class="fa fa-clock"></i></div><div><div class="stat-val">{{ s.presenti }}</div><div class="stat-lbl">Presenti oggi</div></div></div>
-  <div class="stat-card"><div class="stat-icon amber"><i class="fa fa-umbrella-beach"></i></div><div><div class="stat-val">{{ s.ferie }}</div><div class="stat-lbl">Ferie in attesa</div></div></div>
-  <div class="stat-card"><div class="stat-icon red"><i class="fa fa-bell"></i></div><div><div class="stat-val">{{ s.richieste }}</div><div class="stat-lbl">Richieste in attesa</div></div></div>
-  <div class="stat-card"><div class="stat-icon purple"><i class="fa fa-store"></i></div><div><div class="stat-val">{{ s.cantieri }}</div><div class="stat-lbl">Fiere attive</div></div></div>
+<div class="dash-hero widget" data-widget-id="stats" style="margin-bottom:18px">
+  <span class="widget-drag-handle"><i class="fa fa-grip-vertical"></i> Hero & KPI</span>
+  <div class="hero-bar">
+    <div class="hero-greeting">
+      <div class="hero-eyebrow"><span id="hero-greet">Ciao</span>, <strong>{{ session.get('nome','') }}</strong> 👋</div>
+      <div class="hero-title">Ecco il riepilogo della tua azienda</div>
+      <div class="hero-sub"><i class="fa fa-calendar-day"></i> <span id="hero-date"></span> · <i class="fa fa-clock"></i> <span id="hero-time"></span></div>
+    </div>
+    <div class="hero-cta">
+      {% if s.richieste > 0 %}
+      <a href="/admin/richieste" class="hero-btn hero-btn-warn"><i class="fa fa-bell"></i> {{ s.richieste }} richieste in attesa</a>
+      {% endif %}
+      {% if s.fiere_live > 0 %}
+      <a href="/cantieri" class="hero-btn hero-btn-success"><span class="hero-pulse"></span> {{ s.fiere_live }} live oggi</a>
+      {% endif %}
+      <a href="/cantieri/nuovo" class="hero-btn hero-btn-primary"><i class="fa fa-plus"></i> Nuova fiera</a>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <a href="/dipendenti" class="kpi-card kpi-blue">
+      <div class="kpi-icon"><i class="fa fa-users"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-label">Dipendenti attivi</div>
+        <div class="kpi-value">{{ s.dip }}</div>
+        <div class="kpi-foot"><i class="fa fa-circle-check"></i> {{ s.presenti }} oggi al lavoro</div>
+      </div>
+      <div class="kpi-glow"></div>
+    </a>
+
+    <a href="/presenze" class="kpi-card kpi-violet">
+      <div class="kpi-icon"><i class="fa fa-clock"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-label">Ore questo mese</div>
+        <div class="kpi-value">{{ "%.0f"|format(s.ore_mese) }}<span class="kpi-unit">h</span></div>
+        <div class="kpi-foot kpi-trend {% if s.delta_ore_pct > 0 %}up{% elif s.delta_ore_pct < 0 %}down{% else %}flat{% endif %}">
+          {% if s.delta_ore_pct > 0 %}<i class="fa fa-arrow-trend-up"></i> +{{ s.delta_ore_pct }}%
+          {% elif s.delta_ore_pct < 0 %}<i class="fa fa-arrow-trend-down"></i> {{ s.delta_ore_pct }}%
+          {% else %}<i class="fa fa-minus"></i> stabile{% endif %}
+          vs mese scorso
+        </div>
+      </div>
+      <div class="kpi-glow"></div>
+    </a>
+
+    <a href="/cantieri" class="kpi-card kpi-emerald">
+      <div class="kpi-icon"><i class="fa fa-store"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-label">Fiere attive</div>
+        <div class="kpi-value">{{ s.cantieri }}</div>
+        <div class="kpi-foot">
+          {% if s.fiere_live > 0 %}<span class="kpi-dot kpi-dot-live"></span> {{ s.fiere_live }} live oggi
+          {% else %}<i class="fa fa-calendar"></i> nessuna live oggi{% endif %}
+        </div>
+      </div>
+      <div class="kpi-glow"></div>
+    </a>
+
+    <a href="/admin/richieste" class="kpi-card kpi-amber {% if s.richieste > 0 %}kpi-pulse{% endif %}">
+      <div class="kpi-icon"><i class="fa fa-bell"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-label">Richieste in attesa</div>
+        <div class="kpi-value">{{ s.richieste }}</div>
+        <div class="kpi-foot">
+          {% if s.richieste > 0 %}<i class="fa fa-circle-exclamation"></i> da approvare
+          {% else %}<i class="fa fa-circle-check"></i> nessuna pendente{% endif %}
+        </div>
+      </div>
+      <div class="kpi-glow"></div>
+    </a>
+
+    <a href="/scadenze" class="kpi-card kpi-rose {% if s.scad_30g > 0 %}kpi-alert{% endif %}">
+      <div class="kpi-icon"><i class="fa fa-triangle-exclamation"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-label">Scadenze 30 gg</div>
+        <div class="kpi-value">{{ s.scad_30g }}</div>
+        <div class="kpi-foot">
+          {% if s.scad_30g > 0 %}<i class="fa fa-file-circle-exclamation"></i> documenti in scadenza
+          {% else %}<i class="fa fa-shield-check"></i> tutto in regola{% endif %}
+        </div>
+      </div>
+      <div class="kpi-glow"></div>
+    </a>
+
+    <a href="/spese" class="kpi-card kpi-cyan">
+      <div class="kpi-icon"><i class="fa fa-euro-sign"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-label">Rimborsi mese</div>
+        <div class="kpi-value">{{ "%.0f"|format(s.rimborsi_mese) }}<span class="kpi-unit">€</span></div>
+        <div class="kpi-foot"><i class="fa fa-check-double"></i> spese approvate</div>
+      </div>
+      <div class="kpi-glow"></div>
+    </a>
+  </div>
 </div>
 {% endmacro %}
+
+<style>
+/* ═══════════ HERO MODERNO ═══════════ */
+.dash-hero{position:relative}
+.hero-bar{
+  background:linear-gradient(135deg,#0f4c81 0%,#1e3a8a 50%,#312e81 100%);
+  border-radius:18px;padding:22px 26px;margin-bottom:18px;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px;
+  box-shadow:0 10px 28px -8px rgba(15,76,129,.5);
+  position:relative;overflow:hidden;
+}
+.hero-bar::before{
+  content:"";position:absolute;top:-50%;right:-10%;width:380px;height:380px;
+  background:radial-gradient(circle,rgba(0,180,216,.18) 0%,transparent 65%);
+  pointer-events:none;
+}
+.hero-greeting{color:#fff;position:relative;z-index:1}
+.hero-eyebrow{font-size:13px;color:rgba(255,255,255,.78);margin-bottom:4px}
+.hero-eyebrow strong{color:#fff;font-weight:700}
+.hero-title{font-size:22px;font-weight:800;margin-bottom:6px;letter-spacing:-.3px}
+.hero-sub{font-size:12px;color:rgba(255,255,255,.6);display:flex;gap:14px;flex-wrap:wrap}
+.hero-sub i{margin-right:5px;font-size:11px}
+.hero-cta{display:flex;gap:8px;flex-wrap:wrap;position:relative;z-index:1}
+.hero-btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:9px 14px;border-radius:9px;font-size:13px;font-weight:700;
+  text-decoration:none;transition:all .15s;white-space:nowrap;
+  background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.18);
+  position:relative;
+}
+.hero-btn:hover{background:rgba(255,255,255,.22);transform:translateY(-1px)}
+.hero-btn-primary{background:#fff;color:#0f4c81;border-color:transparent}
+.hero-btn-primary:hover{background:#fff;color:#0a3a66;box-shadow:0 6px 18px rgba(0,0,0,.15)}
+.hero-btn-warn{background:#fbbf24;color:#78350f;border-color:transparent}
+.hero-btn-warn:hover{background:#f59e0b;color:#451a03}
+.hero-btn-success{background:#22c55e;color:#fff;border-color:transparent}
+.hero-pulse{
+  display:inline-block;width:8px;height:8px;border-radius:50%;background:#fff;
+  box-shadow:0 0 0 0 rgba(255,255,255,.7);animation:heroPulse 1.5s infinite;margin-right:2px;
+}
+@keyframes heroPulse{
+  0%{box-shadow:0 0 0 0 rgba(255,255,255,.7)}
+  70%{box-shadow:0 0 0 8px rgba(255,255,255,0)}
+  100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}
+}
+
+/* ═══════════ KPI CARDS MODERNE ═══════════ */
+.kpi-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;
+}
+.kpi-card{
+  position:relative;overflow:hidden;
+  background:#fff;border:1px solid var(--border);border-radius:14px;
+  padding:18px;
+  display:flex;align-items:flex-start;gap:14px;
+  text-decoration:none;color:inherit;
+  transition:all .18s;cursor:pointer;
+  box-shadow:0 1px 2px rgba(0,0,0,.04);
+}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:0 12px 28px -8px rgba(15,76,129,.25);border-color:transparent}
+.kpi-card:hover .kpi-glow{opacity:1}
+.kpi-icon{
+  width:46px;height:46px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:18px;flex-shrink:0;
+  box-shadow:0 6px 16px -4px rgba(0,0,0,.18);
+}
+.kpi-body{flex:1;min-width:0;position:relative;z-index:1}
+.kpi-label{font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;color:var(--text-light);margin-bottom:4px}
+.kpi-value{font-size:30px;font-weight:800;color:var(--text);line-height:1;letter-spacing:-1px}
+.kpi-unit{font-size:16px;color:var(--text-light);font-weight:600;margin-left:2px}
+.kpi-foot{font-size:11px;color:var(--text-light);margin-top:6px;font-weight:600}
+.kpi-foot i{margin-right:3px}
+.kpi-trend.up{color:#16a34a}
+.kpi-trend.down{color:#dc2626}
+.kpi-trend.flat{color:var(--text-light)}
+.kpi-glow{position:absolute;top:0;right:0;width:140px;height:140px;border-radius:50%;opacity:0;transition:opacity .25s;pointer-events:none;filter:blur(40px);transform:translate(40%,-40%)}
+.kpi-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+.kpi-dot-live{background:#22c55e;box-shadow:0 0 0 0 rgba(34,197,94,.7);animation:kpiDotPulse 2s infinite}
+@keyframes kpiDotPulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.7)}70%{box-shadow:0 0 0 8px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+
+/* Colori per categoria */
+.kpi-blue .kpi-icon{background:linear-gradient(135deg,#3b82f6,#1d4ed8)}
+.kpi-blue .kpi-glow{background:#3b82f6}
+.kpi-violet .kpi-icon{background:linear-gradient(135deg,#8b5cf6,#6d28d9)}
+.kpi-violet .kpi-glow{background:#8b5cf6}
+.kpi-emerald .kpi-icon{background:linear-gradient(135deg,#10b981,#047857)}
+.kpi-emerald .kpi-glow{background:#10b981}
+.kpi-amber .kpi-icon{background:linear-gradient(135deg,#f59e0b,#d97706)}
+.kpi-amber .kpi-glow{background:#f59e0b}
+.kpi-rose .kpi-icon{background:linear-gradient(135deg,#f43f5e,#be123c)}
+.kpi-rose .kpi-glow{background:#f43f5e}
+.kpi-cyan .kpi-icon{background:linear-gradient(135deg,#06b6d4,#0e7490)}
+.kpi-cyan .kpi-glow{background:#06b6d4}
+
+.kpi-pulse{border-color:#fbbf24;background:#fffbeb}
+.kpi-pulse .kpi-icon{animation:kpiIconPulse 1.6s infinite}
+@keyframes kpiIconPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.kpi-alert{border-color:#fca5a5;background:#fef2f2}
+
+@media (max-width:760px){
+  .hero-bar{padding:16px}
+  .hero-title{font-size:18px}
+  .kpi-value{font-size:24px}
+}
+</style>
+
+<script>
+// Hero greeting + ora live
+(function(){
+  function tick(){
+    var d=new Date(),h=d.getHours();
+    var greet=h<12?'Buongiorno':(h<18?'Buon pomeriggio':'Buonasera');
+    var ge=document.getElementById('hero-greet');
+    if(ge) ge.textContent=greet;
+    var de=document.getElementById('hero-date');
+    if(de) de.textContent=d.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    var te=document.getElementById('hero-time');
+    if(te) te.textContent=d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  }
+  tick();setInterval(tick,30000);
+})();
+</script>
 
 {% macro w_ore_settimana() %}
 <div class="card widget" data-widget-id="ore_settimana">
@@ -3287,6 +3512,34 @@ def dashboard():
         'richieste':db.execute("SELECT COUNT(*) FROM richieste_presenze WHERE stato='in_attesa'").fetchone()[0],
         'cantieri': db.execute("SELECT COUNT(*) FROM cantieri WHERE attivo=1").fetchone()[0],
     }
+
+    # KPI moderni — deltas e info accessorie
+    # Ore lavorate mese in corso vs mese precedente (% delta)
+    mese_prev_y = date.today().year if date.today().month > 1 else date.today().year - 1
+    mese_prev_m = date.today().month - 1 if date.today().month > 1 else 12
+    mese_prev = f"{mese_prev_y:04d}-{mese_prev_m:02d}"
+    ore_mese = db.execute("SELECT COALESCE(SUM(ore_totali),0) FROM presenze WHERE substr(data,1,7)=?", (mese,)).fetchone()[0]
+    ore_mese_prev = db.execute("SELECT COALESCE(SUM(ore_totali),0) FROM presenze WHERE substr(data,1,7)=?", (mese_prev,)).fetchone()[0]
+    delta_ore_pct = round(((ore_mese - ore_mese_prev) / ore_mese_prev * 100), 1) if ore_mese_prev > 0 else 0
+    # Spese rimborsate mese in corso
+    rimborsi_mese = db.execute("SELECT COALESCE(SUM(importo),0) FROM spese_rimborso WHERE substr(data,1,7)=? AND stato='approvata'", (mese,)).fetchone()[0]
+    # Documenti in scadenza nei prossimi 30 giorni (alert level)
+    scad_30g = db.execute("""SELECT COUNT(*) FROM documenti_dipendente
+                             WHERE data_scadenza IS NOT NULL AND data_scadenza != ''
+                               AND CAST(julianday(data_scadenza)-julianday('now') AS INTEGER) BETWEEN 0 AND 30""").fetchone()[0]
+    # Fiere live oggi
+    fiere_live = db.execute("""SELECT COUNT(*) FROM cantieri
+                               WHERE COALESCE(attivo,1)=1
+                                 AND data_live IS NOT NULL AND data_dismantling IS NOT NULL
+                                 AND date('now') BETWEEN data_live AND data_dismantling""").fetchone()[0]
+    s.update({
+        'ore_mese': round(ore_mese, 1),
+        'ore_mese_prev': round(ore_mese_prev, 1),
+        'delta_ore_pct': delta_ore_pct,
+        'rimborsi_mese': round(rimborsi_mese, 2),
+        'scad_30g': scad_30g,
+        'fiere_live': fiere_live,
+    })
 
     presenze_oggi = db.execute("""SELECT p.*,u.nome,u.cognome,c.nome as cantiere_nome
         FROM presenze p LEFT JOIN utenti_full u ON u.id=p.utente_id
