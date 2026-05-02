@@ -13623,12 +13623,6 @@ select option{background:#1e293b}
 .ore-nette-preview{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);border-radius:10px;padding:10px 14px;text-align:center;font-size:13px;color:#93c5fd;margin-top:10px;display:none}
 .switch-link{text-align:center;padding:8px 0 20px;font-size:13px;color:rgba(255,255,255,.3)}
 .switch-link a{color:#60a5fa;text-decoration:none}
-/* Toggle ore/orari modalità */
-.mob-mod-toggle{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
-.mob-mod-pill{flex:1;min-width:130px;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;padding:10px 14px;border-radius:10px;border:2px solid rgba(96,165,250,.4);color:#93c5fd;font-size:13px;font-weight:600;transition:all .15s}
-.mob-mod-pill input{display:none}
-.mob-mod-pill.mob-mod-active{background:#3b82f6;border-color:#3b82f6;color:#fff}
-.mob-mod-pill:active{transform:scale(.97)}
 .gps-status{font-size:11px;color:rgba(255,255,255,.6);margin-top:6px;text-align:center;min-height:14px}
 .gps-status.gps-ok{color:#22c55e}
 .gps-status.gps-error{color:#f87171}
@@ -13693,50 +13687,10 @@ select option{background:#1e293b}
     <div class="card">
       <div class="card-title"><i class="fa fa-clock"></i> {{ t.work_hours }}</div>
 
-      <!-- Toggle modalità: Ore totali / Entrata-Uscita -->
-      <div class="mob-mod-toggle">
-        <label class="mob-mod-pill mob-mod-active" id="mob-lbl-ore">
-          <input type="radio" name="modalita" value="ore" checked onchange="toggleModalitaMobile()"> ⏱ Ore totali
-        </label>
-        <label class="mob-mod-pill" id="mob-lbl-orari">
-          <input type="radio" name="modalita" value="orari" onchange="toggleModalitaMobile()"> 🕐 Entrata / Uscita
-        </label>
-      </div>
+      <!-- Modalità fissa: ENTRATA / USCITA (i dipendenti devono inserire orari precisi) -->
+      <input type="hidden" name="modalita" value="orari">
 
-      <!-- Modalità ORE TOTALI -->
-      <div id="mob-grp-ore">
-        <div class="ore-row">
-          <div>
-            <label class="field-label">{{ t.total_hours }}</label>
-            <div class="ore-input-wrap">
-              <input type="number" name="ore" id="ore-input" min="0" max="24" step="0.5"
-                     placeholder="8" inputmode="decimal" onchange="calcolaOreNette()" oninput="calcolaOreNette()">
-              <span class="ore-suffix">h</span>
-            </div>
-            <div class="quick-btns">
-              {% for h in [6,7,8,9,10] %}
-              <button type="button" class="quick-btn" onclick="setOre({{ h }})">{{ h }}h</button>
-              {% endfor %}
-            </div>
-          </div>
-          <div>
-            <label class="field-label">{{ t.break }}</label>
-            <div class="ore-input-wrap">
-              <select name="pausa" id="pausa-input" onchange="calcolaOreNette()">
-                <option value="0">{{ t.no_break }}</option>
-                <option value="0.5">30 min</option>
-                <option value="1" selected>1 ora</option>
-                <option value="1.5">1h 30m</option>
-                <option value="2">2 ore</option>
-              </select>
-            </div>
-          </div>
-        </div>
-        <div id="ore-nette-preview" class="ore-nette-preview"></div>
-      </div>
-
-      <!-- Modalità ENTRATA / USCITA -->
-      <div id="mob-grp-orari" style="display:none">
+      <div id="mob-grp-orari">
         <div class="ore-row">
           <div>
             <label class="field-label">Entrata</label>
@@ -13837,47 +13791,6 @@ function aggiornaData(val) {
   document.querySelector('.date-display').textContent =
     d.getDate() + ' ' + MESI[d.getMonth()] + ' ' + d.getFullYear();
   document.querySelector('.date-sub').textContent = GIORNI[d.getDay()];
-}
-
-function setOre(h) {
-  document.getElementById('ore-input').value = h;
-  calcolaOreNette();
-}
-
-function calcolaOreNette() {
-  const ore   = parseFloat(document.getElementById('ore-input').value) || 0;
-  const pausa = parseFloat(document.getElementById('pausa-input').value) || 0;
-  const nette = Math.max(0, ore - pausa);
-  const el = document.getElementById('ore-nette-preview');
-  if (ore > 0) {
-    el.style.display = 'block';
-    el.innerHTML = '<i class="fa fa-info-circle"></i> Ore nette: <strong>' + nette.toFixed(1) + 'h</strong>' +
-      (pausa > 0 ? ' (' + ore + 'h - ' + pausa + 'h pausa)' : '');
-  } else {
-    el.style.display = 'none';
-  }
-}
-
-function toggleModalitaMobile() {
-  var isOrari = document.querySelector('input[name=modalita]:checked').value === 'orari';
-  document.getElementById('mob-grp-ore').style.display   = isOrari ? 'none' : '';
-  document.getElementById('mob-grp-orari').style.display = isOrari ? '' : 'none';
-  // Aggiorna pillole
-  document.getElementById('mob-lbl-ore').classList.toggle('mob-mod-active', !isOrari);
-  document.getElementById('mob-lbl-orari').classList.toggle('mob-mod-active', isOrari);
-  // Aggiorna required
-  var oreInp = document.getElementById('ore-input');
-  var oeInp = document.getElementById('mob-ora-entrata');
-  var ouInp = document.getElementById('mob-ora-uscita');
-  if (isOrari) {
-    oreInp.required = false;
-    oeInp.required = true;
-    ouInp.required = true;
-  } else {
-    oreInp.required = true;
-    oeInp.required = false;
-    ouInp.required = false;
-  }
 }
 
 function calcolaOreDaOrari() {
