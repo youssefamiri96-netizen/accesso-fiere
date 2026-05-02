@@ -20446,6 +20446,12 @@ SQUADRE_TMPL = """
     <a href="/squadre/{{ s.id }}/modifica" class="btn btn-secondary btn-sm"><i class="fa fa-pen"></i> Modifica</a>
     <a href="/squadre/{{ s.id }}/toggle" class="btn btn-sm {{ 'btn-danger' if s.attiva else 'btn-green' }}">
       {{ 'Archivia' if s.attiva else 'Riattiva' }}</a>
+    <form method="POST" action="/squadre/{{ s.id }}/elimina" style="display:inline;margin:0"
+          onsubmit="return confermaEliminaSquadra('{{ s.nome|replace("'","\\'") }}', {{ s.membri|length }})">
+      <button type="submit" class="btn btn-sm" style="background:#dc2626;color:#fff;border:1px solid #991b1b" title="Elimina definitivamente">
+        <i class="fa fa-trash"></i> Elimina
+      </button>
+    </form>
   </div>
 </div>
 {% else %}
@@ -20455,6 +20461,21 @@ SQUADRE_TMPL = """
 </div>
 {% endfor %}
 </div>
+
+<script>
+function confermaEliminaSquadra(nome, nMembri) {
+  var msg1 = '⚠️ Stai per eliminare DEFINITIVAMENTE la squadra "' + nome + '".\n\n';
+  if (nMembri > 0) {
+    msg1 += '✓ I ' + nMembri + ' membri NON verranno eliminati (restano nei dipendenti)\n';
+  }
+  msg1 += '✓ Presenze e incarichi assegnati ai membri restano intatti\n';
+  msg1 += '✗ La squadra verrà rimossa permanentemente\n';
+  msg1 += '✗ L\\'operazione NON è reversibile\n\n';
+  msg1 += 'Procedere?';
+  if (!confirm(msg1)) return false;
+  return confirm('Conferma definitiva: eliminare la squadra "' + nome + '"?');
+}
+</script>
 """
 
 SQUADRA_FORM_TMPL = """
@@ -20619,6 +20640,27 @@ def squadra_toggle(sid):
         db.execute("UPDATE squadre SET attiva=? WHERE id=?", (0 if s['attiva'] else 1, sid))
         safe_commit(db)
     db.close()
+    return redirect(url_for('squadre_lista'))
+
+
+@app.route('/squadre/<int:sid>/elimina', methods=['POST'])
+@admin_required
+def squadra_elimina(sid):
+    """Eliminazione definitiva di una squadra: rimuove squadra + tutti i suoi membri.
+    Le presenze e gli incarichi dei dipendenti che ne facevano parte restano intatti
+    (sono legati all'utente, non alla squadra)."""
+    db = get_db()
+    s = db.execute("SELECT nome FROM squadre WHERE id=?", (sid,)).fetchone()
+    if not s:
+        db.close()
+        flash('Squadra non trovata.', 'error')
+        return redirect(url_for('squadre_lista'))
+    nome_squadra = s['nome']
+    # Elimina prima i legami membri (FK), poi la squadra
+    db.execute("DELETE FROM squadre_membri WHERE squadra_id=?", (sid,))
+    db.execute("DELETE FROM squadre WHERE id=?", (sid,))
+    safe_commit(db); db.close()
+    flash(f'Squadra "{nome_squadra}" eliminata definitivamente.', 'success')
     return redirect(url_for('squadre_lista'))
 
 
