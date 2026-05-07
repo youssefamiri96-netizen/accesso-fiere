@@ -8566,8 +8566,12 @@ def tesserino_pubblico(token):
                 return render_template_string(TESSERINO_PUB_PIN_TMPL,
                     dip=dict(dip), azienda_nome=azienda_nome, ha_logo_az=ha_logo_az, ha_foto=ha_foto,
                     token=token, error=err, blocked=False)
-            # PIN corretto → reset rate limit + carica documenti
+            # PIN corretto → reset rate limit + segna come "sbloccato" in sessione + carica documenti
             _pin_rate_limit_clear(token, ip)
+            unlocked = session.get('tess_pin_ok', {})
+            if not isinstance(unlocked, dict): unlocked = {}
+            unlocked[token] = dip['tesserino_pin_hash']
+            session['tess_pin_ok'] = unlocked
             return _render_tesserino_docs(db, dip, az_id, azienda_nome, sede_legale, ha_logo_az, ha_foto, token)
 
         # Caso 3: GET → mostra form PIN
@@ -8580,7 +8584,7 @@ def tesserino_pubblico(token):
 
 def _render_tesserino_docs(db, dip, az_id, azienda_nome, sede_legale, ha_logo_az, ha_foto, token):
     """Carica e visualizza i documenti del dipendente (dopo verifica PIN)."""
-    docs_raw = db.execute("""SELECT tipo_doc, categoria, nome_originale,
+    docs_raw = db.execute("""SELECT id, tipo_doc, categoria, nome_originale, nome_file,
                                     data_scadenza,
                                     CAST(julianday(data_scadenza)-julianday('now') AS INTEGER) as days_left
                              FROM documenti_dipendente
@@ -8596,6 +8600,14 @@ def _render_tesserino_docs(db, dip, az_id, azienda_nome, sede_legale, ha_logo_az
             else: row['stato'] = 'ok'
         else:
             row['stato'] = 'nessuna'
+        # Determina se è visualizzabile inline (PDF/immagine)
+        if row.get('nome_file'):
+            mt = mimetypes.guess_type(row['nome_file'])[0] or ''
+            row['viewable'] = (mt == 'application/pdf') or mt.startswith('image/')
+            row['ext'] = row['nome_file'].rsplit('.', 1)[-1].lower() if '.' in row['nome_file'] else ''
+        else:
+            row['viewable'] = False
+            row['ext'] = ''
         docs.append(row)
     return render_template_string(TESSERINO_PUB_DOCS_TMPL,
         dip=dict(dip), docs=docs, azienda_nome=azienda_nome, sede_legale=sede_legale,
@@ -8636,6 +8648,40 @@ def tesserino_pubblico_logo(token):
                 return send_file(p, mimetype=mime.get(ext,'image/png'))
     except Exception: pass
     return abort(404)
+
+
+@app.route('/t/<token>/doc/<int:did>')
+def tesserino_pubblico_doc_view(token, did):
+    """Visualizza inline un documento del dipendente (PDF o immagine).
+    Protetto: serve sia il token valido sia che il PIN sia stato verificato di recente in sessione."""
+    db, dip, az_id = _carica_tesserino_da_token(token)
+    if not dip:
+        return abort(404)
+    # Verifica che il PIN sia stato sbloccato per questo token in sessione
+    unlocked = session.get('tess_pin_ok', {})
+    if not isinstance(unlocked, dict) or unlocked.get(token) != dip['tesserino_pin_hash']:
+        db.close()
+        return abort(403)
+    # Solo se dipendente attivo + PIN configurato
+    if not dip['attivo'] or not dip['tesserino_pin_hash']:
+        db.close()
+        return abort(403)
+    # Recupera il documento
+    doc = db.execute("SELECT id, nome_file, nome_originale FROM documenti_dipendente WHERE id=? AND utente_id=?",
+                     (did, dip['id'])).fetchone()
+    db.close()
+    if not doc or not doc['nome_file']:
+        return abort(404)
+    # Path: il file è in /data/uploads_dipendenti/<uid>/
+    path = os.path.join(UPLOAD_DIR, str(dip['id']), doc['nome_file'])
+    if not os.path.exists(path):
+        return abort(404)
+    mt = mimetypes.guess_type(doc['nome_file'])[0] or 'application/octet-stream'
+    # Solo PDF e immagini sono visualizzabili inline
+    safe_inline = ('image/' in mt) or (mt == 'application/pdf')
+    return send_file(path, mimetype=mt,
+                     as_attachment=not safe_inline,
+                     download_name=doc['nome_originale'] or doc['nome_file'])
 
 
 # CSS condiviso per le 3 viste pubbliche
@@ -8745,7 +8791,12 @@ TESSERINO_PUB_DOCS_TMPL = """<!DOCTYPE html>
 .section-title{font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.7px;margin-bottom:14px;display:flex;align-items:center;gap:7px}
 .section-title i{color:#0f4c81}
 .docs-grid{display:flex;flex-direction:column;gap:9px}
-.doc-row{display:flex;align-items:center;gap:11px;padding:11px 13px;background:#f8fafc;border-radius:10px;border-left:4px solid #cbd5e1}
+.doc-row{display:flex;align-items:center;gap:11px;padding:11px 13px;background:#f8fafc;border-radius:10px;border-left:4px solid #cbd5e1;text-decoration:none;color:inherit}
+.doc-row.clickable{cursor:pointer;transition:transform .12s,box-shadow .12s}
+.doc-row.clickable:hover{transform:translateX(2px);box-shadow:0 4px 12px rgba(15,23,42,.08)}
+.doc-row.clickable:active{transform:scale(.98)}
+.doc-link-ico{font-size:9px;color:#0f4c81;margin-left:4px;opacity:.7}
+.doc-tap-hint{color:#0f4c81;font-weight:600;font-size:10.5px}
 .doc-row.scaduto{border-left-color:#dc2626;background:#fef2f2}
 .doc-row.in_scadenza{border-left-color:#f59e0b;background:#fffbeb}
 .doc-row.ok{border-left-color:#16a34a;background:#f0fdf4}
@@ -8797,7 +8848,11 @@ TESSERINO_PUB_DOCS_TMPL = """<!DOCTYPE html>
     {% if docs %}
     <div class="docs-grid">
     {% for d in docs %}
+      {% if d.viewable %}
+      <a href="/t/{{ token }}/doc/{{ d.id }}" target="_blank" rel="noopener" class="doc-row {{ d.stato }} clickable">
+      {% else %}
       <div class="doc-row {{ d.stato }}">
+      {% endif %}
         <div class="doc-icon">
           {% if d.stato == 'scaduto' %}<i class="fa fa-file-circle-xmark"></i>
           {% elif d.stato == 'in_scadenza' %}<i class="fa fa-file-circle-exclamation"></i>
@@ -8805,7 +8860,7 @@ TESSERINO_PUB_DOCS_TMPL = """<!DOCTYPE html>
           {% else %}<i class="fa fa-file"></i>{% endif %}
         </div>
         <div class="doc-info">
-          <div class="doc-title">{{ d.tipo_doc or d.categoria or 'Documento' }}</div>
+          <div class="doc-title">{{ d.tipo_doc or d.categoria or 'Documento' }}{% if d.viewable %} <i class="fa fa-up-right-from-square doc-link-ico"></i>{% endif %}</div>
           <div class="doc-meta">
             {% if d.data_scadenza %}
               {% if d.stato == 'scaduto' %}Scaduto il {{ d.data_scadenza }}
@@ -8813,6 +8868,7 @@ TESSERINO_PUB_DOCS_TMPL = """<!DOCTYPE html>
               {% else %}Scade il {{ d.data_scadenza }}
               {% endif %}
             {% else %}Nessuna scadenza{% endif %}
+            {% if d.viewable %} · <span class="doc-tap-hint">tocca per visualizzare</span>{% endif %}
           </div>
         </div>
         <div class="doc-stato {{ d.stato }}">
@@ -8821,7 +8877,7 @@ TESSERINO_PUB_DOCS_TMPL = """<!DOCTYPE html>
           {% elif d.stato == 'ok' %}OK
           {% else %}—{% endif %}
         </div>
-      </div>
+      {% if d.viewable %}</a>{% else %}</div>{% endif %}
     {% endfor %}
     </div>
     {% else %}
@@ -11977,6 +12033,7 @@ def _days_left(scad_str):
 
 def _conta_scadenze_app(db=None):
     """Conta scaduti e in-scadenza-30gg per veicoli, documenti dipendenti, documenti aziendali.
+    Esclude documenti di dipendenti disattivati.
     Ritorna un dict con tutti i contatori usati per badge sidebar e alert pagina."""
     close_after = False
     if db is None:
@@ -12005,11 +12062,13 @@ def _conta_scadenze_app(db=None):
                     out['veicoli_in_scadenza'] += 1
     except Exception: pass
     try:
-        # Documenti dipendenti
+        # Documenti dipendenti — SOLO di utenti ATTIVI
         rows = db.execute("""SELECT
-                CAST(julianday(data_scadenza)-julianday('now') AS INTEGER) as dl
-                FROM documenti_dipendente
-                WHERE data_scadenza IS NOT NULL AND data_scadenza != ''""").fetchall()
+                CAST(julianday(dd.data_scadenza)-julianday('now') AS INTEGER) as dl
+                FROM documenti_dipendente dd
+                JOIN utenti u ON u.id = dd.utente_id
+                WHERE dd.data_scadenza IS NOT NULL AND dd.data_scadenza != ''
+                  AND COALESCE(u.attivo,1)=1""").fetchall()
         for r in rows:
             dl = r['dl']
             if dl is None: continue
@@ -12017,11 +12076,14 @@ def _conta_scadenze_app(db=None):
             elif dl <= 30: out['docs_dip_in_scadenza'] += 1
     except Exception: pass
     try:
-        # Documenti aziendali (tabella "documenti")
+        # Documenti aziendali — esclude quelli assegnati a utenti disattivati
+        # (se assegnato_a è NULL il documento è "globale" e va comunque contato)
         rows = db.execute("""SELECT
-                CAST(julianday(data_scadenza)-julianday('now') AS INTEGER) as dl
-                FROM documenti
-                WHERE data_scadenza IS NOT NULL AND data_scadenza != ''""").fetchall()
+                CAST(julianday(d.data_scadenza)-julianday('now') AS INTEGER) as dl
+                FROM documenti d
+                LEFT JOIN utenti u ON u.id = d.assegnato_a
+                WHERE d.data_scadenza IS NOT NULL AND d.data_scadenza != ''
+                  AND (d.assegnato_a IS NULL OR COALESCE(u.attivo,1)=1)""").fetchall()
         for r in rows:
             dl = r['dl']
             if dl is None: continue
