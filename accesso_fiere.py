@@ -1284,6 +1284,19 @@ def auto_init_tenant_db():
             # Chiama sempre ensure_columns per applicare eventuali nuove colonne
             # ai DB già esistenti (migrazione idempotente).
             ensure_columns()
+        # ── Pulizia automatica record fantasma (scadenze senza file allegato) ──
+        # Vengono creati quando un utente cancella un file ma il record di scadenza
+        # rimane in DB. Inquinano i contatori. Si fa una volta al primo accesso.
+        try:
+            db = get_db()
+            n = db.execute("""DELETE FROM documenti_dipendente
+                              WHERE nome_file IS NULL OR nome_file = ''""").rowcount
+            if n > 0:
+                safe_commit(db)
+                print(f'[auto-clean] Eliminati {n} record fantasma in documenti_dipendente per tenant {azienda_id}')
+            db.close()
+        except Exception as e:
+            print(f'[auto-clean] errore pulizia fantasmi: {e}')
         _tenant_initialized.add(azienda_id)
     except Exception as e:
         print(f'[auto_init_tenant_db] {e}')
@@ -1887,8 +1900,8 @@ textarea{resize:vertical;min-height:80px}
       <a href="/cantieri" class="nav-sub {{ 'active' if active=='cantieri' }}"><i class="fa fa-list"></i> Elenco fiere</a>
       <a href="/calendario-fiere" class="nav-sub {{ 'active' if active=='calendario_fiere' }}"><i class="fa fa-calendar-days"></i> Calendario fiere</a>
     </details>
-    <details class="nav-group" {% if active in ['documenti','scadenze','documenti_azienda'] %}open{% endif %}>
-      <summary class="{{ 'active' if active in ['documenti','scadenze','documenti_azienda'] }}">
+    <details class="nav-group" {% if active in ['documenti','documenti_azienda'] %}open{% endif %}>
+      <summary class="{{ 'active' if active in ['documenti','documenti_azienda'] }}">
         <i class="fa fa-folder"></i> Documenti
         {% if scadenze_app and (scadenze_app.docs_dip_scaduti + scadenze_app.docs_az_scaduti) > 0 %}
         <span class="notif-badge notif-scad" title="{{ scadenze_app.docs_dip_scaduti + scadenze_app.docs_az_scaduti }} documenti scaduti">{{ scadenze_app.docs_dip_scaduti + scadenze_app.docs_az_scaduti }}</span>
@@ -1902,10 +1915,6 @@ textarea{resize:vertical;min-height:80px}
       <a href="/documenti-azienda" class="nav-sub {{ 'active' if active=='documenti_azienda' }}">
         <i class="fa fa-building-columns"></i> Documenti azienda
         {% if scadenze_app and scadenze_app.docs_az_scaduti > 0 %}<span class="notif-badge notif-scad">{{ scadenze_app.docs_az_scaduti }}</span>{% endif %}
-      </a>
-      <a href="/scadenze" class="nav-sub {{ 'active' if active=='scadenze' }}">
-        <i class="fa fa-calendar-exclamation"></i> Scadenze documenti
-        {% if scadenze_app and scadenze_app.totale_scaduti > 0 %}<span class="notif-badge notif-scad">{{ scadenze_app.totale_scaduti }}</span>{% endif %}
       </a>
     </details>
     <a href="/veicoli" class="{{ 'active' if active=='veicoli' }}">
@@ -3249,7 +3258,7 @@ body.customize-mode .btn-link-soft{display:none}
       <div class="kpi-glow"></div>
     </a>
 
-    <a href="/scadenze" class="kpi-card kpi-rose {% if s.scad_doc_totali > 0 %}kpi-alert{% endif %}">
+    <a href="/documenti" class="kpi-card kpi-rose {% if s.scad_doc_totali > 0 %}kpi-alert{% endif %}">
       <div class="kpi-icon"><i class="fa fa-file-circle-exclamation"></i></div>
       <div class="kpi-body">
         <div class="kpi-label">Documenti</div>
