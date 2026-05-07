@@ -8105,6 +8105,66 @@ def tesserino_digitale(uid):
                        ha_logo_az=ha_logo_az, ha_foto=ha_foto)
 
 
+@app.route('/dipendenti/<int:uid>/tesserino/qr.png')
+@admin_required
+def tesserino_qr_png(uid):
+    """Genera il PNG del QR del tesserino. Prova più provider esterni in sequenza,
+    altrimenti restituisce un SVG pseudo-QR di fallback."""
+    az_id = session['azienda_id']
+    db = get_db()
+    row = db.execute("SELECT tesserino_token FROM utenti WHERE id=?", (uid,)).fetchone()
+    if not row:
+        db.close()
+        return abort(404)
+    token = row['tesserino_token']
+    if not token:
+        token = _ensure_tesserino_token(db, az_id, uid)
+    db.close()
+    if not token:
+        return abort(404)
+    base_url = request.host_url.rstrip('/')
+    qr_data = f"{base_url}/t/{token}"
+
+    import urllib.request, urllib.parse, urllib.error
+    # Provider alternativi (PNG). Si prova in ordine, primo che funziona vince.
+    providers = [
+        ('https://api.qrserver.com/v1/create-qr-code/?'
+         + urllib.parse.urlencode({'data': qr_data, 'size': '440x440', 'margin':'0',
+                                   'ecc': 'M', 'color': '0f172a', 'bgcolor': 'ffffff'})),
+        ('https://chart.googleapis.com/chart?'
+         + urllib.parse.urlencode({'cht': 'qr', 'chs': '440x440', 'chld': 'M|0',
+                                   'chl': qr_data})),
+        ('https://quickchart.io/qr?'
+         + urllib.parse.urlencode({'text': qr_data, 'size': 440, 'margin': 0,
+                                   'ecLevel': 'M', 'dark': '0f172a', 'light': 'ffffff'})),
+    ]
+    for url in providers:
+        try:
+            req = urllib.request.Request(url, headers={
+                'User-Agent': 'Mozilla/5.0 (compatible; AccessoFiere/1.0)',
+                'Accept': 'image/png,image/*'
+            })
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                data = resp.read()
+                if len(data) < 200:
+                    continue  # risposta troppo piccola → probabilmente errore
+                return Response(data, mimetype='image/png',
+                                headers={'Cache-Control': 'public, max-age=3600'})
+        except Exception as e:
+            print(f'[QR] provider failed ({url[:50]}...): {e}')
+            continue
+
+    # Ultimo fallback: SVG con messaggio (se tutti i provider sono down)
+    print(f'[QR] tutti i provider falliti per uid={uid}')
+    svg = f"""<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' style='background:#fff'>
+    <rect width='100' height='100' fill='#fff'/>
+    <text x='50' y='40' text-anchor='middle' font-size='8' fill='#dc2626' font-family='sans-serif' font-weight='bold'>QR temporaneamente</text>
+    <text x='50' y='52' text-anchor='middle' font-size='8' fill='#dc2626' font-family='sans-serif' font-weight='bold'>non disponibile</text>
+    <text x='50' y='65' text-anchor='middle' font-size='6' fill='#64748b' font-family='monospace'>Ricarica la pagina</text>
+    </svg>"""
+    return Response(svg, mimetype='image/svg+xml')
+
+
 @app.route('/dipendenti/<int:uid>/tesserino/pin', methods=['POST'])
 @admin_required
 def tesserino_pin_imposta(uid):
@@ -8191,7 +8251,7 @@ TESSERINO_TMPL = """
 .tess-back-head .sub{font-size:8px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-top:1px}
 
 .tess-qr-big{width:110px;height:110px;background:#fff;border-radius:8px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;border:1px solid #e2e8f0;padding:5px}
-.tess-qr-big canvas,.tess-qr-big img{width:100%;height:100%;display:block}
+.tess-qr-big img{width:100%;height:100%;display:block;object-fit:contain;image-rendering:pixelated;image-rendering:-moz-crisp-edges;image-rendering:crisp-edges}
 .tess-qr-caption{font-size:7.5px;color:#64748b;text-align:center;line-height:1.35;font-weight:600;margin-bottom:8px;padding:0 6px}
 .tess-qr-caption strong{color:#0f4c81;display:block;font-size:8.5px;margin-bottom:1px}
 
@@ -8343,7 +8403,13 @@ TESSERINO_TMPL = """
           <div class="sub">Scansiona · Inserisci PIN</div>
         </div>
       </div>
-      <div class="tess-qr-big"><canvas id="qrcode"></canvas></div>
+      <div class="tess-qr-big">
+        {% if tesserino_url %}
+        <img src="/dipendenti/{{ dip.id }}/tesserino/qr.png" alt="QR" width="220" height="220">
+        {% else %}
+        <div style="font-size:9px;color:#94a3b8;text-align:center;padding:20px">QR non disponibile</div>
+        {% endif %}
+      </div>
       <div class="tess-qr-caption">
         <strong>{{ dip.nome }} {{ dip.cognome }}</strong>
         Scansiona per verificare il tesserino
@@ -8358,20 +8424,6 @@ TESSERINO_TMPL = """
   </div>
 </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-<script>
-(function(){
-  var canvas = document.getElementById('qrcode');
-  if(canvas && typeof QRCode !== 'undefined'){
-    var data = {{ tesserino_url|tojson if tesserino_url else ('"'+codice+'"')|safe }};
-    QRCode.toCanvas(canvas, data, {
-      width: 220, margin: 0, errorCorrectionLevel: 'M',
-      color: { dark: '#0f172a', light: '#ffffff' }
-    }, function(err){ if(err) console.error(err); });
-  }
-})();
-</script>
 """
 
 
