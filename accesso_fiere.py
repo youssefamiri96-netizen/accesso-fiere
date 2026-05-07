@@ -650,7 +650,7 @@ def init_db():
         "ALTER TABLE documenti ADD COLUMN file_nome TEXT",
         "ALTER TABLE documenti ADD COLUMN file_nome_originale TEXT",
         "ALTER TABLE documenti ADD COLUMN file_dimensione INTEGER",
-        "INSERT OR IGNORE INTO impostazioni (chiave,valore) VALUES ('sede_legale',''')",
+        "INSERT OR IGNORE INTO impostazioni (chiave,valore) VALUES ('sede_legale','')",
         "INSERT OR IGNORE INTO impostazioni (chiave,valore) VALUES ('partita_iva','')",
         "INSERT OR IGNORE INTO impostazioni (chiave,valore) VALUES ('codice_inail','')",
         "INSERT OR IGNORE INTO impostazioni (chiave,valore) VALUES ('codice_inps','')",
@@ -976,6 +976,10 @@ def init_db():
         # ── Fototessera dipendente (per tesserino di riconoscimento) ──
         "ALTER TABLE utenti ADD COLUMN fototessera_filename TEXT",
         "ALTER TABLE utenti ADD COLUMN tesserino_codice TEXT",
+        # ── Tesserino: token URL univoco + PIN per accesso ai documenti ──
+        "ALTER TABLE utenti ADD COLUMN tesserino_token TEXT",
+        "ALTER TABLE utenti ADD COLUMN tesserino_pin_hash TEXT",
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_utenti_tesserino_token ON utenti(tesserino_token) WHERE tesserino_token IS NOT NULL",
         # ── Pausa pranzo nelle timbrature (per visibilità admin + integrità storico) ──
         "ALTER TABLE presenze ADD COLUMN pausa_ore REAL DEFAULT 0",
         "ALTER TABLE richieste_presenze ADD COLUMN pausa_ore REAL DEFAULT 0",
@@ -7898,6 +7902,37 @@ def _genera_codice_tesserino(uid):
     rand = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
     return f'TS-{az_id}{uid:04d}-{rand}'
 
+def _genera_token_tesserino(az_id, uid):
+    """Token URL random per la pagina pubblica del tesserino (impossibile da indovinare)."""
+    import secrets
+    return f"{az_id}-{uid}-{secrets.token_urlsafe(12)}"
+
+def _ensure_tesserino_token(db, az_id, uid):
+    """Garantisce che il dipendente abbia un token tesserino. Ritorna il token."""
+    row = db.execute("SELECT tesserino_token FROM utenti WHERE id=?", (uid,)).fetchone()
+    if row and row['tesserino_token']:
+        return row['tesserino_token']
+    for _ in range(5):
+        tok = _genera_token_tesserino(az_id, uid)
+        try:
+            db.execute("UPDATE utenti SET tesserino_token=? WHERE id=?", (tok, uid))
+            safe_commit(db)
+            return tok
+        except sqlite3.IntegrityError:
+            continue
+    return None
+
+def _hash_pin(pin: str) -> str:
+    """Hash sha256 del PIN (4 cifre). Non è bcrypt ma è sufficiente per un PIN
+    che già di per sé ha solo 10000 combinazioni e viene protetto dal token URL."""
+    import hashlib
+    return hashlib.sha256(f'tess-pin-salt::{pin}'.encode()).hexdigest()
+
+def _check_pin(pin: str, pin_hash: str) -> bool:
+    if not pin or not pin_hash:
+        return False
+    return _hash_pin(pin) == pin_hash
+
 @app.route('/dipendenti/<int:uid>/fototessera/upload', methods=['POST'])
 @admin_required
 def fototessera_upload(uid):
@@ -8008,22 +8043,23 @@ def tesserino_digitale(uid):
     """Tesserino di riconoscimento — visualizzazione + stampa."""
     az_id = session['azienda_id']
     db = get_db()
-    dip = db.execute("""SELECT id, nome, cognome, email, mansione, titolo,
-                               data_assunzione, fototessera_filename, tesserino_codice
+    dip = db.execute("""SELECT id, nome, cognome, email, telefono, mansione, titolo,
+                               data_assunzione, fototessera_filename, tesserino_codice,
+                               tesserino_token, tesserino_pin_hash
                         FROM utenti WHERE id=?""", (uid,)).fetchone()
     if not dip:
         db.close()
         return abort(404)
-    azienda = db.execute("SELECT nome FROM master.aziende WHERE id=?", (az_id,)).fetchone() if False else None
-    # Master è in DB separato — leggo da impostazioni o da master DB diretto
+    # Nome + indirizzo azienda
     azienda_nome = ''
     try:
         mdb = get_master_db()
         row = mdb.execute("SELECT nome FROM aziende WHERE id=?", (az_id,)).fetchone()
         if row: azienda_nome = row['nome']
         mdb.close()
-    except Exception:
-        pass
+    except Exception: pass
+    sede_legale = (get_setting('sede_legale', '') or '').strip()
+    partita_iva = (get_setting('partita_iva', '') or '').strip()
 
     # Codice tesserino: genera se mancante
     if not dip['tesserino_codice']:
@@ -8033,12 +8069,20 @@ def tesserino_digitale(uid):
     else:
         codice = dip['tesserino_codice']
 
-    # Verifica se ha logo aziendale
+    # Token tesserino: genera se mancante
+    token = _ensure_tesserino_token(db, az_id, uid)
+    base_url = request.host_url.rstrip('/')
+    tesserino_url = f"{base_url}/t/{token}" if token else ''
+    ha_pin = bool(dip['tesserino_pin_hash'])
+
+    # Verifica logo aziendale
     ha_logo_az = False
-    for fname in os.listdir(UPLOAD_DIR_LOGHI):
-        if fname.startswith(f'logo_{az_id}.'):
-            ha_logo_az = True
-            break
+    try:
+        for fname in os.listdir(UPLOAD_DIR_LOGHI):
+            if fname.startswith(f'logo_{az_id}.'):
+                ha_logo_az = True
+                break
+    except Exception: pass
 
     ha_foto = bool(_trova_fototessera(az_id, uid))
     db.close()
@@ -8047,106 +8091,134 @@ def tesserino_digitale(uid):
                        page_title=f'Tesserino - {dip["nome"]} {dip["cognome"]}',
                        active='dipendenti',
                        dip=dip, codice=codice, azienda_nome=azienda_nome,
+                       sede_legale=sede_legale, partita_iva=partita_iva,
+                       tesserino_url=tesserino_url, token=token, ha_pin=ha_pin,
                        ha_logo_az=ha_logo_az, ha_foto=ha_foto)
+
+
+@app.route('/dipendenti/<int:uid>/tesserino/pin', methods=['POST'])
+@admin_required
+def tesserino_pin_imposta(uid):
+    """Imposta o rigenera il PIN (4 cifre) per la pagina QR del dipendente."""
+    pin = (request.form.get('pin', '') or '').strip()
+    azione = request.form.get('azione', 'imposta')
+    db = get_db()
+    if not db.execute("SELECT id FROM utenti WHERE id=?", (uid,)).fetchone():
+        db.close()
+        flash('Dipendente non trovato.', 'error')
+        return redirect(url_for('dipendenti'))
+
+    if azione == 'rimuovi':
+        db.execute("UPDATE utenti SET tesserino_pin_hash=NULL WHERE id=?", (uid,))
+        safe_commit(db); db.close()
+        flash('PIN rimosso. La pagina QR ora non richiede PIN.', 'success')
+        return redirect(url_for('tesserino_digitale', uid=uid))
+
+    # Validazione PIN: deve essere 4 cifre numeriche
+    if not pin.isdigit() or len(pin) != 4:
+        db.close()
+        flash('Il PIN deve essere composto da esattamente 4 cifre.', 'error')
+        return redirect(url_for('tesserino_digitale', uid=uid))
+    # PIN troppo deboli da rifiutare
+    if pin in ('0000','1111','2222','3333','4444','5555','6666','7777','8888','9999','1234','4321'):
+        db.close()
+        flash('PIN troppo facile da indovinare. Scegline uno meno banale.', 'error')
+        return redirect(url_for('tesserino_digitale', uid=uid))
+
+    db.execute("UPDATE utenti SET tesserino_pin_hash=? WHERE id=?", (_hash_pin(pin), uid))
+    safe_commit(db); db.close()
+    flash(f'PIN impostato: <strong>{pin}</strong> — comunicalo a chi deve poter vedere i documenti del dipendente.', 'success')
+    return redirect(url_for('tesserino_digitale', uid=uid))
 
 
 TESSERINO_TMPL = """
 <style>
-/* Layout pagina admin */
 .tess-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px}
-.tess-toolbar .actions{display:flex;gap:8px;flex-wrap:wrap}
 .tess-stage{display:flex;justify-content:center;align-items:flex-start;gap:30px;flex-wrap:wrap;padding:30px 0}
 .tess-stage .label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-light);text-align:center;margin-bottom:10px;display:block}
 
-/* ───────── BADGE FORMATO CARTA DI CREDITO (85.6×54mm in landscape, ma noi facciamo verticale) ───────── */
-/* Usiamo formato verticale 54×85.6mm (badge da collo, formato tessera) */
-.tess-card{
-  width:204px;height:323px; /* 54mm × 85.6mm @ ~96dpi */
-  background:linear-gradient(160deg,#0f4c81 0%,#1e3a8a 50%,#312e81 100%);
+.tess-card,.tess-card-back{
+  width:204px;height:323px;
   border-radius:14px;
   box-shadow:0 18px 40px -12px rgba(15,23,42,.45),0 6px 14px rgba(0,0,0,.12);
-  padding:14px;
-  position:relative;overflow:hidden;
-  color:#fff;font-family:'DM Sans',sans-serif;
-  display:flex;flex-direction:column;
-}
-.tess-card::before{
-  content:"";position:absolute;top:-50%;right:-30%;width:280px;height:280px;
-  background:radial-gradient(circle,rgba(0,180,216,.28) 0%,transparent 65%);
-  pointer-events:none;
-}
-.tess-card::after{
-  content:"";position:absolute;bottom:-20%;left:-30%;width:200px;height:200px;
-  background:radial-gradient(circle,rgba(0,180,216,.15) 0%,transparent 60%);
-  pointer-events:none;
-}
-
-.tess-header{display:flex;align-items:center;gap:8px;position:relative;z-index:1;border-bottom:1px solid rgba(255,255,255,.18);padding-bottom:8px;margin-bottom:10px}
-.tess-logo{width:30px;height:30px;background:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:2px}
-.tess-logo img{max-width:100%;max-height:100%;object-fit:contain}
-.tess-logo i{color:#0f4c81;font-size:15px}
-.tess-corp{flex:1;min-width:0}
-.tess-corp .name{font-size:10.5px;font-weight:800;line-height:1.1;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tess-corp .sub{font-size:8px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.7px;font-weight:600;margin-top:2px}
-
-.tess-photo{
-  width:130px;height:160px;
-  margin:8px auto 12px;
-  border-radius:8px;background:rgba(255,255,255,.1);
-  display:flex;align-items:center;justify-content:center;
-  border:2.5px solid rgba(255,255,255,.85);
-  overflow:hidden;position:relative;z-index:1;
-  box-shadow:0 6px 16px rgba(0,0,0,.18);
-}
-.tess-photo img{width:100%;height:100%;object-fit:cover}
-.tess-photo .ph-empty{font-size:48px;color:rgba(255,255,255,.4)}
-
-.tess-name{font-size:13px;font-weight:800;text-align:center;line-height:1.15;letter-spacing:-.2px;position:relative;z-index:1;padding:0 4px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tess-role{font-size:9.5px;text-align:center;color:rgba(255,255,255,.78);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;position:relative;z-index:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px}
-
-.tess-footer{margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:6px;position:relative;z-index:1;padding-top:8px;border-top:1px solid rgba(255,255,255,.18)}
-.tess-meta{flex:1;min-width:0;font-size:7.5px;color:rgba(255,255,255,.7);font-weight:500;line-height:1.35;letter-spacing:.2px}
-.tess-meta strong{color:#fff;font-weight:700;letter-spacing:.4px;display:block;font-size:8.5px}
-.tess-qr{width:46px;height:46px;background:#fff;border-radius:5px;padding:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-.tess-qr canvas,.tess-qr img{width:100%;height:100%;display:block}
-
-/* ───────── RETRO TESSERINO ───────── */
-.tess-card-back{
-  width:204px;height:323px;
-  background:#fff;border-radius:14px;
-  box-shadow:0 18px 40px -12px rgba(15,23,42,.45),0 6px 14px rgba(0,0,0,.12);
-  padding:14px;
   position:relative;overflow:hidden;
   font-family:'DM Sans',sans-serif;
   display:flex;flex-direction:column;
-  border:1px solid #e2e8f0;
 }
-.tess-back-stripe{position:absolute;top:30px;left:0;right:0;height:32px;background:#0f172a}
-.tess-back-title{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text-light);margin-bottom:4px}
-.tess-back-spacer{height:50px}
-.tess-back-info{font-size:11px;color:var(--text);line-height:1.55;font-weight:500;margin-bottom:14px}
-.tess-back-info strong{color:var(--accent);display:block;font-size:11.5px;margin-bottom:1px}
-.tess-back-rules{font-size:9px;color:var(--text-light);line-height:1.5;border-top:1px solid var(--border);padding-top:10px;margin-top:auto}
-.tess-back-rules .head{font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;font-size:8.5px;margin-bottom:5px}
-.tess-back-emerg{background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:6px 8px;font-size:9px;color:#7f1d1d;text-align:center;margin-top:8px}
 
-/* ═══════════ STAMPA ═══════════ */
+/* ───────── FRONTE ───────── */
+.tess-card{background:linear-gradient(160deg,#0f4c81 0%,#1e3a8a 50%,#312e81 100%);padding:13px 13px 11px;color:#fff}
+.tess-card::before{content:"";position:absolute;top:-50%;right:-30%;width:280px;height:280px;background:radial-gradient(circle,rgba(0,180,216,.28) 0%,transparent 65%);pointer-events:none}
+.tess-card::after{content:"";position:absolute;bottom:-25%;left:-30%;width:220px;height:220px;background:radial-gradient(circle,rgba(0,180,216,.13) 0%,transparent 60%);pointer-events:none}
+
+.tess-header{display:flex;align-items:center;gap:8px;position:relative;z-index:1;border-bottom:1px solid rgba(255,255,255,.18);padding-bottom:7px;margin-bottom:8px}
+.tess-logo{width:32px;height:32px;background:#fff;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:3px;box-shadow:0 2px 6px rgba(0,0,0,.12)}
+.tess-logo img{max-width:100%;max-height:100%;object-fit:contain}
+.tess-logo i{color:#0f4c81;font-size:15px}
+.tess-corp{flex:1;min-width:0}
+.tess-corp .name{font-size:11px;font-weight:800;line-height:1.1;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tess-corp .sub{font-size:7.5px;color:rgba(255,255,255,.62);text-transform:uppercase;letter-spacing:.7px;font-weight:700;margin-top:2px}
+
+.tess-photo{width:108px;height:138px;margin:6px auto 8px;border-radius:8px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;border:2.5px solid rgba(255,255,255,.85);overflow:hidden;position:relative;z-index:1;box-shadow:0 6px 16px rgba(0,0,0,.22)}
+.tess-photo img{width:100%;height:100%;object-fit:cover}
+.tess-photo .ph-empty{font-size:42px;color:rgba(255,255,255,.4)}
+
+.tess-name{font-size:13.5px;font-weight:800;text-align:center;line-height:1.15;letter-spacing:-.2px;position:relative;z-index:1;padding:0 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tess-role{font-size:9.5px;text-align:center;color:#7dd3fc;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;position:relative;z-index:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px}
+
+.tess-info-line{font-size:8px;color:rgba(255,255,255,.78);text-align:center;font-weight:500;line-height:1.4;position:relative;z-index:1;padding:0 6px;margin-bottom:2px;display:flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tess-info-line i{font-size:7px;color:rgba(255,255,255,.5)}
+
+.tess-footer{margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:6px;position:relative;z-index:1;padding-top:6px;border-top:1px solid rgba(255,255,255,.18)}
+.tess-meta{flex:1;min-width:0;font-size:7.5px;color:rgba(255,255,255,.7);font-weight:500;line-height:1.35;letter-spacing:.2px}
+.tess-meta strong{color:#fff;font-weight:700;letter-spacing:.5px;display:block;font-size:9px;font-family:monospace}
+
+/* ───────── RETRO ───────── */
+.tess-card-back{background:#fff;padding:14px 13px;border:1px solid #e2e8f0}
+.tess-back-band{position:absolute;top:0;left:0;right:0;height:8px;background:linear-gradient(90deg,#0f4c81 0%,#1e3a8a 50%,#312e81 100%)}
+.tess-back-head{padding-top:6px;display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.tess-back-head .ico{width:26px;height:26px;background:linear-gradient(135deg,#0f4c81,#1e3a8a);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;flex-shrink:0}
+.tess-back-head .ttl{font-size:10px;font-weight:800;color:#0f172a;line-height:1.1;letter-spacing:-.1px}
+.tess-back-head .sub{font-size:8px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-top:1px}
+
+.tess-qr-big{width:110px;height:110px;background:#fff;border-radius:8px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;border:1px solid #e2e8f0;padding:5px}
+.tess-qr-big canvas,.tess-qr-big img{width:100%;height:100%;display:block}
+.tess-qr-caption{font-size:7.5px;color:#64748b;text-align:center;line-height:1.35;font-weight:600;margin-bottom:8px;padding:0 6px}
+.tess-qr-caption strong{color:#0f4c81;display:block;font-size:8.5px;margin-bottom:1px}
+
+.tess-back-contact{font-size:8px;color:#475569;line-height:1.45;background:#f8fafc;border-radius:6px;padding:7px 9px;margin-top:auto}
+.tess-back-contact .row{display:flex;align-items:flex-start;gap:5px;margin-bottom:2px}
+.tess-back-contact .row:last-child{margin-bottom:0}
+.tess-back-contact i{color:#0f4c81;width:10px;flex-shrink:0;text-align:center;font-size:8px;margin-top:2px}
+.tess-back-contact .v{flex:1;word-break:break-word}
+.tess-back-rules{font-size:7px;color:#94a3b8;line-height:1.45;text-align:center;font-style:italic;margin-top:6px;padding:0 4px}
+
+/* ───────── PIN box ───────── */
+.pin-card{background:#fff;border-radius:14px;border:1px solid var(--border);padding:18px;max-width:560px;margin:0 auto 20px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.pin-card .head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.pin-card .head-ico{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.pin-card h4{margin:0;font-size:14px;font-weight:800;color:#0f172a}
+.pin-card .head .sub{font-size:11.5px;color:var(--text-light);margin-top:1px}
+.pin-status{display:flex;align-items:center;gap:8px;padding:11px 14px;border-radius:10px;margin-bottom:12px;font-size:13px}
+.pin-status.set{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+.pin-status.unset{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+.pin-form{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pin-form input{width:120px;padding:10px 14px;border:1.5px solid var(--border);border-radius:9px;font-size:18px;font-family:monospace;letter-spacing:6px;text-align:center;font-weight:700}
+.pin-form input:focus{border-color:var(--accent);outline:none}
+.pin-form .info{font-size:11.5px;color:var(--text-light);margin-top:8px;width:100%}
+
 @media print{
-  /* Nasconde tutto tranne il tesserino */
   body * { visibility:hidden !important; }
   .tess-print-area, .tess-print-area * { visibility:visible !important; }
   .tess-print-area { position:absolute !important; top:0; left:0; width:100%; padding:20mm 0 0 0; }
   .tess-stage{padding:0;gap:8mm;justify-content:center}
   .tess-stage .label{display:none}
-  .tess-toolbar,.sidebar,.topbar,.dash-customize-tray{display:none !important}
-  /* Mantieni dimensioni precise per stampa fisica */
+  .tess-toolbar,.sidebar,.topbar,.dash-customize-tray,.pin-card{display:none !important}
   .tess-card,.tess-card-back{
     width:54mm !important;height:85.6mm !important;
-    box-shadow:none !important;
-    border-radius:3mm !important;
+    box-shadow:none !important;border-radius:3mm !important;
     page-break-inside:avoid;
-    -webkit-print-color-adjust:exact;
-    print-color-adjust:exact;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
   }
 }
 </style>
@@ -8163,10 +8235,13 @@ TESSERINO_TMPL = """
       <span>Tesserino</span>
     </div>
     <div class="page-title">Tesserino di riconoscimento</div>
-    <div class="page-desc">Tesserino digitale e stampabile (formato carta di credito 54×85.6mm). Usa "Stampa" per stampare su carta o cartoncino.</div>
+    <div class="page-desc">Tesserino digitale e stampabile (formato carta di credito 54×85.6mm). Il QR sul retro permette di vedere i documenti del dipendente, protetti da PIN.</div>
   </div>
   <div class="page-actions">
     <a href="/dipendenti/{{ dip.id }}/modifica" class="btn btn-secondary"><i class="fa fa-arrow-left"></i> Torna al profilo</a>
+    {% if tesserino_url %}
+    <a href="{{ tesserino_url }}" target="_blank" class="btn btn-secondary"><i class="fa fa-eye"></i> Anteprima pagina QR</a>
+    {% endif %}
     {% if ha_foto %}
     <button onclick="window.print()" class="btn btn-primary"><i class="fa fa-print"></i> Stampa tesserino</button>
     {% endif %}
@@ -8180,6 +8255,36 @@ TESSERINO_TMPL = """
 </div>
 {% endif %}
 
+<!-- ───────── PIN management ───────── -->
+<div class="pin-card">
+  <div class="head">
+    <div class="head-ico"><i class="fa fa-lock"></i></div>
+    <div>
+      <h4>PIN per accesso ai documenti</h4>
+      <div class="sub">Chi scansiona il QR vede solo i dati base; per i documenti serve questo PIN.</div>
+    </div>
+  </div>
+  {% if ha_pin %}
+  <div class="pin-status set">
+    <i class="fa fa-shield-halved"></i>
+    <span><strong>PIN impostato</strong> — la pagina pubblica è protetta. Comunica il PIN solo a chi è autorizzato.</span>
+  </div>
+  {% else %}
+  <div class="pin-status unset">
+    <i class="fa fa-triangle-exclamation"></i>
+    <span><strong>Nessun PIN impostato</strong> — chiunque scansioni il QR può vedere i documenti. Imposta un PIN per proteggerli.</span>
+  </div>
+  {% endif %}
+  <form method="POST" action="/dipendenti/{{ dip.id }}/tesserino/pin" class="pin-form">
+    <input type="text" name="pin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="••••" autocomplete="off" required>
+    <button type="submit" name="azione" value="imposta" class="btn btn-primary"><i class="fa fa-key"></i> {% if ha_pin %}Cambia PIN{% else %}Imposta PIN{% endif %}</button>
+    {% if ha_pin %}
+    <button type="submit" name="azione" value="rimuovi" class="btn btn-secondary" onclick="return confirm('Rimuovere il PIN? Chi scansiona il QR vedrà i documenti senza protezione.')"><i class="fa fa-times"></i> Rimuovi PIN</button>
+    {% endif %}
+    <div class="info">PIN di 4 cifre. Niente sequenze ovvie (1234, 0000, ecc.).</div>
+  </form>
+</div>
+
 <div class="tess-print-area">
 <div class="tess-stage">
   <!-- FRONT -->
@@ -8188,11 +8293,8 @@ TESSERINO_TMPL = """
     <div class="tess-card">
       <div class="tess-header">
         <div class="tess-logo">
-          {% if ha_logo_az %}
-            <img src="/admin/logo/serve" alt="logo">
-          {% else %}
-            <i class="fa fa-id-badge"></i>
-          {% endif %}
+          {% if ha_logo_az %}<img src="/admin/logo/serve" alt="logo">
+          {% else %}<i class="fa fa-id-badge"></i>{% endif %}
         </div>
         <div class="tess-corp">
           <div class="name">{{ azienda_nome or 'Azienda' }}</div>
@@ -8200,20 +8302,22 @@ TESSERINO_TMPL = """
         </div>
       </div>
       <div class="tess-photo">
-        {% if ha_foto %}
-          <img src="/dipendenti/{{ dip.id }}/fototessera/serve" alt="foto">
-        {% else %}
-          <i class="fa fa-user ph-empty"></i>
-        {% endif %}
+        {% if ha_foto %}<img src="/dipendenti/{{ dip.id }}/fototessera/serve" alt="foto">
+        {% else %}<i class="fa fa-user ph-empty"></i>{% endif %}
       </div>
       <div class="tess-name">{{ dip.nome }} {{ dip.cognome }}</div>
       <div class="tess-role">{{ dip.mansione or dip.titolo or 'Dipendente' }}</div>
+      {% if sede_legale %}
+      <div class="tess-info-line"><i class="fa fa-location-dot"></i>{{ sede_legale[:38] }}{% if sede_legale|length > 38 %}…{% endif %}</div>
+      {% endif %}
+      {% if dip.telefono %}
+      <div class="tess-info-line"><i class="fa fa-phone"></i>{{ dip.telefono }}</div>
+      {% endif %}
       <div class="tess-footer">
         <div class="tess-meta">
           <strong>{{ codice }}</strong>
           {% if dip.data_assunzione %}Dal {{ dip.data_assunzione[8:10] }}/{{ dip.data_assunzione[5:7] }}/{{ dip.data_assunzione[0:4] }}{% endif %}
         </div>
-        <div class="tess-qr"><canvas id="qrcode"></canvas></div>
       </div>
     </div>
   </div>
@@ -8222,41 +8326,534 @@ TESSERINO_TMPL = """
   <div>
     <span class="label">Retro</span>
     <div class="tess-card-back">
-      <div class="tess-back-title">Tesserino di servizio</div>
-      <div class="tess-back-stripe"></div>
-      <div class="tess-back-spacer"></div>
-      <div class="tess-back-info">
+      <div class="tess-back-band"></div>
+      <div class="tess-back-head">
+        <div class="ico"><i class="fa fa-qrcode"></i></div>
+        <div>
+          <div class="ttl">Verifica documenti</div>
+          <div class="sub">Scansiona · Inserisci PIN</div>
+        </div>
+      </div>
+      <div class="tess-qr-big"><canvas id="qrcode"></canvas></div>
+      <div class="tess-qr-caption">
         <strong>{{ dip.nome }} {{ dip.cognome }}</strong>
-        {% if dip.email %}{{ dip.email }}<br>{% endif %}
-        Codice: {{ codice }}
+        Scansiona per verificare il tesserino
       </div>
-      <div class="tess-back-rules">
-        <div class="head">In caso di smarrimento</div>
-        Restituire al datore di lavoro o contattare la sede dell'azienda. Tesserino strettamente personale, non cedibile a terzi.
+      <div class="tess-back-contact">
+        {% if azienda_nome %}<div class="row"><i class="fa fa-building"></i><span class="v"><strong>{{ azienda_nome }}</strong></span></div>{% endif %}
+        {% if sede_legale %}<div class="row"><i class="fa fa-location-dot"></i><span class="v">{{ sede_legale }}</span></div>{% endif %}
+        {% if partita_iva %}<div class="row"><i class="fa fa-id-card"></i><span class="v">P.IVA {{ partita_iva }}</span></div>{% endif %}
       </div>
-      <div class="tess-back-emerg">
-        <i class="fa fa-shield-halved"></i> Documento di riconoscimento aziendale
-      </div>
+      <div class="tess-back-rules">Tesserino personale e non cedibile. In caso di smarrimento contattare l'azienda.</div>
     </div>
   </div>
 </div>
 </div>
 
-<!-- QR Code library (CDN) - genera QR con il codice tesserino -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script>
 (function(){
   var canvas = document.getElementById('qrcode');
   if(canvas && typeof QRCode !== 'undefined'){
-    var data = '{{ codice }}|{{ dip.nome }} {{ dip.cognome }}|{{ azienda_nome }}';
+    var data = {{ tesserino_url|tojson if tesserino_url else ('"'+codice+'"')|safe }};
     QRCode.toCanvas(canvas, data, {
-      width: 100, margin: 0,
+      width: 220, margin: 0, errorCorrectionLevel: 'M',
       color: { dark: '#0f172a', light: '#ffffff' }
     }, function(err){ if(err) console.error(err); });
   }
 })();
 </script>
 """
+
+
+# ══════════════════════════════════════════════════════════
+#  TESSERINO PUBBLICO (scansione QR) — pin protected
+# ══════════════════════════════════════════════════════════
+# Rate limiting in memory (per evitare brute-force PIN). Per produzione vera serve redis,
+# qui basta a fermare attacchi da singolo IP/token.
+_TESS_PIN_ATTEMPTS = {}   # key: f"{token}::{ip}" → {'count': n, 'until': timestamp}
+_TESS_PIN_MAX = 5
+_TESS_PIN_WINDOW = 600    # 10 minuti di blocco
+
+def _pin_rate_limit_key(token, ip):
+    return f"{token}::{ip}"
+
+def _pin_rate_limit_check(token, ip):
+    """Ritorna (ok, secondi_rimanenti). ok=False se bloccato."""
+    import time
+    k = _pin_rate_limit_key(token, ip)
+    rec = _TESS_PIN_ATTEMPTS.get(k)
+    now = time.time()
+    if rec and rec['count'] >= _TESS_PIN_MAX and rec['until'] > now:
+        return False, int(rec['until'] - now)
+    # Se la finestra di blocco è scaduta (rec con until>0 nel passato) → reset
+    if rec and rec['until'] > 0 and rec['until'] <= now:
+        _TESS_PIN_ATTEMPTS.pop(k, None)
+    return True, 0
+
+def _pin_rate_limit_register_failure(token, ip):
+    import time
+    k = _pin_rate_limit_key(token, ip)
+    rec = _TESS_PIN_ATTEMPTS.get(k, {'count': 0, 'until': 0})
+    rec['count'] = rec['count'] + 1
+    if rec['count'] >= _TESS_PIN_MAX:
+        rec['until'] = time.time() + _TESS_PIN_WINDOW
+    _TESS_PIN_ATTEMPTS[k] = rec
+
+def _pin_rate_limit_clear(token, ip):
+    _TESS_PIN_ATTEMPTS.pop(_pin_rate_limit_key(token, ip), None)
+
+
+def _carica_tesserino_da_token(token):
+    """Carica i dati del dipendente dal token. Ritorna (db, dip, az_id) o (None, None, None)."""
+    if not token or len(token) < 10:
+        return None, None, None
+    try:
+        parts = token.split('-')
+        if len(parts) < 3:
+            return None, None, None
+        az_id = int(parts[0])
+        uid_hint = int(parts[1])
+    except Exception:
+        return None, None, None
+    tenant_db_path = os.path.join(DATA_DIR, 'tenants', f'accesso_fiere_{az_id}.db')
+    if not os.path.exists(tenant_db_path):
+        return None, None, None
+    db = sqlite3.connect(tenant_db_path)
+    db.row_factory = sqlite3.Row
+    try:
+        dip = db.execute("""SELECT id, nome, cognome, mansione, titolo, telefono,
+                                   data_assunzione, fototessera_filename, tesserino_codice,
+                                   tesserino_token, tesserino_pin_hash, attivo
+                            FROM utenti WHERE tesserino_token=? AND id=? LIMIT 1""",
+                         (token, uid_hint)).fetchone()
+    except Exception:
+        db.close()
+        return None, None, None
+    if not dip:
+        db.close()
+        return None, None, None
+    return db, dip, az_id
+
+
+def _client_ip():
+    return request.headers.get('X-Forwarded-For','').split(',')[0].strip() or request.remote_addr or 'unknown'
+
+
+@app.route('/t/<token>', methods=['GET','POST'])
+def tesserino_pubblico(token):
+    """Pagina pubblica del tesserino: form PIN → vista documenti."""
+    db, dip, az_id = _carica_tesserino_da_token(token)
+    if not dip:
+        return abort(404)
+    try:
+        # Info azienda + sede
+        azienda_nome = ''
+        try:
+            mdb = get_master_db()
+            row = mdb.execute("SELECT nome FROM aziende WHERE id=?", (az_id,)).fetchone()
+            if row: azienda_nome = row['nome']
+            mdb.close()
+        except Exception: pass
+        sede_legale = ''
+        try:
+            row = db.execute("SELECT valore FROM impostazioni WHERE chiave='sede_legale'").fetchone()
+            if row: sede_legale = (row['valore'] or '').strip()
+        except Exception: pass
+
+        # Logo + foto
+        ha_logo_az = False
+        try:
+            for fname in os.listdir(UPLOAD_DIR_LOGHI):
+                if fname.startswith(f'logo_{az_id}.'):
+                    ha_logo_az = True; break
+        except Exception: pass
+        ha_foto = False
+        try:
+            for ext in ALLOWED_FOTOTESSERA_EXT:
+                if os.path.exists(os.path.join(UPLOAD_DIR_FOTOTESSERE, f'foto_{az_id}_{dip["id"]}.{ext}')):
+                    ha_foto = True; break
+        except Exception: pass
+
+        # Se il dipendente non è attivo → blocca subito (privacy)
+        if not dip['attivo']:
+            return render_template_string(TESSERINO_PUB_DISABLED_TMPL,
+                azienda_nome=azienda_nome, ha_logo_az=ha_logo_az)
+
+        ip = _client_ip()
+
+        # Caso 1: nessun PIN impostato → mostra messaggio "non disponibile"
+        if not dip['tesserino_pin_hash']:
+            return render_template_string(TESSERINO_PUB_NOPIN_TMPL,
+                dip=dict(dip), azienda_nome=azienda_nome, ha_logo_az=ha_logo_az, ha_foto=ha_foto,
+                token=token)
+
+        # Caso 2: POST con PIN → verifica
+        if request.method == 'POST':
+            ok, secs = _pin_rate_limit_check(token, ip)
+            if not ok:
+                return render_template_string(TESSERINO_PUB_PIN_TMPL,
+                    dip=dict(dip), azienda_nome=azienda_nome, ha_logo_az=ha_logo_az, ha_foto=ha_foto,
+                    token=token, error=f'Troppi tentativi. Riprova tra {secs//60+1} minuti.',
+                    blocked=True), 429
+            pin = (request.form.get('pin','') or '').strip()
+            if not pin or not _check_pin(pin, dip['tesserino_pin_hash']):
+                _pin_rate_limit_register_failure(token, ip)
+                rec = _TESS_PIN_ATTEMPTS.get(_pin_rate_limit_key(token, ip), {'count':1})
+                rimasti = max(0, _TESS_PIN_MAX - rec['count'])
+                err = f'PIN errato. {rimasti} tentativi rimasti.' if rimasti else 'Troppi tentativi. Account temporaneamente bloccato.'
+                return render_template_string(TESSERINO_PUB_PIN_TMPL,
+                    dip=dict(dip), azienda_nome=azienda_nome, ha_logo_az=ha_logo_az, ha_foto=ha_foto,
+                    token=token, error=err, blocked=False)
+            # PIN corretto → reset rate limit + carica documenti
+            _pin_rate_limit_clear(token, ip)
+            return _render_tesserino_docs(db, dip, az_id, azienda_nome, sede_legale, ha_logo_az, ha_foto, token)
+
+        # Caso 3: GET → mostra form PIN
+        return render_template_string(TESSERINO_PUB_PIN_TMPL,
+            dip=dict(dip), azienda_nome=azienda_nome, ha_logo_az=ha_logo_az, ha_foto=ha_foto,
+            token=token, error=None, blocked=False)
+    finally:
+        db.close()
+
+
+def _render_tesserino_docs(db, dip, az_id, azienda_nome, sede_legale, ha_logo_az, ha_foto, token):
+    """Carica e visualizza i documenti del dipendente (dopo verifica PIN)."""
+    docs_raw = db.execute("""SELECT tipo_doc, categoria, nome_originale,
+                                    data_scadenza,
+                                    CAST(julianday(data_scadenza)-julianday('now') AS INTEGER) as days_left
+                             FROM documenti_dipendente
+                             WHERE utente_id=?
+                             ORDER BY (data_scadenza IS NULL), data_scadenza""",
+                          (dip['id'],)).fetchall()
+    docs = []
+    for d in docs_raw:
+        row = dict(d)
+        if row['data_scadenza'] and row['days_left'] is not None:
+            if row['days_left'] < 0: row['stato'] = 'scaduto'
+            elif row['days_left'] <= 30: row['stato'] = 'in_scadenza'
+            else: row['stato'] = 'ok'
+        else:
+            row['stato'] = 'nessuna'
+        docs.append(row)
+    return render_template_string(TESSERINO_PUB_DOCS_TMPL,
+        dip=dict(dip), docs=docs, azienda_nome=azienda_nome, sede_legale=sede_legale,
+        ha_logo_az=ha_logo_az, ha_foto=ha_foto, token=token,
+        n_scaduti=sum(1 for d in docs if d['stato']=='scaduto'),
+        n_in_scadenza=sum(1 for d in docs if d['stato']=='in_scadenza'),
+        n_ok=sum(1 for d in docs if d['stato']=='ok'))
+
+
+@app.route('/t/<token>/foto')
+def tesserino_pubblico_foto(token):
+    """Serve la fototessera per la pagina pubblica (verifica token)."""
+    db, dip, az_id = _carica_tesserino_da_token(token)
+    if not dip:
+        return abort(404)
+    db.close()
+    for ext in ALLOWED_FOTOTESSERA_EXT:
+        p = os.path.join(UPLOAD_DIR_FOTOTESSERE, f'foto_{az_id}_{dip["id"]}.{ext}')
+        if os.path.exists(p):
+            mime = {'jpg':'image/jpeg','jpeg':'image/jpeg','png':'image/png','webp':'image/webp'}
+            return send_file(p, mimetype=mime.get(ext,'image/jpeg'))
+    return abort(404)
+
+
+@app.route('/t/<token>/logo')
+def tesserino_pubblico_logo(token):
+    """Serve il logo aziendale per la pagina pubblica (verifica token)."""
+    db, dip, az_id = _carica_tesserino_da_token(token)
+    if not dip:
+        return abort(404)
+    db.close()
+    try:
+        for fname in os.listdir(UPLOAD_DIR_LOGHI):
+            if fname.startswith(f'logo_{az_id}.'):
+                p = os.path.join(UPLOAD_DIR_LOGHI, fname)
+                ext = fname.rsplit('.',1)[-1].lower()
+                mime = {'jpg':'image/jpeg','jpeg':'image/jpeg','png':'image/png','webp':'image/webp','svg':'image/svg+xml'}
+                return send_file(p, mimetype=mime.get(ext,'image/png'))
+    except Exception: pass
+    return abort(404)
+
+
+# CSS condiviso per le 3 viste pubbliche
+_TESS_PUB_BASE_CSS = """
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:linear-gradient(180deg,#f1f5f9 0%,#e2e8f0 100%);color:#0f172a;min-height:100vh;padding:20px 12px}
+.wrap{max-width:480px;margin:0 auto}
+.hero{background:linear-gradient(160deg,#0f4c81 0%,#1e3a8a 50%,#312e81 100%);border-radius:18px;padding:22px;color:#fff;margin-bottom:16px;box-shadow:0 18px 40px -12px rgba(15,23,42,.25);position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;top:-50%;right:-30%;width:300px;height:300px;background:radial-gradient(circle,rgba(0,180,216,.28) 0%,transparent 65%);pointer-events:none}
+.hero-head{display:flex;align-items:center;gap:10px;margin-bottom:16px;position:relative;z-index:1}
+.hero-logo{width:42px;height:42px;background:#fff;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:4px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+.hero-logo img{max-width:100%;max-height:100%;object-fit:contain}
+.hero-logo i{color:#0f4c81;font-size:18px}
+.hero-corp .name{font-size:14px;font-weight:800;letter-spacing:.2px}
+.hero-corp .sub{font-size:10px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.7px;font-weight:700;margin-top:2px}
+.hero-body{display:flex;gap:14px;align-items:center;position:relative;z-index:1}
+.hero-photo{width:88px;height:112px;border-radius:10px;background:rgba(255,255,255,.12);border:2.5px solid rgba(255,255,255,.85);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+.hero-photo img{width:100%;height:100%;object-fit:cover}
+.hero-photo i{font-size:38px;color:rgba(255,255,255,.45)}
+.hero-info{flex:1;min-width:0}
+.hero-name{font-size:19px;font-weight:800;letter-spacing:-.3px;line-height:1.15;margin-bottom:4px}
+.hero-role{font-size:11.5px;color:#7dd3fc;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.hero-meta{font-size:11px;color:rgba(255,255,255,.78);font-family:monospace;letter-spacing:.3px}
+.section{background:#fff;border-radius:14px;padding:20px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.footer{text-align:center;color:#64748b;font-size:11px;margin-top:14px;padding:0 16px;line-height:1.5}
+.footer .priv{font-size:10px;color:#94a3b8;margin-top:4px;font-style:italic}
+"""
+
+
+TESSERINO_PUB_PIN_TMPL = """<!DOCTYPE html>
+<html lang="it"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Verifica · {{ dip.nome }} {{ dip.cognome }}</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>""" + _TESS_PUB_BASE_CSS + """
+.pin-section{text-align:center}
+.pin-icon{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 14px}
+.pin-title{font-size:18px;font-weight:800;color:#0f172a;letter-spacing:-.3px;margin-bottom:5px}
+.pin-sub{font-size:13px;color:#64748b;line-height:1.45;margin-bottom:22px;max-width:340px;margin-left:auto;margin-right:auto}
+.pin-input{width:200px;height:60px;border:2px solid #e2e8f0;border-radius:12px;text-align:center;font-size:32px;font-family:monospace;letter-spacing:14px;font-weight:700;color:#0f172a;outline:none;padding:0 0 0 14px;transition:all .15s}
+.pin-input:focus{border-color:#0f4c81;box-shadow:0 0 0 4px rgba(15,76,129,.1)}
+.pin-input.error{border-color:#dc2626;animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.pin-btn{display:block;width:200px;margin:18px auto 0;padding:13px;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border:none;border-radius:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.2px;box-shadow:0 4px 12px rgba(15,76,129,.25);transition:all .15s}
+.pin-btn:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(15,76,129,.35)}
+.pin-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.pin-error{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:10px;padding:11px 14px;font-size:13px;margin-top:18px;display:flex;align-items:center;gap:9px;justify-content:center;font-weight:600}
+.pin-blocked{background:#fef2f2;border:1px solid #fca5a5;color:#7f1d1d;border-radius:10px;padding:14px;font-size:13px;margin-top:18px;text-align:center;font-weight:600}
+.pin-info{font-size:11.5px;color:#94a3b8;margin-top:18px;line-height:1.5;padding:0 12px}
+</style></head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="hero-head">
+      <div class="hero-logo">{% if ha_logo_az %}<img src="/t/{{ token }}/logo" alt="">{% else %}<i class="fa fa-id-badge"></i>{% endif %}</div>
+      <div class="hero-corp"><div class="name">{{ azienda_nome or 'Azienda' }}</div><div class="sub">Verifica tesserino</div></div>
+    </div>
+    <div class="hero-body">
+      <div class="hero-photo">{% if ha_foto %}<img src="/t/{{ token }}/foto" alt="">{% else %}<i class="fa fa-user"></i>{% endif %}</div>
+      <div class="hero-info">
+        <div class="hero-name">{{ dip.nome }} {{ dip.cognome }}</div>
+        <div class="hero-role">{{ dip.mansione or dip.titolo or 'Dipendente' }}</div>
+        {% if dip.tesserino_codice %}<div class="hero-meta">{{ dip.tesserino_codice }}</div>{% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="section pin-section">
+    <div class="pin-icon"><i class="fa fa-lock"></i></div>
+    <div class="pin-title">Inserisci il PIN</div>
+    <div class="pin-sub">Per visualizzare i documenti di questo dipendente è necessario il PIN comunicato dall'azienda.</div>
+    {% if blocked %}
+    <div class="pin-blocked"><i class="fa fa-ban"></i> {{ error }}</div>
+    {% else %}
+    <form method="POST" autocomplete="off">
+      <input type="text" name="pin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4"
+             placeholder="••••" autofocus required class="pin-input{% if error %} error{% endif %}">
+      <button type="submit" class="pin-btn"><i class="fa fa-unlock"></i> Verifica PIN</button>
+    </form>
+    {% if error %}<div class="pin-error"><i class="fa fa-circle-exclamation"></i> {{ error }}</div>{% endif %}
+    {% endif %}
+    <div class="pin-info">
+      <i class="fa fa-shield-halved"></i> Il PIN è personale: non condividerlo se non con personale autorizzato.<br>
+      Dopo 5 tentativi errati l'accesso viene bloccato per 10 minuti.
+    </div>
+  </div>
+  <div class="footer">Tesserino di servizio · Sistema gestionale aziendale<div class="priv">Pagina protetta da PIN — i dati non sono indicizzati dai motori di ricerca</div></div>
+</div>
+</body></html>"""
+
+
+TESSERINO_PUB_DOCS_TMPL = """<!DOCTYPE html>
+<html lang="it"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Documenti · {{ dip.nome }} {{ dip.cognome }}</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>""" + _TESS_PUB_BASE_CSS + """
+.verified{display:inline-flex;align-items:center;gap:5px;background:rgba(34,197,94,.18);color:#86efac;padding:4px 10px;border-radius:99px;font-size:10.5px;font-weight:700;margin-top:6px}
+.summary-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;position:relative;z-index:1}
+.sum-pill{font-size:10.5px;font-weight:700;padding:5px 11px;border-radius:99px;display:inline-flex;align-items:center;gap:5px}
+.sum-pill.green{background:rgba(34,197,94,.2);color:#86efac}
+.sum-pill.amber{background:rgba(245,158,11,.2);color:#fcd34d}
+.sum-pill.red{background:rgba(239,68,68,.22);color:#fca5a5}
+.section-title{font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.7px;margin-bottom:14px;display:flex;align-items:center;gap:7px}
+.section-title i{color:#0f4c81}
+.docs-grid{display:flex;flex-direction:column;gap:9px}
+.doc-row{display:flex;align-items:center;gap:11px;padding:11px 13px;background:#f8fafc;border-radius:10px;border-left:4px solid #cbd5e1}
+.doc-row.scaduto{border-left-color:#dc2626;background:#fef2f2}
+.doc-row.in_scadenza{border-left-color:#f59e0b;background:#fffbeb}
+.doc-row.ok{border-left-color:#16a34a;background:#f0fdf4}
+.doc-icon{width:34px;height:34px;border-radius:9px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid #e2e8f0;font-size:13px}
+.doc-row.scaduto .doc-icon{color:#dc2626}
+.doc-row.in_scadenza .doc-icon{color:#d97706}
+.doc-row.ok .doc-icon{color:#16a34a}
+.doc-row.nessuna .doc-icon{color:#94a3b8}
+.doc-info{flex:1;min-width:0}
+.doc-title{font-size:13px;font-weight:700;color:#0f172a;line-height:1.2;margin-bottom:2px}
+.doc-meta{font-size:11px;color:#64748b;line-height:1.4}
+.doc-stato{flex-shrink:0;font-size:10px;font-weight:700;padding:4px 9px;border-radius:99px;white-space:nowrap;text-transform:uppercase;letter-spacing:.3px}
+.doc-stato.scaduto{background:#fee2e2;color:#991b1b}
+.doc-stato.in_scadenza{background:#fef3c7;color:#92400e}
+.doc-stato.ok{background:#dcfce7;color:#166534}
+.doc-stato.nessuna{background:#f1f5f9;color:#64748b}
+.empty{text-align:center;padding:30px 16px;color:#94a3b8;font-size:13px}
+.empty i{font-size:38px;display:block;margin-bottom:10px;opacity:.4}
+.contact-box{background:#f8fafc;border-radius:8px;padding:10px 12px;font-size:12px;color:#475569;line-height:1.5;margin-top:10px}
+.contact-box .row{display:flex;align-items:flex-start;gap:7px;margin-bottom:3px}
+.contact-box .row:last-child{margin-bottom:0}
+.contact-box i{color:#0f4c81;width:12px;flex-shrink:0;text-align:center;font-size:11px;margin-top:3px}
+</style></head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="hero-head">
+      <div class="hero-logo">{% if ha_logo_az %}<img src="/t/{{ token }}/logo" alt="">{% else %}<i class="fa fa-id-badge"></i>{% endif %}</div>
+      <div class="hero-corp"><div class="name">{{ azienda_nome or 'Azienda' }}</div><div class="sub">Tesserino verificato</div></div>
+    </div>
+    <div class="hero-body">
+      <div class="hero-photo">{% if ha_foto %}<img src="/t/{{ token }}/foto" alt="">{% else %}<i class="fa fa-user"></i>{% endif %}</div>
+      <div class="hero-info">
+        <div class="hero-name">{{ dip.nome }} {{ dip.cognome }}</div>
+        <div class="hero-role">{{ dip.mansione or dip.titolo or 'Dipendente' }}</div>
+        {% if dip.tesserino_codice %}<div class="hero-meta">{{ dip.tesserino_codice }}</div>{% endif %}
+        <div class="verified"><i class="fa fa-circle-check"></i> Tesserino valido</div>
+      </div>
+    </div>
+    <div class="summary-pills">
+      {% if n_ok > 0 %}<span class="sum-pill green"><i class="fa fa-check"></i> {{ n_ok }} in regola</span>{% endif %}
+      {% if n_in_scadenza > 0 %}<span class="sum-pill amber"><i class="fa fa-clock"></i> {{ n_in_scadenza }} in scadenza</span>{% endif %}
+      {% if n_scaduti > 0 %}<span class="sum-pill red"><i class="fa fa-triangle-exclamation"></i> {{ n_scaduti }} scaduti</span>{% endif %}
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><i class="fa fa-folder-open"></i> Documenti del dipendente</div>
+    {% if docs %}
+    <div class="docs-grid">
+    {% for d in docs %}
+      <div class="doc-row {{ d.stato }}">
+        <div class="doc-icon">
+          {% if d.stato == 'scaduto' %}<i class="fa fa-file-circle-xmark"></i>
+          {% elif d.stato == 'in_scadenza' %}<i class="fa fa-file-circle-exclamation"></i>
+          {% elif d.stato == 'ok' %}<i class="fa fa-file-circle-check"></i>
+          {% else %}<i class="fa fa-file"></i>{% endif %}
+        </div>
+        <div class="doc-info">
+          <div class="doc-title">{{ d.tipo_doc or d.categoria or 'Documento' }}</div>
+          <div class="doc-meta">
+            {% if d.data_scadenza %}
+              {% if d.stato == 'scaduto' %}Scaduto il {{ d.data_scadenza }}
+              {% elif d.stato == 'in_scadenza' %}Scade il {{ d.data_scadenza }} ({{ d.days_left }}gg)
+              {% else %}Scade il {{ d.data_scadenza }}
+              {% endif %}
+            {% else %}Nessuna scadenza{% endif %}
+          </div>
+        </div>
+        <div class="doc-stato {{ d.stato }}">
+          {% if d.stato == 'scaduto' %}Scaduto
+          {% elif d.stato == 'in_scadenza' %}In scadenza
+          {% elif d.stato == 'ok' %}OK
+          {% else %}—{% endif %}
+        </div>
+      </div>
+    {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty"><i class="fa fa-folder-open"></i>Nessun documento registrato</div>
+    {% endif %}
+  </div>
+
+  {% if azienda_nome or sede_legale %}
+  <div class="section">
+    <div class="section-title"><i class="fa fa-building"></i> Azienda</div>
+    <div class="contact-box">
+      {% if azienda_nome %}<div class="row"><i class="fa fa-building-flag"></i><span>{{ azienda_nome }}</span></div>{% endif %}
+      {% if sede_legale %}<div class="row"><i class="fa fa-location-dot"></i><span>{{ sede_legale }}</span></div>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="footer">
+    <i class="fa fa-shield-halved"></i> Pagina riservata · accesso protetto da PIN
+    <div class="priv">I dati visualizzati sono di sola consultazione</div>
+  </div>
+</div>
+</body></html>"""
+
+
+TESSERINO_PUB_NOPIN_TMPL = """<!DOCTYPE html>
+<html lang="it"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Tesserino · {{ dip.nome }} {{ dip.cognome }}</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>""" + _TESS_PUB_BASE_CSS + """
+.warn-section{text-align:center;padding:30px 20px}
+.warn-icon{width:60px;height:60px;border-radius:50%;background:#fef3c7;color:#d97706;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 14px}
+.warn-title{font-size:17px;font-weight:800;color:#0f172a;margin-bottom:7px}
+.warn-msg{font-size:13px;color:#64748b;line-height:1.5;max-width:340px;margin:0 auto}
+</style></head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="hero-head">
+      <div class="hero-logo">{% if ha_logo_az %}<img src="/t/{{ token }}/logo" alt="">{% else %}<i class="fa fa-id-badge"></i>{% endif %}</div>
+      <div class="hero-corp"><div class="name">{{ azienda_nome or 'Azienda' }}</div><div class="sub">Verifica tesserino</div></div>
+    </div>
+    <div class="hero-body">
+      <div class="hero-photo">{% if ha_foto %}<img src="/t/{{ token }}/foto" alt="">{% else %}<i class="fa fa-user"></i>{% endif %}</div>
+      <div class="hero-info">
+        <div class="hero-name">{{ dip.nome }} {{ dip.cognome }}</div>
+        <div class="hero-role">{{ dip.mansione or dip.titolo or 'Dipendente' }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="section warn-section">
+    <div class="warn-icon"><i class="fa fa-lock-open"></i></div>
+    <div class="warn-title">Documenti non disponibili</div>
+    <div class="warn-msg">L'azienda non ha ancora attivato la consultazione documenti per questo tesserino. Per informazioni contatta direttamente l'azienda.</div>
+  </div>
+  <div class="footer">Tesserino di servizio</div>
+</div>
+</body></html>"""
+
+
+TESSERINO_PUB_DISABLED_TMPL = """<!DOCTYPE html>
+<html lang="it"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Tesserino non valido</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>""" + _TESS_PUB_BASE_CSS + """
+.disabled-card{background:#fef2f2;border:1px solid #fecaca;border-radius:14px;padding:32px 22px;text-align:center;color:#991b1b}
+.disabled-icon{width:60px;height:60px;border-radius:50%;background:#fee2e2;color:#dc2626;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px}
+.disabled-title{font-weight:800;font-size:17px;margin-bottom:7px;color:#0f172a}
+.disabled-sub{font-size:13px;color:#7f1d1d;line-height:1.5;max-width:340px;margin:0 auto}
+</style></head>
+<body>
+<div class="wrap">
+  <div class="hero" style="background:linear-gradient(160deg,#475569 0%,#334155 50%,#1e293b 100%)">
+    <div class="hero-head">
+      <div class="hero-logo">{% if ha_logo_az %}<img src="/t/{{ token if token is defined else '' }}/logo" alt="">{% else %}<i class="fa fa-id-badge"></i>{% endif %}</div>
+      <div class="hero-corp"><div class="name">{{ azienda_nome or 'Azienda' }}</div><div class="sub">Verifica tesserino</div></div>
+    </div>
+  </div>
+  <div class="disabled-card">
+    <div class="disabled-icon"><i class="fa fa-circle-xmark"></i></div>
+    <div class="disabled-title">Tesserino non più valido</div>
+    <div class="disabled-sub">Il dipendente non risulta più in forza all'azienda. Per ulteriori informazioni contattare direttamente l'azienda.</div>
+  </div>
+  <div class="footer">Tesserino di servizio</div>
+</div>
+</body></html>"""
+
 
 # ══════════════════════════════════════════════════════════
 #  DOCUMENTI & SCADENZE
