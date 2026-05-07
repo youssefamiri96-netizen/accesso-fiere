@@ -1203,6 +1203,15 @@ def ensure_columns():
                     sito_web TEXT, note TEXT, attivo INTEGER DEFAULT 1,
                     creato_il TEXT DEFAULT (datetime('now'))
                 )""",
+                # ── Fototessera + tesserino + PIN (idempotenti) ──
+                "ALTER TABLE utenti ADD COLUMN fototessera_filename TEXT",
+                "ALTER TABLE utenti ADD COLUMN tesserino_codice TEXT",
+                "ALTER TABLE utenti ADD COLUMN tesserino_token TEXT",
+                "ALTER TABLE utenti ADD COLUMN tesserino_pin_hash TEXT",
+                "CREATE UNIQUE INDEX IF NOT EXISTS idx_utenti_tesserino_token ON utenti(tesserino_token) WHERE tesserino_token IS NOT NULL",
+                # ── Pausa pranzo nelle timbrature ──
+                "ALTER TABLE presenze ADD COLUMN pausa_ore REAL DEFAULT 0",
+                "ALTER TABLE richieste_presenze ADD COLUMN pausa_ore REAL DEFAULT 0",
             ]:
                 try: db.execute(sql)
                 except: pass
