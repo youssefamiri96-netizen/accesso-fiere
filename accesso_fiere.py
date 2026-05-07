@@ -1579,6 +1579,13 @@ def render_page(tmpl, **ctx):
             ).fetchone()[0]
         except:
             ctx['spese_attesa'] = 0
+        # Conteggi scadenze (per badge sidebar e alert pagina)
+        try:
+            ctx['scadenze_app'] = _conta_scadenze_app(db)
+        except Exception:
+            ctx['scadenze_app'] = {'veicoli_scaduti':0,'docs_dip_scaduti':0,'docs_az_scaduti':0,
+                                   'totale_scaduti':0,'totale_in_scadenza':0,
+                                   'veicoli_in_scadenza':0,'docs_dip_in_scadenza':0,'docs_az_in_scadenza':0}
         db.close()
         # ── Controllo scadenze 1 volta al giorno ──
         oggi = date.today().isoformat()
@@ -1589,6 +1596,9 @@ def render_page(tmpl, **ctx):
     else:
         ctx['notifiche_count'] = 0
         ctx['spese_attesa'] = 0
+        ctx['scadenze_app'] = {'veicoli_scaduti':0,'docs_dip_scaduti':0,'docs_az_scaduti':0,
+                               'totale_scaduti':0,'totale_in_scadenza':0,
+                               'veicoli_in_scadenza':0,'docs_dip_in_scadenza':0,'docs_az_in_scadenza':0}
     ctx.setdefault('azienda_nome', get_setting('azienda','Accesso Fiere'))
     # AI chat disponibile solo se la API key Anthropic è configurata
     try:
@@ -1642,6 +1652,11 @@ nav a.nav-sub::before{content:"";position:absolute;left:32px;top:50%;width:8px;h
 nav a.nav-sub.active{background:rgba(255,255,255,.06);opacity:1}
 nav a.nav-sub i{font-size:11px}
 .notif-badge{margin-left:auto;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:9px;min-width:20px;text-align:center;line-height:1.4;box-shadow:0 2px 6px rgba(239,68,68,.4)}
+.notif-badge.notif-scad{animation:scadPulse 1.8s infinite;background:linear-gradient(135deg,#dc2626,#991b1b)}
+@keyframes scadPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.6)}
+  50%{box-shadow:0 0 0 5px rgba(239,68,68,0)}
+}
 .notif-badge.amber{background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 2px 6px rgba(245,158,11,.4)}
 .sidebar-user{padding:14px 18px;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.18)}
 .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;flex-shrink:0;box-shadow:0 2px 8px rgba(0,180,216,.3)}
@@ -1856,13 +1871,28 @@ textarea{resize:vertical;min-height:80px}
     <details class="nav-group" {% if active in ['documenti','scadenze','documenti_azienda'] %}open{% endif %}>
       <summary class="{{ 'active' if active in ['documenti','scadenze','documenti_azienda'] }}">
         <i class="fa fa-folder"></i> Documenti
+        {% if scadenze_app and (scadenze_app.docs_dip_scaduti + scadenze_app.docs_az_scaduti) > 0 %}
+        <span class="notif-badge notif-scad" title="{{ scadenze_app.docs_dip_scaduti + scadenze_app.docs_az_scaduti }} documenti scaduti">{{ scadenze_app.docs_dip_scaduti + scadenze_app.docs_az_scaduti }}</span>
+        {% endif %}
         <i class="fa fa-chevron-down nav-chev"></i>
       </summary>
-      <a href="/documenti" class="nav-sub {{ 'active' if active=='documenti' }}"><i class="fa fa-file-alt"></i> Documenti dipendenti</a>
-      <a href="/documenti-azienda" class="nav-sub {{ 'active' if active=='documenti_azienda' }}"><i class="fa fa-building-columns"></i> Documenti azienda</a>
-      <a href="/scadenze" class="nav-sub {{ 'active' if active=='scadenze' }}"><i class="fa fa-calendar-exclamation"></i> Scadenze documenti</a>
+      <a href="/documenti" class="nav-sub {{ 'active' if active=='documenti' }}">
+        <i class="fa fa-file-alt"></i> Documenti dipendenti
+        {% if scadenze_app and scadenze_app.docs_dip_scaduti > 0 %}<span class="notif-badge notif-scad">{{ scadenze_app.docs_dip_scaduti }}</span>{% endif %}
+      </a>
+      <a href="/documenti-azienda" class="nav-sub {{ 'active' if active=='documenti_azienda' }}">
+        <i class="fa fa-building-columns"></i> Documenti azienda
+        {% if scadenze_app and scadenze_app.docs_az_scaduti > 0 %}<span class="notif-badge notif-scad">{{ scadenze_app.docs_az_scaduti }}</span>{% endif %}
+      </a>
+      <a href="/scadenze" class="nav-sub {{ 'active' if active=='scadenze' }}">
+        <i class="fa fa-calendar-exclamation"></i> Scadenze documenti
+        {% if scadenze_app and scadenze_app.totale_scaduti > 0 %}<span class="notif-badge notif-scad">{{ scadenze_app.totale_scaduti }}</span>{% endif %}
+      </a>
     </details>
-    <a href="/veicoli" class="{{ 'active' if active=='veicoli' }}"><i class="fa fa-truck"></i> Mezzi & Veicoli</a>
+    <a href="/veicoli" class="{{ 'active' if active=='veicoli' }}">
+      <i class="fa fa-truck"></i> Mezzi & Veicoli
+      {% if scadenze_app and scadenze_app.veicoli_scaduti > 0 %}<span class="notif-badge notif-scad">{{ scadenze_app.veicoli_scaduti }}</span>{% endif %}
+    </a>
     <a href="/pos" class="{{ 'active' if active=='pos' }}"><i class="fa fa-file-shield"></i> PSAF</a>
     <a href="/clienti" class="{{ 'active' if active=='clienti' }}"><i class="fa fa-address-book"></i> Clienti</a>
     <a href="/fornitori" class="{{ 'active' if active=='fornitori' }}"><i class="fa fa-truck-fast"></i> Fornitori</a>
@@ -8232,6 +8262,23 @@ TESSERINO_TMPL = """
 #  DOCUMENTI & SCADENZE
 # ══════════════════════════════════════════════════════════
 DOC_TMPL = """
+{% if session.ruolo=='admin' and scadenze_app and scadenze_app.docs_dip_scaduti > 0 %}
+<div style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border:1px solid #fca5a5;border-left:4px solid #dc2626;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:14px">
+  <div style="background:#dc2626;color:#fff;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;animation:scadIconPulse 1.5s infinite">
+    <i class="fa fa-triangle-exclamation" style="font-size:16px"></i>
+  </div>
+  <div style="flex:1">
+    <div style="font-weight:800;font-size:14px;color:#991b1b">
+      {{ scadenze_app.docs_dip_scaduti }} document{{ 'o' if scadenze_app.docs_dip_scaduti==1 else 'i' }} dei dipendenti scadut{{ 'o' if scadenze_app.docs_dip_scaduti==1 else 'i' }}
+    </div>
+    <div style="font-size:12.5px;color:#7f1d1d;margin-top:2px">
+      Carta d'identità, patente, visita medica o altri documenti scaduti — chiedi ai dipendenti il rinnovo.
+    </div>
+  </div>
+  <a href="?stato=scaduto" class="btn btn-sm" style="background:#fff;color:#991b1b;border:1px solid #dc2626;font-weight:700">Mostra solo scaduti</a>
+</div>
+<style>@keyframes scadIconPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(220,38,38,.6)}50%{transform:scale(1.05);box-shadow:0 0 0 6px rgba(220,38,38,0)}}</style>
+{% endif %}
 <!-- Filtri -->
 <div class="card" style="margin-bottom:20px">
   <div class="card-body">
@@ -10890,6 +10937,27 @@ VEICOLI_TMPL = """
   <a href="/veicoli/nuovo" class="btn btn-primary"><i class="fa fa-plus"></i> Nuovo Veicolo</a>
   {% endif %}
 </div>
+
+{% if scaduti > 0 %}
+<div class="alert-scaduto" style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border:1px solid #fca5a5;border-left:4px solid #dc2626;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:14px;animation:scadShake 1s ease-in-out">
+  <div style="background:#dc2626;color:#fff;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;animation:scadIconPulse 1.5s infinite">
+    <i class="fa fa-triangle-exclamation" style="font-size:16px"></i>
+  </div>
+  <div style="flex:1">
+    <div style="font-weight:800;font-size:14px;color:#991b1b">
+      Attenzione: {{ scaduti }} veicol{{ 'o' if scaduti==1 else 'i' }} con documenti scaduti
+    </div>
+    <div style="font-size:12.5px;color:#7f1d1d;margin-top:2px">
+      Controlla assicurazione, revisione, bollo o tagliando — alcuni veicoli potrebbero non essere utilizzabili legalmente.
+    </div>
+  </div>
+</div>
+<style>
+@keyframes scadShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+@keyframes scadIconPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(220,38,38,.6)}50%{transform:scale(1.05);box-shadow:0 0 0 6px rgba(220,38,38,0)}}
+</style>
+{% endif %}
+
 <div class="grid-3" style="margin-bottom:24px">
   <div class="stat-card"><div class="stat-icon" style="background:#e3f2fd"><i class="fa fa-car" style="color:#2196F3"></i></div><div class="stat-info"><div class="stat-value">{{ veicoli|length }}</div><div class="stat-label">Veicoli totali</div></div></div>
   <div class="stat-card"><div class="stat-icon" style="background:#fce4ec"><i class="fa fa-exclamation-triangle" style="color:#0f4c81"></i></div><div class="stat-info"><div class="stat-value">{{ scaduti }}</div><div class="stat-label">Documenti scaduti</div></div></div>
@@ -11247,6 +11315,66 @@ def _days_left(scad_str):
         return (scad - _date.today()).days
     except Exception:
         return None
+
+
+def _conta_scadenze_app(db=None):
+    """Conta scaduti e in-scadenza-30gg per veicoli, documenti dipendenti, documenti aziendali.
+    Ritorna un dict con tutti i contatori usati per badge sidebar e alert pagina."""
+    close_after = False
+    if db is None:
+        db = get_db()
+        close_after = True
+    out = {
+        'veicoli_scaduti': 0, 'veicoli_in_scadenza': 0,
+        'docs_dip_scaduti': 0, 'docs_dip_in_scadenza': 0,
+        'docs_az_scaduti': 0, 'docs_az_in_scadenza': 0,
+    }
+    try:
+        # Veicoli — scadenza minima fra assicurazione/revisione/bollo/tagliando
+        vs = db.execute("SELECT scad_assicurazione, scad_revisione, scad_bollo, scad_tagliando "
+                        "FROM veicoli WHERE COALESCE(attivo,1)=1").fetchall()
+        for v in vs:
+            campi = ['scad_assicurazione', 'scad_revisione', 'scad_bollo', 'scad_tagliando']
+            min_dl = None
+            for cn in campi:
+                dl = _days_left(v[cn])
+                if dl is not None and (min_dl is None or dl < min_dl):
+                    min_dl = dl
+            if min_dl is not None:
+                if min_dl < 0:
+                    out['veicoli_scaduti'] += 1
+                elif min_dl <= 30:
+                    out['veicoli_in_scadenza'] += 1
+    except Exception: pass
+    try:
+        # Documenti dipendenti
+        rows = db.execute("""SELECT
+                CAST(julianday(data_scadenza)-julianday('now') AS INTEGER) as dl
+                FROM documenti_dipendente
+                WHERE data_scadenza IS NOT NULL AND data_scadenza != ''""").fetchall()
+        for r in rows:
+            dl = r['dl']
+            if dl is None: continue
+            if dl < 0: out['docs_dip_scaduti'] += 1
+            elif dl <= 30: out['docs_dip_in_scadenza'] += 1
+    except Exception: pass
+    try:
+        # Documenti aziendali (tabella "documenti")
+        rows = db.execute("""SELECT
+                CAST(julianday(data_scadenza)-julianday('now') AS INTEGER) as dl
+                FROM documenti
+                WHERE data_scadenza IS NOT NULL AND data_scadenza != ''""").fetchall()
+        for r in rows:
+            dl = r['dl']
+            if dl is None: continue
+            if dl < 0: out['docs_az_scaduti'] += 1
+            elif dl <= 30: out['docs_az_in_scadenza'] += 1
+    except Exception: pass
+    out['totale_scaduti'] = out['veicoli_scaduti'] + out['docs_dip_scaduti'] + out['docs_az_scaduti']
+    out['totale_in_scadenza'] = out['veicoli_in_scadenza'] + out['docs_dip_in_scadenza'] + out['docs_az_in_scadenza']
+    if close_after:
+        db.close()
+    return out
 
 @app.route('/veicoli')
 @login_required
@@ -11702,7 +11830,24 @@ DOCS_AZ_TMPL = """
 .section-header h3{margin:0;font-size:15px}
 #zip-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;border-radius:14px;padding:12px 22px;display:flex;align-items:center;gap:14px;box-shadow:0 8px 30px rgba(0,0,0,.25);z-index:999;transition:.2s;opacity:0;pointer-events:none;font-size:14px}
 #zip-bar.visible{opacity:1;pointer-events:auto}
+@keyframes scadIconPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(220,38,38,.6)}50%{transform:scale(1.05);box-shadow:0 0 0 6px rgba(220,38,38,0)}}
 </style>
+
+{% if scadenze_app and scadenze_app.docs_az_scaduti > 0 %}
+<div style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border:1px solid #fca5a5;border-left:4px solid #dc2626;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:14px">
+  <div style="background:#dc2626;color:#fff;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;animation:scadIconPulse 1.5s infinite">
+    <i class="fa fa-triangle-exclamation" style="font-size:16px"></i>
+  </div>
+  <div style="flex:1">
+    <div style="font-weight:800;font-size:14px;color:#991b1b">
+      {{ scadenze_app.docs_az_scaduti }} document{{ 'o' if scadenze_app.docs_az_scaduti==1 else 'i' }} aziendal{{ 'e' if scadenze_app.docs_az_scaduti==1 else 'i' }} scadut{{ 'o' if scadenze_app.docs_az_scaduti==1 else 'i' }}
+    </div>
+    <div style="font-size:12.5px;color:#7f1d1d;margin-top:2px">
+      DURC, certificazioni, visure o altri documenti aziendali scaduti — verifica e rinnova al più presto.
+    </div>
+  </div>
+</div>
+{% endif %}
 
 <!-- Toolbar FUORI dal form zip -->
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
