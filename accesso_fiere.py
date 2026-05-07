@@ -3213,7 +3213,7 @@ body.customize-mode .btn-link-soft{display:none}
       <div class="kpi-glow"></div>
     </a>
 
-    <a href="/spese" class="kpi-card kpi-cyan">
+    <a href="/admin/spese" class="kpi-card kpi-cyan">
       <div class="kpi-icon"><i class="fa fa-euro-sign"></i></div>
       <div class="kpi-body">
         <div class="kpi-label">Rimborsi mese</div>
