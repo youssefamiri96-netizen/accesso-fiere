@@ -1879,8 +1879,14 @@ textarea{resize:vertical;min-height:80px}
     <a href="/banca-ore" class="{{ 'active' if active=='banca_ore' }}"><i class="fa fa-piggy-bank"></i> Banca Ore</a>
     <a href="/ferie" class="{{ 'active' if active=='ferie' }}"><i class="fa fa-umbrella-beach"></i> Ferie & Permessi</a>
     <div class="nav-section">Fiere & Allestimenti</div>
-    <a href="/cantieri" class="{{ 'active' if active=='cantieri' }}"><i class="fa fa-store"></i> Fiere & Stand</a>
-    <a href="/calendario-fiere" class="{{ 'active' if active=='calendario_fiere' }}"><i class="fa fa-calendar-days"></i> Calendario Fiere</a>
+    <details class="nav-group" {% if active in ['cantieri','calendario_fiere'] %}open{% endif %}>
+      <summary class="{{ 'active' if active in ['cantieri','calendario_fiere'] }}">
+        <i class="fa fa-store"></i> Fiere
+        <i class="fa fa-chevron-down nav-chev"></i>
+      </summary>
+      <a href="/cantieri" class="nav-sub {{ 'active' if active=='cantieri' }}"><i class="fa fa-list"></i> Elenco fiere</a>
+      <a href="/calendario-fiere" class="nav-sub {{ 'active' if active=='calendario_fiere' }}"><i class="fa fa-calendar-days"></i> Calendario fiere</a>
+    </details>
     <details class="nav-group" {% if active in ['documenti','scadenze','documenti_azienda'] %}open{% endif %}>
       <summary class="{{ 'active' if active in ['documenti','scadenze','documenti_azienda'] }}">
         <i class="fa fa-folder"></i> Documenti
@@ -3243,14 +3249,27 @@ body.customize-mode .btn-link-soft{display:none}
       <div class="kpi-glow"></div>
     </a>
 
-    <a href="/scadenze" class="kpi-card kpi-rose {% if s.scad_totali > 0 %}kpi-alert{% endif %}">
-      <div class="kpi-icon"><i class="fa fa-triangle-exclamation"></i></div>
+    <a href="/scadenze" class="kpi-card kpi-rose {% if s.scad_doc_totali > 0 %}kpi-alert{% endif %}">
+      <div class="kpi-icon"><i class="fa fa-file-circle-exclamation"></i></div>
       <div class="kpi-body">
-        <div class="kpi-label">Scadenze 30 gg</div>
-        <div class="kpi-value">{{ s.scad_30g }}{% if s.scad_scaduti > 0 %}<span class="kpi-unit" style="color:#dc2626;font-weight:800">+{{ s.scad_scaduti }} scad.</span>{% endif %}</div>
+        <div class="kpi-label">Documenti</div>
+        <div class="kpi-value">{{ s.scad_doc_30g }}{% if s.scad_doc_scaduti > 0 %}<span class="kpi-unit" style="color:#dc2626;font-weight:800">+{{ s.scad_doc_scaduti }} scad.</span>{% endif %}</div>
         <div class="kpi-foot">
-          {% if s.scad_totali > 0 %}<i class="fa fa-file-circle-exclamation"></i> doc dipendenti, aziendali e veicoli
-          {% else %}<i class="fa fa-shield-check"></i> tutto in regola{% endif %}
+          {% if s.scad_doc_totali > 0 %}<i class="fa fa-file"></i> dipendenti + aziendali in scadenza
+          {% else %}<i class="fa fa-shield-check"></i> documenti in regola{% endif %}
+        </div>
+      </div>
+      <div class="kpi-glow"></div>
+    </a>
+
+    <a href="/veicoli" class="kpi-card kpi-amber {% if s.scad_veic_totali > 0 %}kpi-alert{% endif %}">
+      <div class="kpi-icon"><i class="fa fa-truck"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-label">Veicoli</div>
+        <div class="kpi-value">{{ s.scad_veic_30g }}{% if s.scad_veic_scaduti > 0 %}<span class="kpi-unit" style="color:#dc2626;font-weight:800">+{{ s.scad_veic_scaduti }} scad.</span>{% endif %}</div>
+        <div class="kpi-foot">
+          {% if s.scad_veic_totali > 0 %}<i class="fa fa-triangle-exclamation"></i> assicurazioni/revisioni in scadenza
+          {% else %}<i class="fa fa-shield-check"></i> veicoli in regola{% endif %}
         </div>
       </div>
       <div class="kpi-glow"></div>
@@ -3750,15 +3769,12 @@ def dashboard():
     delta_ore_pct = round(((ore_mese - ore_mese_prev) / ore_mese_prev * 100), 1) if ore_mese_prev > 0 else 0
     # Spese rimborsate mese in corso
     rimborsi_mese = db.execute("SELECT COALESCE(SUM(importo),0) FROM spese_rimborso WHERE substr(data,1,7)=? AND stato='approvata'", (mese,)).fetchone()[0]
-    # Scadenze 30 giorni — TUTTE (documenti dipendenti + documenti aziendali + veicoli)
-    # Riusiamo l'helper centralizzato che esclude utenti disattivati
+    # Scadenze 30 giorni — separate documenti vs veicoli
     sc_app = _conta_scadenze_app(db)
-    scad_30g = (sc_app['docs_dip_in_scadenza']
-                + sc_app['docs_az_in_scadenza']
-                + sc_app['veicoli_in_scadenza'])
-    scad_scaduti = (sc_app['docs_dip_scaduti']
-                    + sc_app['docs_az_scaduti']
-                    + sc_app['veicoli_scaduti'])
+    scad_doc_30g    = sc_app['docs_dip_in_scadenza'] + sc_app['docs_az_in_scadenza']
+    scad_doc_scaduti= sc_app['docs_dip_scaduti']    + sc_app['docs_az_scaduti']
+    scad_veic_30g   = sc_app['veicoli_in_scadenza']
+    scad_veic_scaduti = sc_app['veicoli_scaduti']
     # Fiere live oggi
     fiere_live = db.execute("""SELECT COUNT(*) FROM cantieri
                                WHERE COALESCE(attivo,1)=1
@@ -3769,9 +3785,12 @@ def dashboard():
         'ore_mese_prev': round(ore_mese_prev, 1),
         'delta_ore_pct': delta_ore_pct,
         'rimborsi_mese': round(rimborsi_mese, 2),
-        'scad_30g': scad_30g,
-        'scad_scaduti': scad_scaduti,
-        'scad_totali': scad_30g + scad_scaduti,
+        'scad_doc_30g': scad_doc_30g,
+        'scad_doc_scaduti': scad_doc_scaduti,
+        'scad_doc_totali': scad_doc_30g + scad_doc_scaduti,
+        'scad_veic_30g': scad_veic_30g,
+        'scad_veic_scaduti': scad_veic_scaduti,
+        'scad_veic_totali': scad_veic_30g + scad_veic_scaduti,
         'fiere_live': fiere_live,
     })
 
@@ -9452,42 +9471,131 @@ def documenti_scarica_zip():
 @login_required
 def scadenze():
     db=get_db()
-    # Documenti generici
-    docs1=db.execute("""SELECT d.titolo, d.categoria, d.data_scadenza,
+    # Documenti aziendali (solo se assegnato a utente attivo o non assegnato)
+    docs1=db.execute("""SELECT d.id, d.titolo, d.categoria, d.data_scadenza,
         u.nome||' '||u.cognome as dest_nome,
-        CAST(julianday(d.data_scadenza)-julianday('now') AS INTEGER) as days_left
+        CAST(julianday(d.data_scadenza)-julianday('now') AS INTEGER) as days_left,
+        'azienda' as tipo, d.file_nome as nome_file
         FROM documenti d LEFT JOIN utenti u ON u.id=d.assegnato_a
-        WHERE d.data_scadenza IS NOT NULL ORDER BY d.data_scadenza""").fetchall()
-    # Documenti caricati dalla sezione Dipendenti
-    docs2=db.execute("""SELECT dd.nome_originale as titolo, dd.tipo_doc as categoria, dd.data_scadenza,
+        WHERE d.data_scadenza IS NOT NULL AND d.data_scadenza != ''
+          AND (d.assegnato_a IS NULL OR COALESCE(u.attivo,1)=1)
+        ORDER BY d.data_scadenza""").fetchall()
+    # Documenti dipendenti (solo se utente attivo E con file allegato)
+    docs2=db.execute("""SELECT dd.id, dd.nome_originale as titolo, dd.tipo_doc as categoria, dd.data_scadenza,
         u.nome||' '||u.cognome as dest_nome,
-        CAST(julianday(dd.data_scadenza)-julianday('now') AS INTEGER) as days_left
+        CAST(julianday(dd.data_scadenza)-julianday('now') AS INTEGER) as days_left,
+        'dipendente' as tipo, dd.nome_file
         FROM documenti_dipendente dd JOIN utenti u ON u.id=dd.utente_id
-        WHERE dd.data_scadenza IS NOT NULL ORDER BY dd.data_scadenza""").fetchall()
+        WHERE dd.data_scadenza IS NOT NULL AND dd.data_scadenza != ''
+          AND COALESCE(u.attivo,1)=1
+          AND dd.nome_file IS NOT NULL AND dd.nome_file != ''
+        ORDER BY dd.data_scadenza""").fetchall()
+    # Veicoli — espando ogni scadenza non vuota in una riga
+    veicoli=db.execute("""SELECT id, targa, marca, modello,
+                                 scad_assicurazione, scad_revisione, scad_bollo, scad_tagliando
+                          FROM veicoli WHERE COALESCE(attivo,1)=1""").fetchall()
+
+    # Conta record fantasma (esistono nel DB ma senza file) → da pulire
+    record_fantasma = db.execute("""SELECT COUNT(*) FROM documenti_dipendente dd
+                                    JOIN utenti u ON u.id=dd.utente_id
+                                    WHERE dd.data_scadenza IS NOT NULL
+                                      AND dd.data_scadenza != ''
+                                      AND COALESCE(u.attivo,1)=1
+                                      AND (dd.nome_file IS NULL OR dd.nome_file = '')""").fetchone()[0]
     db.close()
-    docs_list=[dict(d) for d in list(docs1)+list(docs2)]
+
+    veicoli_rows = []
+    for v in veicoli:
+        for cn, label in [('scad_assicurazione','Assicurazione'),('scad_revisione','Revisione'),
+                          ('scad_bollo','Bollo'),('scad_tagliando','Tagliando')]:
+            if v[cn]:
+                try:
+                    from datetime import date as _date
+                    scad = _date.fromisoformat(v[cn])
+                    dl = (scad - _date.today()).days
+                    veicoli_rows.append({
+                        'id': v['id'],
+                        'titolo': f"{label} {v['marca']} {v['modello']}",
+                        'categoria': 'Veicolo',
+                        'data_scadenza': v[cn],
+                        'dest_nome': v['targa'],
+                        'days_left': dl,
+                        'tipo': 'veicolo',
+                        'nome_file': None,
+                    })
+                except Exception:
+                    pass
+
+    docs_list = [dict(d) for d in list(docs1)+list(docs2)] + veicoli_rows
     docs_list.sort(key=lambda d: d['data_scadenza'])
     scadute=sum(1 for d in docs_list if d['days_left']<0)
     imminenti=sum(1 for d in docs_list if 0<=d['days_left']<=30)
     ok=sum(1 for d in docs_list if d['days_left']>30)
-    SCAD_TMPL="""<div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">
+
+    SCAD_TMPL="""
+    {% if record_fantasma > 0 %}
+    <div style="background:#fffbeb;border:1px solid #fde68a;border-left:4px solid #f59e0b;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:14px">
+      <div style="background:#f59e0b;color:#fff;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px">
+        <i class="fa fa-broom"></i>
+      </div>
+      <div style="flex:1">
+        <div style="font-weight:800;font-size:14px;color:#78350f">
+          {{ record_fantasma }} record di scadenza {{ 'fantasma' if record_fantasma==1 else 'fantasma' }} (senza file allegato)
+        </div>
+        <div style="font-size:12.5px;color:#92400e;margin-top:2px">
+          Sono record con scadenza ma a cui è stato rimosso il file. Stai inquinando i contatori.
+        </div>
+      </div>
+      <form method="POST" action="/scadenze/pulisci-fantasma" onsubmit="return confirm('Eliminare {{ record_fantasma }} record fantasma? Sono record di scadenza senza file. Operazione irreversibile.')">
+        <button class="btn btn-warning btn-sm" type="submit"><i class="fa fa-broom"></i> Pulisci ora</button>
+      </form>
+    </div>
+    {% endif %}
+    <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">
       <div class="stat-card"><div class="stat-icon red"><i class="fa fa-exclamation-triangle"></i></div><div><div class="stat-val">{{ s.scadute }}</div><div class="stat-lbl">Scadute</div></div></div>
       <div class="stat-card"><div class="stat-icon amber"><i class="fa fa-clock"></i></div><div><div class="stat-val">{{ s.imminenti }}</div><div class="stat-lbl">Entro 30 giorni</div></div></div>
       <div class="stat-card"><div class="stat-icon green"><i class="fa fa-check-circle"></i></div><div><div class="stat-val">{{ s.ok }}</div><div class="stat-lbl">In regola</div></div></div>
     </div>
     <div class="card"><div class="table-wrap"><table>
-      <thead><tr><th>Documento</th><th>Categoria</th><th>Assegnato</th><th>Scadenza</th><th>Stato</th><th>Giorni</th></tr></thead>
+      <thead><tr><th>Documento</th><th>Tipo</th><th>Categoria</th><th>Assegnato/Targa</th><th>Scadenza</th><th>Stato</th><th>Giorni</th></tr></thead>
       <tbody>{% for d in docs %}
-      <tr><td><strong>{{ d.titolo }}</strong></td><td><span class="tag">{{ d.categoria or '–' }}</span></td>
-      <td>{{ d.dest_nome or 'Tutti' }}</td><td style="font-family:monospace;font-size:12px">{{ d.data_scadenza }}</td>
-      <td>{% if d.days_left<0 %}<span class="badge badge-red">Scaduto</span>
-          {% elif d.days_left<=7 %}<span class="badge badge-red">Urgente</span>
-          {% elif d.days_left<=30 %}<span class="badge badge-amber">Imminente</span>
-          {% else %}<span class="badge badge-green">OK</span>{% endif %}</td>
-      <td><strong style="color:{{ 'var(--danger)' if d.days_left<0 else 'var(--warning)' if d.days_left<=30 else 'var(--success)' }}">{{ d.days_left }}gg</strong></td>
-      </tr>{% else %}<tr><td colspan="6"><div class="empty-state"><i class="fa fa-calendar-check"></i><p>Nessuna scadenza</p></div></td></tr>{% endfor %}
+      <tr>
+        <td><strong>{{ d.titolo }}</strong></td>
+        <td>
+          {% if d.tipo == 'veicolo' %}<span class="tag" style="background:#fef3c7;color:#92400e">🚛 Veicolo</span>
+          {% elif d.tipo == 'dipendente' %}<span class="tag" style="background:#dbeafe;color:#1e40af">👤 Dipendente</span>
+          {% else %}<span class="tag" style="background:#e0e7ff;color:#3730a3">🏢 Aziendale</span>{% endif %}
+        </td>
+        <td><span class="tag">{{ d.categoria or '–' }}</span></td>
+        <td>{{ d.dest_nome or 'Tutti' }}</td>
+        <td style="font-family:monospace;font-size:12px">{{ d.data_scadenza }}</td>
+        <td>{% if d.days_left<0 %}<span class="badge badge-red">Scaduto</span>
+            {% elif d.days_left<=7 %}<span class="badge badge-red">Urgente</span>
+            {% elif d.days_left<=30 %}<span class="badge badge-amber">Imminente</span>
+            {% else %}<span class="badge badge-green">OK</span>{% endif %}</td>
+        <td><strong style="color:{{ 'var(--danger)' if d.days_left<0 else 'var(--warning)' if d.days_left<=30 else 'var(--success)' }}">{{ d.days_left }}gg</strong></td>
+      </tr>{% else %}<tr><td colspan="7"><div class="empty-state"><i class="fa fa-calendar-check"></i><p>Nessuna scadenza</p></div></td></tr>{% endfor %}
       </tbody></table></div></div>"""
-    return render_page(SCAD_TMPL,page_title='Scadenze',active='scadenze',docs=docs_list,s={'scadute':scadute,'imminenti':imminenti,'ok':ok})
+    return render_page(SCAD_TMPL,page_title='Scadenze',active='scadenze',
+                       docs=docs_list, record_fantasma=record_fantasma,
+                       s={'scadute':scadute,'imminenti':imminenti,'ok':ok})
+
+
+@app.route('/scadenze/pulisci-fantasma', methods=['POST'])
+@admin_required
+def scadenze_pulisci_fantasma():
+    """Elimina i record di documenti_dipendente senza nome_file (fantasma)."""
+    db = get_db()
+    n = db.execute("""SELECT COUNT(*) FROM documenti_dipendente
+                      WHERE nome_file IS NULL OR nome_file = ''""").fetchone()[0]
+    db.execute("""DELETE FROM documenti_dipendente
+                  WHERE nome_file IS NULL OR nome_file = ''""")
+    safe_commit(db); db.close()
+    if n > 0:
+        flash(f'✅ Eliminati {n} record fantasma (scadenze senza file).', 'success')
+    else:
+        flash('Nessun record fantasma trovato.', 'info')
+    return redirect(url_for('scadenze'))
 
 # ══════════════════════════════════════════════════════════
 #  CALENDARIO
