@@ -3243,13 +3243,13 @@ body.customize-mode .btn-link-soft{display:none}
       <div class="kpi-glow"></div>
     </a>
 
-    <a href="/scadenze" class="kpi-card kpi-rose {% if s.scad_30g > 0 %}kpi-alert{% endif %}">
+    <a href="/scadenze" class="kpi-card kpi-rose {% if s.scad_totali > 0 %}kpi-alert{% endif %}">
       <div class="kpi-icon"><i class="fa fa-triangle-exclamation"></i></div>
       <div class="kpi-body">
         <div class="kpi-label">Scadenze 30 gg</div>
-        <div class="kpi-value">{{ s.scad_30g }}</div>
+        <div class="kpi-value">{{ s.scad_30g }}{% if s.scad_scaduti > 0 %}<span class="kpi-unit" style="color:#dc2626;font-weight:800">+{{ s.scad_scaduti }} scad.</span>{% endif %}</div>
         <div class="kpi-foot">
-          {% if s.scad_30g > 0 %}<i class="fa fa-file-circle-exclamation"></i> documenti in scadenza
+          {% if s.scad_totali > 0 %}<i class="fa fa-file-circle-exclamation"></i> doc dipendenti, aziendali e veicoli
           {% else %}<i class="fa fa-shield-check"></i> tutto in regola{% endif %}
         </div>
       </div>
@@ -3750,10 +3750,15 @@ def dashboard():
     delta_ore_pct = round(((ore_mese - ore_mese_prev) / ore_mese_prev * 100), 1) if ore_mese_prev > 0 else 0
     # Spese rimborsate mese in corso
     rimborsi_mese = db.execute("SELECT COALESCE(SUM(importo),0) FROM spese_rimborso WHERE substr(data,1,7)=? AND stato='approvata'", (mese,)).fetchone()[0]
-    # Documenti in scadenza nei prossimi 30 giorni (alert level)
-    scad_30g = db.execute("""SELECT COUNT(*) FROM documenti_dipendente
-                             WHERE data_scadenza IS NOT NULL AND data_scadenza != ''
-                               AND CAST(julianday(data_scadenza)-julianday('now') AS INTEGER) BETWEEN 0 AND 30""").fetchone()[0]
+    # Scadenze 30 giorni — TUTTE (documenti dipendenti + documenti aziendali + veicoli)
+    # Riusiamo l'helper centralizzato che esclude utenti disattivati
+    sc_app = _conta_scadenze_app(db)
+    scad_30g = (sc_app['docs_dip_in_scadenza']
+                + sc_app['docs_az_in_scadenza']
+                + sc_app['veicoli_in_scadenza'])
+    scad_scaduti = (sc_app['docs_dip_scaduti']
+                    + sc_app['docs_az_scaduti']
+                    + sc_app['veicoli_scaduti'])
     # Fiere live oggi
     fiere_live = db.execute("""SELECT COUNT(*) FROM cantieri
                                WHERE COALESCE(attivo,1)=1
@@ -3765,6 +3770,8 @@ def dashboard():
         'delta_ore_pct': delta_ore_pct,
         'rimborsi_mese': round(rimborsi_mese, 2),
         'scad_30g': scad_30g,
+        'scad_scaduti': scad_scaduti,
+        'scad_totali': scad_30g + scad_scaduti,
         'fiere_live': fiere_live,
     })
 
@@ -12062,13 +12069,14 @@ def _conta_scadenze_app(db=None):
                     out['veicoli_in_scadenza'] += 1
     except Exception: pass
     try:
-        # Documenti dipendenti — SOLO di utenti ATTIVI
+        # Documenti dipendenti — SOLO di utenti ATTIVI E con file allegato
         rows = db.execute("""SELECT
                 CAST(julianday(dd.data_scadenza)-julianday('now') AS INTEGER) as dl
                 FROM documenti_dipendente dd
                 JOIN utenti u ON u.id = dd.utente_id
                 WHERE dd.data_scadenza IS NOT NULL AND dd.data_scadenza != ''
-                  AND COALESCE(u.attivo,1)=1""").fetchall()
+                  AND COALESCE(u.attivo,1)=1
+                  AND dd.nome_file IS NOT NULL AND dd.nome_file != ''""").fetchall()
         for r in rows:
             dl = r['dl']
             if dl is None: continue
@@ -12079,7 +12087,8 @@ def _conta_scadenze_app(db=None):
         # Documenti aziendali — esclude quelli assegnati a utenti disattivati
         # (se assegnato_a è NULL il documento è "globale" e va comunque contato)
         rows = db.execute("""SELECT
-                CAST(julianday(d.data_scadenza)-julianday('now') AS INTEGER) as dl
+                CAST(julianday(d.data_scadenza)-julianday('now') AS INTEGER) as dl,
+                d.file_nome
                 FROM documenti d
                 LEFT JOIN utenti u ON u.id = d.assegnato_a
                 WHERE d.data_scadenza IS NOT NULL AND d.data_scadenza != ''
