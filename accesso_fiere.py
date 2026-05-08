@@ -2320,12 +2320,23 @@ setInterval(updateClock,1000);updateClock();
       if (!keyText || keyText.length < 80) throw new Error('Chiave VAPID invalida');
       var keyArr = urlBase64ToUint8Array(keyText);
       if (keyArr.length !== 65) throw new Error('Chiave VAPID lunghezza errata');
-      var sub;
-      try {
-        sub = await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey: keyArr.buffer});
-      } catch(e1) {
-        sub = await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey: keyArr});
+      var sub = null, lastErr = null;
+      var attempts = [
+        {n:'string', v:keyText},
+        {n:'Uint8Array', v:keyArr},
+        {n:'ArrayBuffer', v:keyArr.buffer}
+      ];
+      for (var i = 0; i < attempts.length; i++) {
+        try {
+          sub = await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey: attempts[i].v});
+          console.log('[Push] subscribe OK con ' + attempts[i].n);
+          break;
+        } catch(eA) {
+          console.warn('[Push] ' + attempts[i].n + ' fallito:', eA.message);
+          lastErr = eA;
+        }
       }
+      if (!sub) throw lastErr || new Error('Subscribe fallito');
       await fetch('/api/push/subscribe', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify(sub)
@@ -16039,12 +16050,24 @@ function prepareSubmitMobile(ev) {
       if(!keyText || keyText.length < 80) throw new Error('Chiave VAPID invalida');
       var keyArr=urlBase64ToUint8Array(keyText);
       if(keyArr.length !== 65) throw new Error('Chiave VAPID lunghezza errata: '+keyArr.length);
-      var sub;
-      try {
-        sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:keyArr.buffer});
-      } catch(e1) {
-        sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:keyArr});
+      // Multi-fallback per Safari iOS / Chrome / Firefox
+      var sub=null, lastErr=null;
+      var attempts=[
+        {n:'string',v:keyText},
+        {n:'Uint8Array',v:keyArr},
+        {n:'ArrayBuffer',v:keyArr.buffer}
+      ];
+      for(var i=0;i<attempts.length;i++){
+        try {
+          sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:attempts[i].v});
+          console.log('[Push] subscribe OK con '+attempts[i].n);
+          break;
+        } catch(eA) {
+          console.warn('[Push] '+attempts[i].n+' fallito:', eA.message);
+          lastErr=eA;
+        }
       }
+      if(!sub) throw lastErr || new Error('Subscribe fallito');
       var resp=await fetch('/api/push/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sub)});
       if(!resp.ok){
         var e=await resp.json().catch(function(){return {};});
@@ -16140,6 +16163,17 @@ input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
       <i class="fa fa-stethoscope"></i> Mostra diagnostica
     </button>
     <div id="push-diag" class="diag-box"></div>
+  </div>
+
+  <div class="card" id="install-card" style="display:none">
+    <div class="card-title"><i class="fa fa-mobile-screen-button"></i> Installa app</div>
+    <div id="install-status" class="push-status off" style="margin-bottom:12px">
+      <i class="fa fa-circle-info"></i> <span id="install-status-text">App non installata</span>
+    </div>
+    <button type="button" id="install-btn" class="btn-save" onclick="installApp()">
+      <i class="fa fa-download"></i> Installa sul dispositivo
+    </button>
+    <div id="install-help" style="display:none;margin-top:14px;background:#0f172a;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px;font-size:13px;line-height:1.6;color:rgba(255,255,255,.75)"></div>
   </div>
 
   <div class="card">
@@ -16358,23 +16392,35 @@ async function togglePush(){
       }
       var keyResp = await fetch("/api/push/public-key");
       var keyText = (await keyResp.text()).trim();
-      if (!keyText || keyText.length < 80) throw new Error("Chiave VAPID invalida");
+      if (!keyText || keyText.length < 80) throw new Error("Chiave VAPID invalida (lunghezza " + keyText.length + ")");
       var keyArr = urlBase64ToUint8Array(keyText);
-      if (keyArr.length !== 65) throw new Error("Chiave VAPID lunghezza errata: " + keyArr.length);
+      if (keyArr.length !== 65) throw new Error("Chiave VAPID lunghezza errata: " + keyArr.length + " bytes (atteso 65)");
 
-      var newSub;
-      try {
-        newSub = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: keyArr.buffer
-        });
-      } catch(e1) {
-        console.warn("[Push] retry con Uint8Array:", e1);
-        newSub = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: keyArr
-        });
+      // Strategia multi-fallback per massima compatibilita Safari iOS / Chrome / Firefox:
+      // 1) Stringa base64url (preferito da Safari iOS, accettato da spec W3C)
+      // 2) Uint8Array (Chrome, Firefox)
+      // 3) ArrayBuffer (alcuni Chrome vecchi)
+      var newSub = null;
+      var lastErr = null;
+      var attempts = [
+        {name: "string", value: keyText},
+        {name: "Uint8Array", value: keyArr},
+        {name: "ArrayBuffer", value: keyArr.buffer}
+      ];
+      for (var i = 0; i < attempts.length; i++) {
+        try {
+          newSub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: attempts[i].value
+          });
+          console.log("[Push] subscribe OK con " + attempts[i].name);
+          break;
+        } catch(eAttempt) {
+          console.warn("[Push] tentativo " + attempts[i].name + " fallito:", eAttempt.message);
+          lastErr = eAttempt;
+        }
       }
+      if (!newSub) throw lastErr || new Error("Tutti i tentativi falliti");
       var subResp = await fetch("/api/push/subscribe", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
@@ -16395,8 +16441,101 @@ async function togglePush(){
   refreshDiag();
 }
 
+// ───── Install App logic ─────
+var deferredInstallPrompt = null;
+
+window.addEventListener("beforeinstallprompt", function(e){
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  refreshInstallStatus();
+});
+window.addEventListener("appinstalled", function(){
+  deferredInstallPrompt = null;
+  refreshInstallStatus();
+});
+
+function refreshInstallStatus(){
+  var card = document.getElementById("install-card");
+  var status = document.getElementById("install-status");
+  var statusText = document.getElementById("install-status-text");
+  var btn = document.getElementById("install-btn");
+  var help = document.getElementById("install-help");
+  if (!card) return;
+
+  if (isStandalone()) {
+    // App già installata
+    card.style.display = "block";
+    status.className = "push-status on";
+    status.innerHTML = '<i class="fa fa-check-circle"></i> <span>App installata correttamente</span>';
+    btn.style.display = "none";
+    help.style.display = "none";
+    return;
+  }
+
+  card.style.display = "block";
+  status.className = "push-status off";
+  statusText.textContent = "App non installata sul dispositivo";
+
+  if (deferredInstallPrompt) {
+    // Chrome/Edge desktop o Android - prompt nativo disponibile
+    btn.style.display = "flex";
+    btn.innerHTML = '<i class="fa fa-download"></i> Installa sul dispositivo';
+    help.style.display = "none";
+  } else {
+    // Safari iOS, Firefox, o Chrome senza prompt
+    btn.style.display = "none";
+    help.style.display = "block";
+    var ua = navigator.userAgent;
+    var isIOS_ = /iphone|ipad|ipod/i.test(ua);
+    var isAndroid = /android/i.test(ua);
+    var isChrome = /chrome|crios/i.test(ua) && !/edge|edg|opera/i.test(ua);
+    var isFirefox = /firefox|fxios/i.test(ua);
+
+    var instructions = "";
+    if (isIOS_) {
+      instructions = '<div style="font-weight:700;color:#fcd34d;margin-bottom:8px"><i class="fa fa-apple"></i> Su iPhone/iPad</div>' +
+                     '1. Tocca <strong>Condividi</strong> <i class="fa fa-arrow-up-from-bracket"></i> in basso<br>' +
+                     '2. Scorri e tocca <strong>"Aggiungi alla schermata Home"</strong><br>' +
+                     '3. Tocca <strong>Aggiungi</strong> in alto a destra';
+    } else if (isAndroid && isChrome) {
+      instructions = '<div style="font-weight:700;color:#86efac;margin-bottom:8px"><i class="fa fa-android"></i> Su Android Chrome</div>' +
+                     '1. Tocca il menu <strong>⋮</strong> in alto a destra<br>' +
+                     '2. Tocca <strong>"Installa app"</strong> oppure <strong>"Aggiungi a schermata Home"</strong><br>' +
+                     '3. Conferma installazione';
+    } else if (isFirefox) {
+      instructions = '<div style="font-weight:700;color:#fb923c;margin-bottom:8px"><i class="fa fa-firefox-browser"></i> Su Firefox</div>' +
+                     '1. Tocca il menu <strong>⋮</strong><br>' +
+                     '2. Tocca <strong>"Installa"</strong> o <strong>"Aggiungi a schermata Home"</strong>';
+    } else if (isChrome) {
+      instructions = '<div style="font-weight:700;color:#86efac;margin-bottom:8px"><i class="fa fa-chrome"></i> Su Chrome desktop</div>' +
+                     '1. Cerca l icona <strong>Installa</strong> nella barra degli indirizzi<br>' +
+                     '2. Oppure menu <strong>⋮</strong> > <strong>"Installa Accesso Fiere"</strong>';
+    } else {
+      instructions = '<div style="font-weight:700;margin-bottom:8px">Installazione manuale</div>' +
+                     'Cerca nel menu del browser una voce come <strong>"Installa app"</strong>, ' +
+                     '<strong>"Aggiungi alla schermata Home"</strong> o simile.';
+    }
+    help.innerHTML = instructions;
+  }
+}
+
+function installApp(){
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.then(function(c){
+      if (c.outcome === "accepted") {
+        deferredInstallPrompt = null;
+        refreshInstallStatus();
+      }
+    });
+  } else {
+    refreshInstallStatus();
+  }
+}
+
 window.addEventListener("load", function(){
   refreshPushStatus();
+  refreshInstallStatus();
 });
 </script>
 </body>
