@@ -317,7 +317,6 @@ def ensure_ferie_extra_columns(db):
             safe_commit(db)
     except Exception as e:
         print(f'[migrazione ferie extra] {e}')
-    return p
 
 
 def analizza_documento_ai(file_path, nome_file, tipo_doc_hint='', uid=None):
@@ -3000,6 +2999,30 @@ def notifica_admins(titolo, messaggio, url='/admin/notifiche', tipo='admin'):
     return sent
 
 
+def notifica_admins_once(titolo, messaggio, url='/admin/notifiche', tipo_unico='admin_once'):
+    """Notifica gli admin una sola volta per evento, usando tipo_unico come chiave anti-duplicato."""
+    db = get_db()
+    _ensure_notifiche_app_table(db)
+    admins = db.execute("SELECT id FROM utenti WHERE ruolo='admin' AND COALESCE(attivo,1)=1").fetchall()
+    db.close()
+    sent = 0
+    for admin in admins:
+        aid = admin['id']
+        db_check = get_db()
+        _ensure_notifiche_app_table(db_check)
+        exists = db_check.execute("""SELECT 1 FROM notifiche_app
+                                     WHERE utente_id=? AND tipo=? LIMIT 1""",
+                                  (aid, tipo_unico[:40])).fetchone()
+        db_check.close()
+        if exists:
+            continue
+        try:
+            sent += notifica_utente(aid, titolo, messaggio, url, tipo_unico[:40])
+        except Exception as e:
+            print(f'[notifica_admins_once] admin={aid}: {e}')
+    return sent
+
+
 def descrivi_richiesta_assenza(tipo, data_inizio, data_fine, giorni, ora_inizio=None, ora_fine=None):
     tipo_txt = (tipo or 'richiesta').lower()
     if tipo_txt.startswith('permesso') and ora_inizio and ora_fine:
@@ -3488,10 +3511,41 @@ def api_admin_richieste_live():
     latest = None
     if candidates:
         latest = sorted(candidates, key=lambda x: (x.get('created') or '', x.get('key') or ''), reverse=True)[0]
+        for item in candidates:
+            unique_tipo = ('live_' + item['key'].replace('-', '_'))[:40]
+            try:
+                notifica_admins_once(item['title'], item['body'], item['url'], unique_tipo)
+            except Exception as e:
+                print(f'[richieste-live notifica] {e}')
     return jsonify({'count': total, 'latest': latest})
 
 
 ADMIN_NOTIFICHE_TMPL = """
+{% if richieste_live %}
+<div class="card" style="margin-bottom:18px;border-left:4px solid var(--warning)">
+  <div class="card-header">
+    <h3><i class="fa fa-triangle-exclamation" style="color:var(--warning);margin-right:8px"></i>Richieste in attesa</h3>
+  </div>
+  <div class="card-body" style="display:grid;gap:12px">
+    {% for r in richieste_live %}
+    <a href="{{ r.url }}" style="display:block;text-decoration:none;color:inherit;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:14px 16px">
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div style="width:34px;height:34px;border-radius:50%;background:#fef3c7;color:#d97706;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <i class="fa fa-bell"></i>
+        </div>
+        <div style="min-width:0;flex:1">
+          <div style="font-weight:800;margin-bottom:4px">{{ r.title }}</div>
+          <div style="color:#78350f;line-height:1.45">{{ r.body }}</div>
+          <div style="font-size:11px;color:#92400e;margin-top:8px">{{ r.created }}</div>
+        </div>
+        <i class="fa fa-chevron-right" style="color:#d97706;margin-top:8px"></i>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
 <div class="card">
   <div class="card-header">
     <h3><i class="fa fa-inbox" style="color:var(--accent);margin-right:8px"></i>Notifiche del gestionale</h3>
@@ -3512,10 +3566,14 @@ ADMIN_NOTIFICHE_TMPL = """
         </div>
       </a>
       {% endfor %}
-    {% else %}
+    {% elif not richieste_live %}
       <div style="text-align:center;color:var(--text-light);padding:34px">
         <i class="fa fa-check-circle" style="font-size:34px;color:var(--success);margin-bottom:12px"></i>
         <div style="font-weight:700;color:var(--text)">Nessuna notifica da leggere</div>
+      </div>
+    {% else %}
+      <div style="text-align:center;color:var(--text-light);padding:20px">
+        Le richieste in attesa sono mostrate sopra.
       </div>
     {% endif %}
   </div>
@@ -3529,6 +3587,57 @@ def admin_notifiche():
     """Centro notifiche interno per l'admin desktop."""
     db = get_db()
     _ensure_notifiche_app_table(db)
+    try:
+        ensure_ferie_extra_columns(db)
+    except Exception:
+        pass
+    richieste_live = []
+    try:
+        for r in db.execute("""SELECT r.id, r.data, r.ore_totali, r.creato_il, u.nome, u.cognome
+                               FROM richieste_presenze r
+                               JOIN utenti u ON u.id=r.utente_id
+                               WHERE r.stato='in_attesa'
+                               ORDER BY datetime(r.creato_il) DESC, r.id DESC LIMIT 30""").fetchall():
+            richieste_live.append({
+                'title': 'Nuova richiesta timbratura',
+                'body': f'{r["nome"]} {r["cognome"]} ha inviato una richiesta timbratura per il {r["data"]}.',
+                'created': r['creato_il'] or '',
+                'url': '/admin/richieste'
+            })
+    except Exception as e:
+        print(f'[admin_notifiche presenze live] {e}')
+    try:
+        for r in db.execute("""SELECT f.id, f.tipo, f.data_inizio, f.data_fine, f.giorni, f.ora_inizio, f.ora_fine,
+                                      f.creato_il, u.nome, u.cognome
+                               FROM ferie_permessi f
+                               JOIN utenti u ON u.id=f.utente_id
+                               WHERE f.stato='in_attesa'
+                               ORDER BY datetime(f.creato_il) DESC, f.id DESC LIMIT 30""").fetchall():
+            dettaglio = descrivi_richiesta_assenza(r['tipo'], r['data_inizio'], r['data_fine'],
+                                                   r['giorni'], r['ora_inizio'], r['ora_fine'])
+            richieste_live.append({
+                'title': f'Nuova richiesta {r["tipo"]}',
+                'body': f'{r["nome"]} {r["cognome"]} ha richiesto {dettaglio}.',
+                'created': r['creato_il'] or '',
+                'url': '/ferie'
+            })
+    except Exception as e:
+        print(f'[admin_notifiche ferie live] {e}')
+    try:
+        for r in db.execute("""SELECT s.id, s.data, s.categoria, s.importo, s.creato_il, u.nome, u.cognome
+                               FROM spese_rimborso s
+                               JOIN utenti u ON u.id=s.utente_id
+                               WHERE s.stato='in_attesa'
+                               ORDER BY datetime(s.creato_il) DESC, s.id DESC LIMIT 30""").fetchall():
+            richieste_live.append({
+                'title': 'Nuova richiesta rimborso spesa',
+                'body': f'{r["nome"]} {r["cognome"]} ha richiesto un rimborso da € {float(r["importo"] or 0):.2f} ({r["categoria"]}) del {r["data"]}.',
+                'created': r['creato_il'] or '',
+                'url': '/admin/spese?stato=in_attesa'
+            })
+    except Exception as e:
+        print(f'[admin_notifiche spese live] {e}')
+    richieste_live.sort(key=lambda x: x.get('created') or '', reverse=True)
     rows = db.execute("""SELECT id, titolo, messaggio, url, tipo, letto, creato_il
                          FROM notifiche_app
                          WHERE utente_id=?
@@ -3541,7 +3650,7 @@ def admin_notifiche():
     safe_commit(db)
     db.close()
     return render_page(ADMIN_NOTIFICHE_TMPL, page_title='Notifiche', active='notifiche_admin',
-                       notifiche=rows)
+                       notifiche=rows, richieste_live=richieste_live[:50])
 
 
 @app.route('/admin/notifiche-push', methods=['GET', 'POST'])
@@ -7842,10 +7951,11 @@ def invia_richiesta_presenza():
                   (session['user_id'], data, int(cid) if cid else None)).fetchone():
         flash('Hai già una richiesta in attesa per questo giorno e cantiere.','error')
         db.close(); return redirect(url_for('presenze'))
-    db.execute("""INSERT INTO richieste_presenze
-                  (utente_id, data, ora_entrata, ora_uscita, ore_totali, cantiere_id, note)
-                  VALUES (?,?,?,?,?,?,?)""",
-               (session['user_id'], data, oe, ou, ore, cid, note))
+    cur_req = db.execute("""INSERT INTO richieste_presenze
+                            (utente_id, data, ora_entrata, ora_uscita, ore_totali, cantiere_id, note)
+                            VALUES (?,?,?,?,?,?,?)""",
+                         (session['user_id'], data, oe, ou, ore, cid, note))
+    rid_new = cur_req.lastrowid
     safe_commit(db)
     db.close()
     # Email notifica in background
@@ -7853,11 +7963,11 @@ def invia_richiesta_presenza():
     _nome_d = f"{session.get('nome','')} {session.get('cognome','')}".strip()
     riepilogo = f"{ore:.1f} ore" if modalita == 'ore' else f"{oe}-{ou} ({ore:.1f}h)"
     try:
-        notifica_admins(
+        notifica_admins_once(
             'Nuova richiesta timbratura',
             f'{_nome_d} ha inviato una richiesta di timbratura per il {data}: {riepilogo}.',
             '/admin/richieste',
-            'richiesta_presenza'
+            f'richiesta_presenza_{rid_new}'
         )
     except Exception as e:
         print(f'[notifica admin presenza] {e}')
@@ -18215,10 +18325,11 @@ def mobile_cs_timbra():
         flash('Esiste già una richiesta in attesa per questo giorno e fiera.', 'error')
         return redirect(url_for('mobile_cs'))
 
-    db.execute("""INSERT INTO richieste_presenze
-                  (utente_id, data, ora_entrata, ora_uscita, ore_totali, cantiere_id, note)
-                  VALUES (?,?,?,?,?,?,?)""",
-               (target_uid, data, ora_e, ora_u, ore_nette, int(cantiere_id), nota_completa))
+    cur_req = db.execute("""INSERT INTO richieste_presenze
+                            (utente_id, data, ora_entrata, ora_uscita, ore_totali, cantiere_id, note)
+                            VALUES (?,?,?,?,?,?,?)""",
+                         (target_uid, data, ora_e, ora_u, ore_nette, int(cantiere_id), nota_completa))
+    rid_new = cur_req.lastrowid
     safe_commit(db)
 
     # Recupera nome del target per messaggio
@@ -18227,11 +18338,11 @@ def mobile_cs_timbra():
     db.close()
 
     try:
-        notifica_admins(
+        notifica_admins_once(
             'Nuova richiesta timbratura',
             f'{targ_nome} ha una nuova richiesta di timbratura per il {data}: {ore_nette}h nette.',
             '/admin/richieste',
-            'richiesta_presenza'
+            f'richiesta_presenza_{rid_new}'
         )
     except Exception as e:
         print(f'[notifica admin presenza cs] {e}')
@@ -18416,20 +18527,21 @@ def mobile_inserisci():
         flash('Hai già una richiesta in attesa per questo giorno e cantiere.', 'error')
         db.close(); return redirect(url_for('mobile'))
 
-    db.execute(
+    cur_req = db.execute(
         "INSERT INTO richieste_presenze (utente_id,data,ora_entrata,ora_uscita,ore_totali,pausa_ore,cantiere_id,note) VALUES (?,?,?,?,?,?,?,?)",
         (uid, data, ora_e, ora_u, ore_nette, pausa, int(cantiere_id), nota_completa))
+    rid_new = cur_req.lastrowid
     safe_commit(db)
     db.close()
     # Notifica email admin — in background per non bloccare la risposta
     email_admin = get_setting('email_notifiche', '')
     nome_dip = f"{session.get('nome','')} {session.get('cognome','')}".strip()
     try:
-        notifica_admins(
+        notifica_admins_once(
             'Nuova richiesta timbratura',
             f'{nome_dip} ha inviato una richiesta di timbratura per il {data}: {ore_nette}h nette.',
             '/admin/richieste',
-            'richiesta_presenza'
+            f'richiesta_presenza_{rid_new}'
         )
     except Exception as e:
         print(f'[notifica admin presenza mobile] {e}')
