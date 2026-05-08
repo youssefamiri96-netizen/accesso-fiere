@@ -297,6 +297,26 @@ def salva_certificato_ferie(file_obj, uid):
     path = os.path.join(UPLOAD_DIR_FERIE_CERT, safe_name)
     file_obj.save(path)
     return original, path
+
+def ensure_ferie_extra_columns(db):
+    """Aggiorna i DB tenant gia esistenti con i campi nuovi ferie/permessi."""
+    try:
+        cols = {r[1] for r in db.execute("PRAGMA table_info(ferie_permessi)").fetchall()}
+        missing = [
+            ('ora_inizio', 'TEXT'),
+            ('ora_fine', 'TEXT'),
+            ('certificato_nome', 'TEXT'),
+            ('certificato_path', 'TEXT'),
+        ]
+        changed = False
+        for name, sql_type in missing:
+            if name not in cols:
+                db.execute(f"ALTER TABLE ferie_permessi ADD COLUMN {name} {sql_type}")
+                changed = True
+        if changed:
+            safe_commit(db)
+    except Exception as e:
+        print(f'[migrazione ferie extra] {e}')
     return p
 
 
@@ -1711,6 +1731,10 @@ def render_page(tmpl, **ctx):
             session['_scadenze_check'] = oggi
             import threading
             threading.Thread(target=check_scadenze_email, daemon=True).start()
+            try:
+                invia_notifiche_scadenze_imminenti()
+            except Exception as e:
+                print(f'[scadenze notifiche] {e}')
     else:
         ctx['notifiche_count'] = 0
         ctx['spese_attesa'] = 0
@@ -2143,6 +2167,7 @@ textarea{resize:vertical;min-height:80px}
   {% if session.ruolo=='admin' %}
   (function(){
     var lastKey = 'accesso_admin_last_notifica_id';
+    var lastRequestKey = 'accesso_admin_last_richiesta_key';
     window.requestAdminDesktopNotifications = async function(ev){
       if(ev) ev.preventDefault();
       if(!('Notification' in window)){
@@ -2173,6 +2198,7 @@ textarea{resize:vertical;min-height:80px}
         var r = await fetch('/api/notifiche/latest-unread', {cache:'no-store'});
         var data = await r.json();
         if(!data.latest) return;
+        if(((data.latest.tipo || '') + '').indexOf('richiesta_') === 0) return;
         var last = parseInt(localStorage.getItem(lastKey) || '0', 10);
         var id = parseInt(data.latest.id || 0, 10);
         if(id > last){
@@ -2193,8 +2219,34 @@ textarea{resize:vertical;min-height:80px}
         }
       }catch(e){}
     }
+    async function pollAdminRichiesteLive(){
+      try{
+        var r = await fetch('/api/admin/richieste-live', {cache:'no-store'});
+        var data = await r.json();
+        if(!data.latest || !data.latest.key) return;
+        var last = localStorage.getItem(lastRequestKey) || '';
+        if(data.latest.key !== last){
+          localStorage.setItem(lastRequestKey, data.latest.key);
+          showAdminToast(data.latest.title || 'Nuova richiesta', data.latest.body || '');
+          if('Notification' in window && Notification.permission === 'granted'){
+            new Notification(data.latest.title || 'Nuova richiesta', {
+              body: data.latest.body || '',
+              icon: '/static/pwa/icon-192.png'
+            });
+          }
+          var bell = document.querySelector('.tb-icon-btn[href="/admin/notifiche"]');
+          if(bell && !bell.querySelector('.tb-dot')){
+            var dot = document.createElement('span');
+            dot.className = 'tb-dot';
+            bell.appendChild(dot);
+          }
+        }
+      }catch(e){}
+    }
     pollAdminNotifiche();
+    pollAdminRichiesteLive();
     setInterval(pollAdminNotifiche, 30000);
+    setInterval(pollAdminRichiesteLive, 15000);
   })();
   {% endif %}
   </script>
@@ -2957,6 +3009,121 @@ def descrivi_richiesta_assenza(tipo, data_inizio, data_fine, giorni, ora_inizio=
     return f"{tipo_txt} dal {data_inizio} al {data_fine} ({giorni} gg)"
 
 
+def _utente_ha_notifica_tipo_oggi(db, utente_id, tipo):
+    _ensure_notifiche_app_table(db)
+    row = db.execute("""SELECT 1 FROM notifiche_app
+                        WHERE utente_id=? AND tipo=? AND date(creato_il)=date('now')
+                        LIMIT 1""", (utente_id, tipo)).fetchone()
+    return bool(row)
+
+
+def invia_notifiche_scadenze_imminenti():
+    """Crea notifiche app/push per scadenze documenti entro 30 giorni, senza duplicati giornalieri."""
+    tipo_notifica = 'scadenze_imminenti'
+    db = get_db()
+    _ensure_notifiche_app_table(db)
+    oggi = date.today().isoformat()
+    admin_items = []
+    per_utente = {}
+
+    def add_user(uid, testo):
+        if not uid:
+            return
+        per_utente.setdefault(uid, []).append(testo)
+
+    try:
+        rows = db.execute("""
+            SELECT d.titolo, d.data_scadenza, d.assegnato_a,
+                   u.nome, u.cognome,
+                   CAST(julianday(d.data_scadenza)-julianday('now') AS INTEGER) as days_left
+            FROM documenti d
+            LEFT JOIN utenti u ON u.id=d.assegnato_a
+            WHERE d.data_scadenza IS NOT NULL AND d.data_scadenza != ''
+              AND CAST(julianday(d.data_scadenza)-julianday('now') AS INTEGER) BETWEEN 0 AND 30
+            ORDER BY d.data_scadenza""").fetchall()
+        for r in rows:
+            chi = f" - {r['nome']} {r['cognome']}" if r['nome'] else ''
+            txt = f"{r['titolo']}{chi}: scade il {r['data_scadenza']} ({r['days_left']} gg)"
+            admin_items.append(txt)
+            add_user(r['assegnato_a'], f"Il documento {r['titolo']} scade il {r['data_scadenza']} ({r['days_left']} gg).")
+    except Exception as e:
+        print(f'[scadenze notify documenti] {e}')
+
+    try:
+        rows = db.execute("""
+            SELECT dd.nome_originale as titolo, dd.tipo_doc, dd.data_scadenza, dd.utente_id,
+                   u.nome, u.cognome,
+                   CAST(julianday(dd.data_scadenza)-julianday('now') AS INTEGER) as days_left
+            FROM documenti_dipendente dd
+            JOIN utenti u ON u.id=dd.utente_id
+            WHERE dd.data_scadenza IS NOT NULL AND dd.data_scadenza != ''
+              AND CAST(julianday(dd.data_scadenza)-julianday('now') AS INTEGER) BETWEEN 0 AND 30
+            ORDER BY dd.data_scadenza""").fetchall()
+        for r in rows:
+            txt = f"{r['tipo_doc']} {r['titolo']} - {r['nome']} {r['cognome']}: scade il {r['data_scadenza']} ({r['days_left']} gg)"
+            admin_items.append(txt)
+            add_user(r['utente_id'], f"Il tuo documento {r['titolo']} scade il {r['data_scadenza']} ({r['days_left']} gg).")
+    except Exception as e:
+        print(f'[scadenze notify documenti_dipendente] {e}')
+
+    try:
+        rows = db.execute("""
+            SELECT titolo, data_scadenza,
+                   CAST(julianday(data_scadenza)-julianday('now') AS INTEGER) as days_left
+            FROM documenti_azienda
+            WHERE data_scadenza IS NOT NULL AND data_scadenza != ''
+              AND CAST(julianday(data_scadenza)-julianday('now') AS INTEGER) BETWEEN 0 AND COALESCE(avviso_giorni,30)
+            ORDER BY data_scadenza""").fetchall()
+        for r in rows:
+            admin_items.append(f"Documento azienda {r['titolo']}: scade il {r['data_scadenza']} ({r['days_left']} gg)")
+    except Exception as e:
+        print(f'[scadenze notify documenti_azienda] {e}')
+
+    try:
+        rows = db.execute("""
+            SELECT dv.nome_originale as titolo, dv.tipo_doc, dv.data_scadenza, v.targa,
+                   CAST(julianday(dv.data_scadenza)-julianday('now') AS INTEGER) as days_left
+            FROM documenti_veicoli dv
+            JOIN veicoli v ON v.id=dv.veicolo_id
+            WHERE dv.data_scadenza IS NOT NULL AND dv.data_scadenza != ''
+              AND CAST(julianday(dv.data_scadenza)-julianday('now') AS INTEGER) BETWEEN 0 AND 30
+            ORDER BY dv.data_scadenza""").fetchall()
+        for r in rows:
+            admin_items.append(f"Documento mezzo {r['tipo_doc']} {r['titolo']} ({r['targa']}): scade il {r['data_scadenza']} ({r['days_left']} gg)")
+    except Exception as e:
+        print(f'[scadenze notify documenti_veicoli] {e}')
+
+    try:
+        rows = db.execute("""SELECT id FROM utenti WHERE ruolo='admin' AND COALESCE(attivo,1)=1""").fetchall()
+        admin_ids = [r['id'] for r in rows]
+    except Exception:
+        admin_ids = []
+    db.close()
+
+    if admin_items:
+        titolo = 'Scadenze documenti imminenti'
+        preview = '; '.join(admin_items[:3])
+        extra = len(admin_items) - 3
+        body = f"Hai {len(admin_items)} scadenza/e nei prossimi 30 giorni: {preview}" + (f" e altre {extra}." if extra > 0 else ".")
+        for aid in admin_ids:
+            db2 = get_db()
+            already = _utente_ha_notifica_tipo_oggi(db2, aid, tipo_notifica)
+            db2.close()
+            if not already:
+                notifica_utente(aid, titolo, body[:500], '/scadenze', tipo_notifica)
+
+    for uid, items in per_utente.items():
+        db2 = get_db()
+        already = _utente_ha_notifica_tipo_oggi(db2, uid, tipo_notifica)
+        db2.close()
+        if already:
+            continue
+        preview = '; '.join(items[:2])
+        extra = len(items) - 2
+        body = f"Hai {len(items)} documento/i in scadenza: {preview}" + (f" e altri {extra}." if extra > 0 else ".")
+        notifica_utente(uid, 'Documento in scadenza', body[:500], '/mobile/notifiche', tipo_notifica)
+
+
 @app.route('/manifest.webmanifest')
 def pwa_manifest():
     """Manifest PWA con dati personalizzati per tenant se loggato."""
@@ -3250,6 +3417,78 @@ def api_notifiche_latest_unread():
                      (session['user_id'],)).fetchone()
     db.close()
     return jsonify({'count': count, 'latest': dict(row) if row else None})
+
+
+@app.route('/api/admin/richieste-live')
+@admin_required
+def api_admin_richieste_live():
+    """Ultima richiesta dipendente in attesa: timbrature, ferie/permessi/malattia, rimborsi."""
+    db = get_db()
+    try:
+        ensure_ferie_extra_columns(db)
+    except Exception:
+        pass
+    candidates = []
+    total = 0
+    try:
+        total += db.execute("SELECT COUNT(*) FROM richieste_presenze WHERE stato='in_attesa'").fetchone()[0]
+        r = db.execute("""SELECT r.id, r.data, r.ore_totali, r.creato_il, u.nome, u.cognome
+                          FROM richieste_presenze r
+                          JOIN utenti u ON u.id=r.utente_id
+                          WHERE r.stato='in_attesa'
+                          ORDER BY datetime(r.creato_il) DESC, r.id DESC LIMIT 1""").fetchone()
+        if r:
+            candidates.append({
+                'key': f'presenza-{r["id"]}',
+                'created': r['creato_il'] or '',
+                'title': 'Nuova richiesta timbratura',
+                'body': f'{r["nome"]} {r["cognome"]} ha inviato una richiesta timbratura per il {r["data"]}.',
+                'url': '/admin/richieste'
+            })
+    except Exception as e:
+        print(f'[richieste-live presenze] {e}')
+    try:
+        total += db.execute("SELECT COUNT(*) FROM ferie_permessi WHERE stato='in_attesa'").fetchone()[0]
+        r = db.execute("""SELECT f.id, f.tipo, f.data_inizio, f.data_fine, f.giorni, f.ora_inizio, f.ora_fine,
+                                 f.creato_il, u.nome, u.cognome
+                          FROM ferie_permessi f
+                          JOIN utenti u ON u.id=f.utente_id
+                          WHERE f.stato='in_attesa'
+                          ORDER BY datetime(f.creato_il) DESC, f.id DESC LIMIT 1""").fetchone()
+        if r:
+            dettaglio = descrivi_richiesta_assenza(r['tipo'], r['data_inizio'], r['data_fine'],
+                                                   r['giorni'], r['ora_inizio'], r['ora_fine'])
+            candidates.append({
+                'key': f'ferie-{r["id"]}',
+                'created': r['creato_il'] or '',
+                'title': f'Nuova richiesta {r["tipo"]}',
+                'body': f'{r["nome"]} {r["cognome"]} ha richiesto {dettaglio}.',
+                'url': '/ferie'
+            })
+    except Exception as e:
+        print(f'[richieste-live ferie] {e}')
+    try:
+        total += db.execute("SELECT COUNT(*) FROM spese_rimborso WHERE stato='in_attesa'").fetchone()[0]
+        r = db.execute("""SELECT s.id, s.data, s.categoria, s.importo, s.creato_il, u.nome, u.cognome
+                          FROM spese_rimborso s
+                          JOIN utenti u ON u.id=s.utente_id
+                          WHERE s.stato='in_attesa'
+                          ORDER BY datetime(s.creato_il) DESC, s.id DESC LIMIT 1""").fetchone()
+        if r:
+            candidates.append({
+                'key': f'spesa-{r["id"]}',
+                'created': r['creato_il'] or '',
+                'title': 'Nuova richiesta rimborso spesa',
+                'body': f'{r["nome"]} {r["cognome"]} ha richiesto un rimborso da € {float(r["importo"] or 0):.2f} ({r["categoria"]}) del {r["data"]}.',
+                'url': '/admin/spese?stato=in_attesa'
+            })
+    except Exception as e:
+        print(f'[richieste-live spese] {e}')
+    db.close()
+    latest = None
+    if candidates:
+        latest = sorted(candidates, key=lambda x: (x.get('created') or '', x.get('key') or ''), reverse=True)[0]
+    return jsonify({'count': total, 'latest': latest})
 
 
 ADMIN_NOTIFICHE_TMPL = """
@@ -7833,6 +8072,7 @@ FERIE_TMPL = """
 @login_required
 def ferie():
     db  = get_db()
+    ensure_ferie_extra_columns(db)
     uid = session['user_id']
     filtro_uid = request.args.get('uid','')
     mese = date.today().strftime('%Y-%m')
@@ -7888,6 +8128,7 @@ def ferie_richiesta():
         if giorni <= 0: raise ValueError
     except: flash("La data fine deve essere dopo la data inizio.",'error'); return redirect(url_for('ferie'))
     db = get_db()
+    ensure_ferie_extra_columns(db)
     db.execute("""INSERT INTO ferie_permessi
                   (utente_id,tipo,data_inizio,data_fine,giorni,ora_inizio,ora_fine,certificato_nome,certificato_path,motivo)
                   VALUES (?,?,?,?,?,?,?,?,?,?)""",
@@ -7918,6 +8159,7 @@ def ferie_gestisci(fid):
     now_str = datetime.now().strftime('%Y-%m-%d %H:%M')
     stato = 'approvata' if azione == 'approva' else 'rifiutata'
     db = get_db()
+    ensure_ferie_extra_columns(db)
     # Recupera info per notifica push prima di chiudere
     f_info = db.execute("""SELECT utente_id, tipo, data_inizio, data_fine, giorni, ora_inizio, ora_fine
                            FROM ferie_permessi WHERE id=?""", (fid,)).fetchone()
@@ -7951,6 +8193,7 @@ def ferie_gestisci(fid):
 @login_required
 def ferie_certificato(fid):
     db = get_db()
+    ensure_ferie_extra_columns(db)
     row = db.execute("""SELECT utente_id, certificato_nome, certificato_path
                         FROM ferie_permessi WHERE id=?""", (fid,)).fetchone()
     db.close()
@@ -19514,6 +19757,7 @@ aggiornaCampiRichiesta();
 def mobile_ferie():
     uid = session['user_id']
     db = get_db()
+    ensure_ferie_extra_columns(db)
     richieste = db.execute("""SELECT id, tipo, data_inizio, data_fine, giorni, ora_inizio, ora_fine,
                                      certificato_nome, motivo, stato, nota_admin, creato_il
                               FROM ferie_permessi
@@ -19561,6 +19805,7 @@ def mobile_ferie_richiesta():
         return redirect(url_for('mobile_ferie'))
 
     db = get_db()
+    ensure_ferie_extra_columns(db)
     db.execute("""INSERT INTO ferie_permessi
                   (utente_id, tipo, data_inizio, data_fine, giorni, ora_inizio, ora_fine, certificato_nome, certificato_path, motivo)
                   VALUES (?,?,?,?,?,?,?,?,?,?)""",
