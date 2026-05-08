@@ -95,7 +95,8 @@ if DATA_DIR != BASE_DIR:
             print(f"[ACCESSO FIERE] Errore migrazione tenants: {_e}", flush=True)
     # Cartelle upload
     for _up in ('uploads_dipendenti','uploads_documenti','uploads_eventi','uploads_veicoli',
-                'uploads_fatture','uploads_docs_azienda','uploads_spese','uploads_contratti'):
+                'uploads_fatture','uploads_docs_azienda','uploads_spese','uploads_contratti',
+                'uploads_ferie_certificati'):
         _src = os.path.join(BASE_DIR, _up)
         _dst = os.path.join(DATA_DIR, _up)
         if os.path.isdir(_src) and not os.path.isdir(_dst):
@@ -203,12 +204,14 @@ UPLOAD_DIR_EVENTI  = os.path.join(DATA_DIR, 'uploads_eventi')
 UPLOAD_DIR_DOCS    = os.path.join(DATA_DIR, 'uploads_documenti')
 UPLOAD_DIR_LOGHI   = os.path.join(DATA_DIR, 'uploads_loghi_aziende')
 UPLOAD_DIR_FOTOTESSERE = os.path.join(DATA_DIR, 'uploads_fototessere')
+UPLOAD_DIR_FERIE_CERT = os.path.join(DATA_DIR, 'uploads_ferie_certificati')
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(UPLOAD_DIR_VEICOLI, exist_ok=True)
 os.makedirs(UPLOAD_DIR_EVENTI,  exist_ok=True)
 os.makedirs(UPLOAD_DIR_DOCS,    exist_ok=True)
 os.makedirs(UPLOAD_DIR_LOGHI,   exist_ok=True)
 os.makedirs(UPLOAD_DIR_FOTOTESSERE, exist_ok=True)
+os.makedirs(UPLOAD_DIR_FERIE_CERT, exist_ok=True)
 
 # ── Migrazione one-time: se esiste un vecchio logo_legacy.* lo assegno al tenant 1
 # (il primo admin storico) e poi via il fallback. I nuovi tenant partono senza logo.
@@ -282,6 +285,18 @@ def get_upload_path_evento(eid):
     p = os.path.join(UPLOAD_DIR_EVENTI, str(eid))
     os.makedirs(p, exist_ok=True)
     return p
+
+def salva_certificato_ferie(file_obj, uid):
+    if not file_obj or not getattr(file_obj, 'filename', ''):
+        return None, None
+    original = secure_filename(file_obj.filename)
+    ext = original.rsplit('.', 1)[1].lower() if '.' in original else ''
+    if ext not in {'pdf', 'png', 'jpg', 'jpeg', 'webp'}:
+        raise ValueError('Formato certificato non valido. Usa PDF, JPG, PNG o WEBP.')
+    safe_name = f"{uid}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{original}"
+    path = os.path.join(UPLOAD_DIR_FERIE_CERT, safe_name)
+    file_obj.save(path)
+    return original, path
     return p
 
 
@@ -477,6 +492,10 @@ def init_db():
         data_inizio TEXT NOT NULL,
         data_fine TEXT NOT NULL,
         giorni INTEGER,
+        ora_inizio TEXT,
+        ora_fine TEXT,
+        certificato_nome TEXT,
+        certificato_path TEXT,
         motivo TEXT,
         stato TEXT DEFAULT 'in_attesa',
         nota_admin TEXT,
@@ -510,6 +529,10 @@ def init_db():
     migrations = [
         "ALTER TABLE presenze ADD COLUMN cantiere_id INTEGER",
         "ALTER TABLE richieste_presenze ADD COLUMN cantiere_id INTEGER",
+        "ALTER TABLE ferie_permessi ADD COLUMN ora_inizio TEXT",
+        "ALTER TABLE ferie_permessi ADD COLUMN ora_fine TEXT",
+        "ALTER TABLE ferie_permessi ADD COLUMN certificato_nome TEXT",
+        "ALTER TABLE ferie_permessi ADD COLUMN certificato_path TEXT",
         "ALTER TABLE utenti ADD COLUMN mansione TEXT",
         "ALTER TABLE documenti ADD COLUMN doc_dipendente_id INTEGER",
         "ALTER TABLE cantieri ADD COLUMN ente_organizzatore TEXT",
@@ -2063,6 +2086,9 @@ textarea{resize:vertical;min-height:80px}
         <i class="fa fa-bell"></i>
         {% if admin_notifiche_totale and admin_notifiche_totale > 0 %}<span class="tb-dot"></span>{% endif %}
       </a>
+      <button type="button" class="tb-icon-btn" title="Attiva notifiche PC" onclick="requestAdminDesktopNotifications(event)">
+        <i class="fa fa-desktop"></i>
+      </button>
       <div class="tb-divider"></div>
       {% endif %}
 
@@ -2117,6 +2143,23 @@ textarea{resize:vertical;min-height:80px}
   {% if session.ruolo=='admin' %}
   (function(){
     var lastKey = 'accesso_admin_last_notifica_id';
+    window.requestAdminDesktopNotifications = async function(ev){
+      if(ev) ev.preventDefault();
+      if(!('Notification' in window)){
+        showAdminToast('Notifiche PC', 'Questo browser non supporta le notifiche desktop.');
+        return;
+      }
+      var permission = Notification.permission;
+      if(permission === 'default'){
+        permission = await Notification.requestPermission();
+      }
+      if(permission === 'granted'){
+        showAdminToast('Notifiche PC attive', 'Ti avviso appena arriva una richiesta sul gestionale.');
+        new Notification('Accesso Fiere', {body:'Notifiche PC attive', icon:'/static/pwa/icon-192.png'});
+      } else {
+        showAdminToast('Notifiche PC bloccate', 'Apri le impostazioni del browser e abilita le notifiche per questo sito.');
+      }
+    };
     function showAdminToast(titolo, messaggio){
       var t = document.createElement('div');
       t.style.cssText = 'position:fixed;right:22px;top:82px;max-width:360px;background:#0f172a;color:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 18px 45px rgba(15,23,42,.28);z-index:10000;font-size:13px;line-height:1.4';
@@ -2132,10 +2175,6 @@ textarea{resize:vertical;min-height:80px}
         if(!data.latest) return;
         var last = parseInt(localStorage.getItem(lastKey) || '0', 10);
         var id = parseInt(data.latest.id || 0, 10);
-        if(!last){
-          localStorage.setItem(lastKey, String(id));
-          return;
-        }
         if(id > last){
           localStorage.setItem(lastKey, String(id));
           showAdminToast(data.latest.titolo || 'Nuova notifica', data.latest.messaggio || '');
@@ -2907,6 +2946,15 @@ def notifica_admins(titolo, messaggio, url='/admin/notifiche', tipo='admin'):
         except Exception as e:
             print(f'[notifica_admins] admin={admin["id"]}: {e}')
     return sent
+
+
+def descrivi_richiesta_assenza(tipo, data_inizio, data_fine, giorni, ora_inizio=None, ora_fine=None):
+    tipo_txt = (tipo or 'richiesta').lower()
+    if tipo_txt.startswith('permesso') and ora_inizio and ora_fine:
+        if data_inizio == data_fine:
+            return f"{tipo_txt} del {data_inizio} dalle {ora_inizio} alle {ora_fine}"
+        return f"{tipo_txt} dal {data_inizio} al {data_fine}, dalle {ora_inizio} alle {ora_fine}"
+    return f"{tipo_txt} dal {data_inizio} al {data_fine} ({giorni} gg)"
 
 
 @app.route('/manifest.webmanifest')
@@ -7691,7 +7739,7 @@ FERIE_TMPL = """
 <div class="card" style="margin-bottom:20px">
   <div class="card-header"><h3><i class="fa fa-paper-plane" style="color:#7c3aed;margin-right:8px"></i>Nuova richiesta</h3></div>
   <div class="card-body">
-    <form method="POST" action="/ferie/richiesta">
+    <form method="POST" action="/ferie/richiesta" enctype="multipart/form-data">
       <div class="form-row-4">
         <div class="form-group"><label>Tipo *</label>
           <select name="tipo" required>
@@ -7703,6 +7751,11 @@ FERIE_TMPL = """
         <div class="form-group"><label>Dal *</label><input type="date" name="data_inizio" required></div>
         <div class="form-group"><label>Al *</label><input type="date" name="data_fine" required></div>
         <div class="form-group"><label>Motivo</label><input name="motivo" placeholder="Opzionale"></div>
+      </div>
+      <div class="form-row-4" style="margin-top:10px">
+        <div class="form-group"><label>Permesso dalle</label><input type="time" name="ora_inizio"></div>
+        <div class="form-group"><label>Permesso alle</label><input type="time" name="ora_fine"></div>
+        <div class="form-group"><label>Certificato malattia</label><input type="file" name="certificato" accept="image/*,application/pdf"></div>
       </div>
       <button type="submit" class="btn btn-blue"><i class="fa fa-paper-plane"></i> Invia richiesta</button>
     </form>
@@ -7722,13 +7775,15 @@ FERIE_TMPL = """
 <div class="card" style="margin-bottom:20px;border-left:4px solid var(--warning)">
   <div class="card-header"><h3><i class="fa fa-bell" style="color:var(--warning);margin-right:8px"></i>Da approvare</h3></div>
   <div class="table-wrap"><table>
-    <thead><tr><th>Dipendente</th><th>Tipo</th><th>Dal</th><th>Al</th><th>Giorni</th><th>Motivo</th><th>Azioni</th></tr></thead>
+    <thead><tr><th>Dipendente</th><th>Tipo</th><th>Dal</th><th>Al</th><th>Giorni</th><th>Orario</th><th>Certificato</th><th>Motivo</th><th>Azioni</th></tr></thead>
     <tbody>{% for r in richieste_attesa %}
     <tr style="background:#fffbf0">
       <td><span class="avatar-sm">{{ r.nome[0] }}{{ r.cognome[0] }}</span><strong>{{ r.nome }} {{ r.cognome }}</strong></td>
       <td><span class="badge badge-purple">{{ r.tipo }}</span></td>
       <td>{{ r.data_inizio }}</td><td>{{ r.data_fine }}</td>
       <td><strong>{{ r.giorni }}</strong></td>
+      <td>{% if r.ora_inizio and r.ora_fine %}<span class="badge badge-blue">{{ r.ora_inizio }} - {{ r.ora_fine }}</span>{% else %}<span style="color:var(--text-light)">-</span>{% endif %}</td>
+      <td>{% if r.certificato_nome %}<a href="/ferie/certificato/{{ r.id }}" class="btn btn-sm btn-secondary" target="_blank"><i class="fa fa-file-medical"></i> Apri</a>{% else %}<span style="color:var(--text-light)">-</span>{% endif %}</td>
       <td style="color:var(--text-light)">{{ r.motivo or '–' }}</td>
       <td>
         <form method="POST" action="/ferie/{{ r.id }}/gestisci" style="display:flex;gap:6px;align-items:center">
@@ -7755,19 +7810,21 @@ FERIE_TMPL = """
     </div>
   </div>
   <div class="table-wrap"><table>
-    <thead><tr>{% if session.ruolo=='admin' %}<th>Dipendente</th>{% endif %}<th>Tipo</th><th>Dal</th><th>Al</th><th>Giorni</th><th>Motivo</th><th>Stato</th><th>Risposta admin</th></tr></thead>
+    <thead><tr>{% if session.ruolo=='admin' %}<th>Dipendente</th>{% endif %}<th>Tipo</th><th>Dal</th><th>Al</th><th>Giorni</th><th>Orario</th><th>Certificato</th><th>Motivo</th><th>Stato</th><th>Risposta admin</th></tr></thead>
     <tbody>{% for r in storico %}
     <tr>
       {% if session.ruolo=='admin' %}<td><span class="avatar-sm">{{ r.nome[0] }}{{ r.cognome[0] }}</span>{{ r.nome }} {{ r.cognome }}</td>{% endif %}
       <td><span class="badge badge-purple">{{ r.tipo }}</span></td>
       <td>{{ r.data_inizio }}</td><td>{{ r.data_fine }}</td><td>{{ r.giorni }}</td>
+      <td>{% if r.ora_inizio and r.ora_fine %}<span class="badge badge-blue">{{ r.ora_inizio }} - {{ r.ora_fine }}</span>{% else %}<span style="color:var(--text-light)">-</span>{% endif %}</td>
+      <td>{% if r.certificato_nome %}<a href="/ferie/certificato/{{ r.id }}" class="btn btn-sm btn-secondary" target="_blank"><i class="fa fa-file-medical"></i> Apri</a>{% else %}<span style="color:var(--text-light)">-</span>{% endif %}</td>
       <td style="color:var(--text-light)">{{ r.motivo or '–' }}</td>
       <td>{% if r.stato=='in_attesa' %}<span class="badge badge-amber">⏳ In attesa</span>
           {% elif r.stato=='approvata' %}<span class="badge badge-green">✅ Approvata</span>
           {% else %}<span class="badge badge-red">❌ Rifiutata</span>{% endif %}</td>
       <td style="font-size:12px;color:var(--text-light)">{{ r.nota_admin or '–' }}</td>
     </tr>{% else %}
-    <tr><td colspan="8"><div class="empty-state"><i class="fa fa-umbrella-beach"></i><p>Nessuna richiesta</p></div></td></tr>
+    <tr><td colspan="10"><div class="empty-state"><i class="fa fa-umbrella-beach"></i><p>Nessuna richiesta</p></div></td></tr>
     {% endfor %}</tbody>
   </table></div>
 </div>"""
@@ -7808,26 +7865,45 @@ def ferie_richiesta():
     tipo = request.form.get('tipo','Ferie')
     d_in = request.form.get('data_inizio',''); d_fi = request.form.get('data_fine','')
     motivo = request.form.get('motivo','')
+    ora_inizio = (request.form.get('ora_inizio') or '').strip() or None
+    ora_fine = (request.form.get('ora_fine') or '').strip() or None
     if not d_in or not d_fi: flash('Date obbligatorie.','error'); return redirect(url_for('ferie'))
+    if tipo.lower().startswith('permesso') and (not ora_inizio or not ora_fine):
+        flash('Per i permessi inserisci anche ora inizio e ora fine.', 'error')
+        return redirect(url_for('ferie'))
+    cert_nome = cert_path = None
+    if tipo.lower() == 'malattia':
+        cert = request.files.get('certificato')
+        if not cert or not cert.filename:
+            flash('Per la malattia devi allegare il certificato.', 'error')
+            return redirect(url_for('ferie'))
+        try:
+            cert_nome, cert_path = salva_certificato_ferie(cert, session['user_id'])
+        except ValueError as e:
+            flash(str(e), 'error')
+            return redirect(url_for('ferie'))
     try:
         diff = datetime.strptime(d_fi,'%Y-%m-%d') - datetime.strptime(d_in,'%Y-%m-%d')
         giorni = diff.days + 1
         if giorni <= 0: raise ValueError
     except: flash("La data fine deve essere dopo la data inizio.",'error'); return redirect(url_for('ferie'))
     db = get_db()
-    db.execute("INSERT INTO ferie_permessi (utente_id,tipo,data_inizio,data_fine,giorni,motivo) VALUES (?,?,?,?,?,?)",
-               (session['user_id'],tipo,d_in,d_fi,giorni,motivo))
+    db.execute("""INSERT INTO ferie_permessi
+                  (utente_id,tipo,data_inizio,data_fine,giorni,ora_inizio,ora_fine,certificato_nome,certificato_path,motivo)
+                  VALUES (?,?,?,?,?,?,?,?,?,?)""",
+               (session['user_id'],tipo,d_in,d_fi,giorni,ora_inizio,ora_fine,cert_nome,cert_path,motivo))
     safe_commit(db)
+    dettaglio = descrivi_richiesta_assenza(tipo, d_in, d_fi, giorni, ora_inizio, ora_fine)
     email_admin = get_setting('email_notifiche','')
     if email_admin:
         send_email(email_admin, f'[ACCESSO FIERE] Richiesta {tipo} da {session["nome"]} {session["cognome"]}',
-            f'<p><b>{session["nome"]} {session["cognome"]}</b> ha richiesto <b>{tipo}</b> dal {d_in} al {d_fi} ({giorni} giorni).</p>')
+            f'<p><b>{session["nome"]} {session["cognome"]}</b> ha richiesto <b>{dettaglio}</b>.</p>')
     db.close()
     # ── Notifica agli admin ──
     try:
         notifica_admins(
             f'Nuova richiesta {tipo}',
-            f'{session["nome"]} {session["cognome"]} ha richiesto {tipo.lower()} dal {d_in} al {d_fi} ({giorni} gg).',
+            f'{session["nome"]} {session["cognome"]} ha richiesto {dettaglio}.',
             '/ferie',
             'richiesta_ferie'
         )
@@ -7843,7 +7919,7 @@ def ferie_gestisci(fid):
     stato = 'approvata' if azione == 'approva' else 'rifiutata'
     db = get_db()
     # Recupera info per notifica push prima di chiudere
-    f_info = db.execute("""SELECT utente_id, tipo, data_inizio, data_fine, giorni
+    f_info = db.execute("""SELECT utente_id, tipo, data_inizio, data_fine, giorni, ora_inizio, ora_fine
                            FROM ferie_permessi WHERE id=?""", (fid,)).fetchone()
     db.execute("UPDATE ferie_permessi SET stato=?,nota_admin=?,gestito_il=? WHERE id=?",
                (stato, nota or stato.capitalize(), now_str, fid))
@@ -7852,12 +7928,16 @@ def ferie_gestisci(fid):
     if f_info:
         try:
             tipo_label = (f_info['tipo'] or 'Richiesta').capitalize()
+            dettaglio = descrivi_richiesta_assenza(
+                f_info['tipo'], f_info['data_inizio'], f_info['data_fine'],
+                f_info['giorni'], f_info['ora_inizio'], f_info['ora_fine']
+            )
             if stato == 'approvata':
                 title = f'{tipo_label} accettata'
-                body = f"La tua richiesta di {tipo_label.lower()} dal {f_info['data_inizio']} al {f_info['data_fine']} è stata accettata."
+                body = f"La tua richiesta di {dettaglio} è stata accettata."
             else:
                 title = f'{tipo_label} rifiutata'
-                body = f"La tua richiesta di {tipo_label.lower()} dal {f_info['data_inizio']} al {f_info['data_fine']} è stata rifiutata."
+                body = f"La tua richiesta di {dettaglio} è stata rifiutata."
                 if nota:
                     body += f" Nota: {nota}"
             notifica_utente(f_info['utente_id'], title, body, '/mobile/notifiche', f'ferie_{stato}')
@@ -7865,6 +7945,24 @@ def ferie_gestisci(fid):
             print(f'[push ferie] {e}')
     flash(f'{"✅ Approvata" if stato=="approvata" else "❌ Rifiutata"}!','success')
     return redirect(url_for('ferie'))
+
+
+@app.route('/ferie/certificato/<int:fid>')
+@login_required
+def ferie_certificato(fid):
+    db = get_db()
+    row = db.execute("""SELECT utente_id, certificato_nome, certificato_path
+                        FROM ferie_permessi WHERE id=?""", (fid,)).fetchone()
+    db.close()
+    if not row or not row['certificato_path']:
+        return 'Certificato non trovato', 404
+    if session.get('ruolo') != 'admin' and row['utente_id'] != session.get('user_id'):
+        return 'Forbidden', 403
+    if not os.path.exists(row['certificato_path']):
+        return 'File non trovato', 404
+    mt = mimetypes.guess_type(row['certificato_nome'] or row['certificato_path'])[0] or 'application/octet-stream'
+    return send_file(row['certificato_path'], mimetype=mt,
+                     download_name=row['certificato_nome'] or 'certificato')
 
 # ══════════════════════════════════════════════════════════
 #  RICHIESTE PRESENZE (admin panel)
@@ -19307,6 +19405,9 @@ input,select,textarea{width:100%;background:#0f172a;border:1.5px solid rgba(255,
 input:focus,select:focus,textarea:focus{border-color:#a78bfa;box-shadow:0 0 0 3px rgba(167,139,250,.16)}
 select option{background:#1e293b}
 .submit-btn{width:100%;background:linear-gradient(135deg,#6d28d9,#a855f7);color:#fff;border:none;border-radius:14px;padding:17px;font-size:17px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
+.extra-fields{display:none;background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.18);border-radius:14px;padding:13px;margin-top:2px;margin-bottom:12px}
+.extra-fields.active{display:block}
+.hint{font-size:12px;color:rgba(255,255,255,.42);line-height:1.4;margin-top:-6px;margin-bottom:10px}
 .ferie-item{background:#0f172a;border-radius:12px;padding:13px 14px;margin-bottom:8px;border:1px solid rgba(255,255,255,.05)}
 .ferie-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:5px}
 .ferie-tipo{font-size:13px;font-weight:800;color:#c4b5fd}
@@ -19333,11 +19434,11 @@ select option{background:#1e293b}
   <div class="flash {{ cat }}"><i class="fa fa-{{ 'check-circle' if cat=='success' else 'exclamation-circle' }}"></i> {{ msg }}</div>
   {% endfor %}{% endwith %}
 
-  <form method="POST" action="/mobile/ferie/richiesta">
+  <form method="POST" action="/mobile/ferie/richiesta" enctype="multipart/form-data">
     <div class="card">
       <div class="card-title"><i class="fa fa-paper-plane" style="color:#c4b5fd"></i> Nuova richiesta</div>
       <label>Tipo *</label>
-      <select name="tipo" required>
+      <select name="tipo" id="tipo-richiesta" required onchange="aggiornaCampiRichiesta()">
         <option value="Ferie">Ferie</option>
         <option value="Permesso">Permesso</option>
         <option value="Malattia">Malattia</option>
@@ -19347,6 +19448,17 @@ select option{background:#1e293b}
       <input type="date" name="data_inizio" value="{{ oggi }}" required>
       <label>Al *</label>
       <input type="date" name="data_fine" value="{{ oggi }}" required>
+      <div id="permesso-fields" class="extra-fields">
+        <label>Permesso dalle *</label>
+        <input type="time" name="ora_inizio" id="ora-inizio">
+        <label>Permesso alle *</label>
+        <input type="time" name="ora_fine" id="ora-fine">
+      </div>
+      <div id="malattia-fields" class="extra-fields">
+        <label>Certificato di malattia *</label>
+        <input type="file" name="certificato" id="certificato" accept="image/*,application/pdf">
+        <div class="hint">Puoi allegare foto o PDF del certificato.</div>
+      </div>
       <label>Motivo</label>
       <textarea name="motivo" rows="2" placeholder="Opzionale"></textarea>
     </div>
@@ -19361,11 +19473,12 @@ select option{background:#1e293b}
         <div class="ferie-top">
           <div>
             <div class="ferie-tipo">{{ r.tipo }}</div>
-            <div class="ferie-date">Dal {{ r.data_inizio }} al {{ r.data_fine }} · {{ r.giorni }} gg</div>
+            <div class="ferie-date">Dal {{ r.data_inizio }} al {{ r.data_fine }} · {{ r.giorni }} gg{% if r.ora_inizio and r.ora_fine %}<br>Dalle {{ r.ora_inizio }} alle {{ r.ora_fine }}{% endif %}</div>
           </div>
           <span class="stato stato-{{ r.stato }}">{{ 'In attesa' if r.stato=='in_attesa' else 'Accettata' if r.stato=='approvata' else 'Rifiutata' }}</span>
         </div>
         {% if r.motivo %}<div class="ferie-note">{{ r.motivo }}</div>{% endif %}
+        {% if r.certificato_nome %}<div class="ferie-note"><a href="/ferie/certificato/{{ r.id }}" style="color:#c4b5fd;text-decoration:none" target="_blank"><i class="fa fa-file-medical"></i> Certificato allegato</a></div>{% endif %}
         {% if r.nota_admin %}<div class="ferie-note">Risposta admin: {{ r.nota_admin }}</div>{% endif %}
       </div>
       {% endfor %}
@@ -19374,6 +19487,24 @@ select option{background:#1e293b}
     {% endif %}
   </div>
 </div>
+<script>
+function aggiornaCampiRichiesta(){
+  var tipo = (document.getElementById('tipo-richiesta').value || '').toLowerCase();
+  var permesso = document.getElementById('permesso-fields');
+  var malattia = document.getElementById('malattia-fields');
+  var oraInizio = document.getElementById('ora-inizio');
+  var oraFine = document.getElementById('ora-fine');
+  var certificato = document.getElementById('certificato');
+  var isPermesso = tipo.indexOf('permesso') === 0;
+  var isMalattia = tipo === 'malattia';
+  permesso.classList.toggle('active', isPermesso);
+  malattia.classList.toggle('active', isMalattia);
+  oraInizio.required = isPermesso;
+  oraFine.required = isPermesso;
+  certificato.required = isMalattia;
+}
+aggiornaCampiRichiesta();
+</script>
 </body>
 </html>"""
 
@@ -19383,7 +19514,8 @@ select option{background:#1e293b}
 def mobile_ferie():
     uid = session['user_id']
     db = get_db()
-    richieste = db.execute("""SELECT id, tipo, data_inizio, data_fine, giorni, motivo, stato, nota_admin, creato_il
+    richieste = db.execute("""SELECT id, tipo, data_inizio, data_fine, giorni, ora_inizio, ora_fine,
+                                     certificato_nome, motivo, stato, nota_admin, creato_il
                               FROM ferie_permessi
                               WHERE utente_id=?
                               ORDER BY creato_il DESC, id DESC LIMIT 30""",
@@ -19400,9 +19532,25 @@ def mobile_ferie_richiesta():
     d_in = (request.form.get('data_inizio') or '').strip()
     d_fi = (request.form.get('data_fine') or '').strip()
     motivo = (request.form.get('motivo') or '').strip()
+    ora_inizio = (request.form.get('ora_inizio') or '').strip() or None
+    ora_fine = (request.form.get('ora_fine') or '').strip() or None
     if not d_in or not d_fi:
         flash('Date obbligatorie.', 'error')
         return redirect(url_for('mobile_ferie'))
+    if tipo.lower().startswith('permesso') and (not ora_inizio or not ora_fine):
+        flash('Per i permessi inserisci anche ora inizio e ora fine.', 'error')
+        return redirect(url_for('mobile_ferie'))
+    cert_nome = cert_path = None
+    if tipo.lower() == 'malattia':
+        cert = request.files.get('certificato')
+        if not cert or not cert.filename:
+            flash('Per la malattia devi allegare il certificato.', 'error')
+            return redirect(url_for('mobile_ferie'))
+        try:
+            cert_nome, cert_path = salva_certificato_ferie(cert, session['user_id'])
+        except ValueError as e:
+            flash(str(e), 'error')
+            return redirect(url_for('mobile_ferie'))
     try:
         diff = datetime.strptime(d_fi, '%Y-%m-%d') - datetime.strptime(d_in, '%Y-%m-%d')
         giorni = diff.days + 1
@@ -19413,15 +19561,17 @@ def mobile_ferie_richiesta():
         return redirect(url_for('mobile_ferie'))
 
     db = get_db()
-    db.execute("""INSERT INTO ferie_permessi (utente_id, tipo, data_inizio, data_fine, giorni, motivo)
-                  VALUES (?,?,?,?,?,?)""",
-               (session['user_id'], tipo, d_in, d_fi, giorni, motivo))
+    db.execute("""INSERT INTO ferie_permessi
+                  (utente_id, tipo, data_inizio, data_fine, giorni, ora_inizio, ora_fine, certificato_nome, certificato_path, motivo)
+                  VALUES (?,?,?,?,?,?,?,?,?,?)""",
+               (session['user_id'], tipo, d_in, d_fi, giorni, ora_inizio, ora_fine, cert_nome, cert_path, motivo))
     safe_commit(db)
     db.close()
+    dettaglio = descrivi_richiesta_assenza(tipo, d_in, d_fi, giorni, ora_inizio, ora_fine)
     try:
         notifica_admins(
             f'Nuova richiesta {tipo}',
-            f'{session["nome"]} {session["cognome"]} ha richiesto {tipo.lower()} dal {d_in} al {d_fi} ({giorni} gg).',
+            f'{session["nome"]} {session["cognome"]} ha richiesto {dettaglio}.',
             '/ferie',
             'richiesta_ferie'
         )
