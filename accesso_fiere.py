@@ -16037,7 +16037,7 @@ function prepareSubmitMobile(ev) {
 </html>"""
 
 
-MOBILE_PROFILO_TMPL = r"""<!DOCTYPE html>
+MOBILE_PROFILO_TMPL = """<!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -16161,7 +16161,7 @@ function isIOS(){
   return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
 }
 function getIOSVersion(){
-  var m = navigator.userAgent.match(/OS (\d+)_(\d+)/i);
+  var m = navigator.userAgent.match(/OS ([0-9]+)_([0-9]+)/i);
   return m ? parseFloat(m[1] + '.' + m[2]) : null;
 }
 
