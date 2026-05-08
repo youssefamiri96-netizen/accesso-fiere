@@ -1000,6 +1000,19 @@ def init_db():
             FOREIGN KEY(utente_id) REFERENCES utenti(id)
         )""",
         "CREATE INDEX IF NOT EXISTS idx_pwa_sub_utente ON pwa_subscriptions(utente_id)",
+        """CREATE TABLE IF NOT EXISTS notifiche_app (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            utente_id INTEGER NOT NULL,
+            titolo TEXT NOT NULL,
+            messaggio TEXT NOT NULL,
+            url TEXT DEFAULT '/mobile/notifiche',
+            tipo TEXT DEFAULT 'manuale',
+            letto INTEGER DEFAULT 0,
+            creato_il TEXT DEFAULT (datetime('now')),
+            letto_il TEXT,
+            FOREIGN KEY(utente_id) REFERENCES utenti(id)
+        )""",
+        "CREATE INDEX IF NOT EXISTS idx_notifiche_app_utente ON notifiche_app(utente_id, letto, creato_il)",
     ]
     for sql in migrations:
         try: db.execute(sql)
@@ -1242,6 +1255,19 @@ def ensure_columns():
                     FOREIGN KEY(utente_id) REFERENCES utenti(id)
                 )""",
                 "CREATE INDEX IF NOT EXISTS idx_pwa_sub_utente ON pwa_subscriptions(utente_id)",
+                """CREATE TABLE IF NOT EXISTS notifiche_app (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    utente_id INTEGER NOT NULL,
+                    titolo TEXT NOT NULL,
+                    messaggio TEXT NOT NULL,
+                    url TEXT DEFAULT '/mobile/notifiche',
+                    tipo TEXT DEFAULT 'manuale',
+                    letto INTEGER DEFAULT 0,
+                    creato_il TEXT DEFAULT (datetime('now')),
+                    letto_il TEXT,
+                    FOREIGN KEY(utente_id) REFERENCES utenti(id)
+                )""",
+                "CREATE INDEX IF NOT EXISTS idx_notifiche_app_utente ON notifiche_app(utente_id, letto, creato_il)",
             ]:
                 try: db.execute(sql)
                 except: pass
@@ -2764,6 +2790,48 @@ def send_push_to_admins(title, body, url='/dashboard'):
     return total
 
 
+def _ensure_notifiche_app_table(db):
+    db.execute("""CREATE TABLE IF NOT EXISTS notifiche_app (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        utente_id INTEGER NOT NULL,
+        titolo TEXT NOT NULL,
+        messaggio TEXT NOT NULL,
+        url TEXT DEFAULT '/mobile/notifiche',
+        tipo TEXT DEFAULT 'manuale',
+        letto INTEGER DEFAULT 0,
+        creato_il TEXT DEFAULT (datetime('now')),
+        letto_il TEXT,
+        FOREIGN KEY(utente_id) REFERENCES utenti(id)
+    )""")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_notifiche_app_utente ON notifiche_app(utente_id, letto, creato_il)")
+
+
+def salva_notifica_app(utente_id, titolo, messaggio, url='/mobile/notifiche', tipo='manuale'):
+    """Salva una notifica leggibile nella webapp dipendente."""
+    db = get_db()
+    _ensure_notifiche_app_table(db)
+    db.execute("""INSERT INTO notifiche_app (utente_id, titolo, messaggio, url, tipo)
+                  VALUES (?,?,?,?,?)""",
+               (utente_id, titolo[:120], messaggio[:500], url or '/mobile/notifiche', tipo[:40]))
+    safe_commit(db)
+    db.close()
+
+
+def conta_notifiche_non_lette(utente_id):
+    db = get_db()
+    _ensure_notifiche_app_table(db)
+    n = db.execute("SELECT COUNT(*) FROM notifiche_app WHERE utente_id=? AND letto=0",
+                   (utente_id,)).fetchone()[0]
+    db.close()
+    return n
+
+
+def notifica_utente(utente_id, titolo, messaggio, url='/mobile/notifiche', tipo='manuale'):
+    """Salva nello storico dipendente e prova anche la push immediata."""
+    salva_notifica_app(utente_id, titolo, messaggio, url, tipo)
+    return send_push_to_user(utente_id, titolo, messaggio, url)
+
+
 @app.route('/manifest.webmanifest')
 def pwa_manifest():
     """Manifest PWA con dati personalizzati per tenant se loggato."""
@@ -2830,7 +2898,7 @@ def pwa_manifest():
 def pwa_service_worker():
     """Service worker per PWA. Permette installazione + cache base + offline minimo."""
     sw_code = """// Accesso Fiere — Service Worker
-const CACHE_VERSION = 'v5-no-cryptography-fix';
+const CACHE_VERSION = 'v6-in-app-notifications';
 const CACHE_NAME = `accesso-fiere-${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline';
 
@@ -2912,7 +2980,12 @@ self.addEventListener('push', (event) => {
     badge: '/static/pwa/icon-192.png',
     data: data.url ? { url: data.url } : undefined,
   };
-  event.waitUntil(self.registration.showNotification(data.title || 'Accesso Fiere', opts));
+  event.waitUntil((async () => {
+    await self.registration.showNotification(data.title || 'Accesso Fiere', opts);
+    if (self.registration.setAppBadge) {
+      try { await self.registration.setAppBadge(1); } catch(e) {}
+    }
+  })());
 });
 
 self.addEventListener('notificationclick', (event) => {
@@ -3030,6 +3103,13 @@ def pwa_push_my_subs():
                     'latest': rows['latest'] if rows else None})
 
 
+@app.route('/api/notifiche/unread-count')
+@login_required
+def api_notifiche_unread_count():
+    """Conteggio notifiche non lette per badge UI e app badge."""
+    return jsonify({'count': conta_notifiche_non_lette(session['user_id'])})
+
+
 @app.route('/admin/notifiche-push', methods=['GET', 'POST'])
 @admin_required
 def admin_notifiche_push():
@@ -3041,6 +3121,7 @@ def admin_notifiche_push():
         target = request.form.get('target','all')
         url_target = (request.form.get('url','') or '/').strip() or '/'
         if not title or not body:
+            db.close()
             flash('Titolo e messaggio obbligatori.', 'error')
             return redirect(url_for('admin_notifiche_push'))
         if title and len(title) > 80:
@@ -3048,13 +3129,20 @@ def admin_notifiche_push():
         if body and len(body) > 200:
             body = body[:197] + '…'
         sent = 0
+        saved = 0
         if target == 'all':
-            users = db.execute("SELECT DISTINCT utente_id FROM pwa_subscriptions").fetchall()
+            users = db.execute("SELECT id as utente_id FROM utenti WHERE attivo=1 AND ruolo!='admin'").fetchall()
+            db.close()
             for u in users:
-                sent += send_push_to_user(u['utente_id'], title, body, url_target)
+                sent += notifica_utente(u['utente_id'], title, body, url_target or '/mobile/notifiche', 'manuale')
+                saved += 1
         elif target.isdigit():
-            sent = send_push_to_user(int(target), title, body, url_target)
-        flash(f'📤 Inviate {sent} notifiche.', 'success' if sent else 'info')
+            db.close()
+            sent = notifica_utente(int(target), title, body, url_target or '/mobile/notifiche', 'manuale')
+            saved = 1
+        else:
+            db.close()
+        flash(f'📤 Messaggi salvati: {saved}. Push inviate: {sent}.', 'success' if saved else 'info')
         return redirect(url_for('admin_notifiche_push'))
     # GET: mostra form + statistiche
     stats_per_user = db.execute("""SELECT u.id, u.nome, u.cognome, u.ruolo,
@@ -3103,9 +3191,9 @@ NOTIFICHE_PUSH_TMPL = """
       <div class="form-group">
         <label>Destinatari</label>
         <select name="target" id="target-select">
-          <option value="all">📢 Tutti gli utenti registrati ({{ tot_devices }} device)</option>
+          <option value="all">📢 Tutti i dipendenti attivi (salva anche in app)</option>
           {% for u in stats_per_user %}
-            {% if u.devices > 0 %}
+            {% if u.ruolo != 'admin' %}
             <option value="{{ u.id }}">👤 {{ u.nome }} {{ u.cognome }} ({{ u.devices }} device)</option>
             {% endif %}
           {% endfor %}
@@ -3121,7 +3209,7 @@ NOTIFICHE_PUSH_TMPL = """
       </div>
       <div class="form-group">
         <label>URL al click <span style="color:var(--text-light);font-size:11px">(dove portare l'utente quando tocca la notifica)</span></label>
-        <input name="url" value="/" placeholder="/calendario" autocomplete="off">
+        <input name="url" value="/mobile/notifiche" placeholder="/mobile/notifiche" autocomplete="off">
       </div>
       <button type="submit" class="btn btn-primary"><i class="fa fa-paper-plane"></i> Invia notifica</button>
     </form>
@@ -7821,19 +7909,17 @@ def gestisci_richiesta(rid):
         flash('❌ Rifiutata.', 'success')
 
     safe_commit(db); db.close()
-    # ── Notifica push al dipendente ──
+    # ── Notifica al dipendente: storico in app + push immediata ──
     try:
         if azione in ('approva', 'modifica_approva'):
             title = '✅ Presenza approvata'
-            body = f"Presenza del {r['data']} approvata"
+            body = f"Presenza del {request.form.get('data_mod') or r['data']} approvata"
+            tipo = 'presenza_approvata'
         else:
             title = '❌ Presenza rifiutata'
             body = (nota or f"Presenza del {r['data']} non approvata")[:200]
-        threading.Thread(
-            target=send_push_to_user,
-            args=(r['utente_id'], title, body, '/mobile'),
-            daemon=True
-        ).start()
+            tipo = 'presenza_rifiutata'
+        notifica_utente(r['utente_id'], title, body, '/mobile/notifiche', tipo)
     except Exception as e:
         print(f'[push richiesta] {e}')
     return redirect(url_for('admin_richieste'))
@@ -15945,6 +16031,17 @@ select option{background:#1e293b}
     <i class="fa fa-receipt" style="font-size:22px"></i>
     {{ t.spese_btn }}
   </a>
+  <a href="/mobile/notifiche" style="position:relative;background:#1e293b;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.9);border-radius:14px;padding:14px 16px;font-size:14px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:10px">
+    <span style="position:relative;display:inline-flex">
+      <i class="fa fa-bell" style="font-size:18px;color:#fbbf24"></i>
+      {% if unread_count and unread_count > 0 %}<span style="position:absolute;right:-5px;top:-5px;width:10px;height:10px;border-radius:50%;background:#ef4444;border:2px solid #1e293b"></span>{% endif %}
+    </span>
+    <div>
+      <div>Notifiche e messaggi</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:1px">{% if unread_count and unread_count > 0 %}{{ unread_count }} non lette{% else %}Nessun nuovo messaggio{% endif %}</div>
+    </div>
+    <i class="fa fa-chevron-right" style="margin-left:auto;font-size:12px;color:rgba(255,255,255,.3)"></i>
+  </a>
   <a href="/mobile/profilo" style="background:#1e293b;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.8);border-radius:14px;padding:14px 16px;font-size:14px;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:10px">
     <i class="fa fa-user-gear" style="font-size:18px;color:#94a3b8"></i>
     <div>
@@ -16184,8 +16281,89 @@ function prepareSubmitMobile(ev) {
     }
   }
   window.subscribePush=subscribePush;
+  async function refreshAppBadge(){
+    try{
+      var r=await fetch('/api/notifiche/unread-count',{cache:'no-store'});
+      var d=await r.json();
+      var n=d.count||0;
+      if('setAppBadge' in navigator){
+        if(n>0) await navigator.setAppBadge(n);
+        else if('clearAppBadge' in navigator) await navigator.clearAppBadge();
+      }
+    }catch(e){}
+  }
   if(document.readyState==='complete')showPushBanner();
   else window.addEventListener('load',showPushBanner);
+  if(document.readyState==='complete')refreshAppBadge();
+  else window.addEventListener('load',refreshAppBadge);
+})();
+</script>
+</body>
+</html>"""
+
+
+MOBILE_NOTIFICHE_TMPL = """<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Accesso Fiere">
+<link rel="apple-touch-icon" href="/static/pwa/icon-192.png">
+<title>Notifiche</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;color:#fff}
+.header{background:linear-gradient(135deg,#1e3a5f,#0f172a);padding:20px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:10}
+.back-btn{color:rgba(255,255,255,.65);text-decoration:none;font-size:16px;padding:6px}
+.header-title{font-size:18px;font-weight:800}
+.content{padding:18px;max-width:520px;margin:0 auto}
+.notice{background:#1e293b;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;margin-bottom:12px}
+.notice.unread{border-color:rgba(239,68,68,.55);box-shadow:0 0 0 1px rgba(239,68,68,.15)}
+.notice-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+.notice-icon{width:36px;height:36px;border-radius:10px;background:rgba(251,191,36,.14);color:#fbbf24;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.notice-title{font-size:15px;font-weight:800;line-height:1.25}
+.notice-date{font-size:11px;color:rgba(255,255,255,.38);margin-top:2px}
+.notice-body{font-size:14px;color:rgba(255,255,255,.72);line-height:1.45;margin-left:46px;white-space:pre-wrap}
+.new-dot{margin-left:auto;width:10px;height:10px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 4px rgba(239,68,68,.16);flex-shrink:0}
+.empty{background:#1e293b;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:34px 18px;text-align:center;color:rgba(255,255,255,.55)}
+.empty i{font-size:32px;margin-bottom:10px;color:rgba(255,255,255,.25)}
+</style>
+</head>
+<body>
+<div class="header">
+  <a href="/mobile" class="back-btn"><i class="fa fa-arrow-left"></i></a>
+  <div class="header-title">Notifiche e messaggi</div>
+</div>
+<div class="content">
+  {% if notifiche %}
+    {% for n in notifiche %}
+    <div class="notice {{ 'unread' if not n.letto else '' }}">
+      <div class="notice-head">
+        <div class="notice-icon"><i class="fa fa-bell"></i></div>
+        <div style="min-width:0;flex:1">
+          <div class="notice-title">{{ n.titolo }}</div>
+          <div class="notice-date">{{ n.creato_il }}</div>
+        </div>
+        {% if not n.letto %}<span class="new-dot"></span>{% endif %}
+      </div>
+      <div class="notice-body">{{ n.messaggio }}</div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty"><i class="fa fa-inbox"></i><p>Nessun messaggio ricevuto.</p></div>
+  {% endif %}
+</div>
+<script>
+(async function(){
+  try{
+    if('clearAppBadge' in navigator) await navigator.clearAppBadge();
+    else if('setAppBadge' in navigator) await navigator.setAppBadge(0);
+  }catch(e){}
 })();
 </script>
 </body>
@@ -16885,7 +17063,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#7c3aed;backgr
 <div class="header">
   <div class="header-top">
     <div class="logo"><i class="fa fa-user-tie"></i> Caposquadra</div>
-    <a href="/logout" class="logout-btn"><i class="fa fa-sign-out-alt"></i> Esci</a>
+    <div style="display:flex;gap:8px;align-items:center">
+      <a href="/mobile/notifiche" class="logout-btn" style="position:relative"><i class="fa fa-bell"></i>{% if unread_count and unread_count > 0 %}<span style="position:absolute;right:4px;top:3px;width:9px;height:9px;border-radius:50%;background:#ef4444;border:2px solid rgba(255,255,255,.25)"></span>{% endif %}</a>
+      <a href="/logout" class="logout-btn"><i class="fa fa-sign-out-alt"></i> Esci</a>
+    </div>
   </div>
   <div class="user-name">{{ nome }} {{ cognome }}</div>
   <div class="user-sub">{{ azienda }} · {{ n_membri }} membri · {{ n_fiere }} fiere assegnate</div>
@@ -17246,6 +17427,17 @@ function submitTimbCs(ev) {
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').catch(function(){});
 }
+(async function(){
+  try{
+    var r=await fetch('/api/notifiche/unread-count',{cache:'no-store'});
+    var d=await r.json();
+    var n=d.count||0;
+    if('setAppBadge' in navigator){
+      if(n>0) await navigator.setAppBadge(n);
+      else if('clearAppBadge' in navigator) await navigator.clearAppBadge();
+    }
+  }catch(e){}
+})();
 </script>
 
 </body>
@@ -17382,6 +17574,7 @@ def mobile_cs():
         timbrature_recenti.append(td)
 
     db.close()
+    unread_count = conta_notifiche_non_lette(uid)
 
     # Flash messaggi
     msgs = session.get('_flashes', [])
@@ -17406,7 +17599,8 @@ def mobile_cs():
                                   n_membri=len(membri_ids),
                                   n_fiere=len(fiere),
                                   oggi=date.today().isoformat(),
-                                  flash_msg=flash_msg, flash_type=flash_type)
+                                  flash_msg=flash_msg, flash_type=flash_type,
+                                  unread_count=unread_count)
 
 
 @app.route('/mobile/cs/timbra', methods=['POST'])
@@ -17537,6 +17731,24 @@ def mobile_cs_timbra():
     return redirect(url_for('mobile_cs'))
 
 
+@app.route('/mobile/notifiche')
+@login_required
+def mobile_notifiche():
+    uid = session['user_id']
+    db = get_db()
+    _ensure_notifiche_app_table(db)
+    rows = [dict(r) for r in db.execute("""SELECT id, titolo, messaggio, url, tipo, letto, creato_il
+                                            FROM notifiche_app
+                                            WHERE utente_id=?
+                                            ORDER BY datetime(creato_il) DESC, id DESC
+                                            LIMIT 100""", (uid,)).fetchall()]
+    if any(not r.get('letto') for r in rows):
+        db.execute("UPDATE notifiche_app SET letto=1, letto_il=datetime('now') WHERE utente_id=? AND letto=0", (uid,))
+        safe_commit(db)
+    db.close()
+    return render_template_string(MOBILE_NOTIFICHE_TMPL, notifiche=rows)
+
+
 @app.route('/mobile')
 @login_required
 def mobile():
@@ -17554,6 +17766,7 @@ def mobile():
            WHERE p.utente_id=? ORDER BY p.data DESC, p.id DESC LIMIT 7""",
         (uid,)).fetchall()
     db.close()
+    unread_count = conta_notifiche_non_lette(uid)
 
     storico = []
     for p in storico_raw:
@@ -17591,7 +17804,8 @@ def mobile():
         oggi_giorno=t['days'][oggi.weekday()],
         flash_msg=flash_msg,
         flash_type=flash_type or 'success',
-        t=t, lang=lang, langs=LANGS, current_lang=lang
+        t=t, lang=lang, langs=LANGS, current_lang=lang,
+        unread_count=unread_count
     )
 
 
