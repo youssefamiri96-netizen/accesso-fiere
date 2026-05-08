@@ -1955,6 +1955,7 @@ textarea{resize:vertical;min-height:80px}
 .section-title{font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.7px;margin:24px 0 12px;display:flex;align-items:center;gap:8px}
 .section-title::before{content:"";width:3px;height:14px;background:linear-gradient(180deg,var(--accent),var(--accent2));border-radius:2px}
 .section-title:first-child{margin-top:0}
+.mobile-admin-shortcuts{display:none}
 
 /* ═══════════ STATUS PILL (per stati: attivo, sospeso, in lavorazione...) ═══════════ */
 .status-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:99px;font-size:11.5px;font-weight:600}
@@ -1995,7 +1996,50 @@ textarea{resize:vertical;min-height:80px}
 .notif-badge{background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:99px;margin-left:auto}
 .progress-bar{background:#e2e8f0;border-radius:99px;height:6px;overflow:hidden;margin-top:4px}
 .progress-fill{background:linear-gradient(90deg,#2563eb,#22c55e);height:100%;border-radius:99px;transition:.3s}
-@media(max-width:900px){.grid-2,.grid-3,.form-row,.form-row-3,.form-row-4{grid-template-columns:1fr}.sidebar{width:200px}.main{margin-left:200px}}
+@media(max-width:900px){
+  html,body{width:100%;max-width:100%;overflow-x:hidden}
+  body{display:block;background:#f8fafc}
+  .sidebar{display:none!important}
+  .main{margin-left:0!important;width:100%;max-width:100vw;min-width:0}
+  .topbar{position:sticky;top:0;z-index:80;height:auto;min-height:58px;padding:10px 12px;gap:10px;align-items:flex-start;box-shadow:0 1px 0 rgba(226,232,240,.9)}
+  .topbar-left{min-width:0;flex:1}
+  .topbar h1{font-size:20px;line-height:1.15;white-space:normal}
+  .topbar-search{display:none!important}
+  .topbar-actions{gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+  .topbar-actions>.btn,.topbar-actions>div[style*="display:flex"]{display:none!important}
+  .tb-user{padding:4px;border-radius:10px}
+  .tb-user>div:not(.tb-avatar),.tb-user>i{display:none}
+  .tb-avatar{width:34px;height:34px}
+  .tb-icon-btn{width:36px;height:36px;flex:0 0 36px}
+  .tb-divider{display:none}
+  .tb-menu{right:10px;top:58px;max-width:calc(100vw - 20px)}
+  .mobile-admin-shortcuts{position:sticky;top:58px;z-index:79;display:flex;gap:8px;overflow-x:auto;padding:10px 12px;background:#fff;border-bottom:1px solid var(--border);box-shadow:0 8px 18px rgba(15,23,42,.05);-webkit-overflow-scrolling:touch}
+  .mobile-admin-shortcuts::-webkit-scrollbar{display:none}
+  .mobile-admin-shortcuts a{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;padding:9px 12px;border-radius:999px;background:#f1f5f9;color:#0f172a;text-decoration:none;font-size:13px;font-weight:700;border:1px solid #e2e8f0}
+  .mobile-admin-shortcuts a.active{background:#0f4c81;color:#fff;border-color:#0f4c81}
+  .content{padding:12px!important;width:100%;max-width:100vw;overflow-x:hidden}
+  .page-header{gap:10px;margin-bottom:12px}
+  .page-title{font-size:20px;line-height:1.18}
+  .page-actions{width:100%;display:grid;grid-template-columns:1fr;gap:8px}
+  .page-actions .btn{width:100%;justify-content:center}
+  .grid-2,.grid-3,.stats-grid,.form-row,.form-row-3,.form-row-4{grid-template-columns:1fr!important}
+  .card{border-radius:12px;max-width:100%;overflow:hidden}
+  .card-header{padding:14px 14px;align-items:flex-start;gap:10px;flex-wrap:wrap}
+  .card-header h3{font-size:15px;line-height:1.2}
+  .card-body{padding:14px}
+  .filter-bar{padding:12px;gap:8px;border-radius:12px}
+  .filter-bar input,.filter-bar select,.filter-bar .filter-search{width:100%!important;min-width:0!important;max-width:none!important}
+  .filter-bar .filter-clear{margin-left:0;text-align:center;background:#f8fafc;border:1px solid var(--border)}
+  .table-wrap{width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:12px}
+  table{max-width:100%}
+  .table-wrap table{min-width:720px}
+  th,td{padding:12px 10px;font-size:13px}
+  .action-icons{flex-wrap:nowrap}
+  .btn{min-height:40px;justify-content:center;white-space:normal;text-align:center}
+  .btn-sm{min-height:36px}
+  .alert{font-size:13px;padding:12px 14px;border-radius:12px}
+  #ai-chat-fab{right:16px;bottom:16px;width:54px;height:54px}
+}
 </style>
 </head>
 <body>
@@ -2249,6 +2293,16 @@ textarea{resize:vertical;min-height:80px}
   })();
   {% endif %}
   </script>
+  {% if session.ruolo=='admin' %}
+  <div class="mobile-admin-shortcuts" aria-label="Navigazione admin mobile">
+    <a href="/admin/mobile" class="{{ 'active' if active=='admin_mobile' else '' }}"><i class="fa fa-grip"></i> Admin</a>
+    <a href="/admin/richieste" class="{{ 'active' if active=='richieste_admin' else '' }}"><i class="fa fa-clock"></i> Richieste</a>
+    <a href="/presenze" class="{{ 'active' if active=='presenze' else '' }}"><i class="fa fa-calendar-check"></i> Presenze</a>
+    <a href="/ferie" class="{{ 'active' if active=='ferie' else '' }}"><i class="fa fa-umbrella-beach"></i> Ferie</a>
+    <a href="/admin/notifiche" class="{{ 'active' if active=='notifiche' else '' }}"><i class="fa fa-bell"></i> Notifiche</a>
+    <a href="/dashboard?desktop=1"><i class="fa fa-desktop"></i> PC</a>
+  </div>
+  {% endif %}
   <div class="content">
     {% with msgs = get_flashed_messages(with_categories=true) %}
       {% for cat, msg in msgs %}
@@ -2330,6 +2384,8 @@ textarea{resize:vertical;min-height:80px}
 .ai-chat-input button{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#7c3aed 0%,#3b82f6 100%);color:#fff;border:none;cursor:pointer;font-size:14px;flex-shrink:0}
 .ai-chat-input button:disabled{opacity:.5;cursor:not-allowed}
 @media (max-width: 600px) {
+  #ai-chat-fab{right:14px;bottom:14px;width:50px;height:50px;font-size:20px}
+  .ai-fab-pulse{width:50px;height:50px}
   #ai-chat-panel{bottom:80px;right:8px;left:8px;width:auto;height:70vh}
 }
 </style>
