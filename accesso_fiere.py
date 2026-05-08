@@ -2292,8 +2292,9 @@ setInterval(updateClock,1000);updateClock();
     }, 4000);
   }
   function urlBase64ToUint8Array(b64){
-    var padding='='.repeat((4-b64.length%4)%4);
-    var base64=(b64+padding).replace(/-/g,'+').replace(/_/g,'/');
+    var clean=String(b64).replace(/[ \r\n\t]+/g,'');
+    var padding='='.repeat((4-clean.length%4)%4);
+    var base64=(clean+padding).replace(/-/g,'+').replace(/_/g,'/');
     var raw=atob(base64); var arr=new Uint8Array(raw.length);
     for(var i=0;i<raw.length;i++) arr[i]=raw.charCodeAt(i);
     return arr;
@@ -2303,21 +2304,22 @@ setInterval(updateClock,1000);updateClock();
       var perm = await Notification.requestPermission();
       if (perm !== 'granted') return;
       var reg = await navigator.serviceWorker.ready;
-      // Recupera la chiave pubblica dal server
-      var resp = await fetch('/api/push/public-key');
-      var pubKey = (await resp.text()).trim();
-      var sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(pubKey),
-      });
-      // Manda la subscription al server
+      var keyText = (await (await fetch('/api/push/public-key')).text()).trim();
+      if (!keyText || keyText.length < 80) throw new Error('Chiave VAPID invalida');
+      var keyArr = urlBase64ToUint8Array(keyText);
+      if (keyArr.length !== 65) throw new Error('Chiave VAPID lunghezza errata');
+      var sub;
+      try {
+        sub = await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey: keyArr.buffer});
+      } catch(e1) {
+        sub = await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey: keyArr});
+      }
       await fetch('/api/push/subscribe', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify(sub)
       });
-      // Mostra una notifica di benvenuto
       await fetch('/api/push/test', {method:'POST'});
-    } catch(e){ console.warn('[Push] subscribe failed:', e); }
+    } catch(e){ console.warn('[Push] subscribe failed:', e); alert('Errore: '+(e.message||e)); }
   }
   // Esponi globalmente per chiamarla da un bottone "Attiva notifiche" nelle impostazioni
   window.subscribePush = subscribePush;
@@ -15997,10 +15999,16 @@ function prepareSubmitMobile(ev) {
       document.getElementById('pnn').onclick=function(){sessionStorage.setItem('pwa_push_dismissed','1');b.remove();};
     },4000);
   }
-  function urlBase64ToUint8Array(b64){var p='='.repeat((4-b64.length%4)%4);var s=(b64+p).replace(/-/g,'+').replace(/_/g,'/');var r=atob(s);var a=new Uint8Array(r.length);for(var i=0;i<r.length;i++)a[i]=r.charCodeAt(i);return a;}
+  function urlBase64ToUint8Array(b64){
+    var clean=String(b64).replace(/[ \r\n\t]+/g,'');
+    var pad='='.repeat((4-clean.length%4)%4);
+    var s=(clean+pad).replace(/-/g,'+').replace(/_/g,'/');
+    var r=atob(s); var a=new Uint8Array(r.length);
+    for(var i=0;i<r.length;i++)a[i]=r.charCodeAt(i);
+    return a;
+  }
   async function subscribePush(){
     try{
-      // Pre-check iOS standalone
       if(/iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone){
         alert('Su iPhone devi prima installare l\\'app:\\n\\n1. Tocca "Condividi" in Safari\\n2. Tocca "Aggiungi alla schermata Home"\\n3. Apri l\\'app dall\\'icona blu sulla home\\n4. Riprova ad attivare le notifiche');
         return;
@@ -16015,8 +16023,16 @@ function prepareSubmitMobile(ev) {
         return;
       }
       var reg=await navigator.serviceWorker.ready;
-      var k=(await (await fetch('/api/push/public-key')).text()).trim();
-      var sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(k)});
+      var keyText=(await (await fetch('/api/push/public-key')).text()).trim();
+      if(!keyText || keyText.length < 80) throw new Error('Chiave VAPID invalida');
+      var keyArr=urlBase64ToUint8Array(keyText);
+      if(keyArr.length !== 65) throw new Error('Chiave VAPID lunghezza errata: '+keyArr.length);
+      var sub;
+      try {
+        sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:keyArr.buffer});
+      } catch(e1) {
+        sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:keyArr});
+      }
       var resp=await fetch('/api/push/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sub)});
       if(!resp.ok){
         var e=await resp.json().catch(function(){return {};});
@@ -16289,7 +16305,19 @@ async function refreshPushStatus(){
     }
   } catch(e){ console.warn(e); }
 }
-function urlBase64ToUint8Array(b64){var p='='.repeat((4-b64.length%4)%4);var s=(b64+p).replace(/-/g,'+').replace(/_/g,'/');var r=atob(s);var a=new Uint8Array(r.length);for(var i=0;i<r.length;i++)a[i]=r.charCodeAt(i);return a;}
+function urlBase64ToUint8Array(b64){
+  // Sanitize: rimuovi qualsiasi whitespace o carattere strano
+  var clean = String(b64).replace(/[ \r\n\t]+/g,'');
+  // Aggiungi padding
+  var padding = '='.repeat((4 - clean.length % 4) % 4);
+  // Converti URL-safe → standard base64
+  var standard = (clean + padding).replace(/-/g, '+').replace(/_/g, '/');
+  // Decodifica
+  var raw = atob(standard);
+  var arr = new Uint8Array(raw.length);
+  for (var i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+  return arr;
+}
 
 async function togglePush(){
   var btn=document.getElementById('push-toggle-btn'); btn.disabled=true;
@@ -16320,8 +16348,31 @@ async function togglePush(){
         if (perm === 'denied') alert('Hai negato il permesso. Per attivarle: Impostazioni iPhone → [App] → Notifiche → Consenti.');
         return;
       }
-      var k=(await (await fetch('/api/push/public-key')).text()).trim();
-      var newSub = await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(k)});
+      // Recupera la chiave pubblica VAPID dal server
+      var keyResp = await fetch('/api/push/public-key');
+      var keyText = (await keyResp.text()).trim();
+      if (!keyText || keyText.length < 80) {
+        throw new Error('Chiave VAPID non valida (lunghezza ' + keyText.length + ')');
+      }
+      var keyArr = urlBase64ToUint8Array(keyText);
+      if (keyArr.length !== 65) {
+        throw new Error('Chiave VAPID lunghezza errata: ' + keyArr.length + ' bytes (atteso 65)');
+      }
+      // Subscribe — Safari iOS preferisce ArrayBuffer puro
+      var newSub;
+      try {
+        newSub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: keyArr.buffer
+        });
+      } catch(e1) {
+        // Fallback: prova con Uint8Array direttamente (Chromium)
+        console.warn('[Push] retry con Uint8Array:', e1);
+        newSub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: keyArr
+        });
+      }
       var subResp = await fetch('/api/push/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(newSub)});
       if (!subResp.ok) {
         var errData = await subResp.json().catch(function(){return {};});
