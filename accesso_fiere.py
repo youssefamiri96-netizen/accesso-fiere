@@ -1402,6 +1402,23 @@ def auto_init_tenant_db():
 # ─────────────────────────────────────────────
 #  AUTH
 # ─────────────────────────────────────────────
+AMMINISTRAZIONE_ENDPOINTS = {
+    'amministrazione_home','amministrazione_mobile',
+    'documenti','documento_nuovo','documento_modifica','documento_scarica','documento_anteprima','documento_rimuovi_file','documento_elimina','documenti_scarica_zip',
+    'documenti_azienda','documenti_azienda_nuovo','documenti_azienda_modifica','documenti_azienda_scarica','documenti_azienda_elimina','documenti_azienda_zip',
+    'scadenze','scadenze_pulisci_fantasma',
+    'veicoli','veicolo_nuovo','veicolo_detail','veicolo_modifica','veicolo_salva_scadenze','veicolo_elimina','veicolo_documenti','veicolo_upload','veicolo_applica_ai','veicolo_scarica','veicolo_anteprima','veicolo_elimina_doc',
+    'fatturazione','fatturazione_nuova','fatturazione_modifica','fatturazione_dettaglio','fatturazione_allega_emessa','fatturazione_elimina','fatturazione_aggiungi_rata','fatturazione_paga_rata','fatturazione_annulla_paga_rata','fatturazione_elimina_rata','fatturazione_file','fatturazione_clienti','fatturazione_nuovo_cliente','fatturazione_elimina_cliente',
+    'clienti_lista','cliente_nuovo','cliente_modifica','cliente_elimina','cliente_ai_estrai',
+    'fornitori_lista','fornitore_nuovo','fornitore_modifica','fornitore_elimina',
+    'preventivi','preventivo_nuovo','preventivo_modifica','preventivo_pdf','preventivo_duplica','preventivo_stato','preventivo_elimina',
+    'admin_spese','admin_spesa_gestisci','admin_spesa_elimina','admin_spesa_foto',
+}
+
+def is_amministrazione_allowed(endpoint=None):
+    endpoint = endpoint or request.endpoint or ''
+    return endpoint in AMMINISTRAZIONE_ENDPOINTS
+
 def login_required(f):
     @wraps(f)
     def d(*a,**k):
@@ -1430,6 +1447,9 @@ def login_required(f):
             ruolo = session.get('ruolo')
             if ruolo == 'caposquadra':
                 return redirect(url_for('mobile_cs'))
+            elif ruolo == 'amministrazione':
+                if not is_amministrazione_allowed(f.__name__):
+                    return redirect(url_for('amministrazione_mobile') if is_mobile_request() else url_for('amministrazione_home'))
             elif ruolo != 'admin':
                 return redirect(url_for('mobile'))
         return f(*a,**k)
@@ -1452,6 +1472,8 @@ def admin_required(f):
                     return redirect(url_for('login'))
             except Exception:
                 pass
+        if session.get('ruolo') == 'amministrazione' and is_amministrazione_allowed(f.__name__):
+            return f(*a,**k)
         if session.get('ruolo') != 'admin':
             flash('Accesso riservato agli amministratori.','error')
             if session.get('ruolo') == 'caposquadra':
@@ -1690,7 +1712,7 @@ def render_page(tmpl, **ctx):
     except Exception:
         ctx.setdefault('ha_logo_az', False)
         ctx.setdefault('logo_az_ts', 0)
-    if session.get('ruolo') == 'admin':
+    if session.get('ruolo') in ('admin', 'amministrazione'):
         db = get_db()
         ctx['notifiche_count'] = db.execute(
             "SELECT COUNT(*) FROM richieste_presenze WHERE stato='in_attesa'"
@@ -1755,7 +1777,7 @@ def render_page(tmpl, **ctx):
 #  BASE TEMPLATE
 # ══════════════════════════════════════════════════════════
 BASE = """<!DOCTYPE html>
-<html lang="it">
+<html lang="{{ lang }}" dir="{{ t.dir }}">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{{ page_title }} | Accesso Fiere — Gestionale Allestitori</title>
@@ -2118,12 +2140,26 @@ textarea{resize:vertical;min-height:80px}
     <a href="/admin/notifiche-push" class="{{ 'active' if active=='notifiche_push' }}"><i class="fa fa-bell-concierge"></i> Notifiche Push</a>
     <a href="/admin/impostazioni" class="{{ 'active' if active=='impostazioni' }}"><i class="fa fa-gear"></i> Impostazioni</a>
     {% endif %}
+    {% if session.ruolo=='amministrazione' %}
+    <div class="nav-section">Amministrazione</div>
+    <a href="/amministrazione" class="{{ 'active' if active=='amministrazione' }}"><i class="fa fa-chart-pie"></i> Dashboard</a>
+    <a href="/scadenze" class="{{ 'active' if active=='scadenze' }}"><i class="fa fa-triangle-exclamation"></i> Scadenze</a>
+    <a href="/admin/spese" class="{{ 'active' if active=='spese' }}"><i class="fa fa-receipt"></i> Rimborsi Spese</a>
+    {% endif %}
   </nav>
+  {% if session.ruolo=='amministrazione' %}
+  <style>
+    .sidebar nav>a[href="/dashboard"],.sidebar nav>a[href="/dipendenti"],.sidebar nav>a[href="/squadre"],.sidebar nav>a[href="/presenze"],.sidebar nav>a[href="/banca-ore"],.sidebar nav>a[href="/ferie"],
+    .sidebar nav>a[href="/pos"],.sidebar nav>a[href="/calendario"],.sidebar nav>a[href="/contratti-clienti"],.sidebar nav>a[href="/report"],
+    .sidebar nav details.nav-group:first-of-type{display:none!important}
+    .sidebar nav .nav-section:first-child{display:none!important}
+  </style>
+  {% endif %}
   <div class="sidebar-user">
     <div class="avatar">{{ (session.nome or 'U')[0] }}{{ (session.cognome or '')[0] }}</div>
     <div class="uinfo">
       <div class="uname">{{ session.nome }} {{ session.cognome }}</div>
-      <div class="urole">{{ 'Amministratore' if session.ruolo=='admin' else 'Dipendente' }}</div>
+      <div class="urole">{{ 'Amministratore' if session.ruolo=='admin' else 'Amministrazione' if session.ruolo=='amministrazione' else 'Dipendente' }}</div>
     </div>
     <div class="udot" title="Online"></div>
   </div>
@@ -2139,7 +2175,7 @@ textarea{resize:vertical;min-height:80px}
       </div>
     </div>
     <div class="topbar-actions">
-      {% if session.ruolo=='admin' %}
+      {% if session.ruolo in ['admin','amministrazione'] %}
         {% if active=='dipendenti' %}<a href="/dipendenti/nuovo" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> Aggiungi persona</a>
         {% elif active=='cantieri' %}<a href="/cantieri/nuovo" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> Nuova fiera</a>
         {% elif active=='documenti' %}<a href="/documenti/nuovo" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> Nuovo documento</a>
@@ -2163,7 +2199,7 @@ textarea{resize:vertical;min-height:80px}
         <div class="tb-avatar">{{ (session.nome or 'U')[0] }}{{ (session.cognome or '')[0] }}</div>
         <div>
           <div class="tb-uname">{{ session.nome }} {{ session.cognome }}</div>
-          <div class="tb-urole">{{ 'Amministratore' if session.ruolo=='admin' else 'Dipendente' }}</div>
+          <div class="tb-urole">{{ 'Amministratore' if session.ruolo=='admin' else 'Amministrazione' if session.ruolo=='amministrazione' else 'Dipendente' }}</div>
         </div>
         <i class="fa fa-chevron-down"></i>
       </div>
@@ -2174,7 +2210,7 @@ textarea{resize:vertical;min-height:80px}
   <div id="tb-menu" class="tb-menu">
     <div class="tb-menu-head">
       <div class="name">{{ session.nome }} {{ session.cognome }}</div>
-      <div class="role">{{ 'Amministratore' if session.ruolo=='admin' else 'Dipendente' }} · {{ azienda_nome }}</div>
+      <div class="role">{{ 'Amministratore' if session.ruolo=='admin' else 'Amministrazione' if session.ruolo=='amministrazione' else 'Dipendente' }} · {{ azienda_nome }}</div>
     </div>
     {% if session.ruolo=='admin' %}
     <a href="/admin/impostazioni"><i class="fa fa-gear"></i> Impostazioni</a>
@@ -2293,14 +2329,21 @@ textarea{resize:vertical;min-height:80px}
   })();
   {% endif %}
   </script>
-  {% if session.ruolo=='admin' %}
+  {% if session.ruolo in ['admin','amministrazione'] %}
   <div class="mobile-admin-shortcuts" aria-label="Navigazione admin mobile">
-    <a href="/admin/mobile" class="{{ 'active' if active=='admin_mobile' else '' }}"><i class="fa fa-grip"></i> Admin</a>
+    <a href="{{ '/amministrazione/mobile' if session.ruolo=='amministrazione' else '/admin/mobile' }}" class="{{ 'active' if active in ['admin_mobile','amministrazione'] else '' }}"><i class="fa fa-grip"></i> {{ 'Amministrazione' if session.ruolo=='amministrazione' else 'Admin' }}</a>
+    {% if session.ruolo=='admin' %}
     <a href="/admin/richieste" class="{{ 'active' if active=='richieste_admin' else '' }}"><i class="fa fa-clock"></i> Richieste</a>
     <a href="/presenze" class="{{ 'active' if active=='presenze' else '' }}"><i class="fa fa-calendar-check"></i> Presenze</a>
     <a href="/ferie" class="{{ 'active' if active=='ferie' else '' }}"><i class="fa fa-umbrella-beach"></i> Ferie</a>
     <a href="/admin/notifiche" class="{{ 'active' if active=='notifiche' else '' }}"><i class="fa fa-bell"></i> Notifiche</a>
-    <a href="/dashboard?desktop=1"><i class="fa fa-desktop"></i> PC</a>
+    {% else %}
+    <a href="/documenti-azienda" class="{{ 'active' if active=='documenti_azienda' else '' }}"><i class="fa fa-building-columns"></i> Documenti</a>
+    <a href="/fatturazione" class="{{ 'active' if active in ['fatturazione_attiva','fatturazione_passiva'] else '' }}"><i class="fa fa-file-invoice-dollar"></i> Fatture</a>
+    <a href="/veicoli" class="{{ 'active' if active=='veicoli' else '' }}"><i class="fa fa-truck"></i> Veicoli</a>
+    <a href="/scadenze" class="{{ 'active' if active=='scadenze' else '' }}"><i class="fa fa-triangle-exclamation"></i> Scadenze</a>
+    {% endif %}
+    <a href="{{ '/amministrazione?desktop=1' if session.ruolo=='amministrazione' else '/dashboard?desktop=1' }}"><i class="fa fa-desktop"></i> PC</a>
   </div>
   {% endif %}
   <div class="content">
@@ -2707,6 +2750,8 @@ def index():
         return redirect(url_for('login'))
     if session.get('ruolo') == 'admin':
         return redirect(url_for('admin_mobile') if is_mobile_request() else url_for('dashboard'))
+    if session.get('ruolo') == 'amministrazione':
+        return redirect(url_for('amministrazione_mobile') if is_mobile_request() else url_for('amministrazione_home'))
     if session.get('ruolo') == 'caposquadra':
         return redirect(url_for('mobile_cs'))
     return redirect(url_for('mobile'))
@@ -3233,6 +3278,8 @@ def pwa_manifest():
     ruolo = session.get('ruolo')
     if ruolo == 'admin':
         start_url = '/dashboard'
+    elif ruolo == 'amministrazione':
+        start_url = '/amministrazione'
     elif ruolo == 'caposquadra':
         start_url = '/mobile/cs'
     elif ruolo == 'dipendente':
@@ -4156,6 +4203,8 @@ def login():
                 pass
             if utente_trovato['ruolo'] == 'admin':
                 return redirect(url_for('dashboard'))
+            elif utente_trovato['ruolo'] == 'amministrazione':
+                return redirect(url_for('amministrazione_mobile') if is_mobile_request() else url_for('amministrazione_home'))
             elif utente_trovato['ruolo'] == 'caposquadra':
                 return redirect(url_for('mobile_cs'))
             else:
@@ -4853,6 +4902,87 @@ def get_lang():
     """Restituisce il dizionario traduzioni per la lingua corrente."""
     lang = session.get('lang', 'it')
     return LANGS.get(lang, LANGS['it'])
+
+LANGS['it'].update({
+    'profile_title':'Impostazioni profilo','profile_role_default':'Dipendente','notifications':'Notifiche',
+    'loading':'Caricamento...','activate_notifications':'Attiva notifiche','show_diagnostics':'Mostra diagnostica',
+    'install_app':'Installa app','app_not_installed':'App non installata','install_on_device':'Installa sul dispositivo',
+    'change_email':'Cambia email di accesso','new_email':'Nuova email','confirm_current_password':'Conferma password attuale',
+    'update_email':'Aggiorna email','change_password':'Cambia password','current_password':'Password attuale',
+    'new_password':'Nuova password','min_6_chars':'Minimo 6 caratteri','at_least_6_chars':'Almeno 6 caratteri',
+    'repeat_new_password':'Ripeti nuova password','repeat_password':'Ripeti la password','logout_account':'Esci dall account',
+    'leave_title':'Ferie e permessi','leave_new':'Nuova richiesta','leave_type':'Tipo','leave_from':'Dal','leave_to':'Al',
+    'leave_vacation':'Ferie','leave_permission':'Permesso','leave_sickness':'Malattia','leave_study':'Permesso studio',
+    'leave_permission_from':'Permesso dalle','leave_permission_to':'Permesso alle','leave_certificate':'Certificato di malattia',
+    'leave_certificate_hint':'Puoi allegare foto o PDF del certificato.','leave_reason':'Motivo','optional':'Opzionale',
+    'send_request':'Invia richiesta','your_requests':'Le tue richieste','from_date':'Dal','to_date':'al','days_short':'gg',
+    'from_time':'Dalle','to_time':'alle','accepted':'Accettata','admin_reply':'Risposta admin:','certificate_attached':'Certificato allegato',
+    'no_requests':'Non hai ancora richieste.','leave_dates_required':'Date obbligatorie.',
+    'leave_hours_required':'Per i permessi inserisci anche ora inizio e ora fine.',
+    'leave_certificate_required':'Per la malattia devi allegare il certificato.',
+    'leave_date_order':'La data fine deve essere dopo la data inizio.','leave_sent':'Richiesta inviata.',
+    'spese_cat_labels': {'Carburante':'Carburante','Parcheggio':'Parcheggio','Pedaggio':'Pedaggio','Vitto':'Vitto','Alloggio':'Alloggio','Materiale':'Materiale','Trasporto':'Trasporto','Altro':'Altro'},
+})
+LANGS['en'].update({
+    'profile_title':'Profile settings','profile_role_default':'Employee','notifications':'Notifications',
+    'loading':'Loading...','activate_notifications':'Enable notifications','show_diagnostics':'Show diagnostics',
+    'install_app':'Install app','app_not_installed':'App not installed','install_on_device':'Install on device',
+    'change_email':'Change login email','new_email':'New email','confirm_current_password':'Confirm current password',
+    'update_email':'Update email','change_password':'Change password','current_password':'Current password',
+    'new_password':'New password','min_6_chars':'At least 6 characters','at_least_6_chars':'At least 6 characters',
+    'repeat_new_password':'Repeat new password','repeat_password':'Repeat password','logout_account':'Log out',
+    'leave_title':'Leave and permits','leave_new':'New request','leave_type':'Type','leave_from':'From','leave_to':'To',
+    'leave_vacation':'Vacation','leave_permission':'Permit','leave_sickness':'Sick leave','leave_study':'Study permit',
+    'leave_permission_from':'Permit from','leave_permission_to':'Permit to','leave_certificate':'Sick certificate',
+    'leave_certificate_hint':'You can attach a photo or PDF certificate.','leave_reason':'Reason','optional':'Optional',
+    'send_request':'Send request','your_requests':'Your requests','from_date':'From','to_date':'to','days_short':'d',
+    'from_time':'From','to_time':'to','accepted':'Accepted','admin_reply':'Admin reply:','certificate_attached':'Certificate attached',
+    'no_requests':'You do not have any requests yet.','leave_dates_required':'Dates are required.',
+    'leave_hours_required':'For permits, enter both start and end time.',
+    'leave_certificate_required':'For sick leave, you must attach the certificate.',
+    'leave_date_order':'The end date must be after the start date.','leave_sent':'Request sent.',
+    'spese_cat_labels': {'Carburante':'Fuel','Parcheggio':'Parking','Pedaggio':'Toll','Vitto':'Meals','Alloggio':'Accommodation','Materiale':'Materials','Trasporto':'Transport','Altro':'Other'},
+})
+LANGS['fr'].update({
+    'profile_title':'Parametres du profil','profile_role_default':'Employe','notifications':'Notifications',
+    'loading':'Chargement...','activate_notifications':'Activer les notifications','show_diagnostics':'Afficher le diagnostic',
+    'install_app':'Installer l app','app_not_installed':'App non installee','install_on_device':'Installer sur l appareil',
+    'change_email':'Changer l email de connexion','new_email':'Nouvel email','confirm_current_password':'Confirmer le mot de passe actuel',
+    'update_email':'Mettre a jour l email','change_password':'Changer le mot de passe','current_password':'Mot de passe actuel',
+    'new_password':'Nouveau mot de passe','min_6_chars':'Minimum 6 caracteres','at_least_6_chars':'Au moins 6 caracteres',
+    'repeat_new_password':'Repeter le nouveau mot de passe','repeat_password':'Repeter le mot de passe','logout_account':'Se deconnecter',
+    'leave_title':'Conges et permissions','leave_new':'Nouvelle demande','leave_type':'Type','leave_from':'Du','leave_to':'Au',
+    'leave_vacation':'Conges','leave_permission':'Permission','leave_sickness':'Maladie','leave_study':'Permission etudes',
+    'leave_permission_from':'Permission de','leave_permission_to':'Permission a','leave_certificate':'Certificat medical',
+    'leave_certificate_hint':'Vous pouvez joindre une photo ou un PDF du certificat.','leave_reason':'Motif','optional':'Optionnel',
+    'send_request':'Envoyer la demande','your_requests':'Vos demandes','from_date':'Du','to_date':'au','days_short':'j',
+    'from_time':'De','to_time':'a','accepted':'Acceptee','admin_reply':'Reponse admin:','certificate_attached':'Certificat joint',
+    'no_requests':'Vous n avez encore aucune demande.','leave_dates_required':'Les dates sont obligatoires.',
+    'leave_hours_required':'Pour les permissions, indiquez l heure de debut et de fin.',
+    'leave_certificate_required':'Pour la maladie, vous devez joindre le certificat.',
+    'leave_date_order':'La date de fin doit etre apres la date de debut.','leave_sent':'Demande envoyee.',
+    'spese_cat_labels': {'Carburante':'Carburant','Parcheggio':'Parking','Pedaggio':'Peage','Vitto':'Repas','Alloggio':'Logement','Materiale':'Materiel','Trasporto':'Transport','Altro':'Autre'},
+})
+LANGS['ar'].update({
+    'profile_title':'اعدادات الملف','profile_role_default':'موظف','notifications':'الاشعارات',
+    'loading':'جار التحميل...','activate_notifications':'تفعيل الاشعارات','show_diagnostics':'عرض التشخيص',
+    'install_app':'تثبيت التطبيق','app_not_installed':'التطبيق غير مثبت','install_on_device':'تثبيت على الجهاز',
+    'change_email':'تغيير بريد الدخول','new_email':'البريد الجديد','confirm_current_password':'تاكيد كلمة المرور الحالية',
+    'update_email':'تحديث البريد','change_password':'تغيير كلمة المرور','current_password':'كلمة المرور الحالية',
+    'new_password':'كلمة مرور جديدة','min_6_chars':'6 احرف على الاقل','at_least_6_chars':'6 احرف على الاقل',
+    'repeat_new_password':'اعد كتابة كلمة المرور الجديدة','repeat_password':'اعد كتابة كلمة المرور','logout_account':'تسجيل الخروج',
+    'leave_title':'العطل والتصاريح','leave_new':'طلب جديد','leave_type':'النوع','leave_from':'من','leave_to':'الى',
+    'leave_vacation':'عطلة','leave_permission':'تصريح','leave_sickness':'مرض','leave_study':'تصريح دراسة',
+    'leave_permission_from':'التصريح من','leave_permission_to':'التصريح الى','leave_certificate':'شهادة مرضية',
+    'leave_certificate_hint':'يمكنك ارفاق صورة او PDF للشهادة.','leave_reason':'السبب','optional':'اختياري',
+    'send_request':'ارسال الطلب','your_requests':'طلباتك','from_date':'من','to_date':'الى','days_short':'يوم',
+    'from_time':'من','to_time':'الى','accepted':'مقبول','admin_reply':'رد الادارة:','certificate_attached':'الشهادة مرفقة',
+    'no_requests':'ليس لديك طلبات بعد.','leave_dates_required':'التواريخ مطلوبة.',
+    'leave_hours_required':'للتصاريح ادخل وقت البداية والنهاية.',
+    'leave_certificate_required':'للمرض يجب ارفاق الشهادة.',
+    'leave_date_order':'تاريخ النهاية يجب ان يكون بعد تاريخ البداية.','leave_sent':'تم ارسال الطلب.',
+    'spese_cat_labels': {'Carburante':'وقود','Parcheggio':'موقف','Pedaggio':'رسوم طريق','Vitto':'وجبات','Alloggio':'اقامة','Materiale':'مواد','Trasporto':'نقل','Altro':'اخرى'},
+})
 
 @app.route('/set-lang', methods=['POST'])
 def set_lang():
@@ -5889,6 +6019,84 @@ def admin_mobile():
 
 
 # ══════════ Dashboard layout personalizzato ══════════
+AMMINISTRAZIONE_HOME_TMPL = """
+<div class="page-header">
+  <div>
+    <h2 class="page-title"><i class="fa fa-briefcase"></i> Portale amministrazione</h2>
+    <p style="color:var(--text-light);font-size:13px;margin-top:4px">Documenti, fatture, scadenze e veicoli.</p>
+  </div>
+  <div class="page-actions"><a href="/amministrazione/mobile" class="btn btn-secondary"><i class="fa fa-mobile-screen"></i> Vista telefono</a></div>
+</div>
+<div class="stats-grid">
+  <a class="stat-card" href="/documenti-azienda" style="text-decoration:none;color:inherit"><div class="stat-icon blue"><i class="fa fa-building-columns"></i></div><div class="stat-value">{{ s.docs_azienda }}</div><div class="stat-label">Documenti azienda</div></a>
+  <a class="stat-card" href="/documenti" style="text-decoration:none;color:inherit"><div class="stat-icon blue"><i class="fa fa-folder"></i></div><div class="stat-value">{{ s.docs_dip }}</div><div class="stat-label">Documenti dipendenti</div></a>
+  <a class="stat-card" href="/fatturazione" style="text-decoration:none;color:inherit"><div class="stat-icon green"><i class="fa fa-file-invoice-dollar"></i></div><div class="stat-value">{{ s.fatture_attive }}</div><div class="stat-label">Fatture attive</div></a>
+  <a class="stat-card" href="/fatturazione?tipo=passiva" style="text-decoration:none;color:inherit"><div class="stat-icon amber"><i class="fa fa-file-invoice"></i></div><div class="stat-value">{{ s.fatture_passive }}</div><div class="stat-label">Fatture passive</div></a>
+  <a class="stat-card" href="/veicoli" style="text-decoration:none;color:inherit"><div class="stat-icon purple"><i class="fa fa-truck"></i></div><div class="stat-value">{{ s.veicoli }}</div><div class="stat-label">Veicoli</div></a>
+  <a class="stat-card" href="/scadenze" style="text-decoration:none;color:inherit"><div class="stat-icon red"><i class="fa fa-triangle-exclamation"></i></div><div class="stat-value">{{ s.scadenze }}</div><div class="stat-label">Scadenze</div></a>
+</div>
+<div class="grid-3">
+  <div class="card"><div class="card-header"><h3>Documenti</h3></div><div class="card-body" style="display:grid;gap:10px"><a class="btn btn-secondary" href="/documenti-azienda"><i class="fa fa-building-columns"></i> Documenti azienda</a><a class="btn btn-secondary" href="/documenti"><i class="fa fa-folder"></i> Documenti dipendenti</a><a class="btn btn-secondary" href="/scadenze"><i class="fa fa-triangle-exclamation"></i> Scadenze</a></div></div>
+  <div class="card"><div class="card-header"><h3>Contabilita</h3></div><div class="card-body" style="display:grid;gap:10px"><a class="btn btn-secondary" href="/fatturazione"><i class="fa fa-file-invoice-dollar"></i> Fatture attive</a><a class="btn btn-secondary" href="/fatturazione?tipo=passiva"><i class="fa fa-file-invoice"></i> Fatture passive</a><a class="btn btn-secondary" href="/preventivi"><i class="fa fa-file-lines"></i> Preventivi</a></div></div>
+  <div class="card"><div class="card-header"><h3>Anagrafiche e mezzi</h3></div><div class="card-body" style="display:grid;gap:10px"><a class="btn btn-secondary" href="/clienti"><i class="fa fa-address-book"></i> Clienti</a><a class="btn btn-secondary" href="/fornitori"><i class="fa fa-truck-fast"></i> Fornitori</a><a class="btn btn-secondary" href="/veicoli"><i class="fa fa-truck"></i> Veicoli</a></div></div>
+</div>
+"""
+
+AMMINISTRAZIONE_MOBILE_TMPL = """<!DOCTYPE html>
+<html lang="it"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Amministrazione mobile</title><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#0f172a">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"><style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#fff;min-height:100vh}.top{padding:18px;background:linear-gradient(135deg,#0f172a,#164e63);position:sticky;top:0;z-index:10;border-bottom:1px solid rgba(255,255,255,.08)}.row{display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{font-size:12px;color:rgba(255,255,255,.55);font-weight:900;text-transform:uppercase;letter-spacing:1px}h1{font-size:22px;margin-top:4px}.pill{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);color:#fff;border-radius:999px;padding:8px 11px;text-decoration:none;font-size:12px;font-weight:800}.content{padding:16px;max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.tile{min-height:116px;border-radius:16px;padding:15px;text-decoration:none;color:#fff;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:#1e293b}.tile:active{transform:scale(.98)}.tile i{font-size:24px}.label{font-size:15px;font-weight:900;line-height:1.15}.sub{font-size:12px;color:rgba(255,255,255,.55);margin-top:4px}.badge{position:absolute;right:12px;top:12px;background:#ef4444;color:#fff;min-width:22px;height:22px;border-radius:99px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;padding:0 7px}.blue{background:linear-gradient(135deg,#1e3a8a,#2563eb)}.green{background:linear-gradient(135deg,#064e3b,#10b981)}.amber{background:linear-gradient(135deg,#92400e,#f59e0b)}.purple{background:linear-gradient(135deg,#581c87,#a855f7)}.rose{background:linear-gradient(135deg,#881337,#e11d48)}.section{font-size:11px;color:rgba(255,255,255,.42);font-weight:900;text-transform:uppercase;letter-spacing:1px;margin:4px 2px -4px}
+</style></head><body><div class="top"><div class="row"><div><div class="brand">{{ azienda_nome }}</div><h1>Amministrazione</h1></div><a class="pill" href="/amministrazione?desktop=1"><i class="fa fa-desktop"></i> PC</a></div></div>
+<div class="content"><div class="section">Documenti e scadenze</div><div class="grid">
+<a class="tile blue" href="/documenti-azienda"><div><i class="fa fa-building-columns"></i><div class="label">Documenti azienda</div><div class="sub">{{ s.docs_azienda }} documenti</div></div></a>
+<a class="tile blue" href="/documenti"><div><i class="fa fa-folder"></i><div class="label">Documenti dipendenti</div><div class="sub">{{ s.docs_dip }} documenti</div></div></a>
+<a class="tile amber" href="/scadenze">{% if s.scadenze > 0 %}<span class="badge">{{ s.scadenze }}</span>{% endif %}<div><i class="fa fa-triangle-exclamation"></i><div class="label">Scadenze</div><div class="sub">Documenti e mezzi</div></div></a>
+<a class="tile purple" href="/veicoli"><div><i class="fa fa-truck"></i><div class="label">Veicoli</div><div class="sub">{{ s.veicoli }} mezzi</div></div></a></div>
+<div class="section">Contabilita</div><div class="grid"><a class="tile green" href="/fatturazione"><div><i class="fa fa-file-invoice-dollar"></i><div class="label">Fatture attive</div><div class="sub">{{ s.fatture_attive }} documenti</div></div></a><a class="tile green" href="/fatturazione?tipo=passiva"><div><i class="fa fa-file-invoice"></i><div class="label">Fatture passive</div><div class="sub">{{ s.fatture_passive }} documenti</div></div></a><a class="tile" href="/clienti"><div><i class="fa fa-address-book"></i><div class="label">Clienti</div><div class="sub">Anagrafica</div></div></a><a class="tile" href="/fornitori"><div><i class="fa fa-truck-fast"></i><div class="label">Fornitori</div><div class="sub">Anagrafica</div></div></a></div>
+<div class="grid"><a class="tile rose" href="/logout"><div><i class="fa fa-sign-out-alt"></i><div class="label">Esci</div><div class="sub">Logout</div></div></a></div></div></body></html>"""
+
+def _amministrazione_stats():
+    db = get_db()
+    sc_app = _conta_scadenze_app(db)
+    def one(sql, params=()):
+        try:
+            return db.execute(sql, params).fetchone()[0]
+        except Exception:
+            return 0
+    s = {
+        'docs_azienda': one("SELECT COUNT(*) FROM documenti_azienda"),
+        'docs_dip': one("SELECT COUNT(*) FROM documenti_dipendente"),
+        'fatture_attive': one("SELECT COUNT(*) FROM fatture WHERE COALESCE(tipo,'attiva')='attiva'"),
+        'fatture_passive': one("SELECT COUNT(*) FROM fatture WHERE tipo='passiva'"),
+        'veicoli': one("SELECT COUNT(*) FROM veicoli WHERE COALESCE(attivo,1)=1"),
+        'scadenze': int(sc_app.get('totale_scaduti', 0) or 0) + int(sc_app.get('totale_in_scadenza', 0) or 0),
+    }
+    db.close()
+    return s
+
+@app.route('/amministrazione')
+@login_required
+def amministrazione_home():
+    if session.get('ruolo') == 'admin':
+        return redirect(url_for('dashboard'))
+    if session.get('ruolo') != 'amministrazione':
+        return redirect(url_for('mobile'))
+    if is_mobile_request():
+        return redirect(url_for('amministrazione_mobile'))
+    return render_page(AMMINISTRAZIONE_HOME_TMPL, page_title='Amministrazione', active='amministrazione', s=_amministrazione_stats())
+
+@app.route('/amministrazione/mobile')
+@login_required
+def amministrazione_mobile():
+    if session.get('ruolo') == 'admin':
+        return redirect(url_for('admin_mobile'))
+    if session.get('ruolo') != 'amministrazione':
+        return redirect(url_for('mobile'))
+    return render_template_string(AMMINISTRAZIONE_MOBILE_TMPL,
+                                  azienda_nome=session.get('azienda_nome') or get_setting('azienda','Accesso Fiere'),
+                                  s=_amministrazione_stats())
+
 ALLOWED_WIDGETS = {'ore_settimana','cantieri','presenze_oggi','scadenze','ferie','richieste'}
 
 def _default_dashboard_layout():
@@ -9608,6 +9816,7 @@ DIP_FORM_TMPL = """
           <select name="ruolo">
             <option value="dipendente" {{ 'selected' if (not dip) or (dip and dip.ruolo=='dipendente') }}>Operatore / Dipendente</option>
             <option value="caposquadra" {{ 'selected' if dip and dip.ruolo=='caposquadra' }}>Caposquadra</option>
+            <option value="amministrazione" {{ 'selected' if dip and dip.ruolo=='amministrazione' }}>Amministrazione / Contabilita</option>
             <option value="admin" {{ 'selected' if dip and dip.ruolo=='admin' }}>Amministratore</option>
           </select>
         </div>
@@ -11035,7 +11244,7 @@ TESSERINO_PUB_DISABLED_TMPL = """<!DOCTYPE html>
 #  DOCUMENTI & SCADENZE
 # ══════════════════════════════════════════════════════════
 DOC_TMPL = """
-{% if session.ruolo=='admin' and scadenze_app and scadenze_app.docs_dip_scaduti > 0 %}
+{% if session.ruolo in ['admin','amministrazione'] and scadenze_app and scadenze_app.docs_dip_scaduti > 0 %}
 <div style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border:1px solid #fca5a5;border-left:4px solid #dc2626;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:14px">
   <div style="background:#dc2626;color:#fff;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;animation:scadIconPulse 1.5s infinite">
     <i class="fa fa-triangle-exclamation" style="font-size:16px"></i>
@@ -11102,7 +11311,7 @@ DOC_TMPL = """
     <thead><tr>
       <th style="width:36px"><input type="checkbox" id="sel-all" onchange="toggleAll(this)" title="Seleziona tutti"></th>
       <th>Titolo</th><th>Categoria</th><th>Dipendente</th><th>Scadenza</th><th>Stato</th>
-      {% if session.ruolo=='admin' %}<th>Azioni</th>{% endif %}
+      {% if session.ruolo in ['admin','amministrazione'] %}<th>Azioni</th>{% endif %}
     </tr></thead>
     <tbody>{% for d in documenti %}
     <tr id="row-{{ d.id }}">
@@ -11129,7 +11338,7 @@ DOC_TMPL = """
         {% elif d.days_left <= 30 %}<span class="badge badge-amber">{{ d.days_left }}gg</span>
         {% else %}<span class="badge badge-green">OK</span>{% endif %}
       </td>
-      {% if session.ruolo=='admin' %}<td style="display:flex;gap:6px">
+      {% if session.ruolo in ['admin','amministrazione'] %}<td style="display:flex;gap:6px">
         {% if d.sorgente == 'dipendente' %}
           <a href="/dipendenti/{{ d.assegnato_a }}/documenti/{{ d.id }}/scarica" class="btn btn-secondary btn-sm" title="Scarica"><i class="fa fa-download"></i></a>
           <a href="/dipendenti/{{ d.assegnato_a }}/documenti" class="btn btn-secondary btn-sm" title="Vai al dipendente"><i class="fa fa-user"></i></a>
@@ -11256,7 +11465,7 @@ def documenti():
                NULL as nome_file, 'documenti' as sorgente
            FROM documenti d LEFT JOIN utenti u ON u.id=d.assegnato_a WHERE 1=1"""
     params = []
-    if session['ruolo'] != 'admin':
+    if session.get('ruolo') not in ('admin', 'amministrazione'):
         q += " AND (d.assegnato_a IS NULL OR d.assegnato_a=?)"; params.append(uid)
     if cat:        q += " AND d.categoria=?";    params.append(cat)
     if filtro_uid: q += " AND d.assegnato_a=?";  params.append(int(filtro_uid))
@@ -11275,7 +11484,7 @@ def documenti():
                 dd.nome_file, 'dipendente' as sorgente
             FROM documenti_dipendente dd JOIN utenti u ON u.id=dd.utente_id WHERE 1=1"""
     params2 = []
-    if session['ruolo'] != 'admin':
+    if session.get('ruolo') not in ('admin', 'amministrazione'):
         q2 += " AND dd.utente_id=?"; params2.append(uid)
     if filtro_uid: q2 += " AND dd.utente_id=?";  params2.append(int(filtro_uid))
 
@@ -13795,7 +14004,7 @@ VEICOLI_TMPL = """
 
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
   <div><p style="color:var(--text-light);font-size:13px;margin:0">Clicca su una riga per vedere le scadenze del veicolo.</p></div>
-  {% if session.ruolo==\'admin\' %}
+  {% if session.ruolo in [\'admin\',\'amministrazione\'] %}
   <a href="/veicoli/nuovo" class="btn btn-primary"><i class="fa fa-plus"></i> Nuovo Veicolo</a>
   {% endif %}
 </div>
@@ -13898,7 +14107,7 @@ VEICOLI_TMPL = """
           </div>
           <div class="veh-row-actions">
             <a href="/veicoli/{{ v.id }}/documenti" class="btn btn-primary btn-sm"><i class="fa fa-folder-open"></i> Documenti ({{ v.n_docs }})</a>
-            {% if session.ruolo==\'admin\' %}
+            {% if session.ruolo in [\'admin\',\'amministrazione\'] %}
             <a href="/veicoli/{{ v.id }}/modifica" class="btn btn-secondary btn-sm"><i class="fa fa-pen"></i> Modifica veicolo e scadenze</a>
             <a href="/veicoli/{{ v.id }}/elimina" class="btn btn-danger btn-sm" onclick="return confirm(\'Eliminare il veicolo e tutti i suoi documenti?\')"><i class="fa fa-trash"></i> Elimina</a>
             {% endif %}
@@ -17221,7 +17430,7 @@ body{background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
 
 
 MOBILE_PROFILO_TMPL = """<!DOCTYPE html>
-<html lang="it">
+<html lang="{{ lang }}" dir="{{ t.dir }}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
@@ -17231,7 +17440,7 @@ MOBILE_PROFILO_TMPL = """<!DOCTYPE html>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Accesso Fiere">
 <link rel="apple-touch-icon" href="/static/pwa/icon-192.png">
-<title>Profilo</title>
+<title>{{ t.profile_title }}</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -17266,7 +17475,7 @@ input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
 <body>
 <div class="header">
   <a href="/mobile" class="back-btn"><i class="fa fa-arrow-left"></i></a>
-  <div class="header-title">Impostazioni profilo</div>
+  <div class="header-title">{{ t.profile_title }}</div>
 </div>
 <div class="content">
   {% for cat,msg in messages %}
@@ -17278,63 +17487,63 @@ input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
       <div class="avatar-big">{{ nome[0]|upper }}{{ cognome[0]|upper }}</div>
       <div>
         <div class="user-name">{{ nome }} {{ cognome }}</div>
-        <div class="user-role"><i class="fa fa-hard-hat"></i> {{ mansione or 'Dipendente' }}</div>
+        <div class="user-role"><i class="fa fa-hard-hat"></i> {{ mansione or t.profile_role_default }}</div>
       </div>
     </div>
   </div>
 
   <div class="card">
-    <div class="card-title"><i class="fa fa-bell"></i> Notifiche</div>
+    <div class="card-title"><i class="fa fa-bell"></i> {{ t.notifications }}</div>
     <div id="push-status" class="push-status off">
-      <i class="fa fa-bell-slash"></i> <span id="push-status-text">Caricamento...</span>
+      <i class="fa fa-bell-slash"></i> <span id="push-status-text">{{ t.loading }}</span>
     </div>
     <button type="button" id="push-toggle-btn" class="btn-save" onclick="togglePush()">
-      <i class="fa fa-bell"></i> <span id="push-btn-text">Attiva notifiche</span>
+      <i class="fa fa-bell"></i> <span id="push-btn-text">{{ t.activate_notifications }}</span>
     </button>
     <button type="button" class="btn-secondary" onclick="toggleDiag()">
-      <i class="fa fa-stethoscope"></i> Mostra diagnostica
+      <i class="fa fa-stethoscope"></i> {{ t.show_diagnostics }}
     </button>
     <div id="push-diag" class="diag-box"></div>
   </div>
 
   <div class="card" id="install-card" style="display:none">
-    <div class="card-title"><i class="fa fa-mobile-screen-button"></i> Installa app</div>
+    <div class="card-title"><i class="fa fa-mobile-screen-button"></i> {{ t.install_app }}</div>
     <div id="install-status" class="push-status off" style="margin-bottom:12px">
-      <i class="fa fa-circle-info"></i> <span id="install-status-text">App non installata</span>
+      <i class="fa fa-circle-info"></i> <span id="install-status-text">{{ t.app_not_installed }}</span>
     </div>
     <button type="button" id="install-btn" class="btn-save" onclick="installApp()">
-      <i class="fa fa-download"></i> Installa sul dispositivo
+      <i class="fa fa-download"></i> {{ t.install_on_device }}
     </button>
     <div id="install-help" style="display:none;margin-top:14px;background:#0f172a;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px;font-size:13px;line-height:1.6;color:rgba(255,255,255,.75)"></div>
   </div>
 
   <div class="card">
-    <div class="card-title"><i class="fa fa-envelope"></i> Cambia email di accesso</div>
+    <div class="card-title"><i class="fa fa-envelope"></i> {{ t.change_email }}</div>
     <form method="POST" action="/mobile/profilo/cambia-email">
-      <label>Nuova email</label>
+      <label>{{ t.new_email }}</label>
       <input type="email" name="nuova_email" value="{{ email }}" required autocomplete="email">
-      <label>Conferma password attuale</label>
+      <label>{{ t.confirm_current_password }}</label>
       <input type="password" name="password_attuale" required placeholder="********">
-      <button type="submit" class="btn-save"><i class="fa fa-save"></i> Aggiorna email</button>
+      <button type="submit" class="btn-save"><i class="fa fa-save"></i> {{ t.update_email }}</button>
     </form>
   </div>
 
   <div class="card">
-    <div class="card-title"><i class="fa fa-key"></i> Cambia password</div>
+    <div class="card-title"><i class="fa fa-key"></i> {{ t.change_password }}</div>
     <form method="POST" action="/mobile/profilo/cambia-password">
-      <label>Password attuale</label>
+      <label>{{ t.current_password }}</label>
       <input type="password" name="password_attuale" required placeholder="********">
-      <label>Nuova password</label>
-      <input type="password" name="nuova_password" required placeholder="Minimo 6 caratteri" id="np">
-      <div class="hint">Almeno 6 caratteri</div>
-      <label>Ripeti nuova password</label>
-      <input type="password" name="conferma_password" required placeholder="Ripeti la password">
-      <button type="submit" class="btn-save"><i class="fa fa-lock"></i> Cambia password</button>
+      <label>{{ t.new_password }}</label>
+      <input type="password" name="nuova_password" required placeholder="{{ t.min_6_chars }}" id="np">
+      <div class="hint">{{ t.at_least_6_chars }}</div>
+      <label>{{ t.repeat_new_password }}</label>
+      <input type="password" name="conferma_password" required placeholder="{{ t.repeat_password }}">
+      <button type="submit" class="btn-save"><i class="fa fa-lock"></i> {{ t.change_password }}</button>
     </form>
   </div>
 
   <a href="/logout" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:14px;color:#fca5a5;text-decoration:none;font-size:14px;font-weight:700">
-    <i class="fa fa-right-from-bracket"></i> Esci dall account
+    <i class="fa fa-right-from-bracket"></i> {{ t.logout_account }}
   </a>
 </div>
 
@@ -17750,7 +17959,8 @@ def mobile_profilo():
     return render_template_string(MOBILE_PROFILO_TMPL,
         nome=u.get('nome',''), cognome=u.get('cognome',''),
         email=u.get('email',''), mansione=u.get('mansione') or '',
-        messages=msgs, vapid_public_key=vapid_pub)
+        messages=msgs, vapid_public_key=vapid_pub,
+        t=get_lang(), lang=session.get('lang','it'))
 
 @app.route('/mobile/profilo/cambia-email', methods=['POST'])
 @login_required
@@ -19982,7 +20192,7 @@ MOBILE_FERIE_TMPL = """<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>Ferie e permessi</title>
+<title>{{ t.leave_title }}</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -20019,7 +20229,7 @@ select option{background:#1e293b}
 <body>
 <div class="header">
   <a href="/mobile"><i class="fa fa-arrow-left"></i></a>
-  <h1><i class="fa fa-umbrella-beach"></i> Ferie e permessi</h1>
+  <h1><i class="fa fa-umbrella-beach"></i> {{ t.leave_title }}</h1>
 </div>
 <div class="content">
   {% with messages = get_flashed_messages(with_categories=true) %}
@@ -20029,54 +20239,54 @@ select option{background:#1e293b}
 
   <form method="POST" action="/mobile/ferie/richiesta" enctype="multipart/form-data">
     <div class="card">
-      <div class="card-title"><i class="fa fa-paper-plane" style="color:#c4b5fd"></i> Nuova richiesta</div>
-      <label>Tipo *</label>
+      <div class="card-title"><i class="fa fa-paper-plane" style="color:#c4b5fd"></i> {{ t.leave_new }}</div>
+      <label>{{ t.leave_type }} *</label>
       <select name="tipo" id="tipo-richiesta" required onchange="aggiornaCampiRichiesta()">
-        <option value="Ferie">Ferie</option>
-        <option value="Permesso">Permesso</option>
-        <option value="Malattia">Malattia</option>
-        <option value="Permesso studio">Permesso studio</option>
+        <option value="Ferie">{{ t.leave_vacation }}</option>
+        <option value="Permesso">{{ t.leave_permission }}</option>
+        <option value="Malattia">{{ t.leave_sickness }}</option>
+        <option value="Permesso studio">{{ t.leave_study }}</option>
       </select>
-      <label>Dal *</label>
+      <label>{{ t.leave_from }} *</label>
       <input type="date" name="data_inizio" value="{{ oggi }}" required>
-      <label>Al *</label>
+      <label>{{ t.leave_to }} *</label>
       <input type="date" name="data_fine" value="{{ oggi }}" required>
       <div id="permesso-fields" class="extra-fields">
-        <label>Permesso dalle *</label>
+        <label>{{ t.leave_permission_from }} *</label>
         <input type="time" name="ora_inizio" id="ora-inizio">
-        <label>Permesso alle *</label>
+        <label>{{ t.leave_permission_to }} *</label>
         <input type="time" name="ora_fine" id="ora-fine">
       </div>
       <div id="malattia-fields" class="extra-fields">
-        <label>Certificato di malattia *</label>
+        <label>{{ t.leave_certificate }} *</label>
         <input type="file" name="certificato" id="certificato" accept="image/*,application/pdf">
-        <div class="hint">Puoi allegare foto o PDF del certificato.</div>
+        <div class="hint">{{ t.leave_certificate_hint }}</div>
       </div>
-      <label>Motivo</label>
-      <textarea name="motivo" rows="2" placeholder="Opzionale"></textarea>
+      <label>{{ t.leave_reason }}</label>
+      <textarea name="motivo" rows="2" placeholder="{{ t.optional }}"></textarea>
     </div>
-    <button type="submit" class="submit-btn"><i class="fa fa-paper-plane"></i> Invia richiesta</button>
+    <button type="submit" class="submit-btn"><i class="fa fa-paper-plane"></i> {{ t.send_request }}</button>
   </form>
 
   <div class="card">
-    <div class="card-title"><i class="fa fa-clock-rotate-left" style="color:#94a3b8"></i> Le tue richieste</div>
+    <div class="card-title"><i class="fa fa-clock-rotate-left" style="color:#94a3b8"></i> {{ t.your_requests }}</div>
     {% if richieste %}
       {% for r in richieste %}
       <div class="ferie-item">
         <div class="ferie-top">
           <div>
-            <div class="ferie-tipo">{{ r.tipo }}</div>
-            <div class="ferie-date">Dal {{ r.data_inizio }} al {{ r.data_fine }} · {{ r.giorni }} gg{% if r.ora_inizio and r.ora_fine %}<br>Dalle {{ r.ora_inizio }} alle {{ r.ora_fine }}{% endif %}</div>
+            <div class="ferie-tipo">{{ t.leave_vacation if r.tipo=='Ferie' else t.leave_permission if r.tipo=='Permesso' else t.leave_sickness if r.tipo=='Malattia' else t.leave_study if r.tipo=='Permesso studio' else r.tipo }}</div>
+            <div class="ferie-date">{{ t.from_date }} {{ r.data_inizio }} {{ t.to_date }} {{ r.data_fine }} &middot; {{ r.giorni }} {{ t.days_short }}{% if r.ora_inizio and r.ora_fine %}<br>{{ t.from_time }} {{ r.ora_inizio }} {{ t.to_time }} {{ r.ora_fine }}{% endif %}</div>
           </div>
-          <span class="stato stato-{{ r.stato }}">{{ 'In attesa' if r.stato=='in_attesa' else 'Accettata' if r.stato=='approvata' else 'Rifiutata' }}</span>
+          <span class="stato stato-{{ r.stato }}">{{ t.waiting if r.stato=='in_attesa' else t.accepted if r.stato=='approvata' else t.rejected }}</span>
         </div>
         {% if r.motivo %}<div class="ferie-note">{{ r.motivo }}</div>{% endif %}
-        {% if r.certificato_nome %}<div class="ferie-note"><a href="/ferie/certificato/{{ r.id }}" style="color:#c4b5fd;text-decoration:none" target="_blank"><i class="fa fa-file-medical"></i> Certificato allegato</a></div>{% endif %}
-        {% if r.nota_admin %}<div class="ferie-note">Risposta admin: {{ r.nota_admin }}</div>{% endif %}
+        {% if r.certificato_nome %}<div class="ferie-note"><a href="/ferie/certificato/{{ r.id }}" style="color:#c4b5fd;text-decoration:none" target="_blank"><i class="fa fa-file-medical"></i> {{ t.certificate_attached }}</a></div>{% endif %}
+        {% if r.nota_admin %}<div class="ferie-note">{{ t.admin_reply }} {{ r.nota_admin }}</div>{% endif %}
       </div>
       {% endfor %}
     {% else %}
-      <div class="empty">Non hai ancora richieste.</div>
+      <div class="empty">{{ t.no_requests }}</div>
     {% endif %}
   </div>
 </div>
@@ -20115,8 +20325,10 @@ def mobile_ferie():
                               ORDER BY creato_il DESC, id DESC LIMIT 30""",
                            (uid,)).fetchall()
     db.close()
+    lang = session.get('lang', 'it')
     return render_template_string(MOBILE_FERIE_TMPL, oggi=date.today().isoformat(),
-                                  richieste=[dict(r) for r in richieste])
+                                  richieste=[dict(r) for r in richieste],
+                                  t=get_lang(), lang=lang, langs=LANGS, current_lang=lang)
 
 
 @app.route('/mobile/ferie/richiesta', methods=['POST'])
@@ -20129,16 +20341,16 @@ def mobile_ferie_richiesta():
     ora_inizio = (request.form.get('ora_inizio') or '').strip() or None
     ora_fine = (request.form.get('ora_fine') or '').strip() or None
     if not d_in or not d_fi:
-        flash('Date obbligatorie.', 'error')
+        flash(get_lang().get('leave_dates_required', 'Date obbligatorie.'), 'error')
         return redirect(url_for('mobile_ferie'))
     if tipo.lower().startswith('permesso') and (not ora_inizio or not ora_fine):
-        flash('Per i permessi inserisci anche ora inizio e ora fine.', 'error')
+        flash(get_lang().get('leave_hours_required', 'Per i permessi inserisci anche ora inizio e ora fine.'), 'error')
         return redirect(url_for('mobile_ferie'))
     cert_nome = cert_path = None
     if tipo.lower() == 'malattia':
         cert = request.files.get('certificato')
         if not cert or not cert.filename:
-            flash('Per la malattia devi allegare il certificato.', 'error')
+            flash(get_lang().get('leave_certificate_required', 'Per la malattia devi allegare il certificato.'), 'error')
             return redirect(url_for('mobile_ferie'))
         try:
             cert_nome, cert_path = salva_certificato_ferie(cert, session['user_id'])
@@ -20151,7 +20363,7 @@ def mobile_ferie_richiesta():
         if giorni <= 0:
             raise ValueError
     except Exception:
-        flash('La data fine deve essere dopo la data inizio.', 'error')
+        flash(get_lang().get('leave_date_order', 'La data fine deve essere dopo la data inizio.'), 'error')
         return redirect(url_for('mobile_ferie'))
 
     db = get_db()
@@ -20172,7 +20384,7 @@ def mobile_ferie_richiesta():
         )
     except Exception as e:
         print(f'[notifica admin ferie mobile] {e}')
-    flash('Richiesta inviata.', 'success')
+    flash(get_lang().get('leave_sent', 'Richiesta inviata.'), 'success')
     return redirect(url_for('mobile_ferie'))
 
 
@@ -20241,7 +20453,7 @@ select option{background:#1e293b}
 
       <label>{{ t.spese_cat }} *</label>
       <select name="categoria" required>
-        {% for c in categorie %}<option>{{ c }}</option>{% endfor %}
+        {% for c in categorie %}<option value="{{ c }}">{{ t.spese_cat_labels.get(c, c) }}</option>{% endfor %}
       </select>
 
       <label>{{ t.spese_amount }} *</label>
@@ -20281,7 +20493,7 @@ select option{background:#1e293b}
     <div class="spesa-item">
       <div class="spesa-top">
         <div>
-          <div class="spesa-cat">{{ s.categoria }}</div>
+          <div class="spesa-cat">{{ t.spese_cat_labels.get(s.categoria, s.categoria) }}</div>
           <div class="spesa-data">{{ s.data }}</div>
         </div>
         <div style="text-align:right">
