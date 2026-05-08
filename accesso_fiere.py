@@ -157,6 +157,10 @@ def init_master_db():
         max_dipendenti INTEGER DEFAULT 10,
         descrizione TEXT
     );
+    CREATE TABLE IF NOT EXISTS app_globals (
+        chiave TEXT PRIMARY KEY,
+        valore TEXT
+    );
     """)
     # Inserisci piani di default
     existing = db.execute("SELECT COUNT(*) FROM piani").fetchone()[0]
@@ -983,6 +987,19 @@ def init_db():
         # ── Pausa pranzo nelle timbrature (per visibilità admin + integrità storico) ──
         "ALTER TABLE presenze ADD COLUMN pausa_ore REAL DEFAULT 0",
         "ALTER TABLE richieste_presenze ADD COLUMN pausa_ore REAL DEFAULT 0",
+        # ── PWA push notifications: subscriptions per device ──
+        """CREATE TABLE IF NOT EXISTS pwa_subscriptions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            utente_id INTEGER NOT NULL,
+            endpoint TEXT NOT NULL UNIQUE,
+            p256dh TEXT NOT NULL,
+            auth TEXT NOT NULL,
+            user_agent TEXT,
+            creato_il TEXT DEFAULT (datetime('now')),
+            ultima_notifica TEXT,
+            FOREIGN KEY(utente_id) REFERENCES utenti(id)
+        )""",
+        "CREATE INDEX IF NOT EXISTS idx_pwa_sub_utente ON pwa_subscriptions(utente_id)",
     ]
     for sql in migrations:
         try: db.execute(sql)
@@ -1212,6 +1229,19 @@ def ensure_columns():
                 # ── Pausa pranzo nelle timbrature ──
                 "ALTER TABLE presenze ADD COLUMN pausa_ore REAL DEFAULT 0",
                 "ALTER TABLE richieste_presenze ADD COLUMN pausa_ore REAL DEFAULT 0",
+                # ── PWA push notifications ──
+                """CREATE TABLE IF NOT EXISTS pwa_subscriptions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    utente_id INTEGER NOT NULL,
+                    endpoint TEXT NOT NULL UNIQUE,
+                    p256dh TEXT NOT NULL,
+                    auth TEXT NOT NULL,
+                    user_agent TEXT,
+                    creato_il TEXT DEFAULT (datetime('now')),
+                    ultima_notifica TEXT,
+                    FOREIGN KEY(utente_id) REFERENCES utenti(id)
+                )""",
+                "CREATE INDEX IF NOT EXISTS idx_pwa_sub_utente ON pwa_subscriptions(utente_id)",
             ]:
                 try: db.execute(sql)
                 except: pass
@@ -1950,6 +1980,7 @@ textarea{resize:vertical;min-height:80px}
       <i class="fa fa-receipt"></i> Rimborsi Spese
       {% if spese_attesa > 0 %}<span class="notif-badge amber">{{ spese_attesa }}</span>{% endif %}
     </a>
+    <a href="/admin/notifiche-push" class="{{ 'active' if active=='notifiche_push' }}"><i class="fa fa-bell-concierge"></i> Notifiche Push</a>
     <a href="/admin/impostazioni" class="{{ 'active' if active=='impostazioni' }}"><i class="fa fa-gear"></i> Impostazioni</a>
     {% endif %}
   </nav>
@@ -2235,6 +2266,64 @@ setInterval(updateClock,1000);updateClock();
       },2500);
     }
   }
+
+  // ───── Push Notifications onboarding ─────
+  // Mostra il banner solo se: app installata (standalone), notifiche supportate, permission default
+  function isStandalone(){
+    return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  }
+  function showPushBanner(){
+    if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    if (Notification.permission !== 'default') return;
+    if (sessionStorage.getItem('pwa_push_dismissed')) return;
+    if (!isStandalone()) return;  // solo se app installata
+    if (document.getElementById('pwa-push-banner')) return;
+    setTimeout(function(){
+      var b=document.createElement('div'); b.id='pwa-push-banner';
+      b.innerHTML=`<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(22,163,74,.35);max-width:480px;margin:0 auto"><div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🔔</div><div style="flex:1;min-width:0"><div style="font-weight:800;font-size:14px;letter-spacing:-.1px">Attiva notifiche</div><div style="font-size:11.5px;color:rgba(255,255,255,.85);margin-top:2px">Ricevi aggiornamenti su ferie e scadenze</div></div><button id="pn-yes" style="background:#fff;color:#16a34a;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:12.5px;cursor:pointer;flex-shrink:0">Attiva</button><button id="pn-no" style="background:transparent;color:rgba(255,255,255,.7);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">×</button></div>`;
+      document.body.appendChild(b);
+      document.getElementById('pn-yes').onclick=function(){
+        b.remove();
+        subscribePush();
+      };
+      document.getElementById('pn-no').onclick=function(){
+        sessionStorage.setItem('pwa_push_dismissed','1'); b.remove();
+      };
+    }, 4000);
+  }
+  function urlBase64ToUint8Array(b64){
+    var padding='='.repeat((4-b64.length%4)%4);
+    var base64=(b64+padding).replace(/-/g,'+').replace(/_/g,'/');
+    var raw=atob(base64); var arr=new Uint8Array(raw.length);
+    for(var i=0;i<raw.length;i++) arr[i]=raw.charCodeAt(i);
+    return arr;
+  }
+  async function subscribePush(){
+    try {
+      var perm = await Notification.requestPermission();
+      if (perm !== 'granted') return;
+      var reg = await navigator.serviceWorker.ready;
+      // Recupera la chiave pubblica dal server
+      var resp = await fetch('/api/push/public-key');
+      var pubKey = (await resp.text()).trim();
+      var sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(pubKey),
+      });
+      // Manda la subscription al server
+      await fetch('/api/push/subscribe', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(sub)
+      });
+      // Mostra una notifica di benvenuto
+      await fetch('/api/push/test', {method:'POST'});
+    } catch(e){ console.warn('[Push] subscribe failed:', e); }
+  }
+  // Esponi globalmente per chiamarla da un bottone "Attiva notifiche" nelle impostazioni
+  window.subscribePush = subscribePush;
+
+  if (document.readyState === 'complete') showPushBanner();
+  else window.addEventListener('load', showPushBanner);
 })();
 </script>
 </body></html>"""
@@ -2358,6 +2447,197 @@ def index():
 # ══════════════════════════════════════════════════════════
 #  PWA — Progressive Web App (installabile, offline, push)
 # ══════════════════════════════════════════════════════════
+
+# ─── VAPID + Web Push (RFC 8030, RFC 8291, RFC 8292) ───
+# Implementazione zero-dependency: usa solo `cryptography` (stdlib di fatto via requirements)
+# Genera chiavi VAPID una volta sola, salvate nel master DB. Le chiavi sono pubbliche/private:
+# - public key → mandata al browser per registrare il push
+# - private key → firma i JWT VAPID per autenticarsi col push service del browser
+
+def _b64url(data):
+    """Base64 URL-safe senza padding (RFC 7515)."""
+    return base64.urlsafe_b64encode(data).rstrip(b'=').decode('ascii')
+
+def _b64url_decode(s):
+    if isinstance(s, str): s = s.encode('ascii')
+    pad = (4 - len(s) % 4) % 4
+    return base64.urlsafe_b64decode(s + b'=' * pad)
+
+
+def _get_vapid_keys():
+    """Restituisce (public_key_b64url, private_key_pem). Le genera al primo uso."""
+    mdb = get_master_db()
+    pub = mdb.execute("SELECT valore FROM app_globals WHERE chiave='vapid_public'").fetchone()
+    priv = mdb.execute("SELECT valore FROM app_globals WHERE chiave='vapid_private'").fetchone()
+    if pub and priv and pub['valore'] and priv['valore']:
+        mdb.close()
+        return pub['valore'], priv['valore']
+    # Genera nuove chiavi VAPID (curva P-256)
+    from cryptography.hazmat.primitives.asymmetric import ec
+    from cryptography.hazmat.primitives import serialization
+    pk = ec.generate_private_key(ec.SECP256R1())
+    # Public key in formato uncompressed (65 bytes: 0x04 + X + Y)
+    pub_numbers = pk.public_key().public_numbers()
+    raw_pub = b'\x04' + pub_numbers.x.to_bytes(32, 'big') + pub_numbers.y.to_bytes(32, 'big')
+    pub_b64 = _b64url(raw_pub)
+    # Private key in PEM
+    priv_pem = pk.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption()
+    ).decode('ascii')
+    mdb.execute("INSERT OR REPLACE INTO app_globals(chiave,valore) VALUES ('vapid_public',?)", (pub_b64,))
+    mdb.execute("INSERT OR REPLACE INTO app_globals(chiave,valore) VALUES ('vapid_private',?)", (priv_pem,))
+    mdb.commit(); mdb.close()
+    print(f'[VAPID] Generate nuove chiavi (public {pub_b64[:20]}...)')
+    return pub_b64, priv_pem
+
+
+def _vapid_jwt(audience, subject_email='mailto:noreply@example.com'):
+    """Genera un JWT VAPID firmato con la chiave privata. Audience = origine del push service."""
+    from cryptography.hazmat.primitives import serialization, hashes
+    from cryptography.hazmat.primitives.asymmetric import ec
+    _, priv_pem = _get_vapid_keys()
+    pk = serialization.load_pem_private_key(priv_pem.encode(), password=None)
+    # Header
+    header = {"typ":"JWT", "alg":"ES256"}
+    # Payload: aud=push service, exp=now+12h, sub=email contatto
+    now = int(time.time())
+    payload = {"aud": audience, "exp": now + 12*3600, "sub": subject_email}
+    h_b64 = _b64url(json.dumps(header, separators=(',',':')).encode())
+    p_b64 = _b64url(json.dumps(payload, separators=(',',':')).encode())
+    signing_input = f'{h_b64}.{p_b64}'.encode()
+    # ECDSA P-256 SHA-256, output deve essere R||S concatenato (64 bytes), non DER
+    der_sig = pk.sign(signing_input, ec.ECDSA(hashes.SHA256()))
+    # Decodifico DER → r, s
+    from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature
+    r, s = decode_dss_signature(der_sig)
+    raw_sig = r.to_bytes(32, 'big') + s.to_bytes(32, 'big')
+    return f'{h_b64}.{p_b64}.{_b64url(raw_sig)}'
+
+
+def _encrypt_push_payload(payload_bytes, p256dh_b64, auth_b64):
+    """Cifra il payload secondo RFC 8291 (aes128gcm content encoding).
+    Restituisce (body_bytes, headers_dict) da inviare al push service."""
+    from cryptography.hazmat.primitives.asymmetric import ec
+    from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    from cryptography.hazmat.primitives import hashes, serialization
+
+    # Chiave pubblica del client (UA)
+    ua_pub_raw = _b64url_decode(p256dh_b64)
+    auth_secret = _b64url_decode(auth_b64)
+    # Carico la chiave UA come EC point
+    ua_pub = ec.EllipticCurvePublicKey.from_encoded_point(ec.SECP256R1(), ua_pub_raw)
+    # Genero un keypair effimero (ECDH)
+    server_pk = ec.generate_private_key(ec.SECP256R1())
+    server_pub = server_pk.public_key()
+    server_pub_numbers = server_pub.public_numbers()
+    server_pub_raw = b'\x04' + server_pub_numbers.x.to_bytes(32,'big') + server_pub_numbers.y.to_bytes(32,'big')
+    # ECDH shared secret
+    shared = server_pk.exchange(ec.ECDH(), ua_pub)
+    # Salt (16 bytes random)
+    salt = os.urandom(16)
+    # PRK_key = HKDF-SHA256(IKM=shared, salt=auth_secret, info="WebPush: info\0"+ua_pub+server_pub, L=32)
+    info_key = b'WebPush: info\x00' + ua_pub_raw + server_pub_raw
+    ikm = HKDF(algorithm=hashes.SHA256(), length=32, salt=auth_secret, info=info_key).derive(shared)
+    # CEK = HKDF(IKM=ikm, salt=salt, info="Content-Encoding: aes128gcm\0", L=16)
+    cek = HKDF(algorithm=hashes.SHA256(), length=16, salt=salt,
+               info=b'Content-Encoding: aes128gcm\x00').derive(ikm)
+    # NONCE = HKDF(IKM=ikm, salt=salt, info="Content-Encoding: nonce\0", L=12)
+    nonce = HKDF(algorithm=hashes.SHA256(), length=12, salt=salt,
+                 info=b'Content-Encoding: nonce\x00').derive(ikm)
+    # Payload: aggiunge padding delimiter 0x02
+    plaintext = payload_bytes + b'\x02'
+    # AES-128-GCM encrypt
+    ciphertext = AESGCM(cek).encrypt(nonce, plaintext, None)
+    # Body finale: salt(16) + recordsize(4 BE) + idlen(1) + keyid(0/65) + ciphertext
+    record_size = 4096
+    keyid = server_pub_raw  # 65 bytes
+    body = salt + record_size.to_bytes(4,'big') + len(keyid).to_bytes(1,'big') + keyid + ciphertext
+    return body
+
+
+def send_push_notification(subscription, payload_dict, ttl=86400):
+    """Invia una notifica push a una subscription.
+    subscription = {'endpoint': '...', 'p256dh': '...', 'auth': '...'}
+    payload_dict = {'title': ..., 'body': ..., 'url': ..., 'icon': ...}
+    Ritorna (success, status_code, error_message_or_None)."""
+    import urllib.request, urllib.error, urllib.parse
+    try:
+        endpoint = subscription['endpoint']
+        # Audience = scheme + host del push service
+        parsed = urllib.parse.urlparse(endpoint)
+        audience = f'{parsed.scheme}://{parsed.netloc}'
+        # JWT VAPID + chiave pubblica server in formato corretto
+        jwt = _vapid_jwt(audience)
+        pub_b64, _ = _get_vapid_keys()
+        # Cifra payload
+        payload_bytes = json.dumps(payload_dict, ensure_ascii=False).encode('utf-8')
+        body = _encrypt_push_payload(payload_bytes, subscription['p256dh'], subscription['auth'])
+        # Headers
+        headers = {
+            'Content-Type': 'application/octet-stream',
+            'Content-Encoding': 'aes128gcm',
+            'TTL': str(ttl),
+            'Authorization': f'vapid t={jwt}, k={pub_b64}',
+        }
+        req = urllib.request.Request(endpoint, data=body, headers=headers, method='POST')
+        try:
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                return True, resp.status, None
+        except urllib.error.HTTPError as e:
+            err_body = ''
+            try: err_body = e.read().decode('utf-8', errors='replace')[:200]
+            except: pass
+            return False, e.code, f'{e.reason}: {err_body}'
+    except Exception as e:
+        return False, 0, str(e)
+
+
+def send_push_to_user(utente_id, title, body, url='/', icon=None):
+    """Invia una notifica a TUTTI i device registrati di un utente.
+    Pulisce subscription ormai invalide (410 Gone, 404 Not Found).
+    Ritorna numero notifiche inviate con successo."""
+    db = get_db()
+    subs = db.execute("SELECT id, endpoint, p256dh, auth FROM pwa_subscriptions WHERE utente_id=?",
+                      (utente_id,)).fetchall()
+    if not subs:
+        db.close()
+        return 0
+    payload = {'title': title, 'body': body, 'url': url}
+    if icon: payload['icon'] = icon
+    sent = 0
+    to_remove = []
+    for sub in subs:
+        ok, status, err = send_push_notification(dict(sub), payload)
+        if ok:
+            sent += 1
+            db.execute("UPDATE pwa_subscriptions SET ultima_notifica=datetime('now') WHERE id=?", (sub['id'],))
+        else:
+            # 410 Gone, 404 Not Found = subscription scaduta, da rimuovere
+            if status in (404, 410):
+                to_remove.append(sub['id'])
+            else:
+                print(f'[Push] errore utente {utente_id} status={status}: {err}')
+    for sid in to_remove:
+        db.execute("DELETE FROM pwa_subscriptions WHERE id=?", (sid,))
+    safe_commit(db); db.close()
+    if to_remove:
+        print(f'[Push] rimosse {len(to_remove)} subscription scadute per utente {utente_id}')
+    return sent
+
+
+def send_push_to_admins(title, body, url='/dashboard'):
+    """Invia notifica a tutti gli admin del tenant corrente. Ritorna numero notifiche."""
+    db = get_db()
+    admins = db.execute("SELECT id FROM utenti WHERE ruolo='admin' AND attivo=1").fetchall()
+    db.close()
+    total = 0
+    for a in admins:
+        total += send_push_to_user(a['id'], title, body, url)
+    return total
+
 
 @app.route('/manifest.webmanifest')
 def pwa_manifest():
@@ -2542,6 +2822,210 @@ def pwa_static(filename):
     if not os.path.exists(fpath):
         return abort(404)
     return send_file(fpath)
+
+
+# ─── Push subscription endpoints ───
+@app.route('/api/push/public-key')
+def pwa_push_public_key():
+    """Restituisce la chiave pubblica VAPID al browser per registrare il push."""
+    pub, _ = _get_vapid_keys()
+    return Response(pub, mimetype='text/plain')
+
+
+@app.route('/api/push/subscribe', methods=['POST'])
+@login_required
+def pwa_push_subscribe():
+    """Registra una subscription per l'utente loggato."""
+    data = request.get_json(silent=True) or {}
+    endpoint = data.get('endpoint', '').strip()
+    keys = data.get('keys') or {}
+    p256dh = keys.get('p256dh', '')
+    auth = keys.get('auth', '')
+    if not endpoint or not p256dh or not auth:
+        return jsonify({'ok': False, 'error': 'subscription incompleta'}), 400
+    user_agent = request.headers.get('User-Agent', '')[:200]
+    db = get_db()
+    try:
+        # Upsert sull'endpoint (un utente può avere più device, ma stesso endpoint = stesso device)
+        existing = db.execute("SELECT id, utente_id FROM pwa_subscriptions WHERE endpoint=?",
+                              (endpoint,)).fetchone()
+        if existing:
+            # Endpoint già registrato — aggiorna utente_id (caso: device condiviso che cambia user)
+            db.execute("UPDATE pwa_subscriptions SET utente_id=?, p256dh=?, auth=?, user_agent=? WHERE id=?",
+                       (session['user_id'], p256dh, auth, user_agent, existing['id']))
+        else:
+            db.execute("""INSERT INTO pwa_subscriptions (utente_id, endpoint, p256dh, auth, user_agent)
+                          VALUES (?,?,?,?,?)""",
+                       (session['user_id'], endpoint, p256dh, auth, user_agent))
+        safe_commit(db)
+    finally:
+        db.close()
+    return jsonify({'ok': True})
+
+
+@app.route('/api/push/unsubscribe', methods=['POST'])
+@login_required
+def pwa_push_unsubscribe():
+    data = request.get_json(silent=True) or {}
+    endpoint = data.get('endpoint', '').strip()
+    if not endpoint:
+        return jsonify({'ok': False}), 400
+    db = get_db()
+    db.execute("DELETE FROM pwa_subscriptions WHERE endpoint=? AND utente_id=?",
+               (endpoint, session['user_id']))
+    safe_commit(db); db.close()
+    return jsonify({'ok': True})
+
+
+@app.route('/api/push/test', methods=['POST'])
+@login_required
+def pwa_push_test():
+    """Invia una notifica di test all'utente loggato (debug + onboarding)."""
+    sent = send_push_to_user(
+        session['user_id'],
+        title='✅ Notifiche attivate!',
+        body='Riceverai aggiornamenti su ferie, presenze e scadenze.',
+        url='/',
+    )
+    return jsonify({'ok': True, 'sent': sent})
+
+
+@app.route('/admin/notifiche-push', methods=['GET', 'POST'])
+@admin_required
+def admin_notifiche_push():
+    """Pannello admin per inviare notifiche manuali a uno o tutti gli utenti."""
+    db = get_db()
+    if request.method == 'POST':
+        title = (request.form.get('title','') or '').strip()
+        body = (request.form.get('body','') or '').strip()
+        target = request.form.get('target','all')
+        url_target = (request.form.get('url','') or '/').strip() or '/'
+        if not title or not body:
+            flash('Titolo e messaggio obbligatori.', 'error')
+            return redirect(url_for('admin_notifiche_push'))
+        if title and len(title) > 80:
+            title = title[:77] + '…'
+        if body and len(body) > 200:
+            body = body[:197] + '…'
+        sent = 0
+        if target == 'all':
+            users = db.execute("SELECT DISTINCT utente_id FROM pwa_subscriptions").fetchall()
+            for u in users:
+                sent += send_push_to_user(u['utente_id'], title, body, url_target)
+        elif target.isdigit():
+            sent = send_push_to_user(int(target), title, body, url_target)
+        flash(f'📤 Inviate {sent} notifiche.', 'success' if sent else 'info')
+        return redirect(url_for('admin_notifiche_push'))
+    # GET: mostra form + statistiche
+    stats_per_user = db.execute("""SELECT u.id, u.nome, u.cognome, u.ruolo,
+                                          COUNT(s.id) as devices,
+                                          MAX(s.ultima_notifica) as ultima
+                                   FROM utenti u LEFT JOIN pwa_subscriptions s ON s.utente_id=u.id
+                                   WHERE u.attivo=1
+                                   GROUP BY u.id
+                                   ORDER BY devices DESC, u.cognome""").fetchall()
+    tot_devices = db.execute("SELECT COUNT(*) FROM pwa_subscriptions").fetchone()[0]
+    db.close()
+    return render_page(NOTIFICHE_PUSH_TMPL,
+                       page_title='Notifiche Push',
+                       active='impostazioni',
+                       stats_per_user=stats_per_user,
+                       tot_devices=tot_devices)
+
+
+NOTIFICHE_PUSH_TMPL = """
+<div class="page-header">
+  <div class="page-header-info">
+    <div class="page-title">Notifiche Push</div>
+    <div class="page-desc">Invia notifiche istantanee ai dipendenti che hanno installato l'app e attivato i permessi.</div>
+  </div>
+</div>
+
+<div class="grid-3" style="margin-bottom:20px">
+  <div class="stat-card">
+    <div class="stat-icon" style="background:#dbeafe;color:#1e40af"><i class="fa fa-mobile-screen"></i></div>
+    <div><div class="stat-val">{{ tot_devices }}</div><div class="stat-lbl">Device registrati</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon green"><i class="fa fa-bell"></i></div>
+    <div><div class="stat-val">{{ stats_per_user|selectattr('devices','greaterthan',0)|list|length }}</div><div class="stat-lbl">Utenti raggiungibili</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="background:#f3e8ff;color:#7c3aed"><i class="fa fa-users"></i></div>
+    <div><div class="stat-val">{{ stats_per_user|length }}</div><div class="stat-lbl">Utenti totali attivi</div></div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header"><h3>📤 Invia notifica</h3></div>
+    <form method="POST" style="padding:18px">
+      <div class="form-group">
+        <label>Destinatari</label>
+        <select name="target" id="target-select">
+          <option value="all">📢 Tutti gli utenti registrati ({{ tot_devices }} device)</option>
+          {% for u in stats_per_user %}
+            {% if u.devices > 0 %}
+            <option value="{{ u.id }}">👤 {{ u.nome }} {{ u.cognome }} ({{ u.devices }} device)</option>
+            {% endif %}
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Titolo <span style="color:var(--text-light);font-size:11px">(max 80 caratteri)</span></label>
+        <input name="title" maxlength="80" required placeholder="Es: Riunione domani ore 10" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>Messaggio <span style="color:var(--text-light);font-size:11px">(max 200 caratteri)</span></label>
+        <textarea name="body" maxlength="200" required rows="3" placeholder="Es: Cantiere EICMA, ritrovo davanti al padiglione 8 con caschetto"></textarea>
+      </div>
+      <div class="form-group">
+        <label>URL al click <span style="color:var(--text-light);font-size:11px">(dove portare l'utente quando tocca la notifica)</span></label>
+        <input name="url" value="/" placeholder="/calendario" autocomplete="off">
+      </div>
+      <button type="submit" class="btn btn-primary"><i class="fa fa-paper-plane"></i> Invia notifica</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>👥 Stato dipendenti</h3></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Utente</th><th>Ruolo</th><th>Device</th><th>Ultima notifica</th></tr></thead>
+        <tbody>
+        {% for u in stats_per_user %}
+        <tr>
+          <td><span class="avatar-sm">{{ u.nome[0] }}{{ u.cognome[0] }}</span> {{ u.nome }} {{ u.cognome }}</td>
+          <td><span class="tag" style="font-size:10px">{{ u.ruolo }}</span></td>
+          <td>
+            {% if u.devices > 0 %}
+              <span class="badge badge-green">📱 {{ u.devices }}</span>
+            {% else %}
+              <span style="color:var(--text-light);font-size:12px">—</span>
+            {% endif %}
+          </td>
+          <td style="font-size:11px;color:var(--text-light)">{{ u.ultima or 'Mai' }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="card" style="margin-top:18px">
+  <div class="card-header"><h3>ℹ️ Come funzionano le notifiche</h3></div>
+  <div style="padding:18px;font-size:13.5px;line-height:1.65;color:var(--text-light)">
+    <ul style="padding-left:20px;display:flex;flex-direction:column;gap:8px">
+      <li>I dipendenti devono <strong>installare l'app</strong> sul cellulare (PWA) e <strong>accettare il permesso notifiche</strong>.</li>
+      <li>Le notifiche arrivano <strong>anche con app chiusa</strong> (su Android) o <strong>app in background</strong> (su iOS 16.4+).</li>
+      <li>Le notifiche automatiche partono per: <em>ferie approvate/rifiutate, richieste presenze, scadenze documenti</em>.</li>
+      <li>Da qui puoi inviare anche <strong>notifiche manuali</strong> per comunicazioni urgenti (es: cambio cantiere, riunioni).</li>
+      <li>I device che hanno disinstallato l'app vengono rimossi automaticamente al primo invio fallito.</li>
+    </ul>
+  </div>
+</div>
+"""
 
 
 def _genera_icona_pwa(out_path, filename):
@@ -6951,7 +7435,19 @@ def ferie_richiesta():
     if email_admin:
         send_email(email_admin, f'[ACCESSO FIERE] Richiesta {tipo} da {session["nome"]} {session["cognome"]}',
             f'<p><b>{session["nome"]} {session["cognome"]}</b> ha richiesto <b>{tipo}</b> dal {d_in} al {d_fi} ({giorni} giorni).</p>')
-    db.close(); flash('Richiesta inviata!','success'); return redirect(url_for('ferie'))
+    db.close()
+    # ── Notifica push agli admin ──
+    try:
+        threading.Thread(
+            target=send_push_to_admins,
+            args=(f'🏖 Nuova richiesta {tipo}',
+                  f'{session["nome"]} {session["cognome"]} dal {d_in} al {d_fi} ({giorni} gg)',
+                  '/ferie'),
+            daemon=True
+        ).start()
+    except Exception as e:
+        print(f'[push admin ferie] {e}')
+    flash('Richiesta inviata!','success'); return redirect(url_for('ferie'))
 
 @app.route('/ferie/<int:fid>/gestisci', methods=['POST'])
 @admin_required
@@ -6960,9 +7456,29 @@ def ferie_gestisci(fid):
     now_str = datetime.now().strftime('%Y-%m-%d %H:%M')
     stato = 'approvata' if azione == 'approva' else 'rifiutata'
     db = get_db()
+    # Recupera info per notifica push prima di chiudere
+    f_info = db.execute("""SELECT utente_id, tipo, data_inizio, data_fine, giorni
+                           FROM ferie_permessi WHERE id=?""", (fid,)).fetchone()
     db.execute("UPDATE ferie_permessi SET stato=?,nota_admin=?,gestito_il=? WHERE id=?",
                (stato, nota or stato.capitalize(), now_str, fid))
     safe_commit(db); db.close()
+    # ── Notifica push al dipendente ──
+    if f_info:
+        try:
+            tipo_label = (f_info['tipo'] or 'Richiesta').capitalize()
+            if stato == 'approvata':
+                title = f'✅ {tipo_label} approvata'
+                body = f"Dal {f_info['data_inizio']} al {f_info['data_fine']} ({f_info['giorni']} gg)"
+            else:
+                title = f'❌ {tipo_label} rifiutata'
+                body = (nota or 'Vedi i dettagli nell\'app')[:200]
+            threading.Thread(
+                target=send_push_to_user,
+                args=(f_info['utente_id'], title, body, '/mobile/ferie'),
+                daemon=True
+            ).start()
+        except Exception as e:
+            print(f'[push ferie] {e}')
     flash(f'{"✅ Approvata" if stato=="approvata" else "❌ Rifiutata"}!','success')
     return redirect(url_for('ferie'))
 
@@ -7163,6 +7679,21 @@ def gestisci_richiesta(rid):
         flash('❌ Rifiutata.', 'success')
 
     safe_commit(db); db.close()
+    # ── Notifica push al dipendente ──
+    try:
+        if azione in ('approva', 'modifica_approva'):
+            title = '✅ Presenza approvata'
+            body = f"Presenza del {r['data']} approvata"
+        else:
+            title = '❌ Presenza rifiutata'
+            body = (nota or f"Presenza del {r['data']} non approvata")[:200]
+        threading.Thread(
+            target=send_push_to_user,
+            args=(r['utente_id'], title, body, '/mobile'),
+            daemon=True
+        ).start()
+    except Exception as e:
+        print(f'[push richiesta] {e}')
     return redirect(url_for('admin_richieste'))
 
 # ══════════════════════════════════════════════════════════
@@ -15436,6 +15967,38 @@ function prepareSubmitMobile(ev) {
       },2500);
     }
   }
+
+  // ───── Push Notifications ─────
+  function isStandalone(){return window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;}
+  function showPushBanner(){
+    if(!('Notification' in window)||!('serviceWorker' in navigator)||!('PushManager' in window))return;
+    if(Notification.permission!=='default')return;
+    if(sessionStorage.getItem('pwa_push_dismissed'))return;
+    if(!isStandalone())return;
+    if(document.getElementById('pn-banner'))return;
+    setTimeout(function(){
+      var b=document.createElement('div'); b.id='pn-banner';
+      b.innerHTML=`<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(22,163,74,.35);max-width:480px;margin:0 auto"><div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px">🔔</div><div style="flex:1"><div style="font-weight:800;font-size:14px">Attiva notifiche</div><div style="font-size:11.5px;color:rgba(255,255,255,.85)">Ricevi aggiornamenti su ferie e turni</div></div><button id="pny" style="background:#fff;color:#16a34a;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:12.5px">Attiva</button><button id="pnn" style="background:transparent;color:rgba(255,255,255,.7);border:none;font-size:18px;padding:4px 8px">×</button></div>`;
+      document.body.appendChild(b);
+      document.getElementById('pny').onclick=function(){b.remove();subscribePush();};
+      document.getElementById('pnn').onclick=function(){sessionStorage.setItem('pwa_push_dismissed','1');b.remove();};
+    },4000);
+  }
+  function urlBase64ToUint8Array(b64){var p='='.repeat((4-b64.length%4)%4);var s=(b64+p).replace(/-/g,'+').replace(/_/g,'/');var r=atob(s);var a=new Uint8Array(r.length);for(var i=0;i<r.length;i++)a[i]=r.charCodeAt(i);return a;}
+  async function subscribePush(){
+    try{
+      var p=await Notification.requestPermission();
+      if(p!=='granted')return;
+      var reg=await navigator.serviceWorker.ready;
+      var k=(await (await fetch('/api/push/public-key')).text()).trim();
+      var sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(k)});
+      await fetch('/api/push/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sub)});
+      await fetch('/api/push/test',{method:'POST'});
+    }catch(e){console.warn('[Push]',e);}
+  }
+  window.subscribePush=subscribePush;
+  if(document.readyState==='complete')showPushBanner();
+  else window.addEventListener('load',showPushBanner);
 })();
 </script>
 </body>
@@ -15447,7 +16010,12 @@ MOBILE_PROFILO_TMPL = """<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0f4c81">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Accesso Fiere">
+<link rel="apple-touch-icon" href="/static/pwa/icon-192.png">
 <title>Profilo</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
@@ -15468,10 +16036,15 @@ input{width:100%;background:#0f172a;border:1.5px solid rgba(255,255,255,.12);bor
 input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
 .btn-save{width:100%;background:linear-gradient(135deg,#0f4c81,#2563eb);color:#fff;border:none;border-radius:14px;padding:16px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px}
 .btn-save:active{opacity:.85}
+.btn-secondary{width:100%;background:#0f172a;border:1.5px solid rgba(255,255,255,.15);color:#fff;border-radius:14px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px}
 .flash{padding:14px 16px;border-radius:12px;font-size:14px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:10px}
 .flash.success{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
 .flash.error{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#fca5a5}
 .hint{font-size:12px;color:rgba(255,255,255,.3);margin-top:-10px;margin-bottom:14px;padding-left:4px}
+.push-status{padding:14px;border-radius:12px;font-size:13px;display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.push-status.on{background:rgba(34,197,94,.12);color:#86efac;border:1px solid rgba(34,197,94,.3)}
+.push-status.off{background:rgba(245,158,11,.12);color:#fcd34d;border:1px solid rgba(245,158,11,.3)}
+.push-status.unsupported{background:rgba(148,163,184,.12);color:#94a3b8;border:1px solid rgba(148,163,184,.2)}
 </style>
 </head>
 <body>
@@ -15493,6 +16066,17 @@ input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
         <div class="user-role"><i class="fa fa-hard-hat"></i> {{ mansione or 'Dipendente' }}</div>
       </div>
     </div>
+  </div>
+
+  <!-- Notifiche push -->
+  <div class="card">
+    <div class="card-title"><i class="fa fa-bell"></i> Notifiche</div>
+    <div id="push-status" class="push-status off">
+      <i class="fa fa-bell-slash"></i> <span id="push-status-text">Caricamento…</span>
+    </div>
+    <button type="button" id="push-toggle-btn" class="btn-save" onclick="togglePush()">
+      <i class="fa fa-bell"></i> <span id="push-btn-text">Attiva notifiche</span>
+    </button>
   </div>
 
   <!-- Cambia email -->
@@ -15526,6 +16110,66 @@ input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
     <i class="fa fa-right-from-bracket"></i> Esci dall'account
   </a>
 </div>
+
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(function(){});
+
+async function refreshPushStatus(){
+  var st = document.getElementById('push-status');
+  var stT = document.getElementById('push-status-text');
+  var btnT = document.getElementById('push-btn-text');
+  var btn = document.getElementById('push-toggle-btn');
+  if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+    st.className='push-status unsupported';
+    st.innerHTML='<i class="fa fa-circle-info"></i> <span>Notifiche non supportate da questo browser</span>';
+    btn.style.display='none';
+    return;
+  }
+  if (Notification.permission === 'denied') {
+    st.className='push-status off';
+    stT.textContent='Permesso negato. Abilita dalle impostazioni del telefono.';
+    btn.style.display='none';
+    return;
+  }
+  try {
+    var reg = await navigator.serviceWorker.ready;
+    var sub = await reg.pushManager.getSubscription();
+    if (sub && Notification.permission === 'granted') {
+      st.className='push-status on';
+      st.innerHTML='<i class="fa fa-check-circle"></i> <span>Notifiche attive su questo dispositivo</span>';
+      btnT.textContent='Disattiva notifiche';
+      btn.style.background='rgba(239,68,68,.2)';
+    } else {
+      st.className='push-status off';
+      st.innerHTML='<i class="fa fa-bell-slash"></i> <span>Notifiche disattivate</span>';
+      btnT.textContent='Attiva notifiche';
+    }
+  } catch(e){ console.warn(e); }
+}
+function urlBase64ToUint8Array(b64){var p='='.repeat((4-b64.length%4)%4);var s=(b64+p).replace(/-/g,'+').replace(/_/g,'/');var r=atob(s);var a=new Uint8Array(r.length);for(var i=0;i<r.length;i++)a[i]=r.charCodeAt(i);return a;}
+async function togglePush(){
+  var btn=document.getElementById('push-toggle-btn'); btn.disabled=true;
+  try {
+    var reg = await navigator.serviceWorker.ready;
+    var sub = await reg.pushManager.getSubscription();
+    if (sub) {
+      // Disattiva
+      await sub.unsubscribe();
+      await fetch('/api/push/unsubscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({endpoint:sub.endpoint})});
+    } else {
+      var perm = await Notification.requestPermission();
+      if (perm !== 'granted') { btn.disabled=false; return; }
+      var k=(await (await fetch('/api/push/public-key')).text()).trim();
+      var newSub = await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(k)});
+      await fetch('/api/push/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(newSub)});
+      await fetch('/api/push/test',{method:'POST'});
+    }
+  } catch(e){ console.warn(e); alert('Errore: '+e.message); }
+  btn.disabled=false;
+  refreshPushStatus();
+}
+window.addEventListener('load', refreshPushStatus);
+</script>
 </body>
 </html>"""
 
