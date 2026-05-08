@@ -2890,6 +2890,19 @@ def pwa_push_test():
     return jsonify({'ok': True, 'sent': sent})
 
 
+@app.route('/api/push/my-subs')
+@login_required
+def pwa_push_my_subs():
+    """Diagnostica: dice quante subscription ha l'utente loggato registrate sul server."""
+    db = get_db()
+    rows = db.execute("""SELECT COUNT(*) as n, MAX(creato_il) as latest
+                         FROM pwa_subscriptions WHERE utente_id=?""",
+                      (session['user_id'],)).fetchone()
+    db.close()
+    return jsonify({'count': rows['n'] if rows else 0,
+                    'latest': rows['latest'] if rows else None})
+
+
 @app.route('/admin/notifiche-push', methods=['GET', 'POST'])
 @admin_required
 def admin_notifiche_push():
@@ -15987,14 +16000,33 @@ function prepareSubmitMobile(ev) {
   function urlBase64ToUint8Array(b64){var p='='.repeat((4-b64.length%4)%4);var s=(b64+p).replace(/-/g,'+').replace(/_/g,'/');var r=atob(s);var a=new Uint8Array(r.length);for(var i=0;i<r.length;i++)a[i]=r.charCodeAt(i);return a;}
   async function subscribePush(){
     try{
+      // Pre-check iOS standalone
+      if(/iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone){
+        alert('Su iPhone devi prima installare l\\'app:\\n\\n1. Tocca "Condividi" in Safari\\n2. Tocca "Aggiungi alla schermata Home"\\n3. Apri l\\'app dall\\'icona blu sulla home\\n4. Riprova ad attivare le notifiche');
+        return;
+      }
+      if(!('PushManager' in window)){
+        alert('Questo browser non supporta le notifiche push.');
+        return;
+      }
       var p=await Notification.requestPermission();
-      if(p!=='granted')return;
+      if(p!=='granted'){
+        if(p==='denied') alert('Hai negato il permesso. Per attivarle:\\nImpostazioni iPhone → Accesso Fiere → Notifiche → Consenti');
+        return;
+      }
       var reg=await navigator.serviceWorker.ready;
       var k=(await (await fetch('/api/push/public-key')).text()).trim();
       var sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(k)});
-      await fetch('/api/push/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sub)});
+      var resp=await fetch('/api/push/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sub)});
+      if(!resp.ok){
+        var e=await resp.json().catch(function(){return {};});
+        throw new Error('Server: '+(e.error||resp.status));
+      }
       await fetch('/api/push/test',{method:'POST'});
-    }catch(e){console.warn('[Push]',e);}
+    }catch(e){
+      console.warn('[Push]',e);
+      alert('Errore: '+(e.message||e));
+    }
   }
   window.subscribePush=subscribePush;
   if(document.readyState==='complete')showPushBanner();
@@ -16005,7 +16037,7 @@ function prepareSubmitMobile(ev) {
 </html>"""
 
 
-MOBILE_PROFILO_TMPL = """<!DOCTYPE html>
+MOBILE_PROFILO_TMPL = r"""<!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -16077,6 +16109,13 @@ input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
     <button type="button" id="push-toggle-btn" class="btn-save" onclick="togglePush()">
       <i class="fa fa-bell"></i> <span id="push-btn-text">Attiva notifiche</span>
     </button>
+    <button type="button" class="btn-secondary" onclick="document.getElementById('push-diag').style.display='block';this.style.display='none'" style="margin-top:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);font-size:12px;padding:10px;border-radius:10px;width:100%;cursor:pointer">
+      <i class="fa fa-stethoscope"></i> Mostra diagnostica
+    </button>
+    <div id="push-diag" style="display:none;margin-top:14px;background:#0f172a;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px;font-size:11.5px;font-family:monospace;color:rgba(255,255,255,.7);line-height:1.7;word-break:break-word">
+      <div style="color:rgba(255,255,255,.4);font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📋 Diagnostica push</div>
+      <div id="diag-content">Caricamento…</div>
+    </div>
   </div>
 
   <!-- Cambia email -->
@@ -16114,20 +16153,120 @@ input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
 <script>
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(function(){});
 
+// ───── Diagnostica completa ─────
+function isStandalone(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+function isIOS(){
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+}
+function getIOSVersion(){
+  var m = navigator.userAgent.match(/OS (\d+)_(\d+)/i);
+  return m ? parseFloat(m[1] + '.' + m[2]) : null;
+}
+
+async function buildDiagnostics(){
+  var lines = [];
+  var ios = isIOS();
+  var iosVer = getIOSVersion();
+  var standalone = isStandalone();
+  var hasSW = 'serviceWorker' in navigator;
+  var hasPM = 'PushManager' in window;
+  var hasNotif = 'Notification' in window;
+  var perm = hasNotif ? Notification.permission : 'n/a';
+
+  lines.push('Browser: ' + (ios ? 'Safari iOS' : 'Altro'));
+  if (iosVer) lines.push('iOS version: ' + iosVer + (iosVer < 16.4 ? ' ⚠️ (richiede 16.4+)' : ' ✓'));
+  lines.push('Modalità: ' + (standalone ? '✓ App installata (standalone)' : '⚠️ Browser (NON installata)'));
+  lines.push('Service Worker: ' + (hasSW ? '✓' : '✗'));
+  lines.push('Push Manager: ' + (hasPM ? '✓' : '✗ (manca)'));
+  lines.push('Notification API: ' + (hasNotif ? '✓' : '✗'));
+  lines.push('Permesso: ' + perm);
+
+  if (hasSW) {
+    try {
+      var reg = await navigator.serviceWorker.ready;
+      lines.push('SW registrato: ✓ ' + (reg.scope || ''));
+      if (hasPM) {
+        var sub = await reg.pushManager.getSubscription();
+        if (sub) {
+          var ep = sub.endpoint;
+          var host = (new URL(ep)).host;
+          lines.push('Subscription locale: ✓ ' + host);
+          lines.push('  endpoint: ' + ep.substring(0, 80) + '...');
+        } else {
+          lines.push('Subscription locale: NESSUNA');
+        }
+      }
+    } catch(e){
+      lines.push('SW errore: ' + e.message);
+    }
+  }
+
+  // Verifica anche server-side: il device è registrato?
+  try {
+    var r = await fetch('/api/push/my-subs');
+    if (r.ok) {
+      var d = await r.json();
+      lines.push('Device registrati su server: ' + d.count);
+      if (d.count > 0) {
+        lines.push('  ultima registrazione: ' + (d.latest || '-'));
+      }
+    }
+  } catch(e){}
+
+  // Diagnosi finale
+  lines.push('');
+  lines.push('━━━ DIAGNOSI ━━━');
+  if (ios && !standalone) {
+    lines.push('❌ Su iPhone DEVI installare l\\'app:');
+    lines.push('  1. Tocca "Condividi" ⬆ in Safari');
+    lines.push('  2. "Aggiungi alla schermata Home"');
+    lines.push('  3. Apri l\\'app dall\\'icona blu sulla home');
+    lines.push('  4. Torna qui e riattiva le notifiche');
+  } else if (ios && iosVer && iosVer < 16.4) {
+    lines.push('❌ iOS ' + iosVer + ' troppo vecchio.');
+    lines.push('  Aggiorna a iOS 16.4 o successivo.');
+  } else if (perm === 'denied') {
+    lines.push('❌ Permesso negato.');
+    lines.push('  Su iPhone: Impostazioni → [App] → Notifiche → Consenti');
+  } else if (!hasPM) {
+    lines.push('❌ Push non supportato da questo browser.');
+  } else if (perm === 'default') {
+    lines.push('⚠️ Devi cliccare "Attiva notifiche" qui sopra.');
+  } else if (perm === 'granted') {
+    lines.push('✓ Tutto OK lato browser. Se 0 device sul server,');
+    lines.push('  clicca "Disattiva" e poi "Attiva" di nuovo.');
+  }
+
+  return lines.join('\\n');
+}
+
 async function refreshPushStatus(){
   var st = document.getElementById('push-status');
   var stT = document.getElementById('push-status-text');
   var btnT = document.getElementById('push-btn-text');
   var btn = document.getElementById('push-toggle-btn');
+  var diag = document.getElementById('diag-content');
+
+  // Aggiorna sempre la diagnostica
+  if (diag) {
+    buildDiagnostics().then(function(d){ diag.textContent = d; });
+  }
+
   if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
     st.className='push-status unsupported';
-    st.innerHTML='<i class="fa fa-circle-info"></i> <span>Notifiche non supportate da questo browser</span>';
+    if (isIOS() && !isStandalone()) {
+      st.innerHTML='<i class="fa fa-circle-info"></i> <span>Aggiungi l\\'app alla Home dell\\'iPhone per attivare le notifiche</span>';
+    } else {
+      st.innerHTML='<i class="fa fa-circle-info"></i> <span>Notifiche non supportate da questo browser</span>';
+    }
     btn.style.display='none';
     return;
   }
   if (Notification.permission === 'denied') {
     st.className='push-status off';
-    stT.textContent='Permesso negato. Abilita dalle impostazioni del telefono.';
+    stT.textContent='Permesso negato. Vai in Impostazioni iPhone → Accesso Fiere → Notifiche → Consenti';
     btn.style.display='none';
     return;
   }
@@ -16141,30 +16280,60 @@ async function refreshPushStatus(){
       btn.style.background='rgba(239,68,68,.2)';
     } else {
       st.className='push-status off';
-      st.innerHTML='<i class="fa fa-bell-slash"></i> <span>Notifiche disattivate</span>';
+      if (isIOS() && !isStandalone()) {
+        st.innerHTML='<i class="fa fa-triangle-exclamation"></i> <span>App NON installata. Usa "Condividi → Aggiungi alla Home" prima di attivare</span>';
+      } else {
+        st.innerHTML='<i class="fa fa-bell-slash"></i> <span>Notifiche disattivate</span>';
+      }
       btnT.textContent='Attiva notifiche';
     }
   } catch(e){ console.warn(e); }
 }
 function urlBase64ToUint8Array(b64){var p='='.repeat((4-b64.length%4)%4);var s=(b64+p).replace(/-/g,'+').replace(/_/g,'/');var r=atob(s);var a=new Uint8Array(r.length);for(var i=0;i<r.length;i++)a[i]=r.charCodeAt(i);return a;}
+
 async function togglePush(){
   var btn=document.getElementById('push-toggle-btn'); btn.disabled=true;
+
+  // Pre-check iOS standalone
+  if (isIOS() && !isStandalone()) {
+    btn.disabled=false;
+    alert('Su iPhone devi prima installare l\\'app:\\n\\n1. Tocca "Condividi" in Safari\\n2. Scorri e tocca "Aggiungi alla schermata Home"\\n3. Apri l\\'app dall\\'icona blu sulla home\\n4. Torna qui e riprova ad attivare');
+    return;
+  }
+  if (!('PushManager' in window)) {
+    btn.disabled=false;
+    alert('Questo browser non supporta le notifiche push.');
+    return;
+  }
+
   try {
     var reg = await navigator.serviceWorker.ready;
     var sub = await reg.pushManager.getSubscription();
     if (sub) {
       // Disattiva
-      await sub.unsubscribe();
+      try { await sub.unsubscribe(); } catch(e){}
       await fetch('/api/push/unsubscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({endpoint:sub.endpoint})});
     } else {
       var perm = await Notification.requestPermission();
-      if (perm !== 'granted') { btn.disabled=false; return; }
+      if (perm !== 'granted') {
+        btn.disabled=false;
+        if (perm === 'denied') alert('Hai negato il permesso. Per attivarle: Impostazioni iPhone → [App] → Notifiche → Consenti.');
+        return;
+      }
       var k=(await (await fetch('/api/push/public-key')).text()).trim();
       var newSub = await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(k)});
-      await fetch('/api/push/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(newSub)});
+      var subResp = await fetch('/api/push/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(newSub)});
+      if (!subResp.ok) {
+        var errData = await subResp.json().catch(function(){return {};});
+        throw new Error('Server: ' + (errData.error || subResp.status));
+      }
+      // Notifica di benvenuto (test)
       await fetch('/api/push/test',{method:'POST'});
     }
-  } catch(e){ console.warn(e); alert('Errore: '+e.message); }
+  } catch(e){
+    console.warn('[Push] errore:', e);
+    alert('Errore attivazione: ' + (e.message || e));
+  }
   btn.disabled=false;
   refreshPushStatus();
 }
