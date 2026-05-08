@@ -2267,6 +2267,7 @@ setInterval(updateClock,1000);updateClock();
     document.getElementById('pwa-yes').onclick=function(){window.installApp();};
     document.getElementById('pwa-no').onclick=function(){b.remove();};
   }
+  setTimeout(showInstallBanner, 1800);
   function isIOSSafari(){var ua=navigator.userAgent.toLowerCase();return /iphone|ipad|ipod/.test(ua)&&/safari/.test(ua)&&!/crios|fxios/.test(ua);}
   if(isIOSSafari()&&navigator.standalone!==true){
     setTimeout(function(){
@@ -2496,14 +2497,33 @@ def _b64url_decode(s):
     return base64.urlsafe_b64decode(s + b'=' * pad)
 
 
+def _clean_vapid_public_key(value):
+    """Normalizza e valida la public key VAPID base64url (65 byte P-256)."""
+    cleaned = ''.join(ch for ch in str(value or '').strip() if ch.isalnum() or ch in '-_')
+    try:
+        raw = _b64url_decode(cleaned)
+    except Exception:
+        return ''
+    if len(raw) == 65 and raw[0] == 4:
+        return cleaned
+    return ''
+
+
 def _get_vapid_keys():
     """Restituisce (public_key_b64url, private_key_pem). Le genera al primo uso."""
     mdb = get_master_db()
+    mdb.execute("""
+        CREATE TABLE IF NOT EXISTS app_globals (
+            chiave TEXT PRIMARY KEY,
+            valore TEXT
+        )
+    """)
     pub = mdb.execute("SELECT valore FROM app_globals WHERE chiave='vapid_public'").fetchone()
     priv = mdb.execute("SELECT valore FROM app_globals WHERE chiave='vapid_private'").fetchone()
-    if pub and priv and pub['valore'] and priv['valore']:
+    clean_pub = _clean_vapid_public_key(pub['valore'] if pub else '')
+    if clean_pub and priv and priv['valore']:
         mdb.close()
-        return pub['valore'], priv['valore']
+        return clean_pub, priv['valore']
     # Genera nuove chiavi VAPID (curva P-256)
     from cryptography.hazmat.primitives.asymmetric import ec
     from cryptography.hazmat.primitives import serialization
@@ -2730,14 +2750,14 @@ def pwa_manifest():
     }
     return Response(json.dumps(manifest, ensure_ascii=False, indent=2),
                     mimetype='application/manifest+json',
-                    headers={'Cache-Control': 'public, max-age=3600'})
+                    headers={'Cache-Control': 'no-cache'})
 
 
 @app.route('/sw.js')
 def pwa_service_worker():
     """Service worker per PWA. Permette installazione + cache base + offline minimo."""
     sw_code = """// Accesso Fiere — Service Worker
-const CACHE_VERSION = 'v3-push-fix';
+const CACHE_VERSION = 'v4-vapid-install-fix';
 const CACHE_NAME = `accesso-fiere-${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline';
 
@@ -2861,7 +2881,8 @@ def pwa_static(filename):
 def pwa_push_public_key():
     """Restituisce la chiave pubblica VAPID al browser per registrare il push."""
     pub, _ = _get_vapid_keys()
-    return Response(pub, mimetype='text/plain')
+    return Response(pub, mimetype='text/plain',
+                    headers={'Cache-Control': 'no-store, max-age=0'})
 
 
 @app.route('/api/push/subscribe', methods=['POST'])
@@ -3181,7 +3202,6 @@ PWA_INSTALL_SCRIPT = """
   });
 
   function showInstallBanner(){
-    if (sessionStorage.getItem('pwa_install_dismissed')) return;
     if (window.matchMedia('(display-mode: standalone)').matches) return;
     if (navigator.standalone === true) return;
     if (document.getElementById('pwa-install-banner')) return;
@@ -3200,7 +3220,10 @@ PWA_INSTALL_SCRIPT = """
       </div>`;
     document.body.appendChild(banner);
     document.getElementById('pwa-install-yes').onclick = function(){
-      if (!deferredPrompt) return;
+      if (!deferredPrompt) {
+        alert('Per installare su Chrome mobile: apri il menu ⋮ e scegli "Installa app" o "Aggiungi a schermata Home".\\n\\nSu Chrome desktop usa l icona Installa nella barra degli indirizzi.');
+        return;
+      }
       deferredPrompt.prompt();
       deferredPrompt.userChoice.then(function(choice){
         if (choice.outcome === 'accepted') {
@@ -3210,10 +3233,10 @@ PWA_INSTALL_SCRIPT = """
       });
     };
     document.getElementById('pwa-install-no').onclick = function(){
-      sessionStorage.setItem('pwa_install_dismissed', '1');
       banner.remove();
     };
   }
+  setTimeout(showInstallBanner, 1800);
 
   // Su iOS Safari il prompt nativo non esiste — mostriamo un suggerimento manuale
   // dopo che l'utente ha visitato 2 volte (per non essere fastidiosi)
@@ -15988,17 +16011,22 @@ function prepareSubmitMobile(ev) {
     navigator.serviceWorker.register('/sw.js').catch(function(){});
   }
   let dp = null;
-  window.addEventListener('beforeinstallprompt', function(e){
-    e.preventDefault(); dp = e;
-    if (sessionStorage.getItem('pwa_install_dismissed')) return;
+  function showInstallBanner(){
     if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true) return;
     if (document.getElementById('pwa-ib')) return;
     var b=document.createElement('div'); b.id='pwa-ib';
     b.innerHTML=`<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(15,23,42,.35);max-width:480px;margin:0 auto"><div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px">📲</div><div style="flex:1"><div style="font-weight:800;font-size:14px">Installa l'app</div><div style="font-size:11.5px;color:rgba(255,255,255,.75)">Apri più velocemente, usa offline</div></div><button id="pwy" style="background:#fff;color:#0f4c81;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:12.5px">Installa</button><button id="pwn" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;padding:4px 8px">×</button></div>`;
     document.body.appendChild(b);
-    document.getElementById('pwy').onclick=function(){if(!dp)return;dp.prompt();dp.userChoice.then(function(c){if(c.outcome==='accepted')b.remove();dp=null;});};
-    document.getElementById('pwn').onclick=function(){sessionStorage.setItem('pwa_install_dismissed','1');b.remove();};
+    document.getElementById('pwy').onclick=function(){
+      if(dp){dp.prompt();dp.userChoice.then(function(c){if(c.outcome==='accepted')b.remove();dp=null;});return;}
+      alert('Per installare su Chrome mobile: apri il menu ⋮ e scegli "Installa app" o "Aggiungi a schermata Home".');
+    };
+    document.getElementById('pwn').onclick=function(){b.remove();};
+  }
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault(); dp = e; showInstallBanner();
   });
+  setTimeout(showInstallBanner, 1800);
   function isIOS(){var u=navigator.userAgent.toLowerCase();return /iphone|ipad|ipod/.test(u)&&/safari/.test(u)&&!/crios|fxios/.test(u);}
   if(isIOS()&&navigator.standalone!==true){
     var v=parseInt(localStorage.getItem('pwa_visits')||'0',10)+1; localStorage.setItem('pwa_visits',v);
@@ -16258,6 +16286,27 @@ function urlBase64ToUint8Array(b64){
   for (var i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
   return arr;
 }
+function cleanVapidKey(value){
+  return String(value || "").trim().replace(/[^A-Za-z0-9_-]/g, "");
+}
+function isValidVapidKey(value){
+  var k = cleanVapidKey(value);
+  if (k.length < 80 || k.length > 90) return false;
+  try {
+    var arr = urlBase64ToUint8Array(k);
+    return arr.length === 65 && arr[0] === 4;
+  } catch(e) {
+    return false;
+  }
+}
+async function getVapidPublicKey(){
+  var injected = cleanVapidKey(window.VAPID_PUBLIC_KEY);
+  if (isValidVapidKey(injected)) return injected;
+  var resp = await fetch("/api/push/public-key?v=" + Date.now(), {cache: "no-store"});
+  var fetched = cleanVapidKey(await resp.text());
+  if (isValidVapidKey(fetched)) return fetched;
+  throw new Error("Chiave VAPID non valida: HTML=" + injected.length + " API=" + fetched.length + " (atteso 87)");
+}
 
 async function refreshDiag(){
   var diag = document.getElementById("push-diag");
@@ -16279,8 +16328,8 @@ async function refreshDiag(){
   lines.push("Notification API: " + (hasNotif ? "OK" : "NO"));
   lines.push("Permesso: " + perm);
   // VAPID key check
-  var vk = window.VAPID_PUBLIC_KEY || "";
-  lines.push("VAPID key: " + vk.length + " chars" + (vk.length === 87 ? " OK" : " ANOMALA!"));
+  var vk = cleanVapidKey(window.VAPID_PUBLIC_KEY || "");
+  lines.push("VAPID key HTML: " + vk.length + " chars" + (isValidVapidKey(vk) ? " OK" : " ANOMALA!"));
   if (vk.length > 0 && vk.length < 200) {
     lines.push("  inizio: " + vk.substring(0, 20) + "...");
   }
@@ -16434,13 +16483,9 @@ async function togglePush(){
       return;
     }
 
-    // STEP 3: Recupera chiave VAPID dal server e VALIDALA
-    // Iniettata direttamente dal template Flask (no fetch, no cache, no Safari issues)
-    var keyText = window.VAPID_PUBLIC_KEY || "";
-    keyText = String(keyText).trim().replace(/[^A-Za-z0-9_\\-]/g, "");
-    if (!keyText || keyText.length < 80 || keyText.length > 90) {
-      throw new Error("Chiave VAPID lunghezza anomala: " + keyText.length + " (atteso ~87)");
-    }
+    // STEP 3: Recupera e valida la chiave VAPID.
+    // Prima usa quella iniettata nel template; se manca, passa all'endpoint no-store.
+    var keyText = await getVapidPublicKey();
 
     // STEP 4: Subscribe usando STRINGA diretta (metodo W3C standard, preferito da Safari iOS)
     // Documentato in webpush-ios-example, MDN, e specifica W3C Push API
@@ -16521,7 +16566,8 @@ function refreshInstallStatus(){
     help.style.display = "none";
   } else {
     // Safari iOS, Firefox, o Chrome senza prompt
-    btn.style.display = "none";
+    btn.style.display = "flex";
+    btn.innerHTML = '<i class="fa fa-circle-info"></i> Vedi come installare';
     help.style.display = "block";
     var ua = navigator.userAgent;
     var isIOS_ = /iphone|ipad|ipod/i.test(ua);
@@ -16568,6 +16614,11 @@ function installApp(){
     });
   } else {
     refreshInstallStatus();
+    var help = document.getElementById("install-help");
+    if (help) {
+      help.style.display = "block";
+      help.scrollIntoView({behavior: "smooth", block: "center"});
+    }
   }
 }
 
@@ -16591,13 +16642,9 @@ def mobile_profilo():
         return redirect(url_for('login'))
     u = dict(u)  # converti Row in dict per poter usare .get()
     msgs = get_flashed_messages(with_categories=True)
-    # Inietta la chiave VAPID direttamente nel HTML così evitiamo la fetch
-    # (fetch può essere intercettata/cachata da Safari iOS)
-    try:
-        vapid_pub, _ = _get_vapid_keys()
-    except Exception as e:
-        print(f'[VAPID] errore generazione chiave: {e}')
-        vapid_pub = ''
+    # Inietta la chiave VAPID nel HTML. Se qualcosa non va, l'errore deve
+    # emergere nei log invece di trasformarsi in una chiave vuota lato browser.
+    vapid_pub, _ = _get_vapid_keys()
     return render_template_string(MOBILE_PROFILO_TMPL,
         nome=u.get('nome',''), cognome=u.get('cognome',''),
         email=u.get('email',''), mansione=u.get('mansione') or '',
