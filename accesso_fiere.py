@@ -2313,36 +2313,43 @@ setInterval(updateClock,1000);updateClock();
   }
   async function subscribePush(){
     try {
-      var perm = await Notification.requestPermission();
-      if (perm !== 'granted') return;
       var reg = await navigator.serviceWorker.ready;
-      var keyText = (await (await fetch('/api/push/public-key')).text()).trim();
-      if (!keyText || keyText.length < 80) throw new Error('Chiave VAPID invalida');
-      var keyArr = urlBase64ToUint8Array(keyText);
-      if (keyArr.length !== 65) throw new Error('Chiave VAPID lunghezza errata');
-      var sub = null, lastErr = null;
-      var attempts = [
-        {n:'string', v:keyText},
-        {n:'Uint8Array', v:keyArr},
-        {n:'ArrayBuffer', v:keyArr.buffer}
-      ];
-      for (var i = 0; i < attempts.length; i++) {
+      // Pulisci sub esistente
+      var existing = await reg.pushManager.getSubscription();
+      if (existing) {
+        try { await existing.unsubscribe(); } catch(e){}
         try {
-          sub = await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey: attempts[i].v});
-          console.log('[Push] subscribe OK con ' + attempts[i].n);
-          break;
-        } catch(eA) {
-          console.warn('[Push] ' + attempts[i].n + ' fallito:', eA.message);
-          lastErr = eA;
-        }
+          await fetch('/api/push/unsubscribe', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({endpoint: existing.endpoint})
+          });
+        } catch(e){}
       }
-      if (!sub) throw lastErr || new Error('Subscribe fallito');
+      var perm = Notification.permission;
+      if (perm !== 'granted') perm = await Notification.requestPermission();
+      if (perm !== 'granted') return;
+      var keyText = (await (await fetch('/api/push/public-key',{cache:'no-store'})).text()).trim();
+      keyText = keyText.replace(/[^A-Za-z0-9_\\-]/g, '');
+      if (!keyText || keyText.length < 80 || keyText.length > 90) throw new Error('Chiave VAPID anomala: ' + keyText.length);
+      // Subscribe con STRINGA diretta (compatibile Safari iOS, Chrome, Firefox)
+      var sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: keyText
+      });
+      console.log('[Push] subscribe OK');
       await fetch('/api/push/subscribe', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify(sub)
+        body: JSON.stringify(sub.toJSON())
       });
       await fetch('/api/push/test', {method:'POST'});
-    } catch(e){ console.warn('[Push] subscribe failed:', e); alert('Errore: '+(e.message||e)); }
+    } catch(e){
+      console.error('[Push] subscribe failed:', e);
+      var msg = e.message || String(e);
+      if (msg.indexOf('invalid characters') >= 0) {
+        msg = 'iOS Safari rifiuta la chiave. Chiudi completamente l app e riapri, poi riprova.';
+      }
+      alert('Errore: ' + msg);
+    }
   }
   // Esponi globalmente per chiamarla da un bottone "Attiva notifiche" nelle impostazioni
   window.subscribePush = subscribePush;
@@ -2730,7 +2737,7 @@ def pwa_manifest():
 def pwa_service_worker():
     """Service worker per PWA. Permette installazione + cache base + offline minimo."""
     sw_code = """// Accesso Fiere — Service Worker
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v3-push-fix';
 const CACHE_NAME = `accesso-fiere-${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline';
 
@@ -16033,50 +16040,45 @@ function prepareSubmitMobile(ev) {
   async function subscribePush(){
     try{
       if(/iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone){
-        alert('Su iPhone devi prima installare l\\'app:\\n\\n1. Tocca "Condividi" in Safari\\n2. Tocca "Aggiungi alla schermata Home"\\n3. Apri l\\'app dall\\'icona blu sulla home\\n4. Riprova ad attivare le notifiche');
+        alert('Su iPhone devi prima installare l app:\\n\\n1. Tocca Condividi in Safari\\n2. Tocca Aggiungi alla schermata Home\\n3. Apri l app dall icona blu sulla home\\n4. Riprova ad attivare le notifiche');
         return;
       }
       if(!('PushManager' in window)){
         alert('Questo browser non supporta le notifiche push.');
         return;
       }
-      var p=await Notification.requestPermission();
+      var reg=await navigator.serviceWorker.ready;
+      // Pulisci sub esistente per evitare stati corrotti (Safari iOS)
+      var existing=await reg.pushManager.getSubscription();
+      if(existing){
+        try{await existing.unsubscribe();}catch(e){}
+        try{await fetch('/api/push/unsubscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({endpoint:existing.endpoint})});}catch(e){}
+      }
+      var p=Notification.permission;
+      if(p!=='granted') p=await Notification.requestPermission();
       if(p!=='granted'){
-        if(p==='denied') alert('Hai negato il permesso. Per attivarle:\\nImpostazioni iPhone → Accesso Fiere → Notifiche → Consenti');
+        if(p==='denied') alert('Hai negato il permesso. Impostazioni iPhone > Accesso Fiere > Notifiche > Consenti');
         return;
       }
-      var reg=await navigator.serviceWorker.ready;
-      var keyText=(await (await fetch('/api/push/public-key')).text()).trim();
-      if(!keyText || keyText.length < 80) throw new Error('Chiave VAPID invalida');
-      var keyArr=urlBase64ToUint8Array(keyText);
-      if(keyArr.length !== 65) throw new Error('Chiave VAPID lunghezza errata: '+keyArr.length);
-      // Multi-fallback per Safari iOS / Chrome / Firefox
-      var sub=null, lastErr=null;
-      var attempts=[
-        {n:'string',v:keyText},
-        {n:'Uint8Array',v:keyArr},
-        {n:'ArrayBuffer',v:keyArr.buffer}
-      ];
-      for(var i=0;i<attempts.length;i++){
-        try {
-          sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:attempts[i].v});
-          console.log('[Push] subscribe OK con '+attempts[i].n);
-          break;
-        } catch(eA) {
-          console.warn('[Push] '+attempts[i].n+' fallito:', eA.message);
-          lastErr=eA;
-        }
-      }
-      if(!sub) throw lastErr || new Error('Subscribe fallito');
-      var resp=await fetch('/api/push/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sub)});
+      var keyText=(await (await fetch('/api/push/public-key',{cache:'no-store'})).text()).trim();
+      keyText=keyText.replace(/[^A-Za-z0-9_\\-]/g,'');
+      if(!keyText || keyText.length < 80 || keyText.length > 90) throw new Error('Chiave VAPID anomala: '+keyText.length);
+      // Subscribe con STRINGA (metodo W3C, preferito da Safari iOS)
+      var sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:keyText});
+      console.log('[Push] subscribe OK');
+      var resp=await fetch('/api/push/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sub.toJSON())});
       if(!resp.ok){
         var e=await resp.json().catch(function(){return {};});
         throw new Error('Server: '+(e.error||resp.status));
       }
       await fetch('/api/push/test',{method:'POST'});
     }catch(e){
-      console.warn('[Push]',e);
-      alert('Errore: '+(e.message||e));
+      console.error('[Push] ERRORE:',e);
+      var msg=e.message||String(e);
+      if(msg.indexOf('invalid characters')>=0){
+        msg='iOS Safari rifiuta la chiave. Chiudi completamente l app (swipe up), riapri, riprova. Se persiste, disinstalla e reinstalla.';
+      }
+      alert('Errore: '+msg);
     }
   }
   window.subscribePush=subscribePush;
@@ -16208,7 +16210,21 @@ input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
 
 <script>
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/sw.js").catch(function(){});
+  navigator.serviceWorker.register("/sw.js").then(function(reg){
+    // Forza aggiornamento del Service Worker ad ogni accesso
+    reg.update().catch(function(){});
+    // Se c'è un nuovo SW in attesa, ricarica
+    reg.addEventListener("updatefound", function(){
+      var nw = reg.installing;
+      if (nw) {
+        nw.addEventListener("statechange", function(){
+          if (nw.state === "activated" && navigator.serviceWorker.controller) {
+            console.log("[SW] aggiornato, reload pagina");
+          }
+        });
+      }
+    });
+  }).catch(function(e){ console.warn("SW register failed:", e); });
 }
 
 function isStandalone(){
@@ -16375,66 +16391,80 @@ async function togglePush(){
 
   try {
     var reg = await navigator.serviceWorker.ready;
-    var sub = await reg.pushManager.getSubscription();
-    if (sub) {
-      try { await sub.unsubscribe(); } catch(e){}
-      await fetch("/api/push/unsubscribe", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({endpoint: sub.endpoint})
-      });
-    } else {
-      var perm = await Notification.requestPermission();
-      if (perm !== "granted") {
+
+    // STEP 1: Pulisci sempre subscription esistente (sia dal browser che dal server)
+    // Questo evita stati corrotti su Safari iOS
+    var existingSub = await reg.pushManager.getSubscription();
+    if (existingSub) {
+      var endpoint = existingSub.endpoint;
+      try { await existingSub.unsubscribe(); } catch(e) { console.warn("unsubscribe locale failed:", e); }
+      try {
+        await fetch("/api/push/unsubscribe", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({endpoint: endpoint})
+        });
+      } catch(e) { console.warn("unsubscribe server failed:", e); }
+      // Se aveva sub e l'utente vuole disattivare, finisco qui
+      if (btn.dataset.action === "off" || document.getElementById("push-btn-text").textContent.indexOf("Disattiva") >= 0) {
         btn.disabled = false;
-        if (perm === "denied") alert("Permesso negato. Vai in Impostazioni iPhone > [App] > Notifiche > Consenti");
+        refreshPushStatus();
+        refreshDiag();
         return;
       }
-      var keyResp = await fetch("/api/push/public-key");
-      var keyText = (await keyResp.text()).trim();
-      if (!keyText || keyText.length < 80) throw new Error("Chiave VAPID invalida (lunghezza " + keyText.length + ")");
-      var keyArr = urlBase64ToUint8Array(keyText);
-      if (keyArr.length !== 65) throw new Error("Chiave VAPID lunghezza errata: " + keyArr.length + " bytes (atteso 65)");
-
-      // Strategia multi-fallback per massima compatibilita Safari iOS / Chrome / Firefox:
-      // 1) Stringa base64url (preferito da Safari iOS, accettato da spec W3C)
-      // 2) Uint8Array (Chrome, Firefox)
-      // 3) ArrayBuffer (alcuni Chrome vecchi)
-      var newSub = null;
-      var lastErr = null;
-      var attempts = [
-        {name: "string", value: keyText},
-        {name: "Uint8Array", value: keyArr},
-        {name: "ArrayBuffer", value: keyArr.buffer}
-      ];
-      for (var i = 0; i < attempts.length; i++) {
-        try {
-          newSub = await reg.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: attempts[i].value
-          });
-          console.log("[Push] subscribe OK con " + attempts[i].name);
-          break;
-        } catch(eAttempt) {
-          console.warn("[Push] tentativo " + attempts[i].name + " fallito:", eAttempt.message);
-          lastErr = eAttempt;
-        }
-      }
-      if (!newSub) throw lastErr || new Error("Tutti i tentativi falliti");
-      var subResp = await fetch("/api/push/subscribe", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(newSub)
-      });
-      if (!subResp.ok) {
-        var ed = await subResp.json().catch(function(){return {};});
-        throw new Error("Server: " + (ed.error || subResp.status));
-      }
-      await fetch("/api/push/test", {method: "POST"});
     }
+
+    // STEP 2: Chiedi permesso (se non già granted)
+    var perm = Notification.permission;
+    if (perm !== "granted") {
+      perm = await Notification.requestPermission();
+    }
+    if (perm !== "granted") {
+      btn.disabled = false;
+      if (perm === "denied") alert("Permesso negato. Vai in Impostazioni iPhone > [App] > Notifiche > Consenti");
+      return;
+    }
+
+    // STEP 3: Recupera chiave VAPID dal server e VALIDALA
+    var keyResp = await fetch("/api/push/public-key", {cache: "no-store"});
+    var keyText = (await keyResp.text()).trim();
+    // Sanitize: solo caratteri base64url validi
+    keyText = keyText.replace(/[^A-Za-z0-9_\\-]/g, "");
+    if (!keyText || keyText.length < 80 || keyText.length > 90) {
+      throw new Error("Chiave VAPID lunghezza anomala: " + keyText.length);
+    }
+
+    // STEP 4: Subscribe usando STRINGA diretta (metodo W3C standard, preferito da Safari iOS)
+    // Documentato in webpush-ios-example, MDN, e specifica W3C Push API
+    console.log("[Push] subscribing con chiave len=" + keyText.length);
+    var newSub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: keyText
+    });
+    console.log("[Push] subscribe OK, endpoint:", newSub.endpoint.substring(0, 50));
+
+    // STEP 5: Manda al server
+    var subJSON = newSub.toJSON();
+    var subResp = await fetch("/api/push/subscribe", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(subJSON)
+    });
+    if (!subResp.ok) {
+      var ed = await subResp.json().catch(function(){return {};});
+      throw new Error("Server: " + (ed.error || subResp.status));
+    }
+    // Test notifica
+    await fetch("/api/push/test", {method: "POST"});
+
   } catch(e) {
-    console.warn("[Push]", e);
-    alert("Errore: " + (e.message || e));
+    console.error("[Push] ERRORE:", e);
+    var msg = e.message || String(e);
+    // Errore specifico iOS
+    if (msg.indexOf("invalid characters") >= 0) {
+      msg = "iOS Safari rifiuta la chiave. Prova a:\\n1. Chiudere completamente l app (swipe up)\\n2. Riaprire dall icona\\n3. Riprovare\\n\\nSe persiste, disinstalla l app e reinstalla.";
+    }
+    alert("Errore: " + msg);
   }
   btn.disabled = false;
   refreshPushStatus();
