@@ -2243,28 +2243,40 @@ setInterval(updateClock,1000);updateClock();
   window.addEventListener('beforeinstallprompt', function(e){
     e.preventDefault(); deferredPrompt = e; showInstallBanner();
   });
+  // Esponi globalmente per debug e bottone manuale
+  window.installApp = function(){
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function(c){
+        if (c.outcome === 'accepted') {
+          var b = document.getElementById('pwa-install-banner');
+          if (b) b.remove();
+        }
+        deferredPrompt = null;
+      });
+    } else {
+      alert('Installazione non disponibile in questo momento.\\n\\nSu Chrome desktop: clicca l\\'icona "Installa" nella barra degli indirizzi.\\nSu mobile: usa "Aggiungi alla schermata Home" dal menu del browser.');
+    }
+  };
   function showInstallBanner(){
-    if (sessionStorage.getItem('pwa_install_dismissed')) return;
     if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true) return;
     if (document.getElementById('pwa-install-banner')) return;
     var b = document.createElement('div'); b.id='pwa-install-banner';
-    b.innerHTML = `<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(15,23,42,.35);max-width:480px;margin:0 auto"><div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📲</div><div style="flex:1;min-width:0"><div style="font-weight:800;font-size:14px;letter-spacing:-.1px;line-height:1.2">Installa l'app</div><div style="font-size:11.5px;color:rgba(255,255,255,.75);margin-top:2px">Apri più velocemente, usa offline</div></div><button id="pwa-yes" style="background:#fff;color:#0f4c81;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:12.5px;cursor:pointer;flex-shrink:0">Installa</button><button id="pwa-no" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">×</button></div>`;
+    b.innerHTML = '<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(15,23,42,.35);max-width:480px;margin:0 auto"><div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📲</div><div style="flex:1;min-width:0"><div style="font-weight:800;font-size:14px;letter-spacing:-.1px;line-height:1.2">Installa l app</div><div style="font-size:11.5px;color:rgba(255,255,255,.75);margin-top:2px">Apri piu velocemente, usa offline</div></div><button id="pwa-yes" style="background:#fff;color:#0f4c81;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:12.5px;cursor:pointer;flex-shrink:0">Installa</button><button id="pwa-no" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">×</button></div>';
     document.body.appendChild(b);
-    document.getElementById('pwa-yes').onclick=function(){if(!deferredPrompt)return;deferredPrompt.prompt();deferredPrompt.userChoice.then(function(c){if(c.outcome==='accepted')b.remove();deferredPrompt=null;});};
-    document.getElementById('pwa-no').onclick=function(){sessionStorage.setItem('pwa_install_dismissed','1');b.remove();};
+    document.getElementById('pwa-yes').onclick=function(){window.installApp();};
+    document.getElementById('pwa-no').onclick=function(){b.remove();};
   }
   function isIOSSafari(){var ua=navigator.userAgent.toLowerCase();return /iphone|ipad|ipod/.test(ua)&&/safari/.test(ua)&&!/crios|fxios/.test(ua);}
   if(isIOSSafari()&&navigator.standalone!==true){
-    var v=parseInt(localStorage.getItem('pwa_visits')||'0',10)+1;localStorage.setItem('pwa_visits',v);
-    if(v>=2&&!sessionStorage.getItem('pwa_install_dismissed')&&!localStorage.getItem('pwa_ios_seen')){
-      setTimeout(function(){
+    setTimeout(function(){
         if(document.getElementById('pwa-install-banner'))return;
+        if(window.matchMedia('(display-mode: standalone)').matches)return;
         var b=document.createElement('div');b.id='pwa-install-banner';
-        b.innerHTML=`<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border-radius:14px;padding:13px 14px;box-shadow:0 8px 24px rgba(15,23,42,.35);max-width:480px;margin:0 auto"><div style="display:flex;align-items:center;gap:12px;margin-bottom:7px"><div style="width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📲</div><div style="flex:1;font-weight:800;font-size:14px">Installa Accesso Fiere</div><button id="pwa-ios-no" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">×</button></div><div style="font-size:12px;color:rgba(255,255,255,.85);line-height:1.45">Tocca <strong>Condividi</strong> <span style="display:inline-block;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:11px">⬆</span> in basso, poi <strong>"Aggiungi a Home"</strong></div></div>`;
+        b.innerHTML='<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border-radius:14px;padding:13px 14px;box-shadow:0 8px 24px rgba(15,23,42,.35);max-width:480px;margin:0 auto"><div style="display:flex;align-items:center;gap:12px;margin-bottom:7px"><div style="width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📲</div><div style="flex:1;font-weight:800;font-size:14px">Installa Accesso Fiere</div><button id="pwa-ios-no" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">×</button></div><div style="font-size:12px;color:rgba(255,255,255,.85);line-height:1.45">Tocca <strong>Condividi</strong> <span style="display:inline-block;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:11px">⬆</span> in basso, poi <strong>"Aggiungi a Home"</strong></div></div>';
         document.body.appendChild(b);
-        document.getElementById('pwa-ios-no').onclick=function(){localStorage.setItem('pwa_ios_seen','1');b.remove();};
-      },2500);
-    }
+        document.getElementById('pwa-ios-no').onclick=function(){b.remove();};
+    },2500);
   }
 
   // ───── Push Notifications onboarding ─────
@@ -16084,7 +16096,7 @@ input{width:100%;background:#0f172a;border:1.5px solid rgba(255,255,255,.12);bor
 input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
 .btn-save{width:100%;background:linear-gradient(135deg,#0f4c81,#2563eb);color:#fff;border:none;border-radius:14px;padding:16px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px}
 .btn-save:active{opacity:.85}
-.btn-secondary{width:100%;background:#0f172a;border:1.5px solid rgba(255,255,255,.15);color:#fff;border-radius:14px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-secondary{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);font-size:12px;padding:10px;border-radius:10px;cursor:pointer;margin-top:10px;font-family:inherit}
 .flash{padding:14px 16px;border-radius:12px;font-size:14px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:10px}
 .flash.success{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
 .flash.error{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#fca5a5}
@@ -16093,6 +16105,7 @@ input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
 .push-status.on{background:rgba(34,197,94,.12);color:#86efac;border:1px solid rgba(34,197,94,.3)}
 .push-status.off{background:rgba(245,158,11,.12);color:#fcd34d;border:1px solid rgba(245,158,11,.3)}
 .push-status.unsupported{background:rgba(148,163,184,.12);color:#94a3b8;border:1px solid rgba(148,163,184,.2)}
+.diag-box{display:none;margin-top:14px;background:#0f172a;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px;font-size:11.5px;font-family:monospace;color:rgba(255,255,255,.7);line-height:1.7;word-break:break-word;white-space:pre-wrap}
 </style>
 </head>
 <body>
@@ -16105,7 +16118,6 @@ input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
   <div class="flash {{ cat }}"><i class="fa fa-{{ 'check-circle' if cat=='success' else 'exclamation-circle' }}"></i> {{ msg }}</div>
   {% endfor %}
 
-  <!-- Chi sei -->
   <div class="card">
     <div class="avatar-row">
       <div class="avatar-big">{{ nome[0]|upper }}{{ cognome[0]|upper }}</div>
@@ -16116,42 +16128,36 @@ input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
     </div>
   </div>
 
-  <!-- Notifiche push -->
   <div class="card">
     <div class="card-title"><i class="fa fa-bell"></i> Notifiche</div>
     <div id="push-status" class="push-status off">
-      <i class="fa fa-bell-slash"></i> <span id="push-status-text">Caricamento…</span>
+      <i class="fa fa-bell-slash"></i> <span id="push-status-text">Caricamento...</span>
     </div>
     <button type="button" id="push-toggle-btn" class="btn-save" onclick="togglePush()">
       <i class="fa fa-bell"></i> <span id="push-btn-text">Attiva notifiche</span>
     </button>
-    <button type="button" class="btn-secondary" onclick="document.getElementById('push-diag').style.display='block';this.style.display='none'" style="margin-top:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);font-size:12px;padding:10px;border-radius:10px;width:100%;cursor:pointer">
+    <button type="button" class="btn-secondary" onclick="toggleDiag()">
       <i class="fa fa-stethoscope"></i> Mostra diagnostica
     </button>
-    <div id="push-diag" style="display:none;margin-top:14px;background:#0f172a;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px;font-size:11.5px;font-family:monospace;color:rgba(255,255,255,.7);line-height:1.7;word-break:break-word">
-      <div style="color:rgba(255,255,255,.4);font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📋 Diagnostica push</div>
-      <div id="diag-content">Caricamento…</div>
-    </div>
+    <div id="push-diag" class="diag-box"></div>
   </div>
 
-  <!-- Cambia email -->
   <div class="card">
     <div class="card-title"><i class="fa fa-envelope"></i> Cambia email di accesso</div>
     <form method="POST" action="/mobile/profilo/cambia-email">
       <label>Nuova email</label>
       <input type="email" name="nuova_email" value="{{ email }}" required autocomplete="email">
       <label>Conferma password attuale</label>
-      <input type="password" name="password_attuale" required placeholder="••••••••">
+      <input type="password" name="password_attuale" required placeholder="********">
       <button type="submit" class="btn-save"><i class="fa fa-save"></i> Aggiorna email</button>
     </form>
   </div>
 
-  <!-- Cambia password -->
   <div class="card">
     <div class="card-title"><i class="fa fa-key"></i> Cambia password</div>
     <form method="POST" action="/mobile/profilo/cambia-password">
       <label>Password attuale</label>
-      <input type="password" name="password_attuale" required placeholder="••••••••">
+      <input type="password" name="password_attuale" required placeholder="********">
       <label>Nuova password</label>
       <input type="password" name="nuova_password" required placeholder="Minimo 6 caratteri" id="np">
       <div class="hint">Almeno 6 caratteri</div>
@@ -16162,175 +16168,174 @@ input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
   </div>
 
   <a href="/logout" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:14px;color:#fca5a5;text-decoration:none;font-size:14px;font-weight:700">
-    <i class="fa fa-right-from-bracket"></i> Esci dall'account
+    <i class="fa fa-right-from-bracket"></i> Esci dall account
   </a>
 </div>
 
 <script>
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(function(){});
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js").catch(function(){});
+}
 
-// ───── Diagnostica completa ─────
 function isStandalone(){
-  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
 }
 function isIOS(){
   return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
 }
 function getIOSVersion(){
   var m = navigator.userAgent.match(/OS ([0-9]+)_([0-9]+)/i);
-  return m ? parseFloat(m[1] + '.' + m[2]) : null;
+  return m ? parseFloat(m[1] + "." + m[2]) : null;
 }
-
-async function buildDiagnostics(){
-  var lines = [];
-  var ios = isIOS();
-  var iosVer = getIOSVersion();
-  var standalone = isStandalone();
-  var hasSW = 'serviceWorker' in navigator;
-  var hasPM = 'PushManager' in window;
-  var hasNotif = 'Notification' in window;
-  var perm = hasNotif ? Notification.permission : 'n/a';
-
-  lines.push('Browser: ' + (ios ? 'Safari iOS' : 'Altro'));
-  if (iosVer) lines.push('iOS version: ' + iosVer + (iosVer < 16.4 ? ' ⚠️ (richiede 16.4+)' : ' ✓'));
-  lines.push('Modalità: ' + (standalone ? '✓ App installata (standalone)' : '⚠️ Browser (NON installata)'));
-  lines.push('Service Worker: ' + (hasSW ? '✓' : '✗'));
-  lines.push('Push Manager: ' + (hasPM ? '✓' : '✗ (manca)'));
-  lines.push('Notification API: ' + (hasNotif ? '✓' : '✗'));
-  lines.push('Permesso: ' + perm);
-
-  if (hasSW) {
-    try {
-      var reg = await navigator.serviceWorker.ready;
-      lines.push('SW registrato: ✓ ' + (reg.scope || ''));
-      if (hasPM) {
-        var sub = await reg.pushManager.getSubscription();
-        if (sub) {
-          var ep = sub.endpoint;
-          var host = (new URL(ep)).host;
-          lines.push('Subscription locale: ✓ ' + host);
-          lines.push('  endpoint: ' + ep.substring(0, 80) + '...');
-        } else {
-          lines.push('Subscription locale: NESSUNA');
-        }
-      }
-    } catch(e){
-      lines.push('SW errore: ' + e.message);
-    }
+function toggleDiag(){
+  var box = document.getElementById("push-diag");
+  if (box.style.display === "block") {
+    box.style.display = "none";
+  } else {
+    box.style.display = "block";
+    refreshDiag();
   }
-
-  // Verifica anche server-side: il device è registrato?
-  try {
-    var r = await fetch('/api/push/my-subs');
-    if (r.ok) {
-      var d = await r.json();
-      lines.push('Device registrati su server: ' + d.count);
-      if (d.count > 0) {
-        lines.push('  ultima registrazione: ' + (d.latest || '-'));
-      }
-    }
-  } catch(e){}
-
-  // Diagnosi finale
-  lines.push('');
-  lines.push('━━━ DIAGNOSI ━━━');
-  if (ios && !standalone) {
-    lines.push('❌ Su iPhone DEVI installare l\\'app:');
-    lines.push('  1. Tocca "Condividi" ⬆ in Safari');
-    lines.push('  2. "Aggiungi alla schermata Home"');
-    lines.push('  3. Apri l\\'app dall\\'icona blu sulla home');
-    lines.push('  4. Torna qui e riattiva le notifiche');
-  } else if (ios && iosVer && iosVer < 16.4) {
-    lines.push('❌ iOS ' + iosVer + ' troppo vecchio.');
-    lines.push('  Aggiorna a iOS 16.4 o successivo.');
-  } else if (perm === 'denied') {
-    lines.push('❌ Permesso negato.');
-    lines.push('  Su iPhone: Impostazioni → [App] → Notifiche → Consenti');
-  } else if (!hasPM) {
-    lines.push('❌ Push non supportato da questo browser.');
-  } else if (perm === 'default') {
-    lines.push('⚠️ Devi cliccare "Attiva notifiche" qui sopra.');
-  } else if (perm === 'granted') {
-    lines.push('✓ Tutto OK lato browser. Se 0 device sul server,');
-    lines.push('  clicca "Disattiva" e poi "Attiva" di nuovo.');
-  }
-
-  return lines.join('\\n');
-}
-
-async function refreshPushStatus(){
-  var st = document.getElementById('push-status');
-  var stT = document.getElementById('push-status-text');
-  var btnT = document.getElementById('push-btn-text');
-  var btn = document.getElementById('push-toggle-btn');
-  var diag = document.getElementById('diag-content');
-
-  // Aggiorna sempre la diagnostica
-  if (diag) {
-    buildDiagnostics().then(function(d){ diag.textContent = d; });
-  }
-
-  if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
-    st.className='push-status unsupported';
-    if (isIOS() && !isStandalone()) {
-      st.innerHTML='<i class="fa fa-circle-info"></i> <span>Aggiungi l\\'app alla Home dell\\'iPhone per attivare le notifiche</span>';
-    } else {
-      st.innerHTML='<i class="fa fa-circle-info"></i> <span>Notifiche non supportate da questo browser</span>';
-    }
-    btn.style.display='none';
-    return;
-  }
-  if (Notification.permission === 'denied') {
-    st.className='push-status off';
-    stT.textContent='Permesso negato. Vai in Impostazioni iPhone → Accesso Fiere → Notifiche → Consenti';
-    btn.style.display='none';
-    return;
-  }
-  try {
-    var reg = await navigator.serviceWorker.ready;
-    var sub = await reg.pushManager.getSubscription();
-    if (sub && Notification.permission === 'granted') {
-      st.className='push-status on';
-      st.innerHTML='<i class="fa fa-check-circle"></i> <span>Notifiche attive su questo dispositivo</span>';
-      btnT.textContent='Disattiva notifiche';
-      btn.style.background='rgba(239,68,68,.2)';
-    } else {
-      st.className='push-status off';
-      if (isIOS() && !isStandalone()) {
-        st.innerHTML='<i class="fa fa-triangle-exclamation"></i> <span>App NON installata. Usa "Condividi → Aggiungi alla Home" prima di attivare</span>';
-      } else {
-        st.innerHTML='<i class="fa fa-bell-slash"></i> <span>Notifiche disattivate</span>';
-      }
-      btnT.textContent='Attiva notifiche';
-    }
-  } catch(e){ console.warn(e); }
 }
 function urlBase64ToUint8Array(b64){
-  // Sanitize: rimuovi qualsiasi whitespace o carattere strano
-  var clean = String(b64).replace(/[ \r\n\t]+/g,'');
-  // Aggiungi padding
-  var padding = '='.repeat((4 - clean.length % 4) % 4);
-  // Converti URL-safe → standard base64
-  var standard = (clean + padding).replace(/-/g, '+').replace(/_/g, '/');
-  // Decodifica
-  var raw = atob(standard);
+  var clean = String(b64).replace(/[ \\r\\n\\t]+/g, "");
+  var pad = "=".repeat((4 - clean.length % 4) % 4);
+  var s = (clean + pad).replace(/-/g, "+").replace(/_/g, "/");
+  var raw = atob(s);
   var arr = new Uint8Array(raw.length);
   for (var i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
   return arr;
 }
 
-async function togglePush(){
-  var btn=document.getElementById('push-toggle-btn'); btn.disabled=true;
+async function refreshDiag(){
+  var diag = document.getElementById("push-diag");
+  if (!diag) return;
+  var lines = [];
+  var ios = isIOS();
+  var iosVer = getIOSVersion();
+  var standalone = isStandalone();
+  var hasSW = "serviceWorker" in navigator;
+  var hasPM = "PushManager" in window;
+  var hasNotif = "Notification" in window;
+  var perm = hasNotif ? Notification.permission : "n/a";
 
-  // Pre-check iOS standalone
-  if (isIOS() && !isStandalone()) {
-    btn.disabled=false;
-    alert('Su iPhone devi prima installare l\\'app:\\n\\n1. Tocca "Condividi" in Safari\\n2. Scorri e tocca "Aggiungi alla schermata Home"\\n3. Apri l\\'app dall\\'icona blu sulla home\\n4. Torna qui e riprova ad attivare');
+  lines.push("Browser: " + (ios ? "Safari iOS" : "Altro"));
+  if (iosVer) lines.push("iOS: " + iosVer + (iosVer < 16.4 ? " (richiede 16.4+)" : " OK"));
+  lines.push("Modalita: " + (standalone ? "App installata (standalone)" : "Browser (NON installata)"));
+  lines.push("Service Worker: " + (hasSW ? "OK" : "NO"));
+  lines.push("Push Manager: " + (hasPM ? "OK" : "NO"));
+  lines.push("Notification API: " + (hasNotif ? "OK" : "NO"));
+  lines.push("Permesso: " + perm);
+
+  if (hasSW) {
+    try {
+      var reg = await navigator.serviceWorker.ready;
+      lines.push("SW scope: " + (reg.scope || "?"));
+      if (hasPM) {
+        var sub = await reg.pushManager.getSubscription();
+        if (sub) {
+          var ep = sub.endpoint;
+          lines.push("Subscription locale: SI");
+          lines.push("  endpoint: " + ep.substring(0, 70) + "...");
+        } else {
+          lines.push("Subscription locale: NESSUNA");
+        }
+      }
+    } catch(e) {
+      lines.push("SW errore: " + e.message);
+    }
+  }
+
+  try {
+    var r = await fetch("/api/push/my-subs");
+    if (r.ok) {
+      var d = await r.json();
+      lines.push("Device sul server: " + d.count);
+      if (d.count > 0 && d.latest) lines.push("  ultima: " + d.latest);
+    }
+  } catch(e) {}
+
+  lines.push("");
+  lines.push("--- DIAGNOSI ---");
+  if (ios && !standalone) {
+    lines.push("Su iPhone DEVI installare prima:");
+    lines.push("1. Tocca Condividi in Safari");
+    lines.push("2. Aggiungi alla schermata Home");
+    lines.push("3. Apri dall icona blu sulla home");
+    lines.push("4. Riattiva le notifiche");
+  } else if (ios && iosVer && iosVer < 16.4) {
+    lines.push("iOS troppo vecchio. Aggiorna a 16.4+");
+  } else if (perm === "denied") {
+    lines.push("Permesso negato.");
+    lines.push("Su iPhone: Impostazioni > [App] > Notifiche > Consenti");
+  } else if (!hasPM) {
+    lines.push("Push non supportato.");
+  } else if (perm === "default") {
+    lines.push("Clicca Attiva notifiche qui sopra.");
+  } else if (perm === "granted") {
+    lines.push("Tutto OK lato browser.");
+    lines.push("Se 0 device sul server, clicca Disattiva e poi Attiva.");
+  }
+
+  diag.textContent = lines.join("\\n");
+}
+
+async function refreshPushStatus(){
+  var st = document.getElementById("push-status");
+  var stT = document.getElementById("push-status-text");
+  var btnT = document.getElementById("push-btn-text");
+  var btn = document.getElementById("push-toggle-btn");
+
+  if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
+    st.className = "push-status unsupported";
+    if (isIOS() && !isStandalone()) {
+      st.innerHTML = "<i class=\\"fa fa-circle-info\\"></i> <span>Aggiungi alla Home dell iPhone per attivare le notifiche</span>";
+    } else {
+      st.innerHTML = "<i class=\\"fa fa-circle-info\\"></i> <span>Notifiche non supportate da questo browser</span>";
+    }
+    btn.style.display = "none";
     return;
   }
-  if (!('PushManager' in window)) {
-    btn.disabled=false;
-    alert('Questo browser non supporta le notifiche push.');
+  if (Notification.permission === "denied") {
+    st.className = "push-status off";
+    stT.textContent = "Permesso negato. Vai in Impostazioni iPhone > Accesso Fiere > Notifiche > Consenti";
+    btn.style.display = "none";
+    return;
+  }
+  try {
+    var reg = await navigator.serviceWorker.ready;
+    var sub = await reg.pushManager.getSubscription();
+    if (sub && Notification.permission === "granted") {
+      st.className = "push-status on";
+      st.innerHTML = "<i class=\\"fa fa-check-circle\\"></i> <span>Notifiche attive su questo dispositivo</span>";
+      btnT.textContent = "Disattiva notifiche";
+      btn.style.background = "rgba(239,68,68,.2)";
+    } else {
+      st.className = "push-status off";
+      if (isIOS() && !isStandalone()) {
+        st.innerHTML = "<i class=\\"fa fa-triangle-exclamation\\"></i> <span>App NON installata. Usa Condividi > Aggiungi alla Home prima</span>";
+      } else {
+        st.innerHTML = "<i class=\\"fa fa-bell-slash\\"></i> <span>Notifiche disattivate</span>";
+      }
+      btnT.textContent = "Attiva notifiche";
+    }
+  } catch(e) {
+    console.warn(e);
+    st.innerHTML = "<i class=\\"fa fa-triangle-exclamation\\"></i> <span>Errore: " + e.message + "</span>";
+  }
+}
+
+async function togglePush(){
+  var btn = document.getElementById("push-toggle-btn");
+  btn.disabled = true;
+
+  if (isIOS() && !isStandalone()) {
+    btn.disabled = false;
+    alert("Su iPhone devi prima installare l app:\\n\\n1. Tocca Condividi in Safari\\n2. Aggiungi alla schermata Home\\n3. Apri dall icona blu sulla home\\n4. Riprova ad attivare");
+    return;
+  }
+  if (!("PushManager" in window)) {
+    btn.disabled = false;
+    alert("Questo browser non supporta le notifiche push.");
     return;
   }
 
@@ -16338,27 +16343,25 @@ async function togglePush(){
     var reg = await navigator.serviceWorker.ready;
     var sub = await reg.pushManager.getSubscription();
     if (sub) {
-      // Disattiva
       try { await sub.unsubscribe(); } catch(e){}
-      await fetch('/api/push/unsubscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({endpoint:sub.endpoint})});
+      await fetch("/api/push/unsubscribe", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({endpoint: sub.endpoint})
+      });
     } else {
       var perm = await Notification.requestPermission();
-      if (perm !== 'granted') {
-        btn.disabled=false;
-        if (perm === 'denied') alert('Hai negato il permesso. Per attivarle: Impostazioni iPhone → [App] → Notifiche → Consenti.');
+      if (perm !== "granted") {
+        btn.disabled = false;
+        if (perm === "denied") alert("Permesso negato. Vai in Impostazioni iPhone > [App] > Notifiche > Consenti");
         return;
       }
-      // Recupera la chiave pubblica VAPID dal server
-      var keyResp = await fetch('/api/push/public-key');
+      var keyResp = await fetch("/api/push/public-key");
       var keyText = (await keyResp.text()).trim();
-      if (!keyText || keyText.length < 80) {
-        throw new Error('Chiave VAPID non valida (lunghezza ' + keyText.length + ')');
-      }
+      if (!keyText || keyText.length < 80) throw new Error("Chiave VAPID invalida");
       var keyArr = urlBase64ToUint8Array(keyText);
-      if (keyArr.length !== 65) {
-        throw new Error('Chiave VAPID lunghezza errata: ' + keyArr.length + ' bytes (atteso 65)');
-      }
-      // Subscribe — Safari iOS preferisce ArrayBuffer puro
+      if (keyArr.length !== 65) throw new Error("Chiave VAPID lunghezza errata: " + keyArr.length);
+
       var newSub;
       try {
         newSub = await reg.pushManager.subscribe({
@@ -16366,32 +16369,39 @@ async function togglePush(){
           applicationServerKey: keyArr.buffer
         });
       } catch(e1) {
-        // Fallback: prova con Uint8Array direttamente (Chromium)
-        console.warn('[Push] retry con Uint8Array:', e1);
+        console.warn("[Push] retry con Uint8Array:", e1);
         newSub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: keyArr
         });
       }
-      var subResp = await fetch('/api/push/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(newSub)});
+      var subResp = await fetch("/api/push/subscribe", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(newSub)
+      });
       if (!subResp.ok) {
-        var errData = await subResp.json().catch(function(){return {};});
-        throw new Error('Server: ' + (errData.error || subResp.status));
+        var ed = await subResp.json().catch(function(){return {};});
+        throw new Error("Server: " + (ed.error || subResp.status));
       }
-      // Notifica di benvenuto (test)
-      await fetch('/api/push/test',{method:'POST'});
+      await fetch("/api/push/test", {method: "POST"});
     }
-  } catch(e){
-    console.warn('[Push] errore:', e);
-    alert('Errore attivazione: ' + (e.message || e));
+  } catch(e) {
+    console.warn("[Push]", e);
+    alert("Errore: " + (e.message || e));
   }
-  btn.disabled=false;
+  btn.disabled = false;
   refreshPushStatus();
+  refreshDiag();
 }
-window.addEventListener('load', refreshPushStatus);
+
+window.addEventListener("load", function(){
+  refreshPushStatus();
+});
 </script>
 </body>
 </html>"""
+
 
 @app.route('/mobile/profilo')
 @login_required
