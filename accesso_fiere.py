@@ -1698,6 +1698,10 @@ def check_scadenze_email():
 #  RENDER HELPER
 # ─────────────────────────────────────────────
 def render_page(tmpl, **ctx):
+    ctx.setdefault('lang', session.get('lang', 'it'))
+    ctx.setdefault('current_lang', session.get('lang', 'it'))
+    ctx.setdefault('langs', LANGS)
+    ctx.setdefault('t', get_lang())
     # ── Logo aziendale ─────────────────────────────────
     try:
         tid = str(session.get('azienda_id') or 'legacy')
