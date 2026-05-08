@@ -16209,6 +16209,9 @@ input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
 </div>
 
 <script>
+// Chiave VAPID iniettata dal server (no fetch, no cache, no Safari issues)
+window.VAPID_PUBLIC_KEY = "{{ vapid_public_key|e }}";
+
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/sw.js").then(function(reg){
     // Forza aggiornamento del Service Worker ad ogni accesso
@@ -16275,6 +16278,12 @@ async function refreshDiag(){
   lines.push("Push Manager: " + (hasPM ? "OK" : "NO"));
   lines.push("Notification API: " + (hasNotif ? "OK" : "NO"));
   lines.push("Permesso: " + perm);
+  // VAPID key check
+  var vk = window.VAPID_PUBLIC_KEY || "";
+  lines.push("VAPID key: " + vk.length + " chars" + (vk.length === 87 ? " OK" : " ANOMALA!"));
+  if (vk.length > 0 && vk.length < 200) {
+    lines.push("  inizio: " + vk.substring(0, 20) + "...");
+  }
 
   if (hasSW) {
     try {
@@ -16426,12 +16435,11 @@ async function togglePush(){
     }
 
     // STEP 3: Recupera chiave VAPID dal server e VALIDALA
-    var keyResp = await fetch("/api/push/public-key", {cache: "no-store"});
-    var keyText = (await keyResp.text()).trim();
-    // Sanitize: solo caratteri base64url validi
-    keyText = keyText.replace(/[^A-Za-z0-9_\\-]/g, "");
+    // Iniettata direttamente dal template Flask (no fetch, no cache, no Safari issues)
+    var keyText = window.VAPID_PUBLIC_KEY || "";
+    keyText = String(keyText).trim().replace(/[^A-Za-z0-9_\\-]/g, "");
     if (!keyText || keyText.length < 80 || keyText.length > 90) {
-      throw new Error("Chiave VAPID lunghezza anomala: " + keyText.length);
+      throw new Error("Chiave VAPID lunghezza anomala: " + keyText.length + " (atteso ~87)");
     }
 
     // STEP 4: Subscribe usando STRINGA diretta (metodo W3C standard, preferito da Safari iOS)
@@ -16583,10 +16591,17 @@ def mobile_profilo():
         return redirect(url_for('login'))
     u = dict(u)  # converti Row in dict per poter usare .get()
     msgs = get_flashed_messages(with_categories=True)
+    # Inietta la chiave VAPID direttamente nel HTML così evitiamo la fetch
+    # (fetch può essere intercettata/cachata da Safari iOS)
+    try:
+        vapid_pub, _ = _get_vapid_keys()
+    except Exception as e:
+        print(f'[VAPID] errore generazione chiave: {e}')
+        vapid_pub = ''
     return render_template_string(MOBILE_PROFILO_TMPL,
         nome=u.get('nome',''), cognome=u.get('cognome',''),
         email=u.get('email',''), mansione=u.get('mansione') or '',
-        messages=msgs)
+        messages=msgs, vapid_public_key=vapid_pub)
 
 @app.route('/mobile/profilo/cambia-email', methods=['POST'])
 @login_required
