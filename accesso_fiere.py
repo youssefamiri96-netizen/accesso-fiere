@@ -1642,6 +1642,16 @@ BASE = """<!DOCTYPE html>
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{{ page_title }} | Accesso Fiere — Gestionale Allestitori</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0f4c81">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Accesso Fiere">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="/static/pwa/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/pwa/icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/static/pwa/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/static/pwa/icon-512.png">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -2187,6 +2197,46 @@ function sendAiMessage() {
 function updateClock(){var e=document.getElementById('live-clock');if(e)e.textContent=new Date().toLocaleTimeString('it-IT');}
 setInterval(updateClock,1000);updateClock();
 </script>
+
+<!-- PWA: registrazione service worker + banner installazione -->
+<script>
+(function(){
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('/sw.js').catch(function(err){
+        console.warn('[PWA] SW registration failed:', err);
+      });
+    });
+  }
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault(); deferredPrompt = e; showInstallBanner();
+  });
+  function showInstallBanner(){
+    if (sessionStorage.getItem('pwa_install_dismissed')) return;
+    if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true) return;
+    if (document.getElementById('pwa-install-banner')) return;
+    var b = document.createElement('div'); b.id='pwa-install-banner';
+    b.innerHTML = `<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(15,23,42,.35);max-width:480px;margin:0 auto"><div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📲</div><div style="flex:1;min-width:0"><div style="font-weight:800;font-size:14px;letter-spacing:-.1px;line-height:1.2">Installa l'app</div><div style="font-size:11.5px;color:rgba(255,255,255,.75);margin-top:2px">Apri più velocemente, usa offline</div></div><button id="pwa-yes" style="background:#fff;color:#0f4c81;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:12.5px;cursor:pointer;flex-shrink:0">Installa</button><button id="pwa-no" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">×</button></div>`;
+    document.body.appendChild(b);
+    document.getElementById('pwa-yes').onclick=function(){if(!deferredPrompt)return;deferredPrompt.prompt();deferredPrompt.userChoice.then(function(c){if(c.outcome==='accepted')b.remove();deferredPrompt=null;});};
+    document.getElementById('pwa-no').onclick=function(){sessionStorage.setItem('pwa_install_dismissed','1');b.remove();};
+  }
+  function isIOSSafari(){var ua=navigator.userAgent.toLowerCase();return /iphone|ipad|ipod/.test(ua)&&/safari/.test(ua)&&!/crios|fxios/.test(ua);}
+  if(isIOSSafari()&&navigator.standalone!==true){
+    var v=parseInt(localStorage.getItem('pwa_visits')||'0',10)+1;localStorage.setItem('pwa_visits',v);
+    if(v>=2&&!sessionStorage.getItem('pwa_install_dismissed')&&!localStorage.getItem('pwa_ios_seen')){
+      setTimeout(function(){
+        if(document.getElementById('pwa-install-banner'))return;
+        var b=document.createElement('div');b.id='pwa-install-banner';
+        b.innerHTML=`<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border-radius:14px;padding:13px 14px;box-shadow:0 8px 24px rgba(15,23,42,.35);max-width:480px;margin:0 auto"><div style="display:flex;align-items:center;gap:12px;margin-bottom:7px"><div style="width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📲</div><div style="flex:1;font-weight:800;font-size:14px">Installa Accesso Fiere</div><button id="pwa-ios-no" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">×</button></div><div style="font-size:12px;color:rgba(255,255,255,.85);line-height:1.45">Tocca <strong>Condividi</strong> <span style="display:inline-block;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:11px">⬆</span> in basso, poi <strong>"Aggiungi a Home"</strong></div></div>`;
+        document.body.appendChild(b);
+        document.getElementById('pwa-ios-no').onclick=function(){localStorage.setItem('pwa_ios_seen','1');b.remove();};
+      },2500);
+    }
+  }
+})();
+</script>
 </body></html>"""
 
 # ══════════════════════════════════════════════════════════
@@ -2303,6 +2353,375 @@ def index():
     if session.get('ruolo') == 'caposquadra':
         return redirect(url_for('mobile_cs'))
     return redirect(url_for('mobile'))
+
+
+# ══════════════════════════════════════════════════════════
+#  PWA — Progressive Web App (installabile, offline, push)
+# ══════════════════════════════════════════════════════════
+
+@app.route('/manifest.webmanifest')
+def pwa_manifest():
+    """Manifest PWA con dati personalizzati per tenant se loggato."""
+    # Nome tenant se loggato, altrimenti generico
+    nome_app = 'Accesso Fiere'
+    nome_breve = 'Accesso'
+    az_id = session.get('azienda_id')
+    if az_id:
+        try:
+            mdb = get_master_db()
+            row = mdb.execute("SELECT nome FROM aziende WHERE id=?", (az_id,)).fetchone()
+            mdb.close()
+            if row and row['nome']:
+                nome_app = row['nome']
+                # Nome breve: prime 2 parole o max 12 char
+                parole = nome_app.split()
+                nome_breve = ' '.join(parole[:2])[:12]
+        except Exception: pass
+
+    # Determina lo start URL in base al ruolo
+    ruolo = session.get('ruolo')
+    if ruolo == 'admin':
+        start_url = '/dashboard'
+    elif ruolo == 'caposquadra':
+        start_url = '/mobile/cs'
+    elif ruolo == 'dipendente':
+        start_url = '/mobile'
+    else:
+        start_url = '/login'
+
+    manifest = {
+        "name": f"{nome_app} — Gestionale",
+        "short_name": nome_breve,
+        "description": "Timbrature, ferie, documenti e gestione fiere",
+        "start_url": start_url,
+        "scope": "/",
+        "display": "standalone",
+        "orientation": "portrait",
+        "background_color": "#0f172a",
+        "theme_color": "#0f4c81",
+        "lang": "it-IT",
+        "dir": "ltr",
+        "categories": ["business","productivity"],
+        "icons": [
+            {"src": "/static/pwa/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+            {"src": "/static/pwa/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+            {"src": "/static/pwa/icon-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable"},
+            {"src": "/static/pwa/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+        ],
+        "shortcuts": [
+            {"name": "Timbra entrata/uscita", "url": "/mobile",
+             "icons": [{"src":"/static/pwa/icon-192.png","sizes":"192x192"}]},
+            {"name": "Ferie e Permessi", "url": "/mobile/ferie",
+             "icons": [{"src":"/static/pwa/icon-192.png","sizes":"192x192"}]},
+        ],
+        "prefer_related_applications": False,
+    }
+    return Response(json.dumps(manifest, ensure_ascii=False, indent=2),
+                    mimetype='application/manifest+json',
+                    headers={'Cache-Control': 'public, max-age=3600'})
+
+
+@app.route('/sw.js')
+def pwa_service_worker():
+    """Service worker per PWA. Permette installazione + cache base + offline minimo."""
+    sw_code = """// Accesso Fiere — Service Worker
+const CACHE_VERSION = 'v1';
+const CACHE_NAME = `accesso-fiere-${CACHE_VERSION}`;
+const OFFLINE_URL = '/offline';
+
+// Asset statici sempre cached al primo install
+const STATIC_ASSETS = [
+  '/offline',
+  '/static/pwa/icon-192.png',
+  '/static/pwa/icon-512.png',
+];
+
+// Install: precarica asset critici
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+      .then(() => self.skipWaiting())
+      .catch((err) => console.warn('[SW] Install error:', err))
+  );
+});
+
+// Activate: pulisci cache vecchie
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) => Promise.all(
+      keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
+    )).then(() => self.clients.claim())
+  );
+});
+
+// Fetch: network-first per HTML, cache-first per asset
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+
+  const url = new URL(req.url);
+
+  // Salta API e POST (devono passare in rete)
+  if (url.pathname.startsWith('/api/') ||
+      url.pathname.includes('/timbra') ||
+      url.pathname.includes('/inserisci')) {
+    return;
+  }
+
+  // HTML: network first, fallback cache, fallback offline page
+  if (req.mode === 'navigate' || req.headers.get('accept')?.includes('text/html')) {
+    event.respondWith(
+      fetch(req).then((res) => {
+        const copy = res.clone();
+        caches.open(CACHE_NAME).then((c) => c.put(req, copy)).catch(()=>{});
+        return res;
+      }).catch(() => caches.match(req).then((cached) => cached || caches.match(OFFLINE_URL)))
+    );
+    return;
+  }
+
+  // Asset (CSS/JS/immagini): cache first
+  if (url.origin === self.location.origin &&
+      (url.pathname.startsWith('/static/') || /\\.(?:css|js|png|jpg|svg|webp|woff2?)$/.test(url.pathname))) {
+    event.respondWith(
+      caches.match(req).then((cached) => cached || fetch(req).then((res) => {
+        if (res.ok) {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then((c) => c.put(req, copy)).catch(()=>{});
+        }
+        return res;
+      }).catch(() => cached))
+    );
+  }
+});
+
+// Push notifications (Sprint 2 — placeholder)
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+  let data = {};
+  try { data = event.data.json(); } catch(e) { data = { title: 'Accesso Fiere', body: event.data.text() }; }
+  const opts = {
+    body: data.body || '',
+    icon: '/static/pwa/icon-192.png',
+    badge: '/static/pwa/icon-192.png',
+    data: data.url ? { url: data.url } : undefined,
+  };
+  event.waitUntil(self.registration.showNotification(data.title || 'Accesso Fiere', opts));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || '/';
+  event.waitUntil(clients.openWindow(url));
+});
+"""
+    return Response(sw_code, mimetype='application/javascript',
+                    headers={'Service-Worker-Allowed': '/',
+                             'Cache-Control': 'no-cache'})
+
+
+@app.route('/offline')
+def pwa_offline():
+    """Pagina mostrata quando l'app è offline."""
+    return render_template_string(PWA_OFFLINE_TMPL)
+
+
+@app.route('/static/pwa/<path:filename>')
+def pwa_static(filename):
+    """Serve le icone PWA. Le genera al volo se non esistono già."""
+    pwa_dir = os.path.join(DATA_DIR, 'pwa_static')
+    os.makedirs(pwa_dir, exist_ok=True)
+    fpath = os.path.join(pwa_dir, filename)
+    if not os.path.exists(fpath) and filename.startswith('icon-'):
+        # Genera l'icona al volo
+        try:
+            _genera_icona_pwa(fpath, filename)
+        except Exception as e:
+            print(f'[PWA icona] errore: {e}')
+            return abort(404)
+    if not os.path.exists(fpath):
+        return abort(404)
+    return send_file(fpath)
+
+
+def _genera_icona_pwa(out_path, filename):
+    """Genera un'icona PWA come PNG con il logo H3 stilizzato.
+    filename: icon-192.png, icon-512.png, icon-192-maskable.png, icon-512-maskable.png"""
+    from PIL import Image, ImageDraw, ImageFont
+    import re as _re
+    m = _re.match(r'icon-(\d+)(-maskable)?\.png', filename)
+    if not m:
+        raise ValueError(f'Nome icona non valido: {filename}')
+    size = int(m.group(1))
+    is_maskable = bool(m.group(2))
+    # Maskable: padding 10% per "safe zone"
+    pad = int(size * 0.1) if is_maskable else 0
+    img = Image.new('RGB', (size, size), '#0f4c81')
+    draw = ImageDraw.Draw(img)
+    # Gradient blu
+    for y in range(size):
+        ratio = y / size
+        r = int(15 + (30-15)*ratio)   # 0f→1e
+        g = int(76 + (58-76)*ratio)   # 4c→3a
+        b = int(129 + (138-129)*ratio) # 81→8a
+        draw.line([(0,y),(size,y)], fill=(r,g,b))
+    # Cerchio centrale luminoso
+    inner = size - 2*pad
+    cx = cy = size // 2
+    rad = inner // 2 - inner // 12
+    # Background circle effect
+    for r_ring in range(rad, rad - 6, -1):
+        alpha = (rad - r_ring) * 18
+        draw.ellipse([cx-r_ring, cy-r_ring, cx+r_ring, cy+r_ring],
+                     outline=(255, 255, 255, 40))
+    # Lettera centrale
+    try:
+        font_size = int(inner * 0.55)
+        font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', font_size)
+    except Exception:
+        font = ImageFont.load_default()
+    text = 'AF'
+    bbox = draw.textbbox((0,0), text, font=font)
+    tw = bbox[2] - bbox[0]
+    th = bbox[3] - bbox[1]
+    draw.text((cx - tw//2, cy - th//2 - bbox[1]), text, fill='#ffffff', font=font)
+    img.save(out_path, 'PNG', optimize=True)
+
+
+PWA_OFFLINE_TMPL = """<!DOCTYPE html>
+<html lang="it"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Offline · Accesso Fiere</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0f4c81">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+body{background:linear-gradient(160deg,#0f172a 0%,#1e3a8a 100%);color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.box{max-width:400px;text-align:center}
+.icon{width:84px;height:84px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:38px;margin:0 auto 22px}
+h1{font-size:24px;margin-bottom:10px;font-weight:800;letter-spacing:-.4px}
+p{color:rgba(255,255,255,.7);font-size:14.5px;line-height:1.55;margin-bottom:24px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;background:#fff;color:#0f4c81;border-radius:11px;text-decoration:none;font-weight:700;font-size:14px;border:none;cursor:pointer}
+</style></head>
+<body>
+<div class="box">
+  <div class="icon">📵</div>
+  <h1>Sei offline</h1>
+  <p>Non c'è connessione internet al momento. Le timbrature offline saranno sincronizzate appena tornerai online.</p>
+  <button onclick="location.reload()" class="btn">↻ Riprova</button>
+</div>
+</body></html>"""
+
+
+# Tag PWA da iniettare in tutti i template (link manifest, registra SW, meta apple)
+# Si chiama da render_page e dai template mobile
+PWA_HEAD_TAGS = """
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0f4c81">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Accesso Fiere">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="/static/pwa/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/pwa/icon-192.png">
+<link rel="apple-touch-icon" sizes="167x167" href="/static/pwa/icon-192.png">
+<link rel="apple-touch-icon" sizes="152x152" href="/static/pwa/icon-192.png">
+<link rel="apple-touch-icon" sizes="120x120" href="/static/pwa/icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/static/pwa/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/static/pwa/icon-512.png">
+"""
+
+PWA_INSTALL_SCRIPT = """
+<script>
+(function(){
+  // Registra il service worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('/sw.js').catch(function(err){
+        console.warn('[PWA] SW registration failed:', err);
+      });
+    });
+  }
+
+  // Banner "Installa l'app" — cattura il prompt nativo
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();
+    deferredPrompt = e;
+    showInstallBanner();
+  });
+
+  function showInstallBanner(){
+    if (sessionStorage.getItem('pwa_install_dismissed')) return;
+    if (window.matchMedia('(display-mode: standalone)').matches) return;
+    if (navigator.standalone === true) return;
+    if (document.getElementById('pwa-install-banner')) return;
+
+    var banner = document.createElement('div');
+    banner.id = 'pwa-install-banner';
+    banner.innerHTML = `
+      <div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(15,23,42,.35);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:480px;margin:0 auto">
+        <div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📲</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:800;font-size:14px;letter-spacing:-.1px;line-height:1.2">Installa l'app</div>
+          <div style="font-size:11.5px;color:rgba(255,255,255,.75);margin-top:2px">Apri più velocemente, usa offline</div>
+        </div>
+        <button id="pwa-install-yes" style="background:#fff;color:#0f4c81;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:12.5px;cursor:pointer;font-family:inherit;flex-shrink:0">Installa</button>
+        <button id="pwa-install-no" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">×</button>
+      </div>`;
+    document.body.appendChild(banner);
+    document.getElementById('pwa-install-yes').onclick = function(){
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function(choice){
+        if (choice.outcome === 'accepted') {
+          banner.remove();
+        }
+        deferredPrompt = null;
+      });
+    };
+    document.getElementById('pwa-install-no').onclick = function(){
+      sessionStorage.setItem('pwa_install_dismissed', '1');
+      banner.remove();
+    };
+  }
+
+  // Su iOS Safari il prompt nativo non esiste — mostriamo un suggerimento manuale
+  // dopo che l'utente ha visitato 2 volte (per non essere fastidiosi)
+  function isIOSSafari(){
+    var ua = navigator.userAgent.toLowerCase();
+    return /iphone|ipad|ipod/.test(ua) && /safari/.test(ua) && !/crios|fxios/.test(ua);
+  }
+
+  if (isIOSSafari() && navigator.standalone !== true) {
+    var visits = parseInt(localStorage.getItem('pwa_visits') || '0', 10) + 1;
+    localStorage.setItem('pwa_visits', visits);
+    if (visits >= 2 && !sessionStorage.getItem('pwa_install_dismissed') && !localStorage.getItem('pwa_ios_seen')) {
+      setTimeout(function(){
+        if (document.getElementById('pwa-install-banner')) return;
+        var banner = document.createElement('div');
+        banner.id = 'pwa-install-banner';
+        banner.innerHTML = `
+          <div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border-radius:14px;padding:13px 14px;box-shadow:0 8px 24px rgba(15,23,42,.35);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:480px;margin:0 auto">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:7px">
+              <div style="width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📲</div>
+              <div style="flex:1;font-weight:800;font-size:14px">Installa Accesso Fiere</div>
+              <button id="pwa-ios-no" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">×</button>
+            </div>
+            <div style="font-size:12px;color:rgba(255,255,255,.85);line-height:1.45">Tocca <strong>Condividi</strong> <span style="display:inline-block;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:11px">⬆</span> in basso, poi <strong>"Aggiungi a Home"</strong></div>
+          </div>`;
+        document.body.appendChild(banner);
+        document.getElementById('pwa-ios-no').onclick = function(){
+          localStorage.setItem('pwa_ios_seen', '1');
+          banner.remove();
+        };
+      }, 2500);
+    }
+  }
+})();
+</script>
+"""
+
 
 @app.route('/login', methods=['GET','POST'])
 def login():
@@ -14657,8 +15076,15 @@ MOBILE_TMPL = """<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0f4c81">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Accesso Fiere">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="/static/pwa/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/pwa/icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/static/pwa/icon-192.png">
 <title>{{ t.day_label }}</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
@@ -14978,6 +15404,40 @@ function prepareSubmitMobile(ev) {
   return false;
 }
 </script>
+
+<!-- PWA: registrazione service worker + banner installazione -->
+<script>
+(function(){
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(function(){});
+  }
+  let dp = null;
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault(); dp = e;
+    if (sessionStorage.getItem('pwa_install_dismissed')) return;
+    if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true) return;
+    if (document.getElementById('pwa-ib')) return;
+    var b=document.createElement('div'); b.id='pwa-ib';
+    b.innerHTML=`<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(15,23,42,.35);max-width:480px;margin:0 auto"><div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px">📲</div><div style="flex:1"><div style="font-weight:800;font-size:14px">Installa l'app</div><div style="font-size:11.5px;color:rgba(255,255,255,.75)">Apri più velocemente, usa offline</div></div><button id="pwy" style="background:#fff;color:#0f4c81;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:12.5px">Installa</button><button id="pwn" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;padding:4px 8px">×</button></div>`;
+    document.body.appendChild(b);
+    document.getElementById('pwy').onclick=function(){if(!dp)return;dp.prompt();dp.userChoice.then(function(c){if(c.outcome==='accepted')b.remove();dp=null;});};
+    document.getElementById('pwn').onclick=function(){sessionStorage.setItem('pwa_install_dismissed','1');b.remove();};
+  });
+  function isIOS(){var u=navigator.userAgent.toLowerCase();return /iphone|ipad|ipod/.test(u)&&/safari/.test(u)&&!/crios|fxios/.test(u);}
+  if(isIOS()&&navigator.standalone!==true){
+    var v=parseInt(localStorage.getItem('pwa_visits')||'0',10)+1; localStorage.setItem('pwa_visits',v);
+    if(v>=2&&!localStorage.getItem('pwa_ios_seen')&&!sessionStorage.getItem('pwa_install_dismissed')){
+      setTimeout(function(){
+        if(document.getElementById('pwa-ib'))return;
+        var b=document.createElement('div'); b.id='pwa-ib';
+        b.innerHTML=`<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border-radius:14px;padding:13px 14px;box-shadow:0 8px 24px rgba(15,23,42,.35);max-width:480px;margin:0 auto"><div style="display:flex;align-items:center;gap:12px;margin-bottom:7px"><div style="width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:18px">📲</div><div style="flex:1;font-weight:800;font-size:14px">Installa Accesso Fiere</div><button id="iosno" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;padding:4px 8px">×</button></div><div style="font-size:12px;color:rgba(255,255,255,.85);line-height:1.45">Tocca <strong>Condividi</strong> ⬆ in basso, poi <strong>"Aggiungi a Home"</strong></div></div>`;
+        document.body.appendChild(b);
+        document.getElementById('iosno').onclick=function(){localStorage.setItem('pwa_ios_seen','1');b.remove();};
+      },2500);
+    }
+  }
+})();
+</script>
 </body>
 </html>"""
 
@@ -15137,7 +15597,14 @@ MOBILE_CS_TMPL = """<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<link rel="manifest" href="/manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Accesso Fiere">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="/static/pwa/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/pwa/icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/static/pwa/icon-192.png">
 <meta name="theme-color" content="#0f172a">
 <title>Caposquadra · {{ azienda }}</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -15592,6 +16059,13 @@ function submitTimbCs(ev) {
     { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 }
   );
   return false;
+}
+</script>
+
+<!-- PWA: registrazione service worker -->
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(function(){});
 }
 </script>
 
