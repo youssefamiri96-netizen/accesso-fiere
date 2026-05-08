@@ -2650,10 +2650,17 @@ def index():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     if session.get('ruolo') == 'admin':
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('admin_mobile') if is_mobile_request() else url_for('dashboard'))
     if session.get('ruolo') == 'caposquadra':
         return redirect(url_for('mobile_cs'))
     return redirect(url_for('mobile'))
+
+
+def is_mobile_request():
+    ua = (request.headers.get('User-Agent') or '').lower()
+    if request.args.get('desktop') == '1':
+        return False
+    return any(x in ua for x in ('iphone', 'android', 'mobile', 'windows phone', 'ipad'))
 
 
 # ══════════════════════════════════════════════════════════
@@ -5432,6 +5439,8 @@ document.querySelectorAll('.widget').forEach(w => {
 @app.route('/dashboard')
 @login_required
 def dashboard():
+    if session.get('ruolo') == 'admin' and is_mobile_request():
+        return redirect(url_for('admin_mobile'))
     db = get_db()
     today = date.today().isoformat()
     mese  = date.today().strftime('%Y-%m')
@@ -5648,6 +5657,179 @@ def dashboard():
         ferie_attesa=ferie_attesa,
         richieste_attesa=[dict(r) for r in richieste_attesa],
         layout=layout)
+
+
+ADMIN_MOBILE_TMPL = """<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Admin mobile</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0f172a">
+<link rel="apple-touch-icon" href="/static/pwa/icon-192.png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#fff;min-height:100vh}
+.top{padding:18px 18px 14px;background:linear-gradient(135deg,#0f172a,#123b63);position:sticky;top:0;z-index:10;border-bottom:1px solid rgba(255,255,255,.08)}
+.top-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{font-size:12px;color:rgba(255,255,255,.55);font-weight:800;text-transform:uppercase;letter-spacing:1px}
+h1{font-size:22px;line-height:1.1;margin-top:4px}
+.pill{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);color:#fff;border-radius:999px;padding:8px 11px;text-decoration:none;font-size:12px;font-weight:700;white-space:nowrap}
+.content{padding:16px;max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.alert{background:linear-gradient(135deg,#7c2d12,#dc2626);border-radius:16px;padding:16px;display:flex;gap:12px;align-items:center;box-shadow:0 14px 30px rgba(220,38,38,.22);text-decoration:none;color:#fff}
+.alert .num{font-size:30px;font-weight:900;line-height:1}
+.alert .txt{font-size:13px;color:rgba(255,255,255,.82);line-height:1.35}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tile{min-height:108px;background:#1e293b;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:15px;text-decoration:none;color:#fff;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+.tile:active{transform:scale(.98)}
+.tile i{font-size:22px;margin-bottom:10px}
+.tile .label{font-size:14px;font-weight:800;line-height:1.2}
+.tile .sub{font-size:12px;color:rgba(255,255,255,.48);margin-top:4px}
+.badge{position:absolute;right:12px;top:12px;background:#ef4444;color:#fff;min-width:22px;height:22px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;padding:0 7px}
+.blue{background:linear-gradient(135deg,#1e3a8a,#2563eb)}
+.amber{background:linear-gradient(135deg,#92400e,#f59e0b)}
+.green{background:linear-gradient(135deg,#064e3b,#10b981)}
+.purple{background:linear-gradient(135deg,#581c87,#a855f7)}
+.rose{background:linear-gradient(135deg,#881337,#e11d48)}
+.slate{background:#1e293b}
+.section-title{font-size:11px;color:rgba(255,255,255,.42);font-weight:900;text-transform:uppercase;letter-spacing:1px;margin:4px 2px -4px}
+.list{background:#1e293b;border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:hidden}
+.item{display:flex;gap:12px;padding:14px 15px;border-bottom:1px solid rgba(255,255,255,.06);text-decoration:none;color:#fff}
+.item:last-child{border-bottom:none}
+.item .ico{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.item .title{font-size:14px;font-weight:800}
+.item .body{font-size:12px;color:rgba(255,255,255,.52);line-height:1.35;margin-top:3px}
+.bottom{height:28px}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="top-row">
+    <div>
+      <div class="brand">{{ azienda_nome }}</div>
+      <h1>Admin mobile</h1>
+    </div>
+    <a class="pill" href="/dashboard?desktop=1"><i class="fa fa-desktop"></i> PC</a>
+  </div>
+</div>
+<div class="content">
+  {% if pending_totale > 0 %}
+  <a class="alert" href="/admin/notifiche">
+    <div class="num">{{ pending_totale }}</div>
+    <div>
+      <div style="font-weight:900;margin-bottom:2px">Richieste da gestire</div>
+      <div class="txt">Timbrature, ferie/permessi o rimborsi in attesa.</div>
+    </div>
+    <i class="fa fa-chevron-right" style="margin-left:auto;color:#fff"></i>
+  </a>
+  {% endif %}
+
+  <div class="grid">
+    <a class="tile blue" href="/admin/richieste">
+      {% if s.richieste > 0 %}<span class="badge">{{ s.richieste }}</span>{% endif %}
+      <div><i class="fa fa-clock"></i><div class="label">Timbrature</div><div class="sub">Da approvare</div></div>
+    </a>
+    <a class="tile purple" href="/ferie">
+      {% if s.ferie > 0 %}<span class="badge">{{ s.ferie }}</span>{% endif %}
+      <div><i class="fa fa-umbrella-beach"></i><div class="label">Ferie e permessi</div><div class="sub">Richieste personale</div></div>
+    </a>
+    <a class="tile green" href="/admin/spese?stato=in_attesa">
+      {% if s.spese > 0 %}<span class="badge">{{ s.spese }}</span>{% endif %}
+      <div><i class="fa fa-receipt"></i><div class="label">Rimborsi</div><div class="sub">Spese in attesa</div></div>
+    </a>
+    <a class="tile amber" href="/admin/notifiche">
+      {% if unread_count > 0 %}<span class="badge">{{ unread_count }}</span>{% endif %}
+      <div><i class="fa fa-bell"></i><div class="label">Notifiche</div><div class="sub">Messaggi e alert</div></div>
+    </a>
+  </div>
+
+  <div class="section-title">Gestione rapida</div>
+  <div class="grid">
+    <a class="tile slate" href="/dipendenti"><div><i class="fa fa-users"></i><div class="label">Dipendenti</div><div class="sub">{{ s.dip }} attivi</div></div></a>
+    <a class="tile slate" href="/presenze"><div><i class="fa fa-calendar-check"></i><div class="label">Presenze</div><div class="sub">Storico ore</div></div></a>
+    <a class="tile slate" href="/cantieri"><div><i class="fa fa-store"></i><div class="label">Fiere</div><div class="sub">{{ s.cantieri }} attive</div></div></a>
+    <a class="tile slate" href="/scadenze"><div><i class="fa fa-triangle-exclamation"></i><div class="label">Scadenze</div><div class="sub">{{ s.scadenze }} imminenti</div></div></a>
+  </div>
+
+  <div class="section-title">Ultime richieste</div>
+  <div class="list">
+    {% if richieste %}
+      {% for r in richieste %}
+      <a class="item" href="{{ r.url }}">
+        <div class="ico"><i class="fa {{ r.icon }}"></i></div>
+        <div style="min-width:0;flex:1">
+          <div class="title">{{ r.title }}</div>
+          <div class="body">{{ r.body }}</div>
+        </div>
+        <i class="fa fa-chevron-right" style="align-self:center;color:rgba(255,255,255,.3)"></i>
+      </a>
+      {% endfor %}
+    {% else %}
+      <div class="item"><div class="ico"><i class="fa fa-check"></i></div><div><div class="title">Tutto a posto</div><div class="body">Nessuna richiesta in attesa.</div></div></div>
+    {% endif %}
+  </div>
+
+  <div class="section-title">Altro</div>
+  <div class="grid">
+    <a class="tile slate" href="/admin/notifiche-push"><div><i class="fa fa-bell-concierge"></i><div class="label">Push</div><div class="sub">Invia avvisi</div></div></a>
+    <a class="tile slate" href="/admin/impostazioni"><div><i class="fa fa-gear"></i><div class="label">Impostazioni</div><div class="sub">Azienda e app</div></div></a>
+    <a class="tile rose" href="/logout"><div><i class="fa fa-sign-out-alt"></i><div class="label">Esci</div><div class="sub">Logout</div></div></a>
+    <a class="tile slate" href="/dashboard?desktop=1"><div><i class="fa fa-desktop"></i><div class="label">Versione PC</div><div class="sub">Dashboard completa</div></div></a>
+  </div>
+  <div class="bottom"></div>
+</div>
+</body>
+</html>"""
+
+
+@app.route('/admin/mobile')
+@admin_required
+def admin_mobile():
+    db = get_db()
+    try:
+        ensure_ferie_extra_columns(db)
+    except Exception:
+        pass
+    today = date.today().isoformat()
+    sc_app = _conta_scadenze_app(db)
+    s = {
+        'dip': db.execute("SELECT COUNT(*) FROM utenti WHERE COALESCE(attivo,1)=1 AND ruolo='dipendente'").fetchone()[0],
+        'richieste': db.execute("SELECT COUNT(*) FROM richieste_presenze WHERE stato='in_attesa'").fetchone()[0],
+        'ferie': db.execute("SELECT COUNT(*) FROM ferie_permessi WHERE stato='in_attesa'").fetchone()[0],
+        'spese': db.execute("SELECT COUNT(*) FROM spese_rimborso WHERE stato='in_attesa'").fetchone()[0],
+        'cantieri': db.execute("SELECT COUNT(*) FROM cantieri WHERE COALESCE(attivo,1)=1").fetchone()[0],
+        'presenti': db.execute("SELECT COUNT(*) FROM presenze WHERE data=?", (today,)).fetchone()[0],
+        'scadenze': int(sc_app.get('totale_scaduti', 0) or 0) + int(sc_app.get('totale_in_scadenza', 0) or 0),
+    }
+    richieste = []
+    for r in db.execute("""SELECT r.id, r.data, r.ore_totali, r.creato_il, u.nome, u.cognome
+                           FROM richieste_presenze r JOIN utenti u ON u.id=r.utente_id
+                           WHERE r.stato='in_attesa'
+                           ORDER BY datetime(r.creato_il) DESC, r.id DESC LIMIT 4""").fetchall():
+        richieste.append({'created': r['creato_il'] or '', 'title': 'Timbratura', 'body': f'{r["nome"]} {r["cognome"]} - {r["data"]}', 'url': '/admin/richieste', 'icon': 'fa-clock'})
+    for r in db.execute("""SELECT f.tipo, f.data_inizio, f.data_fine, f.giorni, f.ora_inizio, f.ora_fine, f.creato_il, u.nome, u.cognome
+                           FROM ferie_permessi f JOIN utenti u ON u.id=f.utente_id
+                           WHERE f.stato='in_attesa'
+                           ORDER BY datetime(f.creato_il) DESC, f.id DESC LIMIT 4""").fetchall():
+        det = descrivi_richiesta_assenza(r['tipo'], r['data_inizio'], r['data_fine'], r['giorni'], r['ora_inizio'], r['ora_fine'])
+        richieste.append({'created': r['creato_il'] or '', 'title': r['tipo'], 'body': f'{r["nome"]} {r["cognome"]} - {det}', 'url': '/ferie', 'icon': 'fa-umbrella-beach'})
+    for r in db.execute("""SELECT s.data, s.categoria, s.importo, s.creato_il, u.nome, u.cognome
+                           FROM spese_rimborso s JOIN utenti u ON u.id=s.utente_id
+                           WHERE s.stato='in_attesa'
+                           ORDER BY datetime(s.creato_il) DESC, s.id DESC LIMIT 4""").fetchall():
+        richieste.append({'created': r['creato_il'] or '', 'title': 'Rimborso spesa', 'body': f'{r["nome"]} {r["cognome"]} - euro {float(r["importo"] or 0):.2f}', 'url': '/admin/spese?stato=in_attesa', 'icon': 'fa-receipt'})
+    richieste = sorted(richieste, key=lambda x: x.get('created', ''), reverse=True)[:8]
+    db.close()
+    unread_count = conta_notifiche_non_lette(session['user_id'])
+    pending_totale = s['richieste'] + s['ferie'] + s['spese']
+    return render_template_string(ADMIN_MOBILE_TMPL,
+                                  azienda_nome=session.get('azienda_nome') or get_setting('azienda', 'Accesso Fiere'),
+                                  s=s,
+                                  pending_totale=pending_totale,
+                                  unread_count=unread_count,
+                                  richieste=richieste)
 
 
 # ══════════ Dashboard layout personalizzato ══════════
