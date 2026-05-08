@@ -1661,6 +1661,19 @@ def render_page(tmpl, **ctx):
             ).fetchone()[0]
         except:
             ctx['spese_attesa'] = 0
+        try:
+            _ensure_notifiche_app_table(db)
+            ctx['admin_notifiche_app'] = db.execute(
+                "SELECT COUNT(*) FROM notifiche_app WHERE utente_id=? AND letto=0",
+                (session.get('user_id'),)
+            ).fetchone()[0]
+        except Exception:
+            ctx['admin_notifiche_app'] = 0
+        ctx['admin_notifiche_totale'] = (
+            int(ctx.get('notifiche_count') or 0) +
+            int(ctx.get('spese_attesa') or 0) +
+            int(ctx.get('admin_notifiche_app') or 0)
+        )
         # Conteggi scadenze (per badge sidebar e alert pagina)
         try:
             ctx['scadenze_app'] = _conta_scadenze_app(db)
@@ -1678,6 +1691,8 @@ def render_page(tmpl, **ctx):
     else:
         ctx['notifiche_count'] = 0
         ctx['spese_attesa'] = 0
+        ctx['admin_notifiche_app'] = 0
+        ctx['admin_notifiche_totale'] = 0
         ctx['scadenze_app'] = {'veicoli_scaduti':0,'docs_dip_scaduti':0,'docs_az_scaduti':0,
                                'totale_scaduti':0,'totale_in_scadenza':0,
                                'veicoli_in_scadenza':0,'docs_dip_in_scadenza':0,'docs_az_in_scadenza':0}
@@ -2002,6 +2017,10 @@ textarea{resize:vertical;min-height:80px}
       <i class="fa fa-bell"></i> Richieste
       {% if notifiche_count > 0 %}<span class="notif-badge">{{ notifiche_count }}</span>{% endif %}
     </a>
+    <a href="/admin/notifiche" class="{{ 'active' if active=='notifiche_admin' }}">
+      <i class="fa fa-inbox"></i> Notifiche
+      {% if admin_notifiche_app > 0 %}<span class="notif-badge">{{ admin_notifiche_app }}</span>{% endif %}
+    </a>
     <a href="/admin/spese" class="{{ 'active' if active=='spese' }}">
       <i class="fa fa-receipt"></i> Rimborsi Spese
       {% if spese_attesa > 0 %}<span class="notif-badge amber">{{ spese_attesa }}</span>{% endif %}
@@ -2040,9 +2059,9 @@ textarea{resize:vertical;min-height:80px}
       {% endif %}
 
       {% if session.ruolo=='admin' %}
-      <a href="/admin/richieste" class="tb-icon-btn" title="Richieste">
+      <a href="/admin/notifiche" class="tb-icon-btn" title="Notifiche">
         <i class="fa fa-bell"></i>
-        {% if notifiche_count and notifiche_count > 0 %}<span class="tb-dot"></span>{% endif %}
+        {% if admin_notifiche_totale and admin_notifiche_totale > 0 %}<span class="tb-dot"></span>{% endif %}
       </a>
       <div class="tb-divider"></div>
       {% endif %}
@@ -2095,6 +2114,50 @@ textarea{resize:vertical;min-height:80px}
       if(inp) inp.focus();
     }
   });
+  {% if session.ruolo=='admin' %}
+  (function(){
+    var lastKey = 'accesso_admin_last_notifica_id';
+    function showAdminToast(titolo, messaggio){
+      var t = document.createElement('div');
+      t.style.cssText = 'position:fixed;right:22px;top:82px;max-width:360px;background:#0f172a;color:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 18px 45px rgba(15,23,42,.28);z-index:10000;font-size:13px;line-height:1.4';
+      t.innerHTML = '<div style="font-weight:800;margin-bottom:4px">' + titolo + '</div><div style="opacity:.82">' + messaggio + '</div>';
+      document.body.appendChild(t);
+      setTimeout(function(){ t.style.opacity='0'; t.style.transform='translateY(-8px)'; t.style.transition='all .25s'; }, 5200);
+      setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 5600);
+    }
+    async function pollAdminNotifiche(){
+      try{
+        var r = await fetch('/api/notifiche/latest-unread', {cache:'no-store'});
+        var data = await r.json();
+        if(!data.latest) return;
+        var last = parseInt(localStorage.getItem(lastKey) || '0', 10);
+        var id = parseInt(data.latest.id || 0, 10);
+        if(!last){
+          localStorage.setItem(lastKey, String(id));
+          return;
+        }
+        if(id > last){
+          localStorage.setItem(lastKey, String(id));
+          showAdminToast(data.latest.titolo || 'Nuova notifica', data.latest.messaggio || '');
+          if('Notification' in window && Notification.permission === 'granted'){
+            new Notification(data.latest.titolo || 'Accesso Fiere', {
+              body: data.latest.messaggio || '',
+              icon: '/static/pwa/icon-192.png'
+            });
+          }
+          var bell = document.querySelector('.tb-icon-btn[href="/admin/notifiche"]');
+          if(bell && !bell.querySelector('.tb-dot')){
+            var dot = document.createElement('span');
+            dot.className = 'tb-dot';
+            bell.appendChild(dot);
+          }
+        }
+      }catch(e){}
+    }
+    pollAdminNotifiche();
+    setInterval(pollAdminNotifiche, 30000);
+  })();
+  {% endif %}
   </script>
   <div class="content">
     {% with msgs = get_flashed_messages(with_categories=true) %}
@@ -2832,6 +2895,20 @@ def notifica_utente(utente_id, titolo, messaggio, url='/mobile/notifiche', tipo=
     return send_push_to_user(utente_id, titolo, messaggio, url)
 
 
+def notifica_admins(titolo, messaggio, url='/admin/notifiche', tipo='admin'):
+    """Salva e invia una notifica a tutti gli amministratori attivi."""
+    db = get_db()
+    admins = db.execute("SELECT id FROM utenti WHERE ruolo='admin' AND COALESCE(attivo,1)=1").fetchall()
+    db.close()
+    sent = 0
+    for admin in admins:
+        try:
+            sent += notifica_utente(admin['id'], titolo, messaggio, url, tipo)
+        except Exception as e:
+            print(f'[notifica_admins] admin={admin["id"]}: {e}')
+    return sent
+
+
 @app.route('/manifest.webmanifest')
 def pwa_manifest():
     """Manifest PWA con dati personalizzati per tenant se loggato."""
@@ -3108,6 +3185,76 @@ def pwa_push_my_subs():
 def api_notifiche_unread_count():
     """Conteggio notifiche non lette per badge UI e app badge."""
     return jsonify({'count': conta_notifiche_non_lette(session['user_id'])})
+
+
+@app.route('/api/notifiche/latest-unread')
+@login_required
+def api_notifiche_latest_unread():
+    """Ultima notifica non letta, usata dal portale admin per avvisi live."""
+    db = get_db()
+    _ensure_notifiche_app_table(db)
+    count = db.execute("SELECT COUNT(*) FROM notifiche_app WHERE utente_id=? AND letto=0",
+                       (session['user_id'],)).fetchone()[0]
+    row = db.execute("""SELECT id, titolo, messaggio, url, tipo, creato_il
+                        FROM notifiche_app
+                        WHERE utente_id=? AND letto=0
+                        ORDER BY id DESC LIMIT 1""",
+                     (session['user_id'],)).fetchone()
+    db.close()
+    return jsonify({'count': count, 'latest': dict(row) if row else None})
+
+
+ADMIN_NOTIFICHE_TMPL = """
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fa fa-inbox" style="color:var(--accent);margin-right:8px"></i>Notifiche del gestionale</h3>
+  </div>
+  <div class="card-body" style="display:grid;gap:12px">
+    {% if notifiche %}
+      {% for n in notifiche %}
+      <a href="{{ n.url or '#' }}" style="display:block;text-decoration:none;color:inherit;background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.04)">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="width:34px;height:34px;border-radius:50%;background:#dbeafe;color:#1d4ed8;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i class="fa fa-bell"></i>
+          </div>
+          <div style="min-width:0;flex:1">
+            <div style="font-weight:800;margin-bottom:4px">{{ n.titolo }}</div>
+            <div style="color:var(--text-light);line-height:1.45">{{ n.messaggio }}</div>
+            <div style="font-size:11px;color:#94a3b8;margin-top:8px">{{ n.creato_il }}</div>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    {% else %}
+      <div style="text-align:center;color:var(--text-light);padding:34px">
+        <i class="fa fa-check-circle" style="font-size:34px;color:var(--success);margin-bottom:12px"></i>
+        <div style="font-weight:700;color:var(--text)">Nessuna notifica da leggere</div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+"""
+
+
+@app.route('/admin/notifiche')
+@admin_required
+def admin_notifiche():
+    """Centro notifiche interno per l'admin desktop."""
+    db = get_db()
+    _ensure_notifiche_app_table(db)
+    rows = db.execute("""SELECT id, titolo, messaggio, url, tipo, letto, creato_il
+                         FROM notifiche_app
+                         WHERE utente_id=?
+                         ORDER BY id DESC LIMIT 80""",
+                      (session['user_id'],)).fetchall()
+    db.execute("""UPDATE notifiche_app
+                  SET letto=1, letto_il=datetime('now')
+                  WHERE utente_id=? AND letto=0""",
+               (session['user_id'],))
+    safe_commit(db)
+    db.close()
+    return render_page(ADMIN_NOTIFICHE_TMPL, page_title='Notifiche', active='notifiche_admin',
+                       notifiche=rows)
 
 
 @app.route('/admin/notifiche-push', methods=['GET', 'POST'])
@@ -7417,6 +7564,16 @@ def invia_richiesta_presenza():
     # Email notifica in background
     email_admin = get_setting('email_notifiche','')
     _nome_d = f"{session.get('nome','')} {session.get('cognome','')}".strip()
+    riepilogo = f"{ore:.1f} ore" if modalita == 'ore' else f"{oe}-{ou} ({ore:.1f}h)"
+    try:
+        notifica_admins(
+            'Nuova richiesta timbratura',
+            f'{_nome_d} ha inviato una richiesta di timbratura per il {data}: {riepilogo}.',
+            '/admin/richieste',
+            'richiesta_presenza'
+        )
+    except Exception as e:
+        print(f'[notifica admin presenza] {e}')
     if email_admin:
         import threading
         if modalita == 'ore':
@@ -7666,17 +7823,16 @@ def ferie_richiesta():
         send_email(email_admin, f'[ACCESSO FIERE] Richiesta {tipo} da {session["nome"]} {session["cognome"]}',
             f'<p><b>{session["nome"]} {session["cognome"]}</b> ha richiesto <b>{tipo}</b> dal {d_in} al {d_fi} ({giorni} giorni).</p>')
     db.close()
-    # ── Notifica push agli admin ──
+    # ── Notifica agli admin ──
     try:
-        threading.Thread(
-            target=send_push_to_admins,
-            args=(f'🏖 Nuova richiesta {tipo}',
-                  f'{session["nome"]} {session["cognome"]} dal {d_in} al {d_fi} ({giorni} gg)',
-                  '/ferie'),
-            daemon=True
-        ).start()
+        notifica_admins(
+            f'Nuova richiesta {tipo}',
+            f'{session["nome"]} {session["cognome"]} ha richiesto {tipo.lower()} dal {d_in} al {d_fi} ({giorni} gg).',
+            '/ferie',
+            'richiesta_ferie'
+        )
     except Exception as e:
-        print(f'[push admin ferie] {e}')
+        print(f'[notifica admin ferie] {e}')
     flash('Richiesta inviata!','success'); return redirect(url_for('ferie'))
 
 @app.route('/ferie/<int:fid>/gestisci', methods=['POST'])
@@ -7692,21 +7848,19 @@ def ferie_gestisci(fid):
     db.execute("UPDATE ferie_permessi SET stato=?,nota_admin=?,gestito_il=? WHERE id=?",
                (stato, nota or stato.capitalize(), now_str, fid))
     safe_commit(db); db.close()
-    # ── Notifica push al dipendente ──
+    # ── Notifica al dipendente ──
     if f_info:
         try:
             tipo_label = (f_info['tipo'] or 'Richiesta').capitalize()
             if stato == 'approvata':
-                title = f'✅ {tipo_label} approvata'
-                body = f"Dal {f_info['data_inizio']} al {f_info['data_fine']} ({f_info['giorni']} gg)"
+                title = f'{tipo_label} accettata'
+                body = f"La tua richiesta di {tipo_label.lower()} dal {f_info['data_inizio']} al {f_info['data_fine']} è stata accettata."
             else:
-                title = f'❌ {tipo_label} rifiutata'
-                body = (nota or 'Vedi i dettagli nell\'app')[:200]
-            threading.Thread(
-                target=send_push_to_user,
-                args=(f_info['utente_id'], title, body, '/mobile/ferie'),
-                daemon=True
-            ).start()
+                title = f'{tipo_label} rifiutata'
+                body = f"La tua richiesta di {tipo_label.lower()} dal {f_info['data_inizio']} al {f_info['data_fine']} è stata rifiutata."
+                if nota:
+                    body += f" Nota: {nota}"
+            notifica_utente(f_info['utente_id'], title, body, '/mobile/notifiche', f'ferie_{stato}')
         except Exception as e:
             print(f'[push ferie] {e}')
     flash(f'{"✅ Approvata" if stato=="approvata" else "❌ Rifiutata"}!','success')
@@ -7911,13 +8065,16 @@ def gestisci_richiesta(rid):
     safe_commit(db); db.close()
     # ── Notifica al dipendente: storico in app + push immediata ──
     try:
+        data_notifica = request.form.get('data_mod') or r['data']
         if azione in ('approva', 'modifica_approva'):
-            title = '✅ Presenza approvata'
-            body = f"Presenza del {request.form.get('data_mod') or r['data']} approvata"
+            title = 'Timbratura accettata'
+            body = f"La tua timbratura del {data_notifica} è stata accettata."
             tipo = 'presenza_approvata'
         else:
-            title = '❌ Presenza rifiutata'
-            body = (nota or f"Presenza del {r['data']} non approvata")[:200]
+            title = 'Timbratura rifiutata'
+            body = f"La tua timbratura del {data_notifica} è stata rifiutata."
+            if nota:
+                body += f" Nota: {nota}"
             tipo = 'presenza_rifiutata'
         notifica_utente(r['utente_id'], title, body, '/mobile/notifiche', tipo)
     except Exception as e:
@@ -16031,6 +16188,10 @@ select option{background:#1e293b}
     <i class="fa fa-receipt" style="font-size:22px"></i>
     {{ t.spese_btn }}
   </a>
+  <a href="/mobile/ferie" style="background:linear-gradient(135deg,#581c87,#a855f7);color:#fff;border:none;border-radius:14px;padding:16px;font-size:14px;font-weight:700;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:10px">
+    <i class="fa fa-umbrella-beach" style="font-size:22px"></i>
+    Ferie e permessi
+  </a>
   <a href="/mobile/notifiche" style="position:relative;background:#1e293b;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.9);border-radius:14px;padding:14px 16px;font-size:14px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:10px">
     <span style="position:relative;display:inline-flex">
       <i class="fa fa-bell" style="font-size:18px;color:#fbbf24"></i>
@@ -17724,6 +17885,16 @@ def mobile_cs_timbra():
     targ_nome = f"{targ['nome']} {targ['cognome']}" if targ else 'dipendente'
     db.close()
 
+    try:
+        notifica_admins(
+            'Nuova richiesta timbratura',
+            f'{targ_nome} ha una nuova richiesta di timbratura per il {data}: {ore_nette}h nette.',
+            '/admin/richieste',
+            'richiesta_presenza'
+        )
+    except Exception as e:
+        print(f'[notifica admin presenza cs] {e}')
+
     if target_uid == cs_id:
         flash(f'✅ Richiesta inviata ({ore_nette}h) — in attesa di approvazione.', 'success')
     else:
@@ -17912,6 +18083,15 @@ def mobile_inserisci():
     # Notifica email admin — in background per non bloccare la risposta
     email_admin = get_setting('email_notifiche', '')
     nome_dip = f"{session.get('nome','')} {session.get('cognome','')}".strip()
+    try:
+        notifica_admins(
+            'Nuova richiesta timbratura',
+            f'{nome_dip} ha inviato una richiesta di timbratura per il {data}: {ore_nette}h nette.',
+            '/admin/richieste',
+            'richiesta_presenza'
+        )
+    except Exception as e:
+        print(f'[notifica admin presenza mobile] {e}')
     if email_admin:
         import threading
         _base = request.host_url.rstrip('/')
@@ -19031,6 +19211,22 @@ def admin_spesa_gestisci(sid):
                (nuovo_stato, nota, sid))
     safe_commit(db); db.close()
 
+    # Notifica in app + push al dipendente
+    try:
+        importo = float(spesa['importo'] or 0)
+        data_spesa = spesa['data'] or ''
+        if nuovo_stato == 'approvata':
+            title = 'Rimborso spesa accettato'
+            body = f"La tua richiesta di rimborso spesa da € {importo:.2f} del {data_spesa} è stata accettata."
+        else:
+            title = 'Rimborso spesa rifiutato'
+            body = f"La tua richiesta di rimborso spesa da € {importo:.2f} del {data_spesa} è stata rifiutata."
+            if nota:
+                body += f" Nota: {nota}"
+        notifica_utente(spesa['utente_id'], title, body, '/mobile/notifiche', f'rimborso_{nuovo_stato}')
+    except Exception as e:
+        print(f'[notifica spesa gestisci] {e}')
+
     # Notifica email al dipendente
     if spesa['email']:
         import threading
@@ -19088,6 +19284,151 @@ def admin_spesa_foto(fn):
         return 'Not found', 404
     from flask import send_file as _sf
     return _sf(fp)
+
+
+MOBILE_FERIE_TMPL = """<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Ferie e permessi</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;color:#fff}
+.header{background:linear-gradient(135deg,#581c87,#7c3aed);padding:18px 20px 14px;display:flex;align-items:center;gap:12px}
+.header a{color:rgba(255,255,255,.72);text-decoration:none;font-size:20px}
+.header h1{font-size:18px;font-weight:800;flex:1}
+.content{padding:16px;display:flex;flex-direction:column;gap:14px;max-width:480px;margin:0 auto}
+.card{background:#1e293b;border-radius:16px;padding:18px;border:1px solid rgba(255,255,255,.07)}
+.card-title{font-size:11px;font-weight:800;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+label{font-size:13px;color:rgba(255,255,255,.65);margin-bottom:7px;display:block;font-weight:600}
+input,select,textarea{width:100%;background:#0f172a;border:1.5px solid rgba(255,255,255,.12);border-radius:12px;color:#fff;font-size:16px;padding:13px 16px;outline:none;-webkit-appearance:none;appearance:none;font-family:inherit;margin-bottom:12px}
+input:focus,select:focus,textarea:focus{border-color:#a78bfa;box-shadow:0 0 0 3px rgba(167,139,250,.16)}
+select option{background:#1e293b}
+.submit-btn{width:100%;background:linear-gradient(135deg,#6d28d9,#a855f7);color:#fff;border:none;border-radius:14px;padding:17px;font-size:17px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
+.ferie-item{background:#0f172a;border-radius:12px;padding:13px 14px;margin-bottom:8px;border:1px solid rgba(255,255,255,.05)}
+.ferie-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:5px}
+.ferie-tipo{font-size:13px;font-weight:800;color:#c4b5fd}
+.ferie-date{font-size:13px;color:rgba(255,255,255,.74);line-height:1.45}
+.ferie-note{font-size:12px;color:rgba(255,255,255,.45);margin-top:5px;line-height:1.45}
+.stato{display:inline-block;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800;white-space:nowrap}
+.stato-in_attesa{background:rgba(251,191,36,.15);color:#fbbf24}
+.stato-approvata{background:rgba(34,197,94,.15);color:#22c55e}
+.stato-rifiutata{background:rgba(239,68,68,.15);color:#ef4444}
+.flash{padding:13px 15px;border-radius:12px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:10px}
+.flash.success{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac}
+.flash.error{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#fca5a5}
+.empty{padding:24px;text-align:center;color:rgba(255,255,255,.45);font-size:13px}
+</style>
+</head>
+<body>
+<div class="header">
+  <a href="/mobile"><i class="fa fa-arrow-left"></i></a>
+  <h1><i class="fa fa-umbrella-beach"></i> Ferie e permessi</h1>
+</div>
+<div class="content">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}
+  <div class="flash {{ cat }}"><i class="fa fa-{{ 'check-circle' if cat=='success' else 'exclamation-circle' }}"></i> {{ msg }}</div>
+  {% endfor %}{% endwith %}
+
+  <form method="POST" action="/mobile/ferie/richiesta">
+    <div class="card">
+      <div class="card-title"><i class="fa fa-paper-plane" style="color:#c4b5fd"></i> Nuova richiesta</div>
+      <label>Tipo *</label>
+      <select name="tipo" required>
+        <option value="Ferie">Ferie</option>
+        <option value="Permesso">Permesso</option>
+        <option value="Malattia">Malattia</option>
+        <option value="Permesso studio">Permesso studio</option>
+      </select>
+      <label>Dal *</label>
+      <input type="date" name="data_inizio" value="{{ oggi }}" required>
+      <label>Al *</label>
+      <input type="date" name="data_fine" value="{{ oggi }}" required>
+      <label>Motivo</label>
+      <textarea name="motivo" rows="2" placeholder="Opzionale"></textarea>
+    </div>
+    <button type="submit" class="submit-btn"><i class="fa fa-paper-plane"></i> Invia richiesta</button>
+  </form>
+
+  <div class="card">
+    <div class="card-title"><i class="fa fa-clock-rotate-left" style="color:#94a3b8"></i> Le tue richieste</div>
+    {% if richieste %}
+      {% for r in richieste %}
+      <div class="ferie-item">
+        <div class="ferie-top">
+          <div>
+            <div class="ferie-tipo">{{ r.tipo }}</div>
+            <div class="ferie-date">Dal {{ r.data_inizio }} al {{ r.data_fine }} · {{ r.giorni }} gg</div>
+          </div>
+          <span class="stato stato-{{ r.stato }}">{{ 'In attesa' if r.stato=='in_attesa' else 'Accettata' if r.stato=='approvata' else 'Rifiutata' }}</span>
+        </div>
+        {% if r.motivo %}<div class="ferie-note">{{ r.motivo }}</div>{% endif %}
+        {% if r.nota_admin %}<div class="ferie-note">Risposta admin: {{ r.nota_admin }}</div>{% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty">Non hai ancora richieste.</div>
+    {% endif %}
+  </div>
+</div>
+</body>
+</html>"""
+
+
+@app.route('/mobile/ferie')
+@login_required
+def mobile_ferie():
+    uid = session['user_id']
+    db = get_db()
+    richieste = db.execute("""SELECT id, tipo, data_inizio, data_fine, giorni, motivo, stato, nota_admin, creato_il
+                              FROM ferie_permessi
+                              WHERE utente_id=?
+                              ORDER BY creato_il DESC, id DESC LIMIT 30""",
+                           (uid,)).fetchall()
+    db.close()
+    return render_template_string(MOBILE_FERIE_TMPL, oggi=date.today().isoformat(),
+                                  richieste=[dict(r) for r in richieste])
+
+
+@app.route('/mobile/ferie/richiesta', methods=['POST'])
+@login_required
+def mobile_ferie_richiesta():
+    tipo = (request.form.get('tipo') or 'Ferie').strip()
+    d_in = (request.form.get('data_inizio') or '').strip()
+    d_fi = (request.form.get('data_fine') or '').strip()
+    motivo = (request.form.get('motivo') or '').strip()
+    if not d_in or not d_fi:
+        flash('Date obbligatorie.', 'error')
+        return redirect(url_for('mobile_ferie'))
+    try:
+        diff = datetime.strptime(d_fi, '%Y-%m-%d') - datetime.strptime(d_in, '%Y-%m-%d')
+        giorni = diff.days + 1
+        if giorni <= 0:
+            raise ValueError
+    except Exception:
+        flash('La data fine deve essere dopo la data inizio.', 'error')
+        return redirect(url_for('mobile_ferie'))
+
+    db = get_db()
+    db.execute("""INSERT INTO ferie_permessi (utente_id, tipo, data_inizio, data_fine, giorni, motivo)
+                  VALUES (?,?,?,?,?,?)""",
+               (session['user_id'], tipo, d_in, d_fi, giorni, motivo))
+    safe_commit(db)
+    db.close()
+    try:
+        notifica_admins(
+            f'Nuova richiesta {tipo}',
+            f'{session["nome"]} {session["cognome"]} ha richiesto {tipo.lower()} dal {d_in} al {d_fi} ({giorni} gg).',
+            '/ferie',
+            'richiesta_ferie'
+        )
+    except Exception as e:
+        print(f'[notifica admin ferie mobile] {e}')
+    flash('Richiesta inviata.', 'success')
+    return redirect(url_for('mobile_ferie'))
 
 
 MOBILE_SPESE_TMPL = """<!DOCTYPE html>
@@ -19305,6 +19646,15 @@ def mobile_spese_inserisci():
     cat = f.get('categoria','Altro')
     importo = float(f.get('importo') or 0)
     data_spesa = f.get('data') or date.today().isoformat()
+    try:
+        notifica_admins(
+            'Nuova richiesta rimborso spesa',
+            f'{nome_dip} ha richiesto un rimborso spesa da € {importo:.2f} ({cat}) del {data_spesa}.',
+            '/admin/spese?stato=in_attesa',
+            'richiesta_spesa'
+        )
+    except Exception as e:
+        print(f'[notifica admin spesa] {e}')
     if email_admin:
         import threading
         _base = request.host_url.rstrip('/')
