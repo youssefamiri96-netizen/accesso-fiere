@@ -6117,11 +6117,11 @@ SEARCH_TMPL = """
   {% if q and total > 0 %}
   <div class="search-grid">
     {% for g in groups %}
-      {% if g.items %}
+      {% if g.results %}
       <section class="search-section">
-        <div class="search-section-head"><h3><i class="fa {{ g.icon }}"></i> {{ g.title }}</h3><span class="search-count">{{ g.items|length }}</span></div>
+        <div class="search-section-head"><h3><i class="fa {{ g.icon }}"></i> {{ g.title }}</h3><span class="search-count">{{ g.results|length }}</span></div>
         <div class="search-items">
-          {% for item in g.items %}
+          {% for item in g.results %}
           <a class="search-item" href="{{ item.url }}">
             <div class="search-ico"><i class="fa {{ item.icon }}"></i></div>
             <div><div class="search-title">{{ item.title }}</div><div class="search-meta">{{ item.meta }}</div></div>
@@ -6166,7 +6166,7 @@ def global_search():
     def add_group(title, icon, items):
         nonlocal total
         total += len(items)
-        groups.append({'title': title, 'icon': icon, 'items': items})
+        groups.append({'title': title, 'icon': icon, 'results': items})
 
     if ruolo == 'admin':
         items = []
