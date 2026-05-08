@@ -1404,6 +1404,7 @@ def auto_init_tenant_db():
 # ─────────────────────────────────────────────
 AMMINISTRAZIONE_ENDPOINTS = {
     'amministrazione_home','amministrazione_mobile',
+    'global_search',
     'documenti','documento_nuovo','documento_modifica','documento_scarica','documento_anteprima','documento_rimuovi_file','documento_elimina','documenti_scarica_zip',
     'documenti_azienda','documenti_azienda_nuovo','documenti_azienda_modifica','documenti_azienda_scarica','documenti_azienda_elimina','documenti_azienda_zip',
     'scadenze','scadenze_pulisci_fantasma',
@@ -1439,7 +1440,7 @@ def login_required(f):
             except Exception:
                 pass
         # Solo admin vedono le pagine admin. Caposquadra → mobile-cs, dipendenti → mobile
-        admin_pages = {'dashboard','dipendenti','presenze','ferie','cantieri',
+        admin_pages = {'dashboard','dipendenti','presenze','ferie','cantieri','global_search',
                        'documenti','scadenze','calendario','richieste','impostazioni','fatturazione','preventivi','clienti','contratti_clienti',
                        'banca_ore','banca_ore_dettaglio','squadre_lista','calendario_fiere',
                        'cantiere_dettaglio','cantieri','spese_admin'}
@@ -2174,7 +2175,7 @@ textarea{resize:vertical;min-height:80px}
       <h1>{{ page_title }}</h1>
       <div class="topbar-search">
         <i class="fa fa-search"></i>
-        <input type="text" placeholder="Cerca dipendenti, fiere, documenti..." id="topbar-search-input" onkeydown="tbSearch(event)">
+        <input type="text" placeholder="Cerca tutto nel gestionale..." id="topbar-search-input" value="{{ q if active=='search' and q is defined else '' }}" onkeydown="tbSearch(event)">
         <kbd>⏎</kbd>
       </div>
     </div>
@@ -2236,7 +2237,7 @@ textarea{resize:vertical;min-height:80px}
   function tbSearch(ev){
     if(ev.key === 'Enter'){
       var q = ev.target.value.trim();
-      if(q) window.location.href = '/dipendenti?q=' + encodeURIComponent(q);
+      if(q) window.location.href = '/cerca?q=' + encodeURIComponent(q);
     }
   }
   // Cmd+K / Ctrl+K → focus ricerca
@@ -6100,6 +6101,179 @@ def amministrazione_mobile():
     return render_template_string(AMMINISTRAZIONE_MOBILE_TMPL,
                                   azienda_nome=session.get('azienda_nome') or get_setting('azienda','Accesso Fiere'),
                                   s=_amministrazione_stats())
+
+SEARCH_TMPL = """
+<style>
+.search-page{display:grid;gap:18px}.search-box-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px;box-shadow:var(--shadow)}.search-form{display:flex;gap:10px;align-items:center}.search-form input{height:44px;font-size:15px}.search-summary{font-size:13px;color:var(--text-light);margin-top:10px}.search-grid{display:grid;gap:14px}.search-section{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}.search-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border);background:#f8fafc}.search-section-head h3{font-size:15px;margin:0;display:flex;align-items:center;gap:8px}.search-count{background:#e2e8f0;color:#334155;border-radius:999px;padding:2px 8px;font-size:12px;font-weight:800}.search-items{display:grid}.search-item{display:grid;grid-template-columns:40px 1fr auto;gap:12px;align-items:center;padding:13px 16px;text-decoration:none;color:inherit;border-bottom:1px solid #eef2f7}.search-item:last-child{border-bottom:none}.search-item:hover{background:#f8fafc}.search-ico{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:#e0f2fe;color:#0369a1}.search-title{font-weight:800;color:#0f172a}.search-meta{font-size:12px;color:var(--text-light);margin-top:2px;line-height:1.35}.search-pill{font-size:11px;font-weight:800;border-radius:999px;background:#f1f5f9;color:#475569;padding:4px 8px;white-space:nowrap}.search-empty{background:#fff;border:1px solid var(--border);border-radius:12px;text-align:center;padding:45px 20px;color:var(--text-light);box-shadow:var(--shadow)}.search-empty i{font-size:34px;color:#cbd5e1;margin-bottom:10px}@media(max-width:700px){.search-form{flex-direction:column;align-items:stretch}.search-item{grid-template-columns:36px 1fr}.search-pill{grid-column:2}.search-ico{width:36px;height:36px}}
+</style>
+<div class="search-page">
+  <div class="search-box-card">
+    <form class="search-form" method="GET" action="/cerca">
+      <input name="q" value="{{ q }}" placeholder="Cerca dipendenti, documenti, veicoli, fatture, timbrature..." autofocus>
+      <button class="btn btn-primary" type="submit"><i class="fa fa-search"></i> Cerca</button>
+    </form>
+    {% if q %}<div class="search-summary">Risultati per <strong>{{ q }}</strong>: {{ total }} elemento{{ '' if total==1 else 'i' }} trovato{{ '' if total==1 else 'i' }}.</div>{% endif %}
+  </div>
+  {% if q and total > 0 %}
+  <div class="search-grid">
+    {% for g in groups %}
+      {% if g.items %}
+      <section class="search-section">
+        <div class="search-section-head"><h3><i class="fa {{ g.icon }}"></i> {{ g.title }}</h3><span class="search-count">{{ g.items|length }}</span></div>
+        <div class="search-items">
+          {% for item in g.items %}
+          <a class="search-item" href="{{ item.url }}">
+            <div class="search-ico"><i class="fa {{ item.icon }}"></i></div>
+            <div><div class="search-title">{{ item.title }}</div><div class="search-meta">{{ item.meta }}</div></div>
+            <div class="search-pill">{{ item.kind }}</div>
+          </a>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+    {% endfor %}
+  </div>
+  {% elif q %}
+  <div class="search-empty"><i class="fa fa-magnifying-glass"></i><div style="font-weight:800;color:#0f172a">Nessun risultato</div><div>Prova con nome, targa, numero fattura, data, documento o cliente.</div></div>
+  {% else %}
+  <div class="search-empty"><i class="fa fa-search"></i><div style="font-weight:800;color:#0f172a">Cerca in tutto il gestionale</div><div>Puoi cercare dipendenti, documenti, veicoli, fatture, timbrature, ferie, rimborsi, clienti, fornitori e preventivi.</div></div>
+  {% endif %}
+</div>
+"""
+
+@app.route('/cerca')
+@login_required
+def global_search():
+    ruolo = session.get('ruolo')
+    if ruolo not in ('admin', 'amministrazione'):
+        return redirect(url_for('mobile_cs') if ruolo == 'caposquadra' else url_for('mobile'))
+    q = (request.args.get('q', '') or '').strip()
+    groups = []
+    total = 0
+    if not q:
+        return render_page(SEARCH_TMPL, page_title='Cerca', active='search', q='', groups=[], total=0)
+
+    db = get_db()
+    like = f"%{q}%"
+    like_args = (like, like, like, like, like)
+
+    def rows(sql, params=()):
+        try:
+            return db.execute(sql, params).fetchall()
+        except Exception:
+            return []
+
+    def add_group(title, icon, items):
+        nonlocal total
+        total += len(items)
+        groups.append({'title': title, 'icon': icon, 'items': items})
+
+    if ruolo == 'admin':
+        items = []
+        for r in rows("""SELECT id,nome,cognome,email,telefono,ruolo,titolo FROM utenti
+                         WHERE nome LIKE ? OR cognome LIKE ? OR email LIKE ? OR telefono LIKE ? OR COALESCE(titolo,'') LIKE ?
+                         ORDER BY cognome,nome LIMIT 12""", like_args):
+            nome = f"{r['nome']} {r['cognome']}"
+            items.append({'title': nome, 'meta': f"{r['ruolo']} - {r['email'] or ''} {r['telefono'] or ''}", 'url': f"/dipendenti/{r['id']}/modifica", 'icon': 'fa-user', 'kind': 'Dipendente'})
+        add_group('Dipendenti', 'fa-users', items)
+
+        items = []
+        for r in rows("""SELECT c.id,c.nome,c.indirizzo,c.attivo FROM cantieri c
+                         WHERE c.nome LIKE ? OR COALESCE(c.indirizzo,'') LIKE ?
+                         ORDER BY c.attivo DESC,c.nome LIMIT 12""", (like, like)):
+            items.append({'title': r['nome'], 'meta': f"{r['indirizzo'] or ''} - {'attiva' if r['attivo'] else 'chiusa'}", 'url': f"/cantieri/{r['id']}", 'icon': 'fa-store', 'kind': 'Fiera'})
+        add_group('Fiere', 'fa-store', items)
+
+        items = []
+        for r in rows("""SELECT r.id,r.data,r.ora_entrata,r.ora_uscita,r.ore_totali,r.stato,u.nome,u.cognome,c.nome AS cantiere
+                         FROM richieste_presenze r JOIN utenti u ON u.id=r.utente_id
+                         LEFT JOIN cantieri c ON c.id=r.cantiere_id
+                         WHERE u.nome LIKE ? OR u.cognome LIKE ? OR r.data LIKE ? OR COALESCE(c.nome,'') LIKE ? OR COALESCE(r.note,'') LIKE ?
+                         ORDER BY r.data DESC,r.id DESC LIMIT 12""", like_args):
+            meta = f"{r['data']} - {r['ora_entrata'] or ''}/{r['ora_uscita'] or ''} - {r['ore_totali'] or 0} ore - {r['stato']}"
+            if r['cantiere']: meta += f" - {r['cantiere']}"
+            items.append({'title': f"Timbratura {r['nome']} {r['cognome']}", 'meta': meta, 'url': '/admin/richieste' if r['stato']=='in_attesa' else '/presenze', 'icon': 'fa-clock', 'kind': 'Timbratura'})
+        for r in rows("""SELECT p.id,p.data,p.ora_entrata,p.ora_uscita,p.ore_totali,u.nome,u.cognome,p.nome_jolly,p.cognome_jolly,c.nome AS cantiere
+                         FROM presenze p LEFT JOIN utenti u ON u.id=p.utente_id
+                         LEFT JOIN cantieri c ON c.id=p.cantiere_id
+                         WHERE COALESCE(u.nome,'') LIKE ? OR COALESCE(u.cognome,'') LIKE ? OR p.data LIKE ? OR COALESCE(c.nome,'') LIKE ? OR COALESCE(p.note,'') LIKE ? OR COALESCE(p.nome_jolly,'') LIKE ? OR COALESCE(p.cognome_jolly,'') LIKE ?
+                         ORDER BY p.data DESC,p.id DESC LIMIT 12""", like_args + (like, like)):
+            nome = f"{r['nome'] or r['nome_jolly'] or ''} {r['cognome'] or r['cognome_jolly'] or ''}".strip() or 'Jolly'
+            meta = f"{r['data']} - {r['ora_entrata'] or ''}/{r['ora_uscita'] or ''} - {r['ore_totali'] or 0} ore"
+            if r['cantiere']: meta += f" - {r['cantiere']}"
+            items.append({'title': f"Presenza {nome}", 'meta': meta, 'url': '/presenze', 'icon': 'fa-calendar-check', 'kind': 'Presenza'})
+        add_group('Timbrature e presenze', 'fa-clock', items[:18])
+
+        items = []
+        for r in rows("""SELECT f.id,f.tipo,f.data_inizio,f.data_fine,f.ora_inizio,f.ora_fine,f.stato,u.nome,u.cognome
+                         FROM ferie_permessi f JOIN utenti u ON u.id=f.utente_id
+                         WHERE u.nome LIKE ? OR u.cognome LIKE ? OR f.tipo LIKE ? OR f.data_inizio LIKE ? OR COALESCE(f.motivo,'') LIKE ?
+                         ORDER BY f.data_inizio DESC,f.id DESC LIMIT 12""", like_args):
+            ore = f" {r['ora_inizio']}-{r['ora_fine']}" if r['ora_inizio'] and r['ora_fine'] else ''
+            items.append({'title': f"{r['tipo']} - {r['nome']} {r['cognome']}", 'meta': f"{r['data_inizio']} / {r['data_fine']}{ore} - {r['stato']}", 'url': '/ferie', 'icon': 'fa-umbrella-beach', 'kind': 'Ferie/permessi'})
+        add_group('Ferie e permessi', 'fa-umbrella-beach', items)
+
+    items = []
+    for r in rows("""SELECT d.id,d.titolo,d.categoria,d.data_scadenza,u.nome,u.cognome FROM documenti d
+                     LEFT JOIN utenti u ON u.id=d.assegnato_a
+                     WHERE d.titolo LIKE ? OR COALESCE(d.descrizione,'') LIKE ? OR COALESCE(d.categoria,'') LIKE ? OR COALESCE(d.data_scadenza,'') LIKE ? OR COALESCE(u.nome||' '||u.cognome,'') LIKE ?
+                     ORDER BY d.data_scadenza IS NULL,d.data_scadenza LIMIT 12""", like_args):
+        items.append({'title': r['titolo'], 'meta': f"{r['categoria'] or 'Documento'} - {r['nome'] or 'Tutti'} {r['cognome'] or ''} - scadenza {r['data_scadenza'] or '-'}", 'url': f"/documenti/{r['id']}/modifica", 'icon': 'fa-file-lines', 'kind': 'Documento'})
+    for r in rows("""SELECT dd.id,dd.utente_id,dd.nome_originale,COALESCE(dd.categoria,dd.tipo_doc,'Documento') AS categoria,dd.data_scadenza,u.nome,u.cognome
+                     FROM documenti_dipendente dd JOIN utenti u ON u.id=dd.utente_id
+                     WHERE dd.nome_originale LIKE ? OR COALESCE(dd.categoria,dd.tipo_doc,'') LIKE ? OR COALESCE(dd.note,'') LIKE ? OR COALESCE(dd.data_scadenza,'') LIKE ? OR (u.nome||' '||u.cognome) LIKE ?
+                     ORDER BY dd.data_scadenza IS NULL,dd.data_scadenza LIMIT 12""", like_args):
+        items.append({'title': r['nome_originale'], 'meta': f"{r['categoria']} - {r['nome']} {r['cognome']} - scadenza {r['data_scadenza'] or '-'}", 'url': f"/dipendenti/{r['utente_id']}/documenti", 'icon': 'fa-id-card', 'kind': 'Doc dipendente'})
+    for r in rows("""SELECT id,titolo,categoria,data_scadenza,note FROM documenti_azienda
+                     WHERE titolo LIKE ? OR COALESCE(categoria,'') LIKE ? OR COALESCE(note,'') LIKE ? OR COALESCE(data_scadenza,'') LIKE ?
+                     ORDER BY data_scadenza IS NULL,data_scadenza LIMIT 12""", (like, like, like, like)):
+        items.append({'title': r['titolo'], 'meta': f"{r['categoria'] or 'Documento azienda'} - scadenza {r['data_scadenza'] or '-'}", 'url': f"/documenti-azienda/{r['id']}/modifica", 'icon': 'fa-building-columns', 'kind': 'Doc azienda'})
+    add_group('Documenti', 'fa-folder-open', items[:24])
+
+    items = []
+    for r in rows("""SELECT id,targa,marca,modello,tipo,scad_assicurazione,scad_revisione,scad_bollo,scad_tagliando FROM veicoli
+                     WHERE targa LIKE ? OR COALESCE(marca,'') LIKE ? OR COALESCE(modello,'') LIKE ? OR COALESCE(tipo,'') LIKE ? OR COALESCE(note,'') LIKE ?
+                     ORDER BY targa LIMIT 12""", like_args):
+        scad = ', '.join([x for x in [r['scad_assicurazione'], r['scad_revisione'], r['scad_bollo'], r['scad_tagliando']] if x]) or 'nessuna scadenza'
+        items.append({'title': f"{r['targa']} - {r['marca'] or ''} {r['modello'] or ''}", 'meta': f"{r['tipo'] or 'Veicolo'} - {scad}", 'url': f"/veicoli/{r['id']}", 'icon': 'fa-truck', 'kind': 'Veicolo'})
+    add_group('Veicoli', 'fa-truck', items)
+
+    items = []
+    for r in rows("""SELECT id,tipo,numero,cliente_nome,fornitore_nome,data_emissione,data_scadenza,importo_totale,stato FROM fatture
+                     WHERE numero LIKE ? OR COALESCE(cliente_nome,'') LIKE ? OR COALESCE(fornitore_nome,'') LIKE ? OR COALESCE(descrizione,'') LIKE ? OR COALESCE(data_scadenza,'') LIKE ?
+                     ORDER BY data_emissione DESC LIMIT 12""", like_args):
+        controparte = r['fornitore_nome'] if r['tipo']=='passiva' else r['cliente_nome']
+        items.append({'title': f"Fattura {r['numero']} - {controparte or ''}", 'meta': f"{r['tipo'] or 'attiva'} - euro {float(r['importo_totale'] or 0):.2f} - {r['stato']} - scadenza {r['data_scadenza'] or '-'}", 'url': f"/fatturazione/{r['id']}", 'icon': 'fa-file-invoice-dollar', 'kind': 'Fattura'})
+    add_group('Fatture', 'fa-file-invoice-dollar', items)
+
+    items = []
+    for r in rows("""SELECT s.id,s.data,s.categoria,s.descrizione,s.importo,s.stato,u.nome,u.cognome
+                     FROM spese_rimborso s JOIN utenti u ON u.id=s.utente_id
+                     WHERE u.nome LIKE ? OR u.cognome LIKE ? OR s.categoria LIKE ? OR COALESCE(s.descrizione,'') LIKE ? OR s.data LIKE ?
+                     ORDER BY s.data DESC,s.id DESC LIMIT 12""", like_args):
+        items.append({'title': f"Rimborso {r['categoria']} - {r['nome']} {r['cognome']}", 'meta': f"{r['data']} - euro {float(r['importo'] or 0):.2f} - {r['stato']} - {r['descrizione'] or ''}", 'url': '/admin/spese', 'icon': 'fa-receipt', 'kind': 'Rimborso'})
+    add_group('Rimborsi spese', 'fa-receipt', items)
+
+    items = []
+    for r in rows("""SELECT id,nome,partita_iva,email,telefono FROM clienti
+                     WHERE nome LIKE ? OR COALESCE(partita_iva,'') LIKE ? OR COALESCE(email,'') LIKE ? OR COALESCE(telefono,'') LIKE ?
+                     ORDER BY nome LIMIT 12""", (like, like, like, like)):
+        items.append({'title': r['nome'], 'meta': f"P.IVA {r['partita_iva'] or '-'} - {r['email'] or ''} {r['telefono'] or ''}", 'url': f"/clienti/{r['id']}/modifica", 'icon': 'fa-address-book', 'kind': 'Cliente'})
+    for r in rows("""SELECT id,nome,piva,email,telefono,referente FROM fornitori
+                     WHERE nome LIKE ? OR COALESCE(piva,'') LIKE ? OR COALESCE(email,'') LIKE ? OR COALESCE(telefono,'') LIKE ? OR COALESCE(referente,'') LIKE ?
+                     ORDER BY nome LIMIT 12""", like_args):
+        items.append({'title': r['nome'], 'meta': f"P.IVA {r['piva'] or '-'} - {r['referente'] or ''} {r['email'] or ''}", 'url': f"/fornitori/{r['id']}/modifica", 'icon': 'fa-truck-fast', 'kind': 'Fornitore'})
+    add_group('Clienti e fornitori', 'fa-address-book', items[:20])
+
+    items = []
+    for r in rows("""SELECT id,numero,cliente_nome,oggetto,luogo_lavoro,stato,totale_finale FROM preventivi
+                     WHERE numero LIKE ? OR COALESCE(cliente_nome,'') LIKE ? OR COALESCE(oggetto,'') LIKE ? OR COALESCE(luogo_lavoro,'') LIKE ? OR COALESCE(descrizione_servizio,'') LIKE ?
+                     ORDER BY id DESC LIMIT 12""", like_args):
+        items.append({'title': f"Preventivo {r['numero']} - {r['cliente_nome'] or ''}", 'meta': f"{r['oggetto'] or ''} - {r['stato']} - euro {float(r['totale_finale'] or 0):.2f}", 'url': f"/preventivi/{r['id']}/modifica", 'icon': 'fa-file-signature', 'kind': 'Preventivo'})
+    add_group('Preventivi', 'fa-file-signature', items)
+
+    db.close()
+    return render_page(SEARCH_TMPL, page_title='Cerca', active='search', q=q, groups=groups, total=total)
 
 ALLOWED_WIDGETS = {'ore_settimana','cantieri','presenze_oggi','scadenze','ferie','richieste'}
 
