@@ -2650,20 +2650,28 @@ setInterval(updateClock,1000);updateClock();
 LOGIN_TMPL = """<!DOCTYPE html>
 <html lang="{{ t.get('dir','ltr') == 'rtl' and 'ar' or 'it' }}" dir="{{ t.dir }}">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Accesso</title>
+<title>Accesso Fiere - Software verticale per allestitori</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;background:#f4f5f7}
-.left{width:420px;background:#0f172a;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:48px;color:#fff;flex-shrink:0}
-.left .logo{font-size:28px;font-weight:700;margin-bottom:6px}
-.left .tagline{font-size:14px;opacity:.5;text-align:center;max-width:260px;line-height:1.6}
-.features{margin-top:40px;width:100%}
-.feature{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13px;color:rgba(255,255,255,.6)}
-.feature i{color:#0f4c81;font-size:14px;width:16px}
-.right{flex:1;display:flex;align-items:center;justify-content:center;padding:40px}
-.login-box{background:#fff;border-radius:16px;padding:40px;width:100%;max-width:400px;box-shadow:0 4px 40px rgba(0,0,0,.08)}
+body{font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;background:#f5f7fb;color:#102033}
+.left{flex:1;background:#08111f;color:#fff;min-height:100vh;overflow:auto;position:relative}
+.left:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 18% 14%,rgba(0,180,216,.26),transparent 28%),radial-gradient(circle at 82% 8%,rgba(245,158,11,.18),transparent 25%),linear-gradient(135deg,#08111f 0%,#0e2a3d 48%,#111827 100%);pointer-events:none}
+.left-inner{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:38px 54px 46px}
+.brand-row{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:54px}
+.left .logo{font-size:24px;font-weight:800;letter-spacing:-.2px;display:flex;align-items:center;gap:10px}
+.left .tagline{font-size:12px;color:#94a3b8;font-weight:800;text-transform:uppercase;letter-spacing:1.1px}
+.demo-pill{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);border-radius:999px;padding:9px 13px;color:#e2e8f0;text-decoration:none;font-size:13px;font-weight:800}
+.hero-kicker{display:inline-flex;align-items:center;gap:8px;background:rgba(14,165,233,.13);border:1px solid rgba(125,211,252,.28);color:#bae6fd;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.8px;margin-bottom:18px}
+.hero-title{font-size:50px;line-height:1.02;letter-spacing:-1px;max-width:820px;margin-bottom:18px}
+.hero-sub{font-size:18px;line-height:1.55;color:#cbd5e1;max-width:760px;margin-bottom:26px}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:30px}.hero-cta,.hero-secondary{display:inline-flex;align-items:center;gap:9px;border-radius:12px;padding:13px 18px;text-decoration:none;font-weight:900;font-size:14px}.hero-cta{background:#f59e0b;color:#111827}.hero-secondary{background:rgba(255,255,255,.09);color:#fff;border:1px solid rgba(255,255,255,.16)}
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;max-width:720px;margin:26px 0 34px}.metric{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px}.metric strong{display:block;font-size:26px;color:#fff}.metric span{display:block;font-size:12px;color:#cbd5e1;margin-top:3px;line-height:1.35}
+.section-label{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:#93c5fd;margin:28px 0 12px}.pain-grid,.workflow,.features{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.pain,.step,.feature{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.11);border-radius:14px;padding:15px;color:#dbeafe}.pain i,.step i,.feature i{color:#fbbf24;font-size:18px;margin-bottom:10px}.pain strong,.step strong,.feature strong{display:block;color:#fff;font-size:14px;margin-bottom:5px}.pain span,.step span,.feature span{display:block;color:#cbd5e1;font-size:12.5px;line-height:1.4}.step-num{width:25px;height:25px;border-radius:50%;background:#0ea5e9;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;margin-bottom:10px}
+.mockup{margin-top:28px;background:#e5edf5;border-radius:18px;padding:12px;box-shadow:0 24px 70px rgba(0,0,0,.28);max-width:840px}.mock-top{height:34px;background:#fff;border-radius:10px 10px 0 0;display:flex;align-items:center;gap:6px;padding:0 12px}.dot{width:9px;height:9px;border-radius:50%;background:#cbd5e1}.mock-screen{background:#f8fafc;border-radius:0 0 10px 10px;padding:16px;color:#0f172a}.mock-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:12px}.mock-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:13px}.mock-title{font-size:12px;font-weight:900;color:#64748b;text-transform:uppercase;letter-spacing:.6px}.mock-big{font-size:24px;font-weight:900;margin-top:6px}.status-row{display:flex;align-items:center;justify-content:space-between;border-top:1px solid #eef2f7;padding-top:9px;margin-top:9px;font-size:12px}.status-ok{color:#16a34a;font-weight:900}.status-warn{color:#d97706;font-weight:900}.status-bad{color:#dc2626;font-weight:900}
+.right{width:470px;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:34px;background:#f8fafc;border-left:1px solid #e2e8f0}
+.login-box{background:#fff;border-radius:18px;padding:34px;width:100%;max-width:410px;box-shadow:0 18px 55px rgba(15,23,42,.12);border:1px solid #e5edf5}
 .login-box h2{font-size:22px;font-weight:700;margin-bottom:6px}
 .login-box p{font-size:13px;color:#64748b;margin-bottom:20px}
 .form-group{margin-bottom:18px}
@@ -2676,29 +2684,85 @@ input:focus,select:focus{outline:none;border-color:#0f4c81}
 .lang-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
 .lang-btn{flex:1;min-width:70px;padding:8px 6px;border:1.5px solid #e2e8f0;border-radius:8px;background:#f8fafc;font-size:13px;font-weight:600;cursor:pointer;text-align:center;transition:.15s;color:#475569}
 .lang-btn.active{border-color:#0f4c81;background:#fff1f2;color:#0f4c81}
-@media(max-width:700px){.left{display:none}.right{padding:20px}}
+.mobile-brand{display:none}.desktop-only{display:block}
+@media(max-width:900px){body{display:block;background:#f4f5f7}.left{display:none}.right{min-height:100vh;width:100%;padding:20px;border:0}.login-box{box-shadow:0 4px 28px rgba(15,23,42,.08);padding:28px 22px;border-radius:16px;max-width:390px}.desktop-only{display:none!important}.mobile-brand{display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:22px;font-size:22px;font-weight:900;color:#0f172a}.login-box h2{font-size:20px;text-align:center}.login-box p{text-align:center;margin-bottom:18px}.form-group{margin-bottom:16px}.btn{padding:13px;font-size:15px}}
 {% if t.dir == 'rtl' %}body,input,select,button{font-family:'DM Sans',Arial,sans-serif}{% endif %}
 </style></head>
 <body>
+{% if not is_mobile %}
 <div class="left">
-  <div class="logo" style="display:flex;align-items:center;justify-content:center;gap:10px">
-    <svg width="32" height="32" viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg" style="border-radius:8px;background:#0f4c81;padding:4px">
-      <rect x="11" y="20" width="7" height="22" rx="2" fill="#fff"/>
-      <rect x="34" y="20" width="7" height="22" rx="2" fill="#fff"/>
-      <path d="M11 22 Q26 6 41 22" fill="none" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
-      <rect x="8" y="42" width="36" height="3" rx="1.5" fill="#f59e0b"/>
-    </svg>
-    Accesso Fiere</div>
-  <div class="tagline">Gestionale Allestitori</div>
-  <div class="features">
-    <div class="feature"><i class="fa fa-users"></i> Dipendenti & Cantieri</div>
-    <div class="feature"><i class="fa fa-clock"></i> Rilevazione presenze</div>
-    <div class="feature"><i class="fa fa-umbrella-beach"></i> Ferie e permessi</div>
-    <div class="feature"><i class="fa fa-chart-bar"></i> Report e grafici</div>
+  <div class="left-inner">
+    <div class="brand-row">
+      <div>
+        <div class="logo">
+          <svg width="34" height="34" viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg" style="border-radius:9px;background:#0f4c81;padding:4px">
+            <rect x="11" y="20" width="7" height="22" rx="2" fill="#fff"/>
+            <rect x="34" y="20" width="7" height="22" rx="2" fill="#fff"/>
+            <path d="M11 22 Q26 6 41 22" fill="none" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
+            <rect x="8" y="42" width="36" height="3" rx="1.5" fill="#f59e0b"/>
+          </svg>
+          Accesso Fiere
+        </div>
+        <div class="tagline">Il sistema operativo per allestitori fieristici</div>
+      </div>
+      <a class="demo-pill" href="mailto:info@accessofiere.com?subject=Richiesta%20demo%20Accesso%20Fiere"><i class="fa fa-calendar-check"></i> Prenota demo</a>
+    </div>
+
+    <div class="hero-kicker"><i class="fa fa-bolt"></i> Software verticale per fiere, eventi e cantieri temporanei</div>
+    <h1 class="hero-title">Gestisci accessi, documenti e squadre fieristiche in un unico sistema.</h1>
+    <p class="hero-sub">Riduci errori, velocizza gli ingressi e coordina personale, mezzi, documenti e richieste operative senza rincorrere Excel, chat e fogli sparsi.</p>
+    <div class="hero-actions">
+      <a class="hero-cta" href="mailto:info@accessofiere.com?subject=Demo%20Accesso%20Fiere"><i class="fa fa-play"></i> Prenota una demo</a>
+      <a class="hero-secondary" href="#login"><i class="fa fa-right-to-bracket"></i> Accedi al gestionale</a>
+    </div>
+
+    <div class="metrics">
+      <div class="metric"><strong>-70%</strong><span>tempo perso a cercare documenti, scadenze e autorizzazioni</span></div>
+      <div class="metric"><strong>Live</strong><span>stato verde, giallo e rosso su persone, mezzi e documenti</span></div>
+      <div class="metric"><strong>1 app</strong><span>per admin, capicantiere, amministrazione e dipendenti</span></div>
+    </div>
+
+    <div class="mockup" aria-label="Anteprima software">
+      <div class="mock-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <div class="mock-screen">
+        <div class="mock-grid">
+          <div class="mock-card"><div class="mock-title">Dashboard cantiere</div><div class="mock-big">12 operatori pronti</div><div class="status-row"><span>Documenti</span><span class="status-ok">OK</span></div><div class="status-row"><span>Badge accesso</span><span class="status-warn">2 da verificare</span></div><div class="status-row"><span>Mezzi</span><span class="status-ok">Disponibili</span></div></div>
+          <div class="mock-card"><div class="mock-title">Alert operativi</div><div class="status-row"><span>Patente in scadenza</span><span class="status-warn">14 gg</span></div><div class="status-row"><span>Richieste ferie</span><span class="status-bad">3</span></div><div class="status-row"><span>Rimborsi</span><span class="status-ok">Gestiti</span></div><div class="status-row"><span>QR access</span><span class="status-ok">Attivo</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">Il costo reale del caos operativo</div>
+    <div class="pain-grid">
+      <div class="pain"><i class="fa fa-ban"></i><strong>Personale bloccato agli ingressi</strong><span>Documenti mancanti, badge non pronti e autorizzazioni recuperate all'ultimo minuto.</span></div>
+      <div class="pain"><i class="fa fa-file-circle-exclamation"></i><strong>Scadenze fuori controllo</strong><span>Patenti, visite mediche, assicurazioni, bollo e documenti aziendali sempre monitorati.</span></div>
+      <div class="pain"><i class="fa fa-comments"></i><strong>Troppo WhatsApp, troppo Excel</strong><span>Timbrature, ferie, permessi e rimborsi entrano in un workflow unico e tracciabile.</span></div>
+    </div>
+
+    <div class="section-label">Workflow reale per allestitori</div>
+    <div class="workflow">
+      <div class="step"><div class="step-num">1</div><strong>Carica personale e squadre</strong><span>Ruoli, capisquadra, documenti, scadenze, foto e tesserini.</span></div>
+      <div class="step"><div class="step-num">2</div><strong>Prepara fiere e cantieri</strong><span>Coordina presenze, mezzi, incarichi, accessi e documenti richiesti.</span></div>
+      <div class="step"><div class="step-num">3</div><strong>Monitora tutto live</strong><span>Alert automatici, richieste da approvare e dashboard per PC e telefono.</span></div>
+    </div>
+
+    <div class="section-label">Perche e diverso da un gestionale generico</div>
+    <div class="features">
+      <div class="feature"><i class="fa fa-qrcode"></i><strong>QR Access</strong><span>Identificazione rapida operatori e tesserini sempre disponibili.</span></div>
+      <div class="feature"><i class="fa fa-shield-halved"></i><strong>Sicurezza documentale</strong><span>Stato live documenti dipendenti, azienda e veicoli.</span></div>
+      <div class="feature"><i class="fa fa-mobile-screen"></i><strong>Mobile sul campo</strong><span>Dipendenti e responsabili usano funzioni semplici da telefono.</span></div>
+    </div>
   </div>
 </div>
-<div class="right">
+{% endif %}
+<div class="right" id="login">
   <div class="login-box">
+    <div class="mobile-brand">
+      <svg width="30" height="30" viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg" style="border-radius:8px;background:#0f4c81;padding:4px">
+        <rect x="11" y="20" width="7" height="22" rx="2" fill="#fff"/><rect x="34" y="20" width="7" height="22" rx="2" fill="#fff"/><path d="M11 22 Q26 6 41 22" fill="none" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/><rect x="8" y="42" width="36" height="3" rx="1.5" fill="#f59e0b"/>
+      </svg>
+      Accesso Fiere
+    </div>
     <!-- Selettore lingua -->
     <div class="form-group">
       <label>{{ t.login_lang }}</label>
@@ -2729,23 +2793,35 @@ input:focus,select:focus{outline:none;border-color:#0f4c81}
       </div>
       <button class="btn" type="submit">{{ t.login_btn }} <i class="fa fa-arrow-right" style="margin-{{ 'right' if t.dir=='rtl' else 'left' }}:6px"></i></button>
     </form>
-    <div style="display:flex;align-items:center;gap:10px;margin:18px 0">
+    {% if not is_mobile %}
+    <div class="desktop-only" style="display:flex;align-items:center;gap:10px;margin:18px 0">
       <div style="flex:1;height:1px;background:#e2e8f0"></div>
       <span style="font-size:12px;color:#94a3b8">oppure</span>
       <div style="flex:1;height:1px;background:#e2e8f0"></div>
     </div>
-    <a href="/auth/google" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px;background:#fff;border:1.5px solid #e2e8f0;border-radius:9px;font-size:14px;font-weight:600;color:#1e293b;text-decoration:none;transition:.15s" onmouseover="this.style.borderColor='#4285f4';this.style.background='#f8faff'" onmouseout="this.style.borderColor='#e2e8f0';this.style.background='#fff'">
+    <a class="desktop-only" href="/auth/google" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px;background:#fff;border:1.5px solid #e2e8f0;border-radius:9px;font-size:14px;font-weight:600;color:#1e293b;text-decoration:none;transition:.15s" onmouseover="this.style.borderColor='#4285f4';this.style.background='#f8faff'" onmouseout="this.style.borderColor='#e2e8f0';this.style.background='#fff'">
       <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/><path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24c0 3.55.85 6.91 2.34 9.88l7.35-5.7z"/><path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/></svg>
       Accedi con Google
     </a>
+    <div class="desktop-only" style="display:flex;align-items:center;gap:10px;margin:16px 0 4px">
+      <div style="flex:1;height:1px;background:#e2e8f0"></div>
+      <span style="font-size:12px;color:#94a3b8">non hai un account?</span>
+      <div style="flex:1;height:1px;background:#e2e8f0"></div>
+    </div>
+    <a class="desktop-only" href="/registrati" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:#f0f6ff;border:1.5px solid #bfdbfe;border-radius:9px;font-size:14px;font-weight:700;color:#0f4c81;text-decoration:none;margin-top:10px;transition:.15s" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#f0f6ff'">
+      <i class="fa fa-rocket"></i> Registra la tua azienda — 14 giorni gratis
+    </a>
+    {% endif %}
+    {% if is_mobile %}
     <div style="display:flex;align-items:center;gap:10px;margin:16px 0 4px">
       <div style="flex:1;height:1px;background:#e2e8f0"></div>
       <span style="font-size:12px;color:#94a3b8">non hai un account?</span>
       <div style="flex:1;height:1px;background:#e2e8f0"></div>
     </div>
-    <a href="/registrati" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:#f0f6ff;border:1.5px solid #bfdbfe;border-radius:9px;font-size:14px;font-weight:700;color:#0f4c81;text-decoration:none;margin-top:10px;transition:.15s" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#f0f6ff'">
-      <i class="fa fa-rocket"></i> Registra la tua azienda — 14 giorni gratis
+    <a href="/registrati" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:#f0f6ff;border:1.5px solid #bfdbfe;border-radius:9px;font-size:14px;font-weight:700;color:#0f4c81;text-decoration:none;margin-top:10px;transition:.15s">
+      <i class="fa fa-rocket"></i> Registra la tua azienda
     </a>
+    {% endif %}
 </div>
 </body></html>"""
 
@@ -4098,7 +4174,7 @@ PWA_INSTALL_SCRIPT = """
 @app.route('/login', methods=['GET','POST'])
 def login():
     t = get_lang()
-    lang_ctx = dict(t=t, langs=LANGS, current_lang=session.get('lang','it'))
+    lang_ctx = dict(t=t, langs=LANGS, current_lang=session.get('lang','it'), is_mobile=is_mobile_request())
     if request.method == 'POST':
         email = request.form.get('email','').strip().lower()
         pw = hash_pw(request.form.get('password',''))
