@@ -2497,6 +2497,93 @@ def _b64url_decode(s):
     return base64.urlsafe_b64decode(s + b'=' * pad)
 
 
+# P-256 in Python puro: evita di rompere Railway se `cryptography` non è installato.
+_P256_P = 0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff
+_P256_A = -3
+_P256_N = 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551
+_P256_G = (
+    0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296,
+    0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5,
+)
+
+
+def _p256_inv(x, mod):
+    return pow(x % mod, -1, mod)
+
+
+def _p256_add(p1, p2):
+    if p1 is None:
+        return p2
+    if p2 is None:
+        return p1
+    x1, y1 = p1
+    x2, y2 = p2
+    if x1 == x2 and (y1 + y2) % _P256_P == 0:
+        return None
+    if p1 == p2:
+        m = (3 * x1 * x1 + _P256_A) * _p256_inv(2 * y1, _P256_P)
+    else:
+        m = (y2 - y1) * _p256_inv(x2 - x1, _P256_P)
+    m %= _P256_P
+    x3 = (m * m - x1 - x2) % _P256_P
+    y3 = (m * (x1 - x3) - y1) % _P256_P
+    return x3, y3
+
+
+def _p256_mul(k, point=_P256_G):
+    result = None
+    addend = point
+    while k:
+        if k & 1:
+            result = _p256_add(result, addend)
+        addend = _p256_add(addend, addend)
+        k >>= 1
+    return result
+
+
+def _p256_new_private():
+    return (int.from_bytes(os.urandom(32), 'big') % (_P256_N - 1)) + 1
+
+
+def _p256_public_raw(private_int):
+    x, y = _p256_mul(private_int)
+    return b'\x04' + x.to_bytes(32, 'big') + y.to_bytes(32, 'big')
+
+
+def _p256_private_store(private_int):
+    return 'RAWP256:' + _b64url(private_int.to_bytes(32, 'big'))
+
+
+def _p256_private_load(value):
+    value = str(value or '')
+    if not value.startswith('RAWP256:'):
+        return None
+    raw = _b64url_decode(value.split(':', 1)[1])
+    if len(raw) != 32:
+        return None
+    private_int = int.from_bytes(raw, 'big')
+    if 1 <= private_int < _P256_N:
+        return private_int
+    return None
+
+
+def _p256_es256_sign(signing_input, private_int):
+    import hashlib
+    z = int.from_bytes(hashlib.sha256(signing_input).digest(), 'big')
+    while True:
+        k = _p256_new_private()
+        x, _ = _p256_mul(k)
+        r = x % _P256_N
+        if not r:
+            continue
+        s = (_p256_inv(k, _P256_N) * (z + r * private_int)) % _P256_N
+        if not s:
+            continue
+        if s > _P256_N // 2:
+            s = _P256_N - s
+        return r.to_bytes(32, 'big') + s.to_bytes(32, 'big')
+
+
 def _clean_vapid_public_key(value):
     """Normalizza e valida la public key VAPID base64url (65 byte P-256)."""
     cleaned = ''.join(ch for ch in str(value or '').strip() if ch.isalnum() or ch in '-_')
@@ -2521,23 +2608,14 @@ def _get_vapid_keys():
     pub = mdb.execute("SELECT valore FROM app_globals WHERE chiave='vapid_public'").fetchone()
     priv = mdb.execute("SELECT valore FROM app_globals WHERE chiave='vapid_private'").fetchone()
     clean_pub = _clean_vapid_public_key(pub['valore'] if pub else '')
-    if clean_pub and priv and priv['valore']:
+    private_int = _p256_private_load(priv['valore'] if priv else '')
+    if clean_pub and private_int:
         mdb.close()
         return clean_pub, priv['valore']
-    # Genera nuove chiavi VAPID (curva P-256)
-    from cryptography.hazmat.primitives.asymmetric import ec
-    from cryptography.hazmat.primitives import serialization
-    pk = ec.generate_private_key(ec.SECP256R1())
-    # Public key in formato uncompressed (65 bytes: 0x04 + X + Y)
-    pub_numbers = pk.public_key().public_numbers()
-    raw_pub = b'\x04' + pub_numbers.x.to_bytes(32, 'big') + pub_numbers.y.to_bytes(32, 'big')
+    private_int = _p256_new_private()
+    raw_pub = _p256_public_raw(private_int)
     pub_b64 = _b64url(raw_pub)
-    # Private key in PEM
-    priv_pem = pk.private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.PKCS8,
-        encryption_algorithm=serialization.NoEncryption()
-    ).decode('ascii')
+    priv_pem = _p256_private_store(private_int)
     mdb.execute("INSERT OR REPLACE INTO app_globals(chiave,valore) VALUES ('vapid_public',?)", (pub_b64,))
     mdb.execute("INSERT OR REPLACE INTO app_globals(chiave,valore) VALUES ('vapid_private',?)", (priv_pem,))
     mdb.commit(); mdb.close()
@@ -2547,10 +2625,10 @@ def _get_vapid_keys():
 
 def _vapid_jwt(audience, subject_email='mailto:noreply@example.com'):
     """Genera un JWT VAPID firmato con la chiave privata. Audience = origine del push service."""
-    from cryptography.hazmat.primitives import serialization, hashes
-    from cryptography.hazmat.primitives.asymmetric import ec
     _, priv_pem = _get_vapid_keys()
-    pk = serialization.load_pem_private_key(priv_pem.encode(), password=None)
+    private_int = _p256_private_load(priv_pem)
+    if not private_int:
+        raise RuntimeError('Chiave privata VAPID non valida')
     # Header
     header = {"typ":"JWT", "alg":"ES256"}
     # Payload: aud=push service, exp=now+12h, sub=email contatto
@@ -2559,12 +2637,7 @@ def _vapid_jwt(audience, subject_email='mailto:noreply@example.com'):
     h_b64 = _b64url(json.dumps(header, separators=(',',':')).encode())
     p_b64 = _b64url(json.dumps(payload, separators=(',',':')).encode())
     signing_input = f'{h_b64}.{p_b64}'.encode()
-    # ECDSA P-256 SHA-256, output deve essere R||S concatenato (64 bytes), non DER
-    der_sig = pk.sign(signing_input, ec.ECDSA(hashes.SHA256()))
-    # Decodifico DER → r, s
-    from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature
-    r, s = decode_dss_signature(der_sig)
-    raw_sig = r.to_bytes(32, 'big') + s.to_bytes(32, 'big')
+    raw_sig = _p256_es256_sign(signing_input, private_int)
     return f'{h_b64}.{p_b64}.{_b64url(raw_sig)}'
 
 
@@ -2624,16 +2697,16 @@ def send_push_notification(subscription, payload_dict, ttl=86400):
         # JWT VAPID + chiave pubblica server in formato corretto
         jwt = _vapid_jwt(audience)
         pub_b64, _ = _get_vapid_keys()
-        # Cifra payload
-        payload_bytes = json.dumps(payload_dict, ensure_ascii=False).encode('utf-8')
-        body = _encrypt_push_payload(payload_bytes, subscription['p256dh'], subscription['auth'])
-        # Headers
-        headers = {
-            'Content-Type': 'application/octet-stream',
-            'Content-Encoding': 'aes128gcm',
-            'TTL': str(ttl),
-            'Authorization': f'vapid t={jwt}, k={pub_b64}',
-        }
+        headers = {'TTL': str(ttl), 'Authorization': f'vapid t={jwt}, k={pub_b64}'}
+        try:
+            payload_bytes = json.dumps(payload_dict, ensure_ascii=False).encode('utf-8')
+            body = _encrypt_push_payload(payload_bytes, subscription['p256dh'], subscription['auth'])
+            headers.update({'Content-Type': 'application/octet-stream', 'Content-Encoding': 'aes128gcm'})
+        except ModuleNotFoundError as enc_err:
+            if getattr(enc_err, 'name', '') != 'cryptography':
+                raise
+            print('[PUSH] cryptography assente: invio push senza payload cifrato')
+            body = b''
         req = urllib.request.Request(endpoint, data=body, headers=headers, method='POST')
         try:
             with urllib.request.urlopen(req, timeout=10) as resp:
@@ -2757,7 +2830,7 @@ def pwa_manifest():
 def pwa_service_worker():
     """Service worker per PWA. Permette installazione + cache base + offline minimo."""
     sw_code = """// Accesso Fiere — Service Worker
-const CACHE_VERSION = 'v4-vapid-install-fix';
+const CACHE_VERSION = 'v5-no-cryptography-fix';
 const CACHE_NAME = `accesso-fiere-${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline';
 
@@ -2829,9 +2902,10 @@ self.addEventListener('fetch', (event) => {
 
 // Push notifications (Sprint 2 — placeholder)
 self.addEventListener('push', (event) => {
-  if (!event.data) return;
-  let data = {};
-  try { data = event.data.json(); } catch(e) { data = { title: 'Accesso Fiere', body: event.data.text() }; }
+  let data = { title: 'Accesso Fiere', body: 'Hai un nuovo aggiornamento.', url: '/' };
+  if (event.data) {
+    try { data = event.data.json(); } catch(e) { data = { title: 'Accesso Fiere', body: event.data.text(), url: '/' }; }
+  }
   const opts = {
     body: data.body || '',
     icon: '/static/pwa/icon-192.png',
