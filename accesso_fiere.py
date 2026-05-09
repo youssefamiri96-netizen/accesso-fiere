@@ -5488,7 +5488,7 @@ body.customize-mode .btn-link-soft{display:none}
 
 {# Widget: Hero + KPI Cards moderni — sempre full-width, in cima #}
 {% macro w_stats() %}
-<div class="dash-hero widget" data-widget-id="stats" style="margin-bottom:18px">
+<div class="dash-hero widget" data-widget-id="stats" style="margin-bottom:26px">
   <span class="widget-drag-handle"><i class="fa fa-grip-vertical"></i> Hero & KPI</span>
   <div class="hero-bar">
     <div class="hero-greeting">
@@ -5504,7 +5504,7 @@ body.customize-mode .btn-link-soft{display:none}
     </div>
     <div class="hero-cta">
       <a href="/cantieri/nuovo" class="hero-btn hero-btn-primary"><i class="fa fa-plus"></i> Nuova fiera</a>
-      <div class="sync-status"><span class="sync-dot"></span> Realtime attivo <span id="hero-sync-time"></span></div>
+      <div class="sync-status"><span class="sync-dot"></span><span class="sync-live">LIVE</span><span id="hero-sync-time">Sincronizzato ora</span></div>
     </div>
   </div>
 
@@ -5601,7 +5601,7 @@ body.customize-mode .btn-link-soft{display:none}
     <div class="insight-card">
       <div class="live-card-head">
         <span><i class="fa fa-wand-magic-sparkles"></i> Copilota operativo</span>
-        <em>Insight automatici</em>
+        <em>Priorita operative</em>
       </div>
       <div class="insight-list">
         {% if s.scad_doc_totali > 0 %}
@@ -5627,7 +5627,10 @@ body.customize-mode .btn-link-soft{display:none}
         {% for a in attivita_recenti %}
         <div class="timeline-item">
           <span class="timeline-dot {{ a.tone }}"><i class="fa {{ a.icon }}"></i></span>
-          <span class="timeline-copy"><strong>{{ a.title }}</strong><small>{{ a.meta }}</small></span>
+          <span class="timeline-copy">
+            <strong>{{ a.title }}</strong>
+            <span class="timeline-meta-row"><small>{{ a.meta }}</small><em>{{ a.when }}</em></span>
+          </span>
         </div>
         {% else %}
         <div class="timeline-empty"><i class="fa fa-check-circle"></i> Nessuna attivita recente da gestire.</div>
@@ -5643,18 +5646,24 @@ body.customize-mode .btn-link-soft{display:none}
 .dash-hero{position:relative}
 .hero-bar{
   background:
-    linear-gradient(135deg,rgba(7,17,31,.94) 0%,rgba(12,34,57,.95) 58%,rgba(20,93,160,.9) 100%),
-    repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 1px,transparent 1px 38px);
-  border-radius:18px;padding:22px 26px;margin-bottom:18px;
+    radial-gradient(circle at 78% 8%,rgba(0,183,216,.34),transparent 30%),
+    radial-gradient(circle at 15% 112%,rgba(245,158,11,.16),transparent 34%),
+    linear-gradient(135deg,rgba(7,17,31,.98) 0%,rgba(12,34,57,.97) 56%,rgba(20,93,160,.92) 100%),
+    repeating-linear-gradient(90deg,rgba(255,255,255,.055) 0 1px,transparent 1px 38px);
+  border-radius:18px;padding:24px 28px;margin-bottom:22px;
   display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px;
-  box-shadow:0 18px 40px -22px rgba(7,17,31,.85);
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 28px 60px -34px rgba(7,17,31,.95),0 0 42px -22px rgba(0,183,216,.75);
   position:relative;overflow:hidden;
 }
 .hero-bar::before{
   content:"";position:absolute;inset:0;
-  background:linear-gradient(90deg,transparent 0%,rgba(0,183,216,.12) 52%,rgba(245,158,11,.14) 100%);
+  background:
+    linear-gradient(90deg,transparent 0%,rgba(0,183,216,.11) 52%,rgba(245,158,11,.12) 100%),
+    repeating-linear-gradient(135deg,rgba(255,255,255,.035) 0 1px,transparent 1px 14px);
   pointer-events:none;
 }
+.hero-bar::after{content:"";position:absolute;left:28px;right:28px;bottom:0;height:1px;background:linear-gradient(90deg,transparent,rgba(125,211,252,.65),transparent)}
 .hero-greeting{color:#fff;position:relative;z-index:1}
 .hero-eyebrow{font-size:13px;color:rgba(255,255,255,.78);margin-bottom:4px}
 .hero-eyebrow strong{color:#fff;font-weight:700}
@@ -5677,23 +5686,26 @@ body.customize-mode .btn-link-soft{display:none}
 .hero-btn:hover{background:rgba(255,255,255,.22);transform:translateY(-1px)}
 .hero-btn-primary{background:#fff;color:#0f4c81;border-color:transparent}
 .hero-btn-primary:hover{background:#fff;color:#0a3a66;box-shadow:0 6px 18px rgba(0,0,0,.15)}
-.sync-status{width:100%;display:flex;align-items:center;justify-content:flex-end;gap:7px;color:rgba(255,255,255,.72);font-size:11px;font-weight:800;margin-top:2px}
+.sync-status{width:100%;display:flex;align-items:center;justify-content:flex-end;gap:7px;color:rgba(255,255,255,.78);font-size:11px;font-weight:800;margin-top:4px}
 .sync-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 0 rgba(34,197,94,.7);animation:kpiDotPulse 2s infinite}
+.sync-live{background:rgba(34,197,94,.16);border:1px solid rgba(134,239,172,.32);color:#86efac;border-radius:999px;padding:2px 7px;font-size:10px;font-weight:900}
 
 /* ═══════════ KPI CARDS MODERNE ═══════════ */
 .kpi-grid{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:2px;
 }
 .kpi-card{
   position:relative;overflow:hidden;
   background:#fff;border:1px solid var(--border);border-radius:14px;
-  padding:18px;
+  padding:19px;
   display:flex;align-items:flex-start;gap:14px;
   text-decoration:none;color:inherit;
-  transition:all .18s;cursor:pointer;
-  box-shadow:0 8px 22px -20px rgba(7,17,31,.42),0 1px 2px rgba(15,23,42,.06);
+  transition:transform .18s,box-shadow .18s,border-color .18s;cursor:pointer;
+  box-shadow:0 14px 34px -28px rgba(7,17,31,.52),0 1px 2px rgba(15,23,42,.06);
 }
-.kpi-card:hover{transform:translateY(-3px);box-shadow:0 24px 46px -28px rgba(7,17,31,.55);border-color:#b9c9db}
+.kpi-card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,rgba(20,93,160,.9),rgba(0,183,216,.68));opacity:.55}
+.kpi-card::after{content:"";position:absolute;inset:-40% -20% auto auto;width:130px;height:130px;border-radius:50%;background:rgba(20,93,160,.08);filter:blur(8px);pointer-events:none}
+.kpi-card:hover{transform:translateY(-4px);box-shadow:0 28px 56px -30px rgba(7,17,31,.62);border-color:#b9c9db}
 .kpi-card:hover .kpi-glow{opacity:1}
 .kpi-icon{
   width:46px;height:46px;border-radius:12px;
@@ -5734,27 +5746,31 @@ body.customize-mode .btn-link-soft{display:none}
 @keyframes kpiIconPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
 .kpi-alert{border-color:#fca5a5;background:#fef2f2}
 
-.dash-live-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-top:16px}
-.insight-card,.timeline-card{background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:0 10px 28px -24px rgba(7,17,31,.45);overflow:hidden}
-.live-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,#fbfdff,#fff)}
+.dash-live-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;margin-top:22px}
+.insight-card,.timeline-card{background:rgba(255,255,255,.96);border:1px solid var(--border);border-radius:15px;box-shadow:0 18px 40px -32px rgba(7,17,31,.58);overflow:hidden;backdrop-filter:blur(8px)}
+.live-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,#fbfdff,#fff)}
 .live-card-head span{display:flex;align-items:center;gap:8px;font-weight:900;color:#172033}
 .live-card-head i{color:var(--accent)}
 .live-card-head em{font-style:normal;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0;color:#94a3b8}
-.insight-list,.timeline-list{padding:10px 12px}
-.insight-row{display:block;border-radius:11px;padding:11px 12px;margin-bottom:8px;border:1px solid #e5edf5;color:var(--text)}
+.insight-list,.timeline-list{padding:12px 13px}
+.insight-row{display:block;border-radius:12px;padding:12px 13px;margin-bottom:9px;border:1px solid #e5edf5;color:var(--text);position:relative;box-shadow:0 8px 20px -18px rgba(7,17,31,.35)}
+.insight-row::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:999px;background:#94a3b8}
+.risk-high::before{background:#dc2626}.risk-mid::before{background:#f59e0b}.risk-ok::before{background:#16a34a}
 .insight-row:last-child{margin-bottom:0}
 .insight-row strong{display:block;font-size:13px;font-weight:900;margin-bottom:3px}
 .insight-row span{display:block;font-size:12px;line-height:1.4;color:var(--text-light)}
 .risk-high{background:#fef2f2;border-color:#fecaca}.risk-high strong{color:#b91c1c}
 .risk-mid{background:#fffbeb;border-color:#fde68a}.risk-mid strong{color:#92400e}
 .risk-ok{background:#f0fdf4;border-color:#bbf7d0}.risk-ok strong{color:#15803d}
-.timeline-item{display:flex;align-items:center;gap:11px;color:var(--text);padding:9px 4px;border-bottom:1px solid #eef2f7}
+.timeline-item{display:flex;align-items:center;gap:12px;color:var(--text);padding:10px 4px;border-bottom:1px solid #eef2f7}
 .timeline-item:last-child{border-bottom:none}
-.timeline-dot{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:13px}
+.timeline-dot{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:13px;box-shadow:0 10px 20px -14px rgba(7,17,31,.55)}
 .timeline-dot.blue{background:#2563eb}.timeline-dot.green{background:#16a34a}.timeline-dot.amber{background:#f59e0b}.timeline-dot.red{background:#dc2626}.timeline-dot.slate{background:#475569}
-.timeline-copy{display:flex;flex-direction:column;gap:1px;min-width:0}
+.timeline-copy{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
 .timeline-copy strong{font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.timeline-meta-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
 .timeline-copy small{font-size:11.5px;color:var(--text-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.timeline-copy em{font-style:normal;font-size:10px;font-weight:900;color:#64748b;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:999px;padding:2px 7px;white-space:nowrap}
 .timeline-empty{padding:18px 8px;color:var(--text-light);font-size:13px;text-align:center}
 
 @media (max-width:760px){
@@ -5781,7 +5797,7 @@ body.customize-mode .btn-link-soft{display:none}
     var te=document.getElementById('hero-time');
     if(te) te.textContent=d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
     var se=document.getElementById('hero-sync-time');
-    if(se) se.textContent='- aggiornato ' + d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+    if(se) se.textContent='Sincronizzato ora · ' + d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
   }
   tick();setInterval(tick,30000);
   function animateCount(el){
@@ -6348,7 +6364,8 @@ def dashboard():
             'meta': f"{p['ora_entrata'] or '--'} · {p['cantiere_nome'] or 'Fiera non specificata'}",
             'url': '/presenze',
             'icon': 'fa-clock',
-            'tone': 'blue'
+            'tone': 'blue',
+            'when': 'oggi'
         })
     for r in richieste_attesa[:4]:
         if r['tipo'] == 'presenza':
@@ -6357,7 +6374,8 @@ def dashboard():
                 'meta': f"{r['data']} · {_safe_float(r['ore_totali']):.1f}h",
                 'url': '/admin/richieste',
                 'icon': 'fa-inbox',
-                'tone': 'amber'
+                'tone': 'amber',
+                'when': 'in attesa'
             })
         else:
             attivita_recenti.append({
@@ -6365,7 +6383,8 @@ def dashboard():
                 'meta': f"{r['categoria'] or 'Spesa'} · € {_safe_float(r['importo']):.2f}",
                 'url': '/admin/spese?stato=in_attesa',
                 'icon': 'fa-receipt',
-                'tone': 'amber'
+                'tone': 'amber',
+                'when': 'in attesa'
             })
     for f in ferie_attesa[:3]:
         attivita_recenti.append({
@@ -6373,7 +6392,8 @@ def dashboard():
             'meta': f"{f['data_inizio']} - {f['data_fine']}",
             'url': '/ferie',
             'icon': 'fa-umbrella-beach',
-            'tone': 'green'
+            'tone': 'green',
+            'when': 'in attesa'
         })
     for d in scadenze_raw[:4]:
         giorni = int(d['days_left'] or 0)
@@ -6383,7 +6403,8 @@ def dashboard():
                 'meta': f"{d['categoria']} · tra {giorni} giorni",
                 'url': '/scadenze',
                 'icon': 'fa-triangle-exclamation',
-                'tone': 'red' if giorni <= 7 else 'amber'
+                'tone': 'red' if giorni <= 7 else 'amber',
+                'when': f"tra {giorni}g"
             })
     attivita_recenti = attivita_recenti[:7]
 
