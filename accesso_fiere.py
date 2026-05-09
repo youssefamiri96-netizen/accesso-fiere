@@ -6226,21 +6226,24 @@ def _efatt_provider_options():
             'nome': 'Fatture in Cloud',
             'descrizione': 'Consigliato per API OAuth, fatture attive/passive e webhook.',
             'url_key': 'efatt_delega_url_fattureincloud',
-            'fallback_url': 'https://secure.fattureincloud.it/',
+            'codice_destinatario': 'M5UXCR1',
+            'fallback_url': 'https://ivaservizi.agenziaentrate.gov.it/ser/mobile/sso/',
         },
         {
             'id': 'aruba',
             'nome': 'Aruba Fatturazione',
             'descrizione': 'Provider diffuso per SDI, codice destinatario e conservazione.',
             'url_key': 'efatt_delega_url_aruba',
-            'fallback_url': 'https://login.aruba.it/',
+            'codice_destinatario': 'KRRH6B9',
+            'fallback_url': 'https://ivaservizi.agenziaentrate.gov.it/ser/mobile/sso/',
         },
         {
             'id': 'acube',
             'nome': 'A-Cube API',
             'descrizione': 'Provider tecnico/API per automazioni SDI e integrazioni avanzate.',
             'url_key': 'efatt_delega_url_acube',
-            'fallback_url': 'https://dashboard.acubeapi.com/',
+            'codice_destinatario': '',
+            'fallback_url': 'https://ivaservizi.agenziaentrate.gov.it/ser/mobile/sso/',
         },
     ]
 
@@ -15908,7 +15911,7 @@ EFATT_DELEGA_TMPL = """
         <input type="radio" name="provider" value="{{ p.id }}" required {% if cfg.efatt_provider == p.id or cfg.efatt_delega_provider == p.id %}checked{% endif %}>
         <strong>{{ p.nome }}</strong>
         <div class="deleg-muted">{{ p.descrizione }}</div>
-        {% if cfg[p.url_key] %}<span class="deleg-pill">Onboarding diretto configurato</span>{% else %}<span class="deleg-pill">Apre portale provider</span>{% endif %}
+        {% if p.codice_destinatario %}<span class="deleg-pill">Codice {{ p.codice_destinatario }}</span>{% elif cfg[p.url_key] %}<span class="deleg-pill">Onboarding diretto configurato</span>{% else %}<span class="deleg-pill">Codice da configurare</span>{% endif %}
       </label>
       {% endfor %}
     </div>
@@ -15926,6 +15929,40 @@ EFATT_DELEGA_TMPL = """
     </div>
   </form>
   {% endif %}
+</div>
+"""
+
+EFATT_DELEGA_AVVIO_TMPL = """
+<style>
+.go-wrap{max-width:820px;margin:0 auto}.go-card{background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:22px;margin-bottom:16px}.go-muted{color:var(--text-light);font-size:13px;line-height:1.55}.go-code{display:flex;align-items:center;justify-content:space-between;gap:12px;border:2px dashed #0ea5e9;background:#f0f9ff;border-radius:12px;padding:16px;margin:14px 0}.go-code strong{font-size:30px;letter-spacing:2px;color:#075985}.go-steps{margin:14px 0 0;padding:0;list-style:none}.go-steps li{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #e2e8f0}.go-steps li:last-child{border-bottom:0}.go-num{width:24px;height:24px;border-radius:50%;background:#0f4c81;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex-shrink:0}.go-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px}
+</style>
+<div class="go-wrap">
+  <div class="go-card">
+    <h2 style="margin:0 0 6px">Delega fatture passive - {{ provider.nome }}</h2>
+    <div class="go-muted">La registrazione dell'indirizzo telematico si fa sul portale Agenzia Entrate “Fatture e Corrispettivi”, non nella dashboard generica del provider.</div>
+    <div class="go-code">
+      <div>
+        <div class="go-muted">Codice destinatario da registrare</div>
+        <strong id="deleg-code">{{ codice or 'DA CONFIGURARE' }}</strong>
+      </div>
+      <button type="button" class="btn btn-secondary" onclick="navigator.clipboard && navigator.clipboard.writeText(document.getElementById('deleg-code').innerText);this.innerHTML='<i class=&quot;fa fa-check&quot;></i> Copiato'"><i class="fa fa-copy"></i> Copia</button>
+    </div>
+    <ul class="go-steps">
+      <li><span class="go-num">1</span><div>Accedi con SPID/CIE al portale Fatture e Corrispettivi.</div></li>
+      <li><span class="go-num">2</span><div>Vai su <b>Fatturazione elettronica</b> → <b>Registrazione dell'indirizzo telematico</b>.</div></li>
+      <li><span class="go-num">3</span><div>Inserisci il codice destinatario sopra e conferma la registrazione.</div></li>
+      <li><span class="go-num">4</span><div>Quando hai finito, torna qui e premi “Ho completato la delega”.</div></li>
+    </ul>
+    <div class="go-actions">
+      <a class="btn btn-secondary" href="/fatturazione/elettronica/delega"><i class="fa fa-arrow-left"></i> Indietro</a>
+      <a class="btn btn-primary" href="{{ target_url }}" target="_blank"><i class="fa fa-right-to-bracket"></i> Apri Fatture e Corrispettivi</a>
+    </div>
+  </div>
+  <form method="POST" action="/fatturazione/elettronica/delega/completa" class="go-card">
+    <h3 style="margin:0 0 8px">Dopo aver confermato sul portale Agenzia Entrate</h3>
+    <div class="go-muted">Questo salva la delega come attiva nel gestionale. L'import automatico delle fatture passive partirà quando il provider invierà i documenti via API/webhook.</div>
+    <div class="go-actions"><button class="btn btn-success" type="submit"><i class="fa fa-check"></i> Ho completato la delega</button></div>
+  </form>
 </div>
 """
 
@@ -15977,13 +16014,27 @@ def fatturazione_elettronica_delega_avvia():
     target_url = _build_delega_provider_url(configured_url, provider_id, state)
     if not target_url:
         target_url = provider['fallback_url']
+    stored_provider = (cfg.get('efatt_delega_provider') or cfg.get('efatt_provider') or '').strip()
+    stored_code = (cfg.get('efatt_codice_destinatario') or '').strip()
+    if stored_provider == provider_id and stored_code:
+        codice = stored_code
+    else:
+        codice = provider.get('codice_destinatario', '')
 
     set_setting('efatt_provider', provider_id)
     set_setting('efatt_delega_provider', provider_id)
     set_setting('efatt_delega_stato', 'in_corso')
+    if codice:
+        set_setting('efatt_codice_destinatario', codice)
     set_setting('efatt_delega_started_at', datetime.now().isoformat(timespec='seconds'))
-    flash('Ti sto portando sul portale di ' + provider['nome'] + '. Completa accesso/delega e poi torna nel gestionale.', 'info')
-    return redirect(target_url)
+    return render_page(
+        EFATT_DELEGA_AVVIO_TMPL,
+        page_title='Avvia delega fatture passive',
+        active='fatturazione_attiva',
+        provider=provider,
+        codice=codice,
+        target_url=target_url
+    )
 
 @app.route('/fatturazione/elettronica/delega/rientro')
 @admin_required
