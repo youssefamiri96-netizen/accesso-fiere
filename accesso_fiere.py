@@ -15830,91 +15830,41 @@ def documenti_azienda_zip():
 # ── Template lista fatture ─────────────────────────────────
 EFATT_SETUP_TMPL = """
 <style>
-.ef-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}.ef-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px;box-shadow:var(--shadow);margin-bottom:16px}.ef-card h3{margin:0 0 12px;font-size:15px;display:flex;align-items:center;gap:8px}.ef-card h3 i{color:var(--accent)}.ef-step{display:flex;gap:12px;padding:12px 0;border-bottom:1px dashed #e2e8f0}.ef-step:last-child{border-bottom:0}.ef-num{width:28px;height:28px;border-radius:50%;background:#0f4c81;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;flex-shrink:0}.ef-muted{font-size:12px;color:var(--text-light);line-height:1.5}.ef-status{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800}.ef-ok{background:#dcfce7;color:#166534}.ef-warn{background:#fef3c7;color:#92400e}.ef-bad{background:#fee2e2;color:#991b1b}@media(max-width:900px){.ef-grid{grid-template-columns:1fr}}
+.ef-wrap{max-width:880px;margin:0 auto}.ef-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:22px;box-shadow:var(--shadow);margin-bottom:16px}.ef-muted{font-size:13px;color:var(--text-light);line-height:1.5}.ef-status{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:900}.ef-ok{background:#dcfce7;color:#166534}.ef-warn{background:#fef3c7;color:#92400e}.ef-bad{background:#fee2e2;color:#991b1b}.ef-providers{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:18px 0}.ef-provider{position:relative;display:block;border:2px solid #e2e8f0;border-radius:12px;padding:16px;cursor:pointer;background:#fff;transition:.18s;min-height:116px}.ef-provider:hover{border-color:#38bdf8;box-shadow:0 10px 28px rgba(15,23,42,.08)}.ef-provider input{position:absolute;opacity:0}.ef-provider:has(input:checked){border-color:#0ea5e9;background:#f0f9ff}.ef-provider strong{display:block;font-size:17px;margin-bottom:6px}.ef-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:16px}
 </style>
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px;flex-wrap:wrap">
-  <div><h2 style="margin:0">Fatturazione elettronica</h2><div class="ef-muted">Collega il gestionale al provider SDI per fatture attive, passive, ricevute e delega.</div></div>
-  <a href="/fatturazione" class="btn btn-secondary"><i class="fa fa-arrow-left"></i> Fatture</a>
-</div>
-<div class="ef-grid">
-  <div>
-    <div class="ef-card">
-      <h3><i class="fa fa-plug-circle-bolt"></i> Configurazione provider</h3>
-      <form method="POST" action="/fatturazione/elettronica/salva">
-        <div class="form-row">
-          <div class="form-group"><label>Provider</label><select name="efatt_provider"><option value="">Da scegliere</option><option value="acube" {{ 'selected' if cfg.efatt_provider=='acube' }}>A-Cube API</option><option value="fattureincloud" {{ 'selected' if cfg.efatt_provider=='fattureincloud' }}>Fatture in Cloud</option><option value="aruba" {{ 'selected' if cfg.efatt_provider=='aruba' }}>Aruba / altro intermediario</option></select></div>
-          <div class="form-group"><label>Codice destinatario provider</label><input name="efatt_codice_destinatario" value="{{ cfg.efatt_codice_destinatario }}" placeholder="Es. M5UXCR1"></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label>Client ID OAuth</label><input name="efatt_oauth_client_id" value="{{ cfg.efatt_oauth_client_id }}" placeholder="Client ID app provider"></div>
-          <div class="form-group"><label>Client secret OAuth</label><input type="password" name="efatt_oauth_client_secret" value="" placeholder="{% if cfg.efatt_oauth_client_secret %}Gia salvato: non compilare per mantenerlo{% else %}Client secret app provider{% endif %}"></div>
-        </div>
-        <div class="form-group"><label>Scope OAuth richiesti</label><input name="efatt_oauth_scopes" value="{{ cfg.efatt_oauth_scopes }}" placeholder="Scope API fatture attive/passive"></div>
-        <div class="form-row">
-          <div class="form-group"><label>Company / account ID provider</label><input name="efatt_company_id" value="{{ cfg.efatt_company_id }}" placeholder="ID azienda sul provider"></div>
-          <div class="form-group"><label>Webhook secret</label><input name="efatt_webhook_secret" value="{{ cfg.efatt_webhook_secret }}" placeholder="Segreto webhook"></div>
-        </div>
-        <div class="form-group"><label>API key / token provider</label><input name="efatt_api_key" value="{{ cfg.efatt_api_key }}" placeholder="Token API del provider"></div>
-        <div class="form-row">
-          <div class="form-group"><label>Stato delega fatture passive</label><select name="efatt_delega_stato"><option value="">Non configurata</option><option value="da_fare" {{ 'selected' if cfg.efatt_delega_stato=='da_fare' }}>Da fare</option><option value="in_corso" {{ 'selected' if cfg.efatt_delega_stato=='in_corso' }}>In corso</option><option value="attiva" {{ 'selected' if cfg.efatt_delega_stato=='attiva' }}>Attiva</option></select></div>
-          <div class="form-group"><label>Link onboarding/delega provider (SPID/CIE)</label><input name="efatt_delega_note" value="{{ cfg.efatt_delega_note }}" placeholder="https://..."></div>
-        </div>
-        <details style="margin:10px 0 14px">
-          <summary style="cursor:pointer;font-weight:800;color:#334155">Link rapidi delega per provider</summary>
-          <div class="form-row" style="margin-top:12px">
-            <div class="form-group"><label>URL delega Fatture in Cloud</label><input name="efatt_delega_url_fattureincloud" value="{{ cfg.efatt_delega_url_fattureincloud }}" placeholder="URL onboarding provider, anche con {return_url} e {state}"></div>
-            <div class="form-group"><label>URL delega Aruba</label><input name="efatt_delega_url_aruba" value="{{ cfg.efatt_delega_url_aruba }}" placeholder="URL onboarding provider"></div>
-          </div>
-          <div class="form-group"><label>URL delega A-Cube</label><input name="efatt_delega_url_acube" value="{{ cfg.efatt_delega_url_acube }}" placeholder="URL onboarding provider"></div>
-          <div class="ef-muted">Se il provider ti fornisce un link di onboarding con callback, puoi usare i segnaposto {return_url}, {callback_url}, {state}, {provider}.</div>
-        </details>
-        <details style="margin:10px 0 14px">
-          <summary style="cursor:pointer;font-weight:800;color:#334155">Link autorizzazione fatture attive per provider</summary>
-          <div class="form-row" style="margin-top:12px">
-            <div class="form-group"><label>URL autorizzazione Fatture in Cloud</label><input name="efatt_attive_url_fattureincloud" value="{{ cfg.efatt_attive_url_fattureincloud }}" placeholder="Lascia vuoto per usare OAuth automatico"></div>
-            <div class="form-group"><label>URL autorizzazione Aruba</label><input name="efatt_attive_url_aruba" value="{{ cfg.efatt_attive_url_aruba }}" placeholder="URL onboarding/API provider"></div>
-          </div>
-          <div class="form-group"><label>URL autorizzazione A-Cube</label><input name="efatt_attive_url_acube" value="{{ cfg.efatt_attive_url_acube }}" placeholder="URL onboarding/API provider"></div>
-          <div class="ef-muted">Questi link servono per autorizzare il gestionale a creare, inviare e controllare le fatture attive tramite provider.</div>
-        </details>
-        <button class="btn btn-primary" type="submit"><i class="fa fa-save"></i> Salva configurazione</button>
-      </form>
-      <div style="margin-top:14px;padding-top:14px;border-top:1px solid #e2e8f0;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-        {% if cfg.efatt_oauth_status == 'connected' %}
-          <span class="ef-status ef-ok"><i class="fa fa-link"></i> Provider collegato{% if cfg.efatt_oauth_connected_at %} · {{ cfg.efatt_oauth_connected_at[:16] }}{% endif %}</span>
-          <a class="btn btn-secondary" href="/fatturazione/elettronica/disconnetti" onclick="return confirm('Disconnettere il provider?')"><i class="fa fa-unlink"></i> Disconnetti</a>
-        {% else %}
-          <span class="ef-status ef-warn"><i class="fa fa-link-slash"></i> Provider non collegato</span>
-          <a class="btn btn-primary" href="/fatturazione/elettronica/attive"><i class="fa fa-file-invoice-dollar"></i> Collega fatture attive</a>
-        {% endif %}
-      </div>
+<div class="ef-wrap">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px;flex-wrap:wrap">
+    <div>
+      <h2 style="margin:0">Fatturazione elettronica</h2>
+      <div class="ef-muted">Collega il gestionale al provider per emettere fatture, inviarle allo SDI e importare le passive.</div>
     </div>
-    <div class="ef-card">
-      <h3><i class="fa fa-file-invoice-dollar"></i> Fatture attive</h3>
-      <p class="ef-muted">Autorizza il gestionale a creare fatture, inviarle al provider SDI e ricevere stati/ricevute. Per Fatture in Cloud viene usato il consenso OAuth ufficiale.</p>
-      {% if cfg.efatt_oauth_status == 'connected' %}<div class="ef-status ef-ok"><i class="fa fa-check-circle"></i> Autorizzazione attiva</div>{% else %}<div class="ef-status ef-bad"><i class="fa fa-triangle-exclamation"></i> Autorizzazione non attiva</div>{% endif %}
-      <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
-        <a class="btn btn-primary" href="/fatturazione/elettronica/attive"><i class="fa fa-right-to-bracket"></i> Collega fatture attive</a>
-      </div>
-    </div>
-    <div class="ef-card">
-      <h3><i class="fa fa-id-card"></i> Delega con SPID per fatture passive</h3>
-      <p class="ef-muted">Il cliente parte da qui, entra nel portale del provider con SPID/CIE o con il metodo richiesto dal provider, autorizza la ricezione delle fatture passive e registra il codice destinatario. Dopo la delega, il provider recapita le fatture passive al gestionale via API/webhook.</p>
-      {% if cfg.efatt_delega_stato == 'attiva' %}<div class="ef-status ef-ok"><i class="fa fa-check-circle"></i> Delega attiva</div>{% elif cfg.efatt_delega_stato == 'in_corso' %}<div class="ef-status ef-warn"><i class="fa fa-clock"></i> Delega in corso</div>{% else %}<div class="ef-status ef-bad"><i class="fa fa-triangle-exclamation"></i> Delega non attiva</div>{% endif %}
-      <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
-        <a class="btn btn-primary" href="/fatturazione/elettronica/delega"><i class="fa fa-right-to-bracket"></i> Attiva fatture passive</a>
-      </div>
-    </div>
+    <a href="/fatturazione" class="btn btn-secondary"><i class="fa fa-arrow-left"></i> Fatture</a>
   </div>
-  <div>
-    <div class="ef-card">
-      <h3><i class="fa fa-route"></i> Flusso implementazione</h3>
-      <div class="ef-step"><div class="ef-num">1</div><div><strong>Fatture collegate alla fiera</strong><div class="ef-muted">Ogni fattura attiva/passiva può essere collegata a un evento per calcolare marginalità.</div></div></div>
-      <div class="ef-step"><div class="ef-num">2</div><div><strong>Provider SDI</strong><div class="ef-muted">Si collega un provider accreditato, non un canale diretto AdE.</div></div></div>
-      <div class="ef-step"><div class="ef-num">3</div><div><strong>Emissione elettronica</strong><div class="ef-muted">Il gestionale invierà dati fattura al provider, ricevendo stati: inviata, scartata, consegnata.</div></div></div>
-      <div class="ef-step"><div class="ef-num">4</div><div><strong>Fatture passive</strong><div class="ef-muted">Con delega attiva, webhook/API importeranno automaticamente le fatture ricevute.</div></div></div>
-    </div>
-    <div class="ef-card"><h3><i class="fa fa-chart-line"></i> Redditività evento</h3><div class="ef-muted">Nella scheda fiera ora entrano ore personale, rimborsi, incarichi, fatture passive, fatture attive, mezzi e fornitori collegati.</div></div>
+  <div class="ef-card">
+    {% if cfg.efatt_oauth_status == 'connected' %}
+      <span class="ef-status ef-ok"><i class="fa fa-check-circle"></i> Provider collegato{% if cfg.efatt_provider %} · {{ cfg.efatt_provider }}{% endif %}</span>
+    {% else %}
+      <span class="ef-status ef-bad"><i class="fa fa-link-slash"></i> Provider non collegato</span>
+    {% endif %}
+    <form method="POST" action="/fatturazione/elettronica/attive/avvia">
+      <h3 style="margin:18px 0 8px">Scegli il provider da collegare</h3>
+      <div class="ef-muted">Premendo il pulsante verrai portato sul provider per fare accesso e autorizzare il gestionale.</div>
+      <div class="ef-providers">
+        {% for p in providers %}
+        <label class="ef-provider">
+          <input type="radio" name="provider" value="{{ p.id }}" required {% if cfg.efatt_provider == p.id or loop.first %}checked{% endif %}>
+          <strong>{{ p.nome }}</strong>
+          <div class="ef-muted">{{ p.descrizione }}</div>
+        </label>
+        {% endfor %}
+      </div>
+      <div class="ef-actions">
+        {% if cfg.efatt_oauth_status == 'connected' %}
+          <a class="btn btn-secondary" href="/fatturazione/elettronica/disconnetti" onclick="return confirm('Disconnettere il provider?')"><i class="fa fa-unlink"></i> Disconnetti</a>
+        {% endif %}
+        <button type="submit" class="btn btn-primary"><i class="fa fa-right-to-bracket"></i> Collega provider</button>
+      </div>
+    </form>
   </div>
 </div>
 """
@@ -16048,7 +15998,13 @@ EFATT_DELEGA_AVVIO_TMPL = """
 @app.route('/fatturazione/elettronica')
 @admin_required
 def fatturazione_elettronica_setup():
-    return render_page(EFATT_SETUP_TMPL, page_title='Fatturazione elettronica', active='fatturazione_attiva', cfg=_get_efatt_config())
+    return render_page(
+        EFATT_SETUP_TMPL,
+        page_title='Fatturazione elettronica',
+        active='fatturazione_attiva',
+        cfg=_get_efatt_config(),
+        providers=_efatt_provider_options()
+    )
 
 @app.route('/fatturazione/elettronica/salva', methods=['POST'])
 @admin_required
@@ -16192,9 +16148,9 @@ def fatturazione_elettronica_connect():
         flash('Per ora il collegamento OAuth automatico e pronto per Fatture in Cloud. Per altri provider inserisci il link onboarding/delega o API key.', 'error')
         return redirect(url_for('fatturazione_elettronica_setup'))
 
-    client_id = (cfg.get('efatt_oauth_client_id') or '').strip()
+    client_id = (cfg.get('efatt_oauth_client_id') or os.environ.get('FATTUREINCLOUD_CLIENT_ID') or os.environ.get('EFATT_OAUTH_CLIENT_ID') or '').strip()
     if not client_id:
-        flash('Inserisci prima il Client ID OAuth di Fatture in Cloud.', 'error')
+        flash('Collegamento non configurato: manca il Client ID OAuth del provider nelle variabili interne.', 'error')
         return redirect(url_for('fatturazione_elettronica_setup'))
 
     import urllib.parse
@@ -16228,10 +16184,10 @@ def fatturazione_elettronica_callback():
         return redirect(url_for('fatturazione_elettronica_setup'))
 
     cfg = _get_efatt_config()
-    client_id = (cfg.get('efatt_oauth_client_id') or '').strip()
-    client_secret = (cfg.get('efatt_oauth_client_secret') or '').strip()
+    client_id = (cfg.get('efatt_oauth_client_id') or os.environ.get('FATTUREINCLOUD_CLIENT_ID') or os.environ.get('EFATT_OAUTH_CLIENT_ID') or '').strip()
+    client_secret = (cfg.get('efatt_oauth_client_secret') or os.environ.get('FATTUREINCLOUD_CLIENT_SECRET') or os.environ.get('EFATT_OAUTH_CLIENT_SECRET') or '').strip()
     if not client_secret:
-        flash('Manca il Client secret OAuth: salvalo e ripeti il collegamento.', 'error')
+        flash('Collegamento non configurato: manca il Client secret OAuth del provider nelle variabili interne.', 'error')
         return redirect(url_for('fatturazione_elettronica_setup'))
 
     import urllib.request, urllib.error
