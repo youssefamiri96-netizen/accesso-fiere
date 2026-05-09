@@ -15830,7 +15830,7 @@ def documenti_azienda_zip():
 # ── Template lista fatture ─────────────────────────────────
 EFATT_SETUP_TMPL = """
 <style>
-.ef-wrap{max-width:880px;margin:0 auto}.ef-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:22px;box-shadow:var(--shadow);margin-bottom:16px}.ef-muted{font-size:13px;color:var(--text-light);line-height:1.5}.ef-status{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:900}.ef-ok{background:#dcfce7;color:#166534}.ef-warn{background:#fef3c7;color:#92400e}.ef-bad{background:#fee2e2;color:#991b1b}.ef-providers{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:18px 0}.ef-provider{position:relative;display:block;border:2px solid #e2e8f0;border-radius:12px;padding:16px;cursor:pointer;background:#fff;transition:.18s;min-height:116px}.ef-provider:hover{border-color:#38bdf8;box-shadow:0 10px 28px rgba(15,23,42,.08)}.ef-provider input{position:absolute;opacity:0}.ef-provider:has(input:checked){border-color:#0ea5e9;background:#f0f9ff}.ef-provider strong{display:block;font-size:17px;margin-bottom:6px}.ef-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:16px}
+.ef-wrap{max-width:1120px;margin:0 auto}.ef-layout{display:grid;grid-template-columns:1fr 1fr;gap:18px}.ef-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:22px;box-shadow:var(--shadow);margin-bottom:16px}.ef-muted{font-size:13px;color:var(--text-light);line-height:1.5}.ef-status{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:900}.ef-ok{background:#dcfce7;color:#166534}.ef-warn{background:#fef3c7;color:#92400e}.ef-bad{background:#fee2e2;color:#991b1b}.ef-providers{display:grid;grid-template-columns:1fr;gap:10px;margin:18px 0}.ef-provider{position:relative;display:block;border:2px solid #e2e8f0;border-radius:12px;padding:14px;cursor:pointer;background:#fff;transition:.18s}.ef-provider:hover{border-color:#38bdf8;box-shadow:0 10px 28px rgba(15,23,42,.08)}.ef-provider input{position:absolute;opacity:0}.ef-provider:has(input:checked){border-color:#0ea5e9;background:#f0f9ff}.ef-provider strong{display:block;font-size:16px;margin-bottom:4px}.ef-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:16px}@media(max-width:900px){.ef-layout{grid-template-columns:1fr}}
 </style>
 <div class="ef-wrap">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px;flex-wrap:wrap">
@@ -15840,31 +15840,62 @@ EFATT_SETUP_TMPL = """
     </div>
     <a href="/fatturazione" class="btn btn-secondary"><i class="fa fa-arrow-left"></i> Fatture</a>
   </div>
-  <div class="ef-card">
-    {% if cfg.efatt_oauth_status == 'connected' %}
-      <span class="ef-status ef-ok"><i class="fa fa-check-circle"></i> Provider collegato{% if cfg.efatt_provider %} · {{ cfg.efatt_provider }}{% endif %}</span>
-    {% else %}
-      <span class="ef-status ef-bad"><i class="fa fa-link-slash"></i> Provider non collegato</span>
-    {% endif %}
-    <form method="POST" action="/fatturazione/elettronica/attive/avvia">
-      <h3 style="margin:18px 0 8px">Scegli il provider da collegare</h3>
-      <div class="ef-muted">Premendo il pulsante verrai portato sul provider per fare accesso e autorizzare il gestionale.</div>
-      <div class="ef-providers">
-        {% for p in providers %}
-        <label class="ef-provider">
-          <input type="radio" name="provider" value="{{ p.id }}" required {% if cfg.efatt_provider == p.id or loop.first %}checked{% endif %}>
-          <strong>{{ p.nome }}</strong>
-          <div class="ef-muted">{{ p.descrizione }}</div>
-        </label>
-        {% endfor %}
-      </div>
-      <div class="ef-actions">
+  <div class="ef-layout">
+    <div class="ef-card">
+      <h3 style="margin:0 0 8px"><i class="fa fa-file-invoice-dollar"></i> Fatture attive</h3>
+      <div class="ef-muted">Collega il provider per permettere al gestionale di creare, inviare allo SDI e controllare le fatture emesse.</div>
+      <div style="margin-top:14px">
         {% if cfg.efatt_oauth_status == 'connected' %}
-          <a class="btn btn-secondary" href="/fatturazione/elettronica/disconnetti" onclick="return confirm('Disconnettere il provider?')"><i class="fa fa-unlink"></i> Disconnetti</a>
+          <span class="ef-status ef-ok"><i class="fa fa-check-circle"></i> Provider collegato{% if cfg.efatt_provider %} · {{ cfg.efatt_provider }}{% endif %}</span>
+        {% else %}
+          <span class="ef-status ef-bad"><i class="fa fa-link-slash"></i> Provider non collegato</span>
         {% endif %}
-        <button type="submit" class="btn btn-primary"><i class="fa fa-right-to-bracket"></i> Collega provider</button>
       </div>
-    </form>
+      <form method="POST" action="/fatturazione/elettronica/attive/avvia">
+        <div class="ef-providers">
+          {% for p in providers %}
+          <label class="ef-provider">
+            <input type="radio" name="provider" value="{{ p.id }}" required {% if cfg.efatt_provider == p.id or loop.first %}checked{% endif %}>
+            <strong>{{ p.nome }}</strong>
+            <div class="ef-muted">Accesso al provider e consenso API.</div>
+          </label>
+          {% endfor %}
+        </div>
+        <div class="ef-actions">
+          {% if cfg.efatt_oauth_status == 'connected' %}
+            <a class="btn btn-secondary" href="/fatturazione/elettronica/disconnetti" onclick="return confirm('Disconnettere il provider?')"><i class="fa fa-unlink"></i> Disconnetti</a>
+          {% endif %}
+          <button type="submit" class="btn btn-primary"><i class="fa fa-right-to-bracket"></i> Collega provider</button>
+        </div>
+      </form>
+    </div>
+    <div class="ef-card">
+      <h3 style="margin:0 0 8px"><i class="fa fa-landmark"></i> Fatture passive</h3>
+      <div class="ef-muted">Per ricevere le fatture passive devi registrare il mandato/codice destinatario su Agenzia Entrate, sezione Fatture e Corrispettivi.</div>
+      <div style="margin-top:14px">
+        {% if cfg.efatt_delega_stato == 'attiva' %}
+          <span class="ef-status ef-ok"><i class="fa fa-check-circle"></i> Mandato attivo{% if cfg.efatt_delega_provider %} · {{ cfg.efatt_delega_provider }}{% endif %}</span>
+        {% elif cfg.efatt_delega_stato == 'in_corso' %}
+          <span class="ef-status ef-warn"><i class="fa fa-clock"></i> Mandato in corso</span>
+        {% else %}
+          <span class="ef-status ef-bad"><i class="fa fa-triangle-exclamation"></i> Mandato non attivo</span>
+        {% endif %}
+      </div>
+      <form method="POST" action="/fatturazione/elettronica/delega/avvia">
+        <div class="ef-providers">
+          {% for p in providers %}
+          <label class="ef-provider">
+            <input type="radio" name="provider" value="{{ p.id }}" required {% if cfg.efatt_delega_provider == p.id or cfg.efatt_provider == p.id or loop.first %}checked{% endif %}>
+            <strong>{{ p.nome }}</strong>
+            <div class="ef-muted">{% if p.codice_destinatario %}Codice destinatario {{ p.codice_destinatario }}{% else %}Codice destinatario da configurare{% endif %}</div>
+          </label>
+          {% endfor %}
+        </div>
+        <div class="ef-actions">
+          <button type="submit" class="btn btn-primary"><i class="fa fa-landmark"></i> Apri Agenzia Entrate</button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
 """
