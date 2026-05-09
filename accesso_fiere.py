@@ -1427,7 +1427,7 @@ AMMINISTRAZIONE_ENDPOINTS = {
     'documenti_azienda','documenti_azienda_nuovo','documenti_azienda_modifica','documenti_azienda_scarica','documenti_azienda_elimina','documenti_azienda_zip',
     'scadenze','scadenze_pulisci_fantasma',
     'veicoli','veicolo_nuovo','veicolo_detail','veicolo_modifica','veicolo_salva_scadenze','veicolo_elimina','veicolo_documenti','veicolo_upload','veicolo_applica_ai','veicolo_scarica','veicolo_anteprima','veicolo_elimina_doc',
-    'fatturazione','fatturazione_elettronica_setup','fatturazione_elettronica_save','fatturazione_elettronica_connect','fatturazione_elettronica_callback','fatturazione_elettronica_disconnect','fatturazione_nuova','fatturazione_modifica','fatturazione_dettaglio','fatturazione_allega_emessa','fatturazione_elimina','fatturazione_aggiungi_rata','fatturazione_paga_rata','fatturazione_annulla_paga_rata','fatturazione_elimina_rata','fatturazione_file','fatturazione_clienti','fatturazione_nuovo_cliente','fatturazione_elimina_cliente',
+    'fatturazione','fatturazione_elettronica_setup','fatturazione_elettronica_save','fatturazione_elettronica_connect','fatturazione_elettronica_callback','fatturazione_elettronica_disconnect','fatturazione_elettronica_delega','fatturazione_elettronica_delega_avvia','fatturazione_elettronica_delega_rientro','fatturazione_elettronica_delega_completa','fatturazione_nuova','fatturazione_modifica','fatturazione_dettaglio','fatturazione_allega_emessa','fatturazione_elimina','fatturazione_aggiungi_rata','fatturazione_paga_rata','fatturazione_annulla_paga_rata','fatturazione_elimina_rata','fatturazione_file','fatturazione_clienti','fatturazione_nuovo_cliente','fatturazione_elimina_cliente',
     'clienti_lista','cliente_nuovo','cliente_modifica','cliente_elimina','cliente_ai_estrai',
     'fornitori_lista','fornitore_nuovo','fornitore_modifica','fornitore_elimina',
     'preventivi','preventivo_nuovo','preventivo_modifica','preventivo_pdf','preventivo_duplica','preventivo_stato','preventivo_elimina',
@@ -6203,7 +6203,9 @@ def _get_efatt_config():
         'efatt_webhook_secret', 'efatt_oauth_client_id', 'efatt_oauth_client_secret',
         'efatt_oauth_scopes', 'efatt_oauth_status', 'efatt_oauth_connected_at',
         'efatt_oauth_provider_user', 'efatt_access_token', 'efatt_refresh_token',
-        'efatt_token_expires_at'
+        'efatt_token_expires_at', 'efatt_delega_url_fattureincloud',
+        'efatt_delega_url_aruba', 'efatt_delega_url_acube', 'efatt_delega_provider',
+        'efatt_delega_started_at', 'efatt_delega_completed_at'
     ]
     cfg = {k: get_setting(k, '') for k in keys}
     if not cfg.get('efatt_oauth_scopes'):
@@ -6216,6 +6218,46 @@ def _efatt_token_mask(value):
     if len(value) <= 10:
         return '********'
     return value[:4] + '...' + value[-4:]
+
+def _efatt_provider_options():
+    return [
+        {
+            'id': 'fattureincloud',
+            'nome': 'Fatture in Cloud',
+            'descrizione': 'Consigliato per API OAuth, fatture attive/passive e webhook.',
+            'url_key': 'efatt_delega_url_fattureincloud',
+            'fallback_url': 'https://secure.fattureincloud.it/',
+        },
+        {
+            'id': 'aruba',
+            'nome': 'Aruba Fatturazione',
+            'descrizione': 'Provider diffuso per SDI, codice destinatario e conservazione.',
+            'url_key': 'efatt_delega_url_aruba',
+            'fallback_url': 'https://login.aruba.it/',
+        },
+        {
+            'id': 'acube',
+            'nome': 'A-Cube API',
+            'descrizione': 'Provider tecnico/API per automazioni SDI e integrazioni avanzate.',
+            'url_key': 'efatt_delega_url_acube',
+            'fallback_url': 'https://dashboard.acubeapi.com/',
+        },
+    ]
+
+def _build_delega_provider_url(raw_url, provider_id, state):
+    url = (raw_url or '').strip()
+    if not url:
+        return ''
+    return_url = url_for('fatturazione_elettronica_delega_rientro', _external=True)
+    replacements = {
+        '{return_url}': return_url,
+        '{callback_url}': return_url,
+        '{state}': state,
+        '{provider}': provider_id,
+    }
+    for key, value in replacements.items():
+        url = url.replace(key, value)
+    return url
 
 @app.route('/amministrazione')
 @login_required
@@ -15791,6 +15833,15 @@ EFATT_SETUP_TMPL = """
           <div class="form-group"><label>Stato delega fatture passive</label><select name="efatt_delega_stato"><option value="">Non configurata</option><option value="da_fare" {{ 'selected' if cfg.efatt_delega_stato=='da_fare' }}>Da fare</option><option value="in_corso" {{ 'selected' if cfg.efatt_delega_stato=='in_corso' }}>In corso</option><option value="attiva" {{ 'selected' if cfg.efatt_delega_stato=='attiva' }}>Attiva</option></select></div>
           <div class="form-group"><label>Link onboarding/delega provider (SPID/CIE)</label><input name="efatt_delega_note" value="{{ cfg.efatt_delega_note }}" placeholder="https://..."></div>
         </div>
+        <details style="margin:10px 0 14px">
+          <summary style="cursor:pointer;font-weight:800;color:#334155">Link rapidi delega per provider</summary>
+          <div class="form-row" style="margin-top:12px">
+            <div class="form-group"><label>URL delega Fatture in Cloud</label><input name="efatt_delega_url_fattureincloud" value="{{ cfg.efatt_delega_url_fattureincloud }}" placeholder="URL onboarding provider, anche con {return_url} e {state}"></div>
+            <div class="form-group"><label>URL delega Aruba</label><input name="efatt_delega_url_aruba" value="{{ cfg.efatt_delega_url_aruba }}" placeholder="URL onboarding provider"></div>
+          </div>
+          <div class="form-group"><label>URL delega A-Cube</label><input name="efatt_delega_url_acube" value="{{ cfg.efatt_delega_url_acube }}" placeholder="URL onboarding provider"></div>
+          <div class="ef-muted">Se il provider ti fornisce un link di onboarding con callback, puoi usare i segnaposto {return_url}, {callback_url}, {state}, {provider}.</div>
+        </details>
         <button class="btn btn-primary" type="submit"><i class="fa fa-save"></i> Salva configurazione</button>
       </form>
       <div style="margin-top:14px;padding-top:14px;border-top:1px solid #e2e8f0;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
@@ -15808,7 +15859,7 @@ EFATT_SETUP_TMPL = """
       <p class="ef-muted">Il cliente parte da qui, entra nel portale del provider con SPID/CIE o con il metodo richiesto dal provider, autorizza la ricezione delle fatture passive e registra il codice destinatario. Dopo la delega, il provider recapita le fatture passive al gestionale via API/webhook.</p>
       {% if cfg.efatt_delega_stato == 'attiva' %}<div class="ef-status ef-ok"><i class="fa fa-check-circle"></i> Delega attiva</div>{% elif cfg.efatt_delega_stato == 'in_corso' %}<div class="ef-status ef-warn"><i class="fa fa-clock"></i> Delega in corso</div>{% else %}<div class="ef-status ef-bad"><i class="fa fa-triangle-exclamation"></i> Delega non attiva</div>{% endif %}
       <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
-        {% if cfg.efatt_delega_note %}<a class="btn btn-primary" href="{{ cfg.efatt_delega_note }}" target="_blank"><i class="fa fa-right-to-bracket"></i> Apri provider e attiva delega</a>{% else %}<button class="btn btn-secondary" disabled><i class="fa fa-right-to-bracket"></i> Configura prima il link del provider</button>{% endif %}
+        <a class="btn btn-primary" href="/fatturazione/elettronica/delega"><i class="fa fa-right-to-bracket"></i> Attiva fatture passive</a>
       </div>
     </div>
   </div>
@@ -15825,6 +15876,59 @@ EFATT_SETUP_TMPL = """
 </div>
 """
 
+EFATT_DELEGA_TMPL = """
+<style>
+.deleg-wrap{max-width:980px;margin:0 auto}.deleg-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}.deleg-muted{color:var(--text-light);font-size:13px;line-height:1.5}.deleg-card{background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:18px;margin-bottom:16px}.deleg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}.deleg-option{position:relative;border:2px solid #e2e8f0;border-radius:12px;padding:16px;cursor:pointer;display:block;transition:.18s;background:#fff;min-height:132px}.deleg-option input{position:absolute;opacity:0}.deleg-option:hover{border-color:#38bdf8;box-shadow:0 10px 28px rgba(15,23,42,.08)}.deleg-option:has(input:checked){border-color:#0ea5e9;background:#f0f9ff}.deleg-option strong{display:block;font-size:17px;margin-bottom:6px}.deleg-pill{display:inline-flex;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:900;background:#e0f2fe;color:#075985;margin-top:10px}.deleg-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:16px}.deleg-status{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:900}.deleg-ok{background:#dcfce7;color:#166534}.deleg-warn{background:#fef3c7;color:#92400e}.deleg-bad{background:#fee2e2;color:#991b1b}
+</style>
+<div class="deleg-wrap">
+  <div class="deleg-head">
+    <div>
+      <h2 style="margin:0">Attiva fatture passive</h2>
+      <div class="deleg-muted">Scegli il provider, fai accesso sul suo portale e completa la delega/ricezione delle fatture passive.</div>
+    </div>
+    <a class="btn btn-secondary" href="/fatturazione/elettronica"><i class="fa fa-arrow-left"></i> Configurazione</a>
+  </div>
+
+  <div class="deleg-card">
+    {% if cfg.efatt_delega_stato == 'attiva' %}
+      <span class="deleg-status deleg-ok"><i class="fa fa-check-circle"></i> Delega attiva{% if cfg.efatt_delega_provider %} · {{ cfg.efatt_delega_provider }}{% endif %}</span>
+    {% elif cfg.efatt_delega_stato == 'in_corso' %}
+      <span class="deleg-status deleg-warn"><i class="fa fa-clock"></i> Delega in corso{% if cfg.efatt_delega_provider %} · {{ cfg.efatt_delega_provider }}{% endif %}</span>
+    {% else %}
+      <span class="deleg-status deleg-bad"><i class="fa fa-triangle-exclamation"></i> Delega non attiva</span>
+    {% endif %}
+    <p class="deleg-muted" style="margin:12px 0 0">Il gestionale apre il provider scelto. Se il provider supporta il rientro automatico, tornerai qui da solo; altrimenti dopo aver finito premi “Ho completato la delega”.</p>
+  </div>
+
+  <form method="POST" action="/fatturazione/elettronica/delega/avvia" class="deleg-card">
+    <h3 style="margin:0 0 12px">Con quale provider vuoi fare la delega?</h3>
+    <div class="deleg-grid">
+      {% for p in providers %}
+      <label class="deleg-option">
+        <input type="radio" name="provider" value="{{ p.id }}" required {% if cfg.efatt_provider == p.id or cfg.efatt_delega_provider == p.id %}checked{% endif %}>
+        <strong>{{ p.nome }}</strong>
+        <div class="deleg-muted">{{ p.descrizione }}</div>
+        {% if cfg[p.url_key] %}<span class="deleg-pill">Onboarding diretto configurato</span>{% else %}<span class="deleg-pill">Apre portale provider</span>{% endif %}
+      </label>
+      {% endfor %}
+    </div>
+    <div class="deleg-actions">
+      <button type="submit" class="btn btn-primary"><i class="fa fa-right-to-bracket"></i> Vai al provider</button>
+    </div>
+  </form>
+
+  {% if cfg.efatt_delega_stato == 'in_corso' %}
+  <form method="POST" action="/fatturazione/elettronica/delega/completa" class="deleg-card">
+    <h3 style="margin:0 0 8px">Hai completato la procedura sul provider?</h3>
+    <div class="deleg-muted">Usa questo pulsante se il provider non ti ha riportato automaticamente nel gestionale. Lo stato passa ad “attiva” e poi l’import automatico verrà confermato dai webhook/API.</div>
+    <div class="deleg-actions">
+      <button class="btn btn-success" type="submit"><i class="fa fa-check"></i> Ho completato la delega</button>
+    </div>
+  </form>
+  {% endif %}
+</div>
+"""
+
 @app.route('/fatturazione/elettronica')
 @admin_required
 def fatturazione_elettronica_setup():
@@ -15833,7 +15937,7 @@ def fatturazione_elettronica_setup():
 @app.route('/fatturazione/elettronica/salva', methods=['POST'])
 @admin_required
 def fatturazione_elettronica_save():
-    keys = ['efatt_provider','efatt_codice_destinatario','efatt_api_key','efatt_company_id','efatt_delega_stato','efatt_delega_note','efatt_webhook_secret','efatt_oauth_client_id','efatt_oauth_scopes']
+    keys = ['efatt_provider','efatt_codice_destinatario','efatt_api_key','efatt_company_id','efatt_delega_stato','efatt_delega_note','efatt_webhook_secret','efatt_oauth_client_id','efatt_oauth_scopes','efatt_delega_url_fattureincloud','efatt_delega_url_aruba','efatt_delega_url_acube']
     db = get_db()
     for k in keys:
         db.execute("INSERT OR REPLACE INTO impostazioni (chiave,valore) VALUES (?,?)", (k, request.form.get(k, '').strip()))
@@ -15843,6 +15947,73 @@ def fatturazione_elettronica_save():
     safe_commit(db); db.close()
     flash('Configurazione fatturazione elettronica salvata.', 'success')
     return redirect(url_for('fatturazione_elettronica_setup'))
+
+@app.route('/fatturazione/elettronica/delega')
+@admin_required
+def fatturazione_elettronica_delega():
+    return render_page(
+        EFATT_DELEGA_TMPL,
+        page_title='Delega fatture passive',
+        active='fatturazione_attiva',
+        cfg=_get_efatt_config(),
+        providers=_efatt_provider_options()
+    )
+
+@app.route('/fatturazione/elettronica/delega/avvia', methods=['POST'])
+@admin_required
+def fatturazione_elettronica_delega_avvia():
+    provider_id = (request.form.get('provider') or '').strip()
+    providers = {p['id']: p for p in _efatt_provider_options()}
+    provider = providers.get(provider_id)
+    if not provider:
+        flash('Provider non valido.', 'error')
+        return redirect(url_for('fatturazione_elettronica_delega'))
+
+    state = base64.urlsafe_b64encode(os.urandom(24)).decode('ascii').rstrip('=')
+    session['efatt_delega_state'] = state
+    session['efatt_delega_provider'] = provider_id
+    cfg = _get_efatt_config()
+    configured_url = cfg.get(provider['url_key']) or ''
+    target_url = _build_delega_provider_url(configured_url, provider_id, state)
+    if not target_url:
+        target_url = provider['fallback_url']
+
+    set_setting('efatt_provider', provider_id)
+    set_setting('efatt_delega_provider', provider_id)
+    set_setting('efatt_delega_stato', 'in_corso')
+    set_setting('efatt_delega_started_at', datetime.now().isoformat(timespec='seconds'))
+    flash('Ti sto portando sul portale di ' + provider['nome'] + '. Completa accesso/delega e poi torna nel gestionale.', 'info')
+    return redirect(target_url)
+
+@app.route('/fatturazione/elettronica/delega/rientro')
+@admin_required
+def fatturazione_elettronica_delega_rientro():
+    state = request.args.get('state', '')
+    if state and state != session.get('efatt_delega_state'):
+        flash('Rientro delega non valido. Riprova dalla pagina di attivazione.', 'error')
+        return redirect(url_for('fatturazione_elettronica_delega'))
+    status = (request.args.get('status') or request.args.get('esito') or '').lower()
+    provider = request.args.get('provider') or session.get('efatt_delega_provider') or get_setting('efatt_delega_provider', '')
+    set_setting('efatt_delega_provider', provider)
+    if status in ('ok', 'success', 'active', 'attiva', 'completed', 'completata'):
+        set_setting('efatt_delega_stato', 'attiva')
+        set_setting('efatt_delega_completed_at', datetime.now().isoformat(timespec='seconds'))
+        flash('Delega fatture passive attivata. Ora il provider potra inviare le fatture passive al gestionale.', 'success')
+    else:
+        set_setting('efatt_delega_stato', 'in_corso')
+        flash('Se hai completato la procedura sul provider, confermala da questa pagina.', 'info')
+    session.pop('efatt_delega_state', None)
+    return redirect(url_for('fatturazione_elettronica_delega'))
+
+@app.route('/fatturazione/elettronica/delega/completa', methods=['POST'])
+@admin_required
+def fatturazione_elettronica_delega_completa():
+    provider = session.get('efatt_delega_provider') or get_setting('efatt_delega_provider', '')
+    set_setting('efatt_delega_provider', provider)
+    set_setting('efatt_delega_stato', 'attiva')
+    set_setting('efatt_delega_completed_at', datetime.now().isoformat(timespec='seconds'))
+    flash('Delega segnata come attiva. Appena colleghiamo webhook/API, le fatture passive entreranno automaticamente.', 'success')
+    return redirect(url_for('fatturazione_elettronica_delega'))
 
 @app.route('/fatturazione/elettronica/connetti')
 @admin_required
