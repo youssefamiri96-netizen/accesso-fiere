@@ -1791,11 +1791,12 @@ def render_page(tmpl, **ctx):
         ctx.setdefault('logo_az_ts', 0)
     if session.get('ruolo') in ('admin', 'amministrazione'):
         db = get_db()
-        ctx['notifiche_count'] = db.execute(
-            "SELECT COUNT(*) FROM richieste_presenze WHERE stato='in_attesa'"
-        ).fetchone()[0] + db.execute(
+        ctx['ferie_attesa_count'] = db.execute(
             "SELECT COUNT(*) FROM ferie_permessi WHERE stato='in_attesa'"
         ).fetchone()[0]
+        ctx['notifiche_count'] = db.execute(
+            "SELECT COUNT(*) FROM richieste_presenze WHERE stato='in_attesa'"
+        ).fetchone()[0] + ctx['ferie_attesa_count']
         try:
             ctx['spese_attesa'] = db.execute(
                 "SELECT COUNT(*) FROM spese_rimborso WHERE stato='in_attesa'"
@@ -1835,6 +1836,7 @@ def render_page(tmpl, **ctx):
                 print(f'[scadenze notifiche] {e}')
     else:
         ctx['notifiche_count'] = 0
+        ctx['ferie_attesa_count'] = 0
         ctx['spese_attesa'] = 0
         ctx['admin_notifiche_app'] = 0
         ctx['admin_notifiche_totale'] = 0
@@ -1889,6 +1891,7 @@ nav a{display:flex;align-items:center;gap:11px;padding:9px 18px 9px 20px;color:r
 nav a:hover{background:rgba(255,255,255,.06);color:#fff}
 nav a.active{background:linear-gradient(90deg,rgba(0,183,216,.22) 0%,rgba(20,93,160,.1) 100%);color:#fff;border-left-color:var(--accent2);font-weight:800}
 nav a.active::after{content:"";position:absolute;right:14px;top:50%;transform:translateY(-50%);width:6px;height:6px;border-radius:50%;background:var(--accent2);box-shadow:0 0 10px var(--accent2)}
+nav a.active.with-badge::after{display:none}
 nav a i{width:16px;text-align:center;font-size:13px;flex-shrink:0}
 nav a.active i{color:var(--accent2)}
 .nav-group{border:none;margin:0;padding:0}
@@ -2170,7 +2173,10 @@ textarea{resize:vertical;min-height:80px}
 
     <div class="nav-section">Persone</div>
     <a href="/dipendenti" class="{{ 'active' if active=='dipendenti' }}"><i class="fa fa-users"></i> Dipendenti</a>
-    <a href="/ferie" class="{{ 'active' if active=='ferie' }}"><i class="fa fa-umbrella-beach"></i> Ferie & Permessi</a>
+    <a href="/ferie" class="{{ 'active' if active=='ferie' }} {{ 'with-badge' if ferie_attesa_count > 0 }}">
+      <i class="fa fa-umbrella-beach"></i> Ferie & Permessi
+      {% if ferie_attesa_count > 0 %}<span class="notif-badge amber">{{ ferie_attesa_count }}</span>{% endif %}
+    </a>
     <a href="/banca-ore" class="{{ 'active' if active=='banca_ore' }}"><i class="fa fa-piggy-bank"></i> Banca Ore</a>
     <details class="nav-group" {% if active in ['documenti','documenti_azienda'] %}open{% endif %}>
       <summary class="{{ 'active' if active in ['documenti','documenti_azienda'] }}">
@@ -2454,7 +2460,7 @@ textarea{resize:vertical;min-height:80px}
       <i class="fa fa-robot"></i>
       <div>
         <div class="ai-chat-name">Copilota operativo</div>
-        <div class="ai-chat-sub">2 suggerimenti disponibili</div>
+        <div class="ai-chat-sub">Pronto per analisi operative</div>
       </div>
     </div>
     <button onclick="toggleAiChat()" class="ai-chat-close"><i class="fa fa-times"></i></button>
@@ -2480,7 +2486,6 @@ textarea{resize:vertical;min-height:80px}
 <style>
 #ai-chat-fab{position:fixed;bottom:24px;right:24px;width:58px;height:58px;border-radius:16px;background:linear-gradient(135deg,#07111f 0%,#145da0 58%,#00b7d8 100%);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;box-shadow:0 16px 34px -18px rgba(20,93,160,.75),0 0 0 1px rgba(255,255,255,.18) inset;z-index:9998;transition:transform .15s}
 #ai-chat-fab:hover{transform:translateY(-2px)}
-#ai-chat-fab::after{content:'2';position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:999px;background:#f59e0b;color:#111827;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900}
 .ai-fab-pulse{position:absolute;width:58px;height:58px;border-radius:16px;background:#00b7d8;opacity:.22;animation:aiPulse 2.2s infinite;pointer-events:none}
 @keyframes aiPulse{0%{transform:scale(1);opacity:.4}100%{transform:scale(1.5);opacity:0}}
 #ai-chat-panel{position:fixed;bottom:90px;right:24px;width:380px;max-width:calc(100vw - 48px);height:540px;max-height:calc(100vh - 120px);background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.18);z-index:9999;display:none;flex-direction:column;overflow:hidden}
@@ -5498,38 +5503,9 @@ body.customize-mode .btn-link-soft{display:none}
       </div>
     </div>
     <div class="hero-cta">
-      {% if s.richieste_totali > 0 %}
-      <a href="/admin/richieste" class="hero-btn hero-btn-warn"><i class="fa fa-bell"></i> {{ s.richieste_totali }} richieste in attesa</a>
-      {% endif %}
-      {% if s.fiere_live > 0 %}
-      <a href="/cantieri" class="hero-btn hero-btn-success"><span class="hero-pulse"></span> {{ s.fiere_live }} live oggi</a>
-      {% endif %}
       <a href="/cantieri/nuovo" class="hero-btn hero-btn-primary"><i class="fa fa-plus"></i> Nuova fiera</a>
       <div class="sync-status"><span class="sync-dot"></span> Realtime attivo <span id="hero-sync-time"></span></div>
     </div>
-  </div>
-
-  <div class="ops-strip">
-    <a href="/admin/richieste" class="ops-card {% if s.richieste_totali > 0 %}ops-hot{% endif %}">
-      <span class="ops-icon"><i class="fa fa-inbox"></i></span>
-      <span class="ops-copy"><strong class="count-up" data-count="{{ s.richieste_totali }}">0</strong><small>richieste da gestire</small></span>
-      <i class="fa fa-chevron-right"></i>
-    </a>
-    <a href="/documenti" class="ops-card {% if s.scad_doc_totali > 0 %}ops-danger{% endif %}">
-      <span class="ops-icon"><i class="fa fa-shield-halved"></i></span>
-      <span class="ops-copy"><strong class="count-up" data-count="{{ s.scad_doc_totali }}">0</strong><small>documenti critici</small></span>
-      <i class="fa fa-chevron-right"></i>
-    </a>
-    <a href="/veicoli" class="ops-card {% if s.scad_veic_totali > 0 %}ops-warn{% endif %}">
-      <span class="ops-icon"><i class="fa fa-truck"></i></span>
-      <span class="ops-copy"><strong class="count-up" data-count="{{ s.scad_veic_totali }}">0</strong><small>mezzi da verificare</small></span>
-      <i class="fa fa-chevron-right"></i>
-    </a>
-    <a href="/cantieri" class="ops-card {% if s.fiere_live > 0 %}ops-live{% endif %}">
-      <span class="ops-icon"><i class="fa fa-tower-observation"></i></span>
-      <span class="ops-copy"><strong class="count-up" data-count="{{ s.fiere_live }}">0</strong><small>fiere live oggi</small></span>
-      <i class="fa fa-chevron-right"></i>
-    </a>
   </div>
 
   <div class="kpi-grid">
@@ -5629,13 +5605,13 @@ body.customize-mode .btn-link-soft{display:none}
       </div>
       <div class="insight-list">
         {% if s.scad_doc_totali > 0 %}
-        <a href="/documenti" class="insight-row risk-high"><strong>Rischio documentale</strong><span>{{ s.scad_doc_totali }} documento/i richiedono controllo prima degli accessi.</span></a>
+        <div class="insight-row risk-high"><strong>Rischio documentale</strong><span>{{ s.scad_doc_totali }} documento/i richiedono controllo prima degli accessi.</span></div>
         {% endif %}
         {% if s.scad_veic_totali > 0 %}
-        <a href="/veicoli" class="insight-row risk-mid"><strong>Asset da verificare</strong><span>{{ s.scad_veic_totali }} mezzo/i con scadenze operative da gestire.</span></a>
+        <div class="insight-row risk-mid"><strong>Asset da verificare</strong><span>{{ s.scad_veic_totali }} mezzo/i con scadenze operative da gestire.</span></div>
         {% endif %}
         {% if s.richieste_totali > 0 %}
-        <a href="/admin/richieste" class="insight-row risk-mid"><strong>Workflow da sbloccare</strong><span>{{ s.richieste_totali }} richiesta/e in attesa possono rallentare operativita e paghe.</span></a>
+        <div class="insight-row risk-mid"><strong>Workflow da sbloccare</strong><span>{{ s.richieste_totali }} richiesta/e in attesa possono rallentare operativita e paghe.</span></div>
         {% endif %}
         {% if s.scad_doc_totali == 0 and s.scad_veic_totali == 0 and s.richieste_totali == 0 %}
         <div class="insight-row risk-ok"><strong>Tutto conforme</strong><span>Nessuna criticita immediata su richieste, documenti e mezzi.</span></div>
@@ -5649,10 +5625,10 @@ body.customize-mode .btn-link-soft{display:none}
       </div>
       <div class="timeline-list">
         {% for a in attivita_recenti %}
-        <a class="timeline-item" href="{{ a.url }}">
+        <div class="timeline-item">
           <span class="timeline-dot {{ a.tone }}"><i class="fa {{ a.icon }}"></i></span>
           <span class="timeline-copy"><strong>{{ a.title }}</strong><small>{{ a.meta }}</small></span>
-        </a>
+        </div>
         {% else %}
         <div class="timeline-empty"><i class="fa fa-check-circle"></i> Nessuna attivita recente da gestire.</div>
         {% endfor %}
@@ -5701,33 +5677,8 @@ body.customize-mode .btn-link-soft{display:none}
 .hero-btn:hover{background:rgba(255,255,255,.22);transform:translateY(-1px)}
 .hero-btn-primary{background:#fff;color:#0f4c81;border-color:transparent}
 .hero-btn-primary:hover{background:#fff;color:#0a3a66;box-shadow:0 6px 18px rgba(0,0,0,.15)}
-.hero-btn-warn{background:#fbbf24;color:#78350f;border-color:transparent}
-.hero-btn-warn:hover{background:#f59e0b;color:#451a03}
-.hero-btn-success{background:#22c55e;color:#fff;border-color:transparent}
 .sync-status{width:100%;display:flex;align-items:center;justify-content:flex-end;gap:7px;color:rgba(255,255,255,.72);font-size:11px;font-weight:800;margin-top:2px}
 .sync-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 0 rgba(34,197,94,.7);animation:kpiDotPulse 2s infinite}
-.hero-pulse{
-  display:inline-block;width:8px;height:8px;border-radius:50%;background:#fff;
-  box-shadow:0 0 0 0 rgba(255,255,255,.7);animation:heroPulse 1.5s infinite;margin-right:2px;
-}
-@keyframes heroPulse{
-  0%{box-shadow:0 0 0 0 rgba(255,255,255,.7)}
-  70%{box-shadow:0 0 0 8px rgba(255,255,255,0)}
-  100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}
-}
-
-.ops-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 16px}
-.ops-card{display:flex;align-items:center;gap:12px;min-height:74px;padding:13px 14px;border-radius:12px;background:#fff;border:1px solid var(--border);text-decoration:none;color:var(--text);box-shadow:0 1px 2px rgba(15,23,42,.04);transition:all .16s}
-.ops-card:hover{transform:translateY(-1px);border-color:#b8c8db;box-shadow:0 12px 26px -18px rgba(7,17,31,.35)}
-.ops-card>.fa-chevron-right{margin-left:auto;color:#94a3b8;font-size:12px}
-.ops-icon{width:38px;height:38px;border-radius:10px;background:#e0f2fe;color:#0369a1;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.ops-copy{display:flex;flex-direction:column;gap:1px;min-width:0}
-.ops-copy strong{font-size:23px;line-height:1;font-weight:900;letter-spacing:0}
-.ops-copy small{font-size:11px;color:var(--text-light);font-weight:800;text-transform:uppercase;letter-spacing:0}
-.ops-hot{border-color:#fbbf24;background:#fffbeb}.ops-hot .ops-icon{background:#fef3c7;color:#a16207}
-.ops-danger{border-color:#fca5a5;background:#fef2f2}.ops-danger .ops-icon{background:#fee2e2;color:#b91c1c}
-.ops-warn{border-color:#fdba74;background:#fff7ed}.ops-warn .ops-icon{background:#ffedd5;color:#c2410c}
-.ops-live{border-color:#86efac;background:#f0fdf4}.ops-live .ops-icon{background:#dcfce7;color:#15803d}
 
 /* ═══════════ KPI CARDS MODERNE ═══════════ */
 .kpi-grid{
@@ -5790,15 +5741,14 @@ body.customize-mode .btn-link-soft{display:none}
 .live-card-head i{color:var(--accent)}
 .live-card-head em{font-style:normal;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0;color:#94a3b8}
 .insight-list,.timeline-list{padding:10px 12px}
-.insight-row{display:block;text-decoration:none;border-radius:11px;padding:11px 12px;margin-bottom:8px;border:1px solid #e5edf5;color:var(--text);transition:all .15s}
+.insight-row{display:block;border-radius:11px;padding:11px 12px;margin-bottom:8px;border:1px solid #e5edf5;color:var(--text)}
 .insight-row:last-child{margin-bottom:0}
-.insight-row:hover{transform:translateX(2px);border-color:#bfd0e2}
 .insight-row strong{display:block;font-size:13px;font-weight:900;margin-bottom:3px}
 .insight-row span{display:block;font-size:12px;line-height:1.4;color:var(--text-light)}
 .risk-high{background:#fef2f2;border-color:#fecaca}.risk-high strong{color:#b91c1c}
 .risk-mid{background:#fffbeb;border-color:#fde68a}.risk-mid strong{color:#92400e}
 .risk-ok{background:#f0fdf4;border-color:#bbf7d0}.risk-ok strong{color:#15803d}
-.timeline-item{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--text);padding:9px 4px;border-bottom:1px solid #eef2f7}
+.timeline-item{display:flex;align-items:center;gap:11px;color:var(--text);padding:9px 4px;border-bottom:1px solid #eef2f7}
 .timeline-item:last-child{border-bottom:none}
 .timeline-dot{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:13px}
 .timeline-dot.blue{background:#2563eb}.timeline-dot.green{background:#16a34a}.timeline-dot.amber{background:#f59e0b}.timeline-dot.red{background:#dc2626}.timeline-dot.slate{background:#475569}
@@ -5813,9 +5763,6 @@ body.customize-mode .btn-link-soft{display:none}
   .hero-live-status{gap:6px}
   .live-pill{font-size:10px;padding:6px 8px}
   .sync-status{justify-content:flex-start}
-  .ops-strip{grid-template-columns:1fr 1fr}
-  .ops-card{min-height:64px;padding:11px}
-  .ops-copy strong{font-size:20px}
   .kpi-value{font-size:24px}
   .dash-live-grid{grid-template-columns:1fr}
 }
