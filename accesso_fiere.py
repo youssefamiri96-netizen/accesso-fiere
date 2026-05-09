@@ -6285,6 +6285,27 @@ def _build_provider_url(raw_url, provider_id, state, callback_endpoint):
         url = url.replace(key, value)
     return url
 
+def _efatt_platform_oauth_credentials(provider_id):
+    """Credenziali OAuth dell'app SaaS Accesso Fiere, non del singolo cliente."""
+    provider_id = (provider_id or '').strip()
+    if provider_id == 'fattureincloud':
+        client_id = (
+            os.environ.get('ACCESSO_FIERE_FATTUREINCLOUD_CLIENT_ID')
+            or os.environ.get('ACCESSO_CANTIERI_FATTUREINCLOUD_CLIENT_ID')
+            or os.environ.get('FATTUREINCLOUD_CLIENT_ID')
+            or os.environ.get('EFATT_OAUTH_CLIENT_ID')
+            or ''
+        ).strip()
+        client_secret = (
+            os.environ.get('ACCESSO_FIERE_FATTUREINCLOUD_CLIENT_SECRET')
+            or os.environ.get('ACCESSO_CANTIERI_FATTUREINCLOUD_CLIENT_SECRET')
+            or os.environ.get('FATTUREINCLOUD_CLIENT_SECRET')
+            or os.environ.get('EFATT_OAUTH_CLIENT_SECRET')
+            or ''
+        ).strip()
+        return client_id, client_secret
+    return '', ''
+
 @app.route('/amministrazione')
 @login_required
 def amministrazione_home():
@@ -16179,9 +16200,9 @@ def fatturazione_elettronica_connect():
         flash('Per ora il collegamento OAuth automatico e pronto per Fatture in Cloud. Per altri provider inserisci il link onboarding/delega o API key.', 'error')
         return redirect(url_for('fatturazione_elettronica_setup'))
 
-    client_id = (cfg.get('efatt_oauth_client_id') or os.environ.get('FATTUREINCLOUD_CLIENT_ID') or os.environ.get('EFATT_OAUTH_CLIENT_ID') or '').strip()
+    client_id, _client_secret = _efatt_platform_oauth_credentials(provider)
     if not client_id:
-        flash('Collegamento non configurato: manca il Client ID OAuth del provider nelle variabili interne.', 'error')
+        flash("L'app Accesso Fiere non e ancora registrata/configurata su Fatture in Cloud. Questa e una configurazione unica della piattaforma, non del cliente.", 'error')
         return redirect(url_for('fatturazione_elettronica_setup'))
 
     import urllib.parse
@@ -16215,10 +16236,10 @@ def fatturazione_elettronica_callback():
         return redirect(url_for('fatturazione_elettronica_setup'))
 
     cfg = _get_efatt_config()
-    client_id = (cfg.get('efatt_oauth_client_id') or os.environ.get('FATTUREINCLOUD_CLIENT_ID') or os.environ.get('EFATT_OAUTH_CLIENT_ID') or '').strip()
-    client_secret = (cfg.get('efatt_oauth_client_secret') or os.environ.get('FATTUREINCLOUD_CLIENT_SECRET') or os.environ.get('EFATT_OAUTH_CLIENT_SECRET') or '').strip()
+    provider = session.get('efatt_oauth_provider') or (cfg.get('efatt_provider') or '').strip()
+    client_id, client_secret = _efatt_platform_oauth_credentials(provider)
     if not client_secret:
-        flash('Collegamento non configurato: manca il Client secret OAuth del provider nelle variabili interne.', 'error')
+        flash("L'app Accesso Fiere non e ancora configurata per completare il consenso OAuth del provider.", 'error')
         return redirect(url_for('fatturazione_elettronica_setup'))
 
     import urllib.request, urllib.error
