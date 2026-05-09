@@ -1117,6 +1117,29 @@ def get_base_url():
         url = get_setting('app_url', '')
         return url.rstrip('/') if url else 'http://localhost:5000'
 
+def get_public_base_url():
+    """URL pubblico stabile usato per callback OAuth dietro proxy/Railway."""
+    url = (
+        os.environ.get('ACCESSO_FIERE_PUBLIC_URL')
+        or os.environ.get('PUBLIC_BASE_URL')
+        or os.environ.get('APP_URL')
+        or get_setting('app_url', '')
+        or ''
+    ).strip().rstrip('/')
+    if not url:
+        try:
+            from flask import request as _req
+            host = _req.headers.get('X-Forwarded-Host') or _req.host
+            proto = _req.headers.get('X-Forwarded-Proto') or _req.scheme or 'https'
+            url = f"{proto}://{host}".rstrip('/')
+        except Exception:
+            url = 'https://www.accessofiere.com'
+    if url.startswith('http://www.accessofiere.com') or url.startswith('http://accessofiere.com'):
+        url = 'https://' + url[len('http://'):]
+    if url == 'https://accessofiere.com':
+        url = 'https://www.accessofiere.com'
+    return url
+
 _ensure_done = False
 _ensure_lock = threading.Lock()
 
@@ -6284,6 +6307,9 @@ def _build_provider_url(raw_url, provider_id, state, callback_endpoint):
     for key, value in replacements.items():
         url = url.replace(key, value)
     return url
+
+def _efatt_callback_url():
+    return get_public_base_url() + url_for('fatturazione_elettronica_callback')
 
 def _efatt_platform_oauth_credentials(provider_id):
     """Credenziali OAuth dell'app SaaS Accesso Fiere, non del singolo cliente."""
@@ -16209,7 +16235,7 @@ def fatturazione_elettronica_connect():
     state = base64.urlsafe_b64encode(os.urandom(24)).decode('ascii').rstrip('=')
     session['efatt_oauth_state'] = state
     session['efatt_oauth_provider'] = provider
-    redirect_uri = url_for('fatturazione_elettronica_callback', _external=True)
+    redirect_uri = _efatt_callback_url()
     params = {
         'response_type': 'code',
         'client_id': client_id,
@@ -16247,7 +16273,7 @@ def fatturazione_elettronica_callback():
         'grant_type': 'authorization_code',
         'client_id': client_id,
         'client_secret': client_secret,
-        'redirect_uri': url_for('fatturazione_elettronica_callback', _external=True),
+        'redirect_uri': _efatt_callback_url(),
         'code': code,
     }).encode('utf-8')
     req = urllib.request.Request(
