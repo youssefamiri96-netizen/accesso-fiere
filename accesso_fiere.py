@@ -16303,9 +16303,13 @@ def fatturazione_elettronica_callback():
     error = request.args.get('error')
     if error:
         error_description = request.args.get('error_description', '')
-        msg = 'Collegamento provider annullato o rifiutato: ' + error
-        if error_description:
-            msg += ' - ' + error_description
+        if error == 'unauthorized' and 'not authorized to use this app' in error_description.lower():
+            msg = ("Account Fatture in Cloud non autorizzato: l'app Accesso Fiere e ancora privata/test. "
+                   "Aggiungi questo utente alla lista utenti autorizzati dell'app Fatture in Cloud oppure pubblica l'app per usarla con tutte le aziende.")
+        else:
+            msg = 'Collegamento provider annullato o rifiutato: ' + error
+            if error_description:
+                msg += ' - ' + error_description
         flash(msg, 'error')
         return redirect(url_for('fatturazione_elettronica_setup'))
     state = request.args.get('state', '')
