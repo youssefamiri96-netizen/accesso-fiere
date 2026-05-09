@@ -1496,8 +1496,9 @@ def login_required(f):
         if 'user_id' not in session:
             return redirect(url_for('login'))
         # Verifica che l'utente sia ancora attivo (altrimenti logout forzato).
-        # Si salta solo per il superadmin di piattaforma, non per i tenant SaaS.
-        if not session.get('is_superadmin'):
+        # Si salta per il superadmin piattaforma e per il proprietario azienda
+        # autenticato dal master DB: quel login viene validato sul master.
+        if not session.get('is_superadmin') and not session.get('is_tenant_owner'):
             try:
                 db = get_db()
                 u = db.execute("SELECT attivo FROM utenti WHERE id=?", (session['user_id'],)).fetchone()
@@ -1531,8 +1532,9 @@ def admin_required(f):
     def d(*a,**k):
         if 'user_id' not in session:
             return redirect(url_for('login'))
-        # Verifica che l'admin sia ancora attivo (skip solo per superadmin piattaforma)
-        if not session.get('is_superadmin'):
+        # Verifica che l'admin sia ancora attivo (skip per superadmin piattaforma
+        # e proprietario azienda autenticato dal master DB).
+        if not session.get('is_superadmin') and not session.get('is_tenant_owner'):
             try:
                 db = get_db()
                 u = db.execute("SELECT attivo FROM utenti WHERE id=?", (session['user_id'],)).fetchone()
@@ -4488,12 +4490,37 @@ def login():
         email = request.form.get('email','').strip().lower()
         pw = hash_pw(request.form.get('password',''))
 
-        # Controlla se l'email corrisponde a un'azienda SaaS (admin dell'azienda)
+        # Controlla se l'email corrisponde a un'azienda SaaS (admin/proprietario dell'azienda).
+        # L'email proprietaria non deve mai cadere nel login dipendente: se la password
+        # del master e quella del tenant non sono allineate, riallineiamo il master solo
+        # dopo aver verificato la password nel tenant.
         mdb = get_master_db()
-        az = mdb.execute("SELECT * FROM aziende WHERE email_admin=? AND password_admin=?", (email, pw)).fetchone()
+        az = mdb.execute("SELECT * FROM aziende WHERE email_admin=?", (email,)).fetchone()
         mdb.close()
         if az:
             az = dict(az)
+            master_password_ok = (az.get('password_admin') == pw)
+            tenant_password_ok = False
+            if not master_password_ok:
+                try:
+                    tenant_probe = sqlite3.connect(get_tenant_db_path(az['id']), timeout=30, check_same_thread=False)
+                    tenant_probe.row_factory = sqlite3.Row
+                    tenant_user = tenant_probe.execute(
+                        "SELECT id FROM utenti WHERE email=? AND password=? LIMIT 1",
+                        (email, pw)
+                    ).fetchone()
+                    tenant_probe.close()
+                    tenant_password_ok = bool(tenant_user)
+                except Exception:
+                    tenant_password_ok = False
+            if not master_password_ok and not tenant_password_ok:
+                return render_template_string(LOGIN_TMPL, error='Credenziali admin non corrette.', **lang_ctx)
+            if tenant_password_ok and not master_password_ok:
+                mdb = get_master_db()
+                mdb.execute("UPDATE aziende SET password_admin=? WHERE id=?", (pw, az['id']))
+                mdb.commit()
+                mdb.close()
+                az['password_admin'] = pw
             # Verifica stato abbonamento
             if az['stato'] == 'sospeso':
                 return render_template_string(LOGIN_TMPL, error='Abbonamento sospeso. Contatta il supporto.', **lang_ctx)
@@ -4512,17 +4539,24 @@ def login():
                 'azienda_id': az['id'],
                 'azienda_nome': az['nome'],
                 'is_saas': True,
+                'is_tenant_owner': True,
             })
             # Assicura che esista un utente admin nel DB tenant
             session_backup = dict(session)
             db = get_db()
-            admin_tenant = db.execute("SELECT id FROM utenti WHERE ruolo='admin' LIMIT 1").fetchone()
+            owner_user = db.execute("SELECT id FROM utenti WHERE email=? LIMIT 1", (email,)).fetchone()
+            admin_tenant = owner_user or db.execute("SELECT id FROM utenti WHERE ruolo='admin' LIMIT 1").fetchone()
             if not admin_tenant:
                 db.execute(
-                    "INSERT INTO utenti (nome,cognome,email,password,ruolo,titolo) VALUES (?,?,?,?,?,?)",
+                    "INSERT INTO utenti (nome,cognome,email,password,ruolo,titolo,attivo) VALUES (?,?,?,?,?,?,1)",
                     ('Admin', az['nome'], email, pw, 'admin', 'Amministratore'))
                 safe_commit(db)
                 admin_tenant = db.execute("SELECT id FROM utenti WHERE ruolo='admin' LIMIT 1").fetchone()
+            else:
+                db.execute(
+                    "UPDATE utenti SET nome=?, cognome=?, email=?, password=?, ruolo='admin', titolo=?, attivo=1 WHERE id=?",
+                    ('Admin', az['nome'], email, pw, 'Amministratore', admin_tenant['id']))
+                safe_commit(db)
             db.close()
             session['user_id'] = admin_tenant['id']
             return redirect(url_for('dashboard'))
@@ -4616,8 +4650,9 @@ def api_session_check():
     from flask import jsonify
     if 'user_id' not in session:
         return jsonify({'active': False, 'reason': 'not_logged_in'})
-    # Super-admin piattaforma: autenticato sul master DB, non soggetto a 'attivo' tenant.
-    if session.get('is_superadmin'):
+    # Super-admin piattaforma e proprietario azienda: autenticati sul master DB,
+    # non soggetti al flag 'attivo' del tenant.
+    if session.get('is_superadmin') or session.get('is_tenant_owner'):
         return jsonify({'active': True})
     try:
         db = get_db()
