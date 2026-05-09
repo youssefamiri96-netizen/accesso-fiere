@@ -6233,9 +6233,61 @@ def _get_efatt_config():
         'efatt_attive_url_acube', 'efatt_attive_provider'
     ]
     cfg = {k: get_setting(k, '') for k in keys}
-    if not cfg.get('efatt_oauth_scopes'):
-        cfg['efatt_oauth_scopes'] = 'entity.clients:r issued_documents:r issued_documents:a received_documents:r archive:r settings:r'
+    cfg['efatt_oauth_scopes'] = _efatt_clean_scopes(cfg.get('efatt_oauth_scopes', ''))
     return cfg
+
+def _efatt_default_scopes():
+    return 'entity.clients:a entity.suppliers:r issued_documents.invoices:a issued_documents.credit_notes:a received_documents:r archive:r settings:r'
+
+def _efatt_clean_scopes(value):
+    raw_value = (value or '').strip()
+    legacy_scope_sets = {
+        'entity.clients:r issued_documents.invoices:r issued_documents.invoices:a received_documents:r archive:r settings:r',
+        'entity.clients:r issued_documents:r issued_documents:a received_documents:r archive:r settings:r',
+    }
+    if raw_value in legacy_scope_sets:
+        return _efatt_default_scopes()
+    valid = {
+        'situation:r',
+        'entity.clients:r', 'entity.clients:a',
+        'entity.suppliers:r', 'entity.suppliers:a',
+        'products:r', 'products:a',
+        'issued_documents.invoices:r', 'issued_documents.invoices:a',
+        'issued_documents.credit_notes:r', 'issued_documents.credit_notes:a',
+        'issued_documents.quotes:r', 'issued_documents.quotes:a',
+        'issued_documents.proformas:r', 'issued_documents.proformas:a',
+        'issued_documents.receipts:r', 'issued_documents.receipts:a',
+        'issued_documents.delivery_notes:r', 'issued_documents.delivery_notes:a',
+        'issued_documents.orders:r', 'issued_documents.orders:a',
+        'issued_documents.work_reports:r', 'issued_documents.work_reports:a',
+        'issued_documents.supplier_orders:r', 'issued_documents.supplier_orders:a',
+        'issued_documents.self_invoices:r', 'issued_documents.self_invoices:a',
+        'received_documents:r', 'received_documents:a',
+        'receipts:r', 'receipts:a',
+        'calendar:r', 'calendar:a',
+        'archive:r', 'archive:a',
+        'taxes:r', 'taxes:a',
+        'emails:r',
+        'cashbook:r', 'cashbook:a',
+        'settings:r', 'settings:a',
+    }
+    aliases = {
+        'issued_documents:r': 'issued_documents.invoices:r',
+        'issued_documents:a': 'issued_documents.invoices:a',
+        'documenti_emessi.fatture:r': 'issued_documents.invoices:r',
+        'documenti_emessi.fatture:a': 'issued_documents.invoices:a',
+    }
+    cleaned = []
+    had_invalid = False
+    for raw in (value or '').split():
+        scope = aliases.get(raw.strip(), raw.strip())
+        if scope in valid and scope not in cleaned:
+            cleaned.append(scope)
+        elif raw.strip():
+            had_invalid = True
+    if not cleaned or had_invalid:
+        return _efatt_default_scopes()
+    return ' '.join(cleaned)
 
 def _efatt_token_mask(value):
     if not value:
@@ -16240,7 +16292,7 @@ def fatturazione_elettronica_connect():
         'response_type': 'code',
         'client_id': client_id,
         'redirect_uri': redirect_uri,
-        'scope': cfg.get('efatt_oauth_scopes') or 'entity.clients:r issued_documents:r issued_documents:a received_documents:r archive:r settings:r',
+        'scope': cfg.get('efatt_oauth_scopes') or _efatt_default_scopes(),
         'state': state,
     }
     return redirect('https://api-v2.fattureincloud.it/oauth/authorize?' + urllib.parse.urlencode(params))
@@ -16250,7 +16302,11 @@ def fatturazione_elettronica_connect():
 def fatturazione_elettronica_callback():
     error = request.args.get('error')
     if error:
-        flash('Collegamento provider annullato o rifiutato: ' + error, 'error')
+        error_description = request.args.get('error_description', '')
+        msg = 'Collegamento provider annullato o rifiutato: ' + error
+        if error_description:
+            msg += ' - ' + error_description
+        flash(msg, 'error')
         return redirect(url_for('fatturazione_elettronica_setup'))
     state = request.args.get('state', '')
     if not state or state != session.get('efatt_oauth_state'):
