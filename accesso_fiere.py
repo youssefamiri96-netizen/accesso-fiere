@@ -746,6 +746,11 @@ def init_db():
         )""",
         "ALTER TABLE fatture ADD COLUMN file_path TEXT",
         "ALTER TABLE fatture ADD COLUMN preventivo_id INTEGER",
+        "ALTER TABLE fatture ADD COLUMN cantiere_id INTEGER",
+        "ALTER TABLE fatture ADD COLUMN sdi_stato TEXT DEFAULT 'non_inviata'",
+        "ALTER TABLE fatture ADD COLUMN sdi_identificativo TEXT",
+        "ALTER TABLE fatture ADD COLUMN sdi_messaggio TEXT",
+        "ALTER TABLE fatture ADD COLUMN provider_doc_id TEXT",
         "ALTER TABLE fatture ADD COLUMN imponibile_lordo REAL DEFAULT 0",
         "ALTER TABLE fatture ADD COLUMN sconto_importo REAL DEFAULT 0",
         "ALTER TABLE clienti ADD COLUMN codice_fiscale TEXT",
@@ -905,6 +910,7 @@ def init_db():
         "ALTER TABLE fatture ADD COLUMN tipo TEXT DEFAULT 'attiva'",
         "ALTER TABLE fatture ADD COLUMN fornitore_id INTEGER",
         "ALTER TABLE fatture ADD COLUMN fornitore_nome TEXT",
+        "ALTER TABLE spese_rimborso ADD COLUMN cantiere_id INTEGER",
         """CREATE TABLE IF NOT EXISTS fornitori (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nome TEXT NOT NULL,
@@ -1095,6 +1101,12 @@ def get_setting(chiave, default=''):
     db.close()
     return r['valore'] if r else default
 
+def set_setting(chiave, valore):
+    db = get_db()
+    db.execute("INSERT OR REPLACE INTO impostazioni (chiave,valore) VALUES (?,?)", (chiave, valore or ''))
+    safe_commit(db)
+    db.close()
+
 def get_base_url():
     """Restituisce l'URL base del sito (usato nei link delle email)."""
     try:
@@ -1265,6 +1277,12 @@ def ensure_columns():
                 "ALTER TABLE fatture ADD COLUMN tipo TEXT DEFAULT 'attiva'",
                 "ALTER TABLE fatture ADD COLUMN fornitore_id INTEGER",
                 "ALTER TABLE fatture ADD COLUMN fornitore_nome TEXT",
+                "ALTER TABLE fatture ADD COLUMN cantiere_id INTEGER",
+                "ALTER TABLE fatture ADD COLUMN sdi_stato TEXT DEFAULT 'non_inviata'",
+                "ALTER TABLE fatture ADD COLUMN sdi_identificativo TEXT",
+                "ALTER TABLE fatture ADD COLUMN sdi_messaggio TEXT",
+                "ALTER TABLE fatture ADD COLUMN provider_doc_id TEXT",
+                "ALTER TABLE spese_rimborso ADD COLUMN cantiere_id INTEGER",
                 """CREATE TABLE IF NOT EXISTS fornitori (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     nome TEXT NOT NULL,
@@ -1409,7 +1427,7 @@ AMMINISTRAZIONE_ENDPOINTS = {
     'documenti_azienda','documenti_azienda_nuovo','documenti_azienda_modifica','documenti_azienda_scarica','documenti_azienda_elimina','documenti_azienda_zip',
     'scadenze','scadenze_pulisci_fantasma',
     'veicoli','veicolo_nuovo','veicolo_detail','veicolo_modifica','veicolo_salva_scadenze','veicolo_elimina','veicolo_documenti','veicolo_upload','veicolo_applica_ai','veicolo_scarica','veicolo_anteprima','veicolo_elimina_doc',
-    'fatturazione','fatturazione_nuova','fatturazione_modifica','fatturazione_dettaglio','fatturazione_allega_emessa','fatturazione_elimina','fatturazione_aggiungi_rata','fatturazione_paga_rata','fatturazione_annulla_paga_rata','fatturazione_elimina_rata','fatturazione_file','fatturazione_clienti','fatturazione_nuovo_cliente','fatturazione_elimina_cliente',
+    'fatturazione','fatturazione_elettronica_setup','fatturazione_elettronica_save','fatturazione_elettronica_connect','fatturazione_elettronica_callback','fatturazione_elettronica_disconnect','fatturazione_nuova','fatturazione_modifica','fatturazione_dettaglio','fatturazione_allega_emessa','fatturazione_elimina','fatturazione_aggiungi_rata','fatturazione_paga_rata','fatturazione_annulla_paga_rata','fatturazione_elimina_rata','fatturazione_file','fatturazione_clienti','fatturazione_nuovo_cliente','fatturazione_elimina_cliente',
     'clienti_lista','cliente_nuovo','cliente_modifica','cliente_elimina','cliente_ai_estrai',
     'fornitori_lista','fornitore_nuovo','fornitore_modifica','fornitore_elimina',
     'preventivi','preventivo_nuovo','preventivo_modifica','preventivo_pdf','preventivo_duplica','preventivo_stato','preventivo_elimina',
@@ -2656,6 +2674,11 @@ LOGIN_TMPL = """<!DOCTYPE html>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;background:#f5f7fb;color:#102033}
+body.public-home .left{width:100%;flex:1}
+body.public-home .left-inner{max-width:1180px}
+body.public-home .hero-title{max-width:930px}
+body.login-only{justify-content:center;align-items:center;background:#f4f5f7}
+body.login-only .right{width:100%;max-width:520px;min-height:100vh;border-left:0;background:transparent}
 .left{flex:1;background:#08111f;color:#fff;min-height:100vh;overflow:auto;position:relative}
 .left:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 18% 14%,rgba(0,180,216,.26),transparent 28%),radial-gradient(circle at 82% 8%,rgba(245,158,11,.18),transparent 25%),linear-gradient(135deg,#08111f 0%,#0e2a3d 48%,#111827 100%);pointer-events:none}
 .left-inner{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:38px 54px 46px}
@@ -2688,8 +2711,8 @@ input:focus,select:focus{outline:none;border-color:#0f4c81}
 @media(max-width:900px){body{display:block;background:#f4f5f7}.left{display:none}.right{min-height:100vh;width:100%;padding:20px;border:0}.login-box{box-shadow:0 4px 28px rgba(15,23,42,.08);padding:28px 22px;border-radius:16px;max-width:390px}.desktop-only{display:none!important}.mobile-brand{display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:22px;font-size:22px;font-weight:900;color:#0f172a}.login-box h2{font-size:20px;text-align:center}.login-box p{text-align:center;margin-bottom:18px}.form-group{margin-bottom:16px}.btn{padding:13px;font-size:15px}}
 {% if t.dir == 'rtl' %}body,input,select,button{font-family:'DM Sans',Arial,sans-serif}{% endif %}
 </style></head>
-<body>
-{% if not is_mobile %}
+<body class="{{ 'public-home' if public_home else 'login-only' if not show_landing else '' }}">
+{% if show_landing %}
 <div class="left">
   <div class="left-inner">
     <div class="brand-row">
@@ -2705,7 +2728,10 @@ input:focus,select:focus{outline:none;border-color:#0f4c81}
         </div>
         <div class="tagline">Il sistema operativo per allestitori fieristici</div>
       </div>
-      <a class="demo-pill" href="mailto:info@accessofiere.com?subject=Richiesta%20demo%20Accesso%20Fiere"><i class="fa fa-calendar-check"></i> Prenota demo</a>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a class="demo-pill" href="/login"><i class="fa fa-user-lock"></i> Area clienti</a>
+        <a class="demo-pill" href="mailto:info@accessofiere.com?subject=Richiesta%20demo%20Accesso%20Fiere"><i class="fa fa-calendar-check"></i> Prenota demo</a>
+      </div>
     </div>
 
     <div class="hero-kicker"><i class="fa fa-bolt"></i> Software verticale per fiere, eventi e cantieri temporanei</div>
@@ -2713,7 +2739,7 @@ input:focus,select:focus{outline:none;border-color:#0f4c81}
     <p class="hero-sub">Riduci errori, velocizza gli ingressi e coordina personale, mezzi, documenti e richieste operative senza rincorrere Excel, chat e fogli sparsi.</p>
     <div class="hero-actions">
       <a class="hero-cta" href="mailto:info@accessofiere.com?subject=Demo%20Accesso%20Fiere"><i class="fa fa-play"></i> Prenota una demo</a>
-      <a class="hero-secondary" href="#login"><i class="fa fa-right-to-bracket"></i> Accedi al gestionale</a>
+      <a class="hero-secondary" href="{{ '/login' if public_home else '#login' }}"><i class="fa fa-right-to-bracket"></i> {{ 'Area clienti' if public_home else 'Accedi al gestionale' }}</a>
     </div>
 
     <div class="metrics">
@@ -2755,6 +2781,7 @@ input:focus,select:focus{outline:none;border-color:#0f4c81}
   </div>
 </div>
 {% endif %}
+{% if not public_home %}
 <div class="right" id="login">
   <div class="login-box">
     <div class="mobile-brand">
@@ -2823,12 +2850,24 @@ input:focus,select:focus{outline:none;border-color:#0f4c81}
     </a>
     {% endif %}
 </div>
+{% endif %}
 </body></html>"""
 
 @app.route('/')
 def index():
     if 'user_id' not in session:
-        return redirect(url_for('login'))
+        if is_mobile_request():
+            return redirect(url_for('login'))
+        return render_template_string(
+            LOGIN_TMPL,
+            error=None,
+            t=get_lang(),
+            langs=LANGS,
+            current_lang=session.get('lang','it'),
+            is_mobile=False,
+            public_home=True,
+            show_landing=True
+        )
     if session.get('ruolo') == 'admin':
         return redirect(url_for('admin_mobile') if is_mobile_request() else url_for('dashboard'))
     if session.get('ruolo') == 'amministrazione':
@@ -4174,7 +4213,8 @@ PWA_INSTALL_SCRIPT = """
 @app.route('/login', methods=['GET','POST'])
 def login():
     t = get_lang()
-    lang_ctx = dict(t=t, langs=LANGS, current_lang=session.get('lang','it'), is_mobile=is_mobile_request())
+    lang_ctx = dict(t=t, langs=LANGS, current_lang=session.get('lang','it'),
+                    is_mobile=is_mobile_request(), public_home=False, show_landing=False)
     if request.method == 'POST':
         email = request.form.get('email','').strip().lower()
         pw = hash_pw(request.form.get('password',''))
@@ -6146,7 +6186,7 @@ def _amministrazione_stats():
         except Exception:
             return 0
     s = {
-        'docs_azienda': one("SELECT COUNT(*) FROM documenti_azienda"),
+    'docs_azienda': one("SELECT COUNT(*) FROM documenti_azienda"),
         'docs_dip': one("SELECT COUNT(*) FROM documenti_dipendente"),
         'fatture_attive': one("SELECT COUNT(*) FROM fatture WHERE COALESCE(tipo,'attiva')='attiva'"),
         'fatture_passive': one("SELECT COUNT(*) FROM fatture WHERE tipo='passiva'"),
@@ -6155,6 +6195,27 @@ def _amministrazione_stats():
     }
     db.close()
     return s
+
+def _get_efatt_config():
+    keys = [
+        'efatt_provider', 'efatt_codice_destinatario', 'efatt_api_key',
+        'efatt_company_id', 'efatt_delega_stato', 'efatt_delega_note',
+        'efatt_webhook_secret', 'efatt_oauth_client_id', 'efatt_oauth_client_secret',
+        'efatt_oauth_scopes', 'efatt_oauth_status', 'efatt_oauth_connected_at',
+        'efatt_oauth_provider_user', 'efatt_access_token', 'efatt_refresh_token',
+        'efatt_token_expires_at'
+    ]
+    cfg = {k: get_setting(k, '') for k in keys}
+    if not cfg.get('efatt_oauth_scopes'):
+        cfg['efatt_oauth_scopes'] = 'entity.clients:r issued_documents:r issued_documents:a received_documents:r archive:r settings:r'
+    return cfg
+
+def _efatt_token_mask(value):
+    if not value:
+        return ''
+    if len(value) <= 10:
+        return '********'
+    return value[:4] + '...' + value[-4:]
 
 @app.route('/amministrazione')
 @login_required
@@ -6898,7 +6959,8 @@ FIERA_DETTAGLIO_TMPL = """
 
   <div>
     <!-- Margine LIVE -->
-    {% set margine_real = (c.ricavo_previsto or 0) - costi.totale %}
+    {% set ricavi_evento = costi.fatture_attive if costi.fatture_attive > 0 else (c.ricavo_previsto or 0) %}
+    {% set margine_real = ricavi_evento - costi.totale %}
     {% set margine_prev = (c.ricavo_previsto or 0) - (c.costo_previsto or 0) %}
     {% set margine_cls = 'pos' if margine_real > 0 else 'neg' if margine_real < 0 else 'neutral' %}
     <div class="fdt-card" style="padding:14px">
@@ -6915,6 +6977,7 @@ FIERA_DETTAGLIO_TMPL = """
       <div style="margin-top:12px">
         <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Ricavi</div>
         <div class="fdt-cost-line"><span class="lbl">Previsti</span><span class="val">€ {{ '%.2f'|format(c.ricavo_previsto or 0) }}</span></div>
+        <div class="fdt-cost-line"><span class="lbl">Fatture attive collegate ({{ costi.n_fatture_attive }})</span><span class="val">€ {{ '%.2f'|format(costi.fatture_attive) }}</span></div>
       </div>
 
       <div style="margin-top:12px">
@@ -6923,8 +6986,10 @@ FIERA_DETTAGLIO_TMPL = """
         <div class="fdt-cost-line" style="font-size:11px;color:var(--text-light);padding-top:0"><span class="lbl">&nbsp;&nbsp;{{ '%.1f'|format(costi.ore_totali) }}h × media €{{ '%.2f'|format(costi.media_oraria) }}/h</span><span class="val"></span></div>
         <div class="fdt-cost-line"><span class="lbl">Rimborsi spese approvati</span><span class="val">€ {{ '%.2f'|format(costi.rimborsi) }}</span></div>
         <div class="fdt-cost-line"><span class="lbl">Tariffe incarichi montatori</span><span class="val">€ {{ '%.2f'|format(costi.incarichi) }}</span></div>
+        <div class="fdt-cost-line"><span class="lbl">Fatture passive collegate ({{ costi.n_fatture_passive }})</span><span class="val">€ {{ '%.2f'|format(costi.fatture_passive) }}</span></div>
         <div class="fdt-cost-line" style="border-top:1px solid var(--border);margin-top:6px;padding-top:8px"><span class="lbl"><strong>Totale costi</strong></span><span class="val"><strong>€ {{ '%.2f'|format(costi.totale) }}</strong></span></div>
         <div class="fdt-cost-line" style="font-size:11px;color:var(--text-light)"><span class="lbl">Previsti: € {{ '%.2f'|format(c.costo_previsto or 0) }}</span><span class="val">{% if c.costo_previsto and c.costo_previsto > 0 %}{{ '%.0f'|format(costi.totale / c.costo_previsto * 100) }}%{% endif %}</span></div>
+        <div class="fdt-cost-line" style="font-size:11px;color:var(--text-light)"><span class="lbl">Mezzi assegnati: {{ costi.n_veicoli }} · Fornitori collegati: {{ costi.n_fornitori }}</span><span class="val"></span></div>
       </div>
     </div>
   </div>
@@ -7045,13 +7110,20 @@ def _calcola_costi_fiera(db, cantiere_id, data_da=None, data_a=None):
     if data_da and data_a:
         rimborsi = db.execute("""SELECT COALESCE(SUM(s.importo),0) FROM spese_rimborso s
                                  WHERE s.stato='approvata'
-                                   AND s.data BETWEEN ? AND ?
-                                   AND s.utente_id IN (
-                                     SELECT DISTINCT utente_id FROM presenze WHERE cantiere_id=?
-                                   )""", (data_da, data_a, cantiere_id)).fetchone()
+                                   AND (
+                                     s.cantiere_id=?
+                                     OR (
+                                       s.data BETWEEN ? AND ?
+                                       AND s.utente_id IN (
+                                         SELECT DISTINCT utente_id FROM presenze WHERE cantiere_id=?
+                                       )
+                                     )
+                                   )""", (cantiere_id, data_da, data_a, cantiere_id)).fetchone()
         rimborsi_val = float(rimborsi[0] or 0)
     else:
-        rimborsi_val = 0.0
+        rimborsi = db.execute("""SELECT COALESCE(SUM(importo),0) FROM spese_rimborso
+                                 WHERE stato='approvata' AND cantiere_id=?""", (cantiere_id,)).fetchone()
+        rimborsi_val = float(rimborsi[0] or 0)
 
     inc = db.execute("""SELECT id, tariffa_tipo, COALESCE(tariffa_importo,0),
                                data_da, data_a, stato
@@ -7068,12 +7140,35 @@ def _calcola_costi_fiera(db, cantiere_id, data_da=None, data_a=None):
         else:  # forfait
             incarichi_val += tariffa
 
-    totale = manodopera + rimborsi_val + incarichi_val
+    fatt_att = db.execute("""SELECT COALESCE(SUM(importo_totale),0), COUNT(*)
+                             FROM fatture
+                             WHERE COALESCE(tipo,'attiva')='attiva' AND cantiere_id=?""", (cantiere_id,)).fetchone()
+    fatt_pas = db.execute("""SELECT COALESCE(SUM(importo_totale),0), COUNT(*)
+                             FROM fatture
+                             WHERE tipo='passiva' AND cantiere_id=?""", (cantiere_id,)).fetchone()
+    veicoli = db.execute("""SELECT COUNT(DISTINCT ev.veicolo_id)
+                            FROM eventi_veicoli ev
+                            JOIN eventi e ON e.id=ev.evento_id
+                            WHERE e.cantiere_id=?""", (cantiere_id,)).fetchone()
+    fornitori = db.execute("""SELECT COUNT(DISTINCT COALESCE(fornitore_id, fornitore_nome))
+                              FROM fatture
+                              WHERE tipo='passiva' AND cantiere_id=?
+                                AND COALESCE(fornitore_id, fornitore_nome) IS NOT NULL""", (cantiere_id,)).fetchone()
+    fatture_attive_val = float(fatt_att[0] or 0)
+    fatture_passive_val = float(fatt_pas[0] or 0)
+
+    totale = manodopera + rimborsi_val + incarichi_val + fatture_passive_val
     return {
         'totale': round(totale, 2),
         'manodopera': round(manodopera, 2),
         'rimborsi': round(rimborsi_val, 2),
         'incarichi': round(incarichi_val, 2),
+        'fatture_attive': round(fatture_attive_val, 2),
+        'fatture_passive': round(fatture_passive_val, 2),
+        'n_fatture_attive': int(fatt_att[1] or 0),
+        'n_fatture_passive': int(fatt_pas[1] or 0),
+        'n_veicoli': int(veicoli[0] or 0),
+        'n_fornitori': int(fornitori[0] or 0),
         'ore_totali': round(ore_totali, 1),
         'media_oraria': round(media, 2),
     }
@@ -15665,6 +15760,194 @@ def documenti_azienda_zip():
 
 
 # ── Template lista fatture ─────────────────────────────────
+EFATT_SETUP_TMPL = """
+<style>
+.ef-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}.ef-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px;box-shadow:var(--shadow);margin-bottom:16px}.ef-card h3{margin:0 0 12px;font-size:15px;display:flex;align-items:center;gap:8px}.ef-card h3 i{color:var(--accent)}.ef-step{display:flex;gap:12px;padding:12px 0;border-bottom:1px dashed #e2e8f0}.ef-step:last-child{border-bottom:0}.ef-num{width:28px;height:28px;border-radius:50%;background:#0f4c81;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;flex-shrink:0}.ef-muted{font-size:12px;color:var(--text-light);line-height:1.5}.ef-status{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800}.ef-ok{background:#dcfce7;color:#166534}.ef-warn{background:#fef3c7;color:#92400e}.ef-bad{background:#fee2e2;color:#991b1b}@media(max-width:900px){.ef-grid{grid-template-columns:1fr}}
+</style>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px;flex-wrap:wrap">
+  <div><h2 style="margin:0">Fatturazione elettronica</h2><div class="ef-muted">Collega il gestionale al provider SDI per fatture attive, passive, ricevute e delega.</div></div>
+  <a href="/fatturazione" class="btn btn-secondary"><i class="fa fa-arrow-left"></i> Fatture</a>
+</div>
+<div class="ef-grid">
+  <div>
+    <div class="ef-card">
+      <h3><i class="fa fa-plug-circle-bolt"></i> Configurazione provider</h3>
+      <form method="POST" action="/fatturazione/elettronica/salva">
+        <div class="form-row">
+          <div class="form-group"><label>Provider</label><select name="efatt_provider"><option value="">Da scegliere</option><option value="acube" {{ 'selected' if cfg.efatt_provider=='acube' }}>A-Cube API</option><option value="fattureincloud" {{ 'selected' if cfg.efatt_provider=='fattureincloud' }}>Fatture in Cloud</option><option value="aruba" {{ 'selected' if cfg.efatt_provider=='aruba' }}>Aruba / altro intermediario</option></select></div>
+          <div class="form-group"><label>Codice destinatario provider</label><input name="efatt_codice_destinatario" value="{{ cfg.efatt_codice_destinatario }}" placeholder="Es. M5UXCR1"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Client ID OAuth</label><input name="efatt_oauth_client_id" value="{{ cfg.efatt_oauth_client_id }}" placeholder="Client ID app provider"></div>
+          <div class="form-group"><label>Client secret OAuth</label><input type="password" name="efatt_oauth_client_secret" value="" placeholder="{% if cfg.efatt_oauth_client_secret %}Gia salvato: non compilare per mantenerlo{% else %}Client secret app provider{% endif %}"></div>
+        </div>
+        <div class="form-group"><label>Scope OAuth richiesti</label><input name="efatt_oauth_scopes" value="{{ cfg.efatt_oauth_scopes }}" placeholder="Scope API fatture attive/passive"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Company / account ID provider</label><input name="efatt_company_id" value="{{ cfg.efatt_company_id }}" placeholder="ID azienda sul provider"></div>
+          <div class="form-group"><label>Webhook secret</label><input name="efatt_webhook_secret" value="{{ cfg.efatt_webhook_secret }}" placeholder="Segreto webhook"></div>
+        </div>
+        <div class="form-group"><label>API key / token provider</label><input name="efatt_api_key" value="{{ cfg.efatt_api_key }}" placeholder="Token API del provider"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Stato delega fatture passive</label><select name="efatt_delega_stato"><option value="">Non configurata</option><option value="da_fare" {{ 'selected' if cfg.efatt_delega_stato=='da_fare' }}>Da fare</option><option value="in_corso" {{ 'selected' if cfg.efatt_delega_stato=='in_corso' }}>In corso</option><option value="attiva" {{ 'selected' if cfg.efatt_delega_stato=='attiva' }}>Attiva</option></select></div>
+          <div class="form-group"><label>Link onboarding/delega provider (SPID/CIE)</label><input name="efatt_delega_note" value="{{ cfg.efatt_delega_note }}" placeholder="https://..."></div>
+        </div>
+        <button class="btn btn-primary" type="submit"><i class="fa fa-save"></i> Salva configurazione</button>
+      </form>
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid #e2e8f0;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        {% if cfg.efatt_oauth_status == 'connected' %}
+          <span class="ef-status ef-ok"><i class="fa fa-link"></i> Provider collegato{% if cfg.efatt_oauth_connected_at %} · {{ cfg.efatt_oauth_connected_at[:16] }}{% endif %}</span>
+          <a class="btn btn-secondary" href="/fatturazione/elettronica/disconnetti" onclick="return confirm('Disconnettere il provider?')"><i class="fa fa-unlink"></i> Disconnetti</a>
+        {% else %}
+          <span class="ef-status ef-warn"><i class="fa fa-link-slash"></i> Provider non collegato</span>
+          <a class="btn btn-primary" href="/fatturazione/elettronica/connetti"><i class="fa fa-right-to-bracket"></i> Connetti provider</a>
+        {% endif %}
+      </div>
+    </div>
+    <div class="ef-card">
+      <h3><i class="fa fa-id-card"></i> Delega con SPID per fatture passive</h3>
+      <p class="ef-muted">Il cliente parte da qui, entra nel portale del provider con SPID/CIE o con il metodo richiesto dal provider, autorizza la ricezione delle fatture passive e registra il codice destinatario. Dopo la delega, il provider recapita le fatture passive al gestionale via API/webhook.</p>
+      {% if cfg.efatt_delega_stato == 'attiva' %}<div class="ef-status ef-ok"><i class="fa fa-check-circle"></i> Delega attiva</div>{% elif cfg.efatt_delega_stato == 'in_corso' %}<div class="ef-status ef-warn"><i class="fa fa-clock"></i> Delega in corso</div>{% else %}<div class="ef-status ef-bad"><i class="fa fa-triangle-exclamation"></i> Delega non attiva</div>{% endif %}
+      <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+        {% if cfg.efatt_delega_note %}<a class="btn btn-primary" href="{{ cfg.efatt_delega_note }}" target="_blank"><i class="fa fa-right-to-bracket"></i> Apri provider e attiva delega</a>{% else %}<button class="btn btn-secondary" disabled><i class="fa fa-right-to-bracket"></i> Configura prima il link del provider</button>{% endif %}
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="ef-card">
+      <h3><i class="fa fa-route"></i> Flusso implementazione</h3>
+      <div class="ef-step"><div class="ef-num">1</div><div><strong>Fatture collegate alla fiera</strong><div class="ef-muted">Ogni fattura attiva/passiva può essere collegata a un evento per calcolare marginalità.</div></div></div>
+      <div class="ef-step"><div class="ef-num">2</div><div><strong>Provider SDI</strong><div class="ef-muted">Si collega un provider accreditato, non un canale diretto AdE.</div></div></div>
+      <div class="ef-step"><div class="ef-num">3</div><div><strong>Emissione elettronica</strong><div class="ef-muted">Il gestionale invierà dati fattura al provider, ricevendo stati: inviata, scartata, consegnata.</div></div></div>
+      <div class="ef-step"><div class="ef-num">4</div><div><strong>Fatture passive</strong><div class="ef-muted">Con delega attiva, webhook/API importeranno automaticamente le fatture ricevute.</div></div></div>
+    </div>
+    <div class="ef-card"><h3><i class="fa fa-chart-line"></i> Redditività evento</h3><div class="ef-muted">Nella scheda fiera ora entrano ore personale, rimborsi, incarichi, fatture passive, fatture attive, mezzi e fornitori collegati.</div></div>
+  </div>
+</div>
+"""
+
+@app.route('/fatturazione/elettronica')
+@admin_required
+def fatturazione_elettronica_setup():
+    return render_page(EFATT_SETUP_TMPL, page_title='Fatturazione elettronica', active='fatturazione_attiva', cfg=_get_efatt_config())
+
+@app.route('/fatturazione/elettronica/salva', methods=['POST'])
+@admin_required
+def fatturazione_elettronica_save():
+    keys = ['efatt_provider','efatt_codice_destinatario','efatt_api_key','efatt_company_id','efatt_delega_stato','efatt_delega_note','efatt_webhook_secret','efatt_oauth_client_id','efatt_oauth_scopes']
+    db = get_db()
+    for k in keys:
+        db.execute("INSERT OR REPLACE INTO impostazioni (chiave,valore) VALUES (?,?)", (k, request.form.get(k, '').strip()))
+    secret = request.form.get('efatt_oauth_client_secret', '').strip()
+    if secret:
+        db.execute("INSERT OR REPLACE INTO impostazioni (chiave,valore) VALUES (?,?)", ('efatt_oauth_client_secret', secret))
+    safe_commit(db); db.close()
+    flash('Configurazione fatturazione elettronica salvata.', 'success')
+    return redirect(url_for('fatturazione_elettronica_setup'))
+
+@app.route('/fatturazione/elettronica/connetti')
+@admin_required
+def fatturazione_elettronica_connect():
+    cfg = _get_efatt_config()
+    provider = (cfg.get('efatt_provider') or '').strip()
+    if provider != 'fattureincloud':
+        if cfg.get('efatt_delega_note'):
+            flash('Per questo provider uso il flusso onboarding indicato: completa login/delega sul portale del provider.', 'info')
+            return redirect(cfg['efatt_delega_note'])
+        flash('Per ora il collegamento OAuth automatico e pronto per Fatture in Cloud. Per altri provider inserisci il link onboarding/delega o API key.', 'error')
+        return redirect(url_for('fatturazione_elettronica_setup'))
+
+    client_id = (cfg.get('efatt_oauth_client_id') or '').strip()
+    if not client_id:
+        flash('Inserisci prima il Client ID OAuth di Fatture in Cloud.', 'error')
+        return redirect(url_for('fatturazione_elettronica_setup'))
+
+    import urllib.parse
+    state = base64.urlsafe_b64encode(os.urandom(24)).decode('ascii').rstrip('=')
+    session['efatt_oauth_state'] = state
+    session['efatt_oauth_provider'] = provider
+    redirect_uri = url_for('fatturazione_elettronica_callback', _external=True)
+    params = {
+        'response_type': 'code',
+        'client_id': client_id,
+        'redirect_uri': redirect_uri,
+        'scope': cfg.get('efatt_oauth_scopes') or 'entity.clients:r issued_documents:r issued_documents:a received_documents:r archive:r settings:r',
+        'state': state,
+    }
+    return redirect('https://api-v2.fattureincloud.it/oauth/authorize?' + urllib.parse.urlencode(params))
+
+@app.route('/fatturazione/elettronica/callback')
+@admin_required
+def fatturazione_elettronica_callback():
+    error = request.args.get('error')
+    if error:
+        flash('Collegamento provider annullato o rifiutato: ' + error, 'error')
+        return redirect(url_for('fatturazione_elettronica_setup'))
+    state = request.args.get('state', '')
+    if not state or state != session.get('efatt_oauth_state'):
+        flash('Sessione di collegamento non valida. Riprova dal pulsante Connetti provider.', 'error')
+        return redirect(url_for('fatturazione_elettronica_setup'))
+    code = request.args.get('code', '')
+    if not code:
+        flash('Il provider non ha restituito il codice OAuth.', 'error')
+        return redirect(url_for('fatturazione_elettronica_setup'))
+
+    cfg = _get_efatt_config()
+    client_id = (cfg.get('efatt_oauth_client_id') or '').strip()
+    client_secret = (cfg.get('efatt_oauth_client_secret') or '').strip()
+    if not client_secret:
+        flash('Manca il Client secret OAuth: salvalo e ripeti il collegamento.', 'error')
+        return redirect(url_for('fatturazione_elettronica_setup'))
+
+    import urllib.request, urllib.error
+    payload = json.dumps({
+        'grant_type': 'authorization_code',
+        'client_id': client_id,
+        'client_secret': client_secret,
+        'redirect_uri': url_for('fatturazione_elettronica_callback', _external=True),
+        'code': code,
+    }).encode('utf-8')
+    req = urllib.request.Request(
+        'https://api-v2.fattureincloud.it/oauth/token',
+        data=payload,
+        headers={'Content-Type': 'application/json', 'Accept': 'application/json'},
+        method='POST'
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            data = json.loads(resp.read().decode('utf-8') or '{}')
+    except urllib.error.HTTPError as e:
+        body = e.read().decode('utf-8', errors='ignore')
+        flash('Errore token provider: ' + (body[:250] or str(e)), 'error')
+        return redirect(url_for('fatturazione_elettronica_setup'))
+    except Exception as e:
+        flash('Errore collegamento provider: ' + str(e), 'error')
+        return redirect(url_for('fatturazione_elettronica_setup'))
+
+    access_token = data.get('access_token', '')
+    refresh_token = data.get('refresh_token', '')
+    expires_in = int(data.get('expires_in') or 0)
+    expires_at = (datetime.now() + timedelta(seconds=expires_in)).isoformat(timespec='seconds') if expires_in else ''
+    set_setting('efatt_access_token', access_token)
+    set_setting('efatt_refresh_token', refresh_token)
+    set_setting('efatt_token_expires_at', expires_at)
+    set_setting('efatt_oauth_status', 'connected' if access_token else 'token_missing')
+    set_setting('efatt_oauth_connected_at', datetime.now().isoformat(timespec='seconds'))
+    session.pop('efatt_oauth_state', None)
+    session.pop('efatt_oauth_provider', None)
+    if access_token:
+        flash('Provider collegato correttamente. Token: ' + _efatt_token_mask(access_token), 'success')
+    else:
+        flash('Il provider ha risposto ma non ha restituito access_token. Verifica app OAuth e scope.', 'error')
+    return redirect(url_for('fatturazione_elettronica_setup'))
+
+@app.route('/fatturazione/elettronica/disconnetti')
+@admin_required
+def fatturazione_elettronica_disconnect():
+    for k in ('efatt_access_token','efatt_refresh_token','efatt_token_expires_at','efatt_oauth_status','efatt_oauth_connected_at','efatt_oauth_provider_user'):
+        set_setting(k, '')
+    flash('Provider disconnesso dal gestionale.', 'success')
+    return redirect(url_for('fatturazione_elettronica_setup'))
+
 FATT_LIST_TMPL = """
 <style>
 .stat-fatt{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px}
@@ -15753,6 +16036,7 @@ FATT_LIST_TMPL = """
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
   <div style="display:flex;gap:10px;flex-wrap:wrap">
     <a href="/fatturazione/nuova?tipo={{ tipo }}" class="btn btn-primary"><i class="fa fa-plus"></i> Nuova fattura {{ tipo }}</a>
+    <a href="/fatturazione/elettronica" class="btn btn-secondary"><i class="fa fa-plug-circle-bolt"></i> Fatturazione elettronica</a>
     {% if tipo == 'attiva' %}
     <a href="/fatturazione/clienti" class="btn btn-secondary"><i class="fa fa-users"></i> Clienti</a>
     {% else %}
@@ -16251,6 +16535,16 @@ FATT_FORM_TMPL = """
       <label>Descrizione lavori</label>
       <textarea name="descrizione" rows="2" placeholder="Es. Montaggio stand Fiera Milano - pad. 5">{{ fattura.descrizione or '' }}</textarea>
     </div>
+    <div class="form-group">
+      <label>Collega a fiera / evento</label>
+      <select name="cantiere_id">
+        <option value="">— Nessuna fiera collegata —</option>
+        {% for ca in cantieri %}
+        <option value="{{ ca.id }}" {{ 'selected' if fattura.cantiere_id and fattura.cantiere_id == ca.id }}>{{ ca.nome }}{% if ca.citta %} · {{ ca.citta }}{% endif %}</option>
+        {% endfor %}
+      </select>
+      <div style="font-size:11px;color:var(--text-light);margin-top:4px">Serve per calcolare automaticamente redditività e marginalità dell'evento.</div>
+    </div>
   </div>
 </div>
 
@@ -16740,6 +17034,7 @@ def fatturazione_nuova():
     db = get_db()
     clienti = db.execute("SELECT id, nome FROM clienti ORDER BY nome").fetchall()
     fornitori = db.execute("SELECT id, nome FROM fornitori WHERE COALESCE(attivo,1)=1 ORDER BY nome").fetchall()
+    cantieri = db.execute("SELECT id,nome,citta FROM cantieri ORDER BY COALESCE(data_inizio,'' ) DESC, nome").fetchall()
     db.close()
     ai_result = session.pop('fatt_ai_result', None)
     pre = session.pop('fatt_pre', {})
@@ -16748,7 +17043,7 @@ def fatturazione_nuova():
     active_key = 'fatturazione_attiva' if tipo == 'attiva' else 'fatturazione_passiva'
     return render_page(FATT_FORM_TMPL,
         page_title='Nuova fattura ' + tipo, active=active_key, tipo=tipo,
-        form_action='/fatturazione/nuova', fattura=pre, clienti=clienti, fornitori=fornitori,
+        form_action='/fatturazione/nuova', fattura=pre, clienti=clienti, fornitori=fornitori, cantieri=cantieri,
         ai_result=ai_result, ai_ok=bool(get_setting('anthropic_api_key','')),
         today=date.today().isoformat())
 
@@ -16762,6 +17057,7 @@ def fatturazione_modifica(fid):
     f = db.execute("SELECT * FROM fatture WHERE id=?", (fid,)).fetchone()
     clienti = db.execute("SELECT id, nome FROM clienti ORDER BY nome").fetchall()
     fornitori = db.execute("SELECT id, nome FROM fornitori WHERE COALESCE(attivo,1)=1 ORDER BY nome").fetchall()
+    cantieri = db.execute("SELECT id,nome,citta FROM cantieri ORDER BY COALESCE(data_inizio,'' ) DESC, nome").fetchall()
     db.close()
     if not f:
         return redirect(url_for('fatturazione'))
@@ -16769,7 +17065,7 @@ def fatturazione_modifica(fid):
     tipo = fd.get('tipo') or 'attiva'
     active_key = 'fatturazione_attiva' if tipo == 'attiva' else 'fatturazione_passiva'
     return render_page(FATT_FORM_TMPL, page_title='Modifica fattura', active=active_key, tipo=tipo,
-        form_action=f'/fatturazione/{fid}/modifica', fattura=fd, clienti=clienti, fornitori=fornitori,
+        form_action=f'/fatturazione/{fid}/modifica', fattura=fd, clienti=clienti, fornitori=fornitori, cantieri=cantieri,
         ai_result=None, ai_ok=bool(get_setting('anthropic_api_key','')),
         today=date.today().isoformat())
 
@@ -16794,6 +17090,7 @@ def _salva_fattura(fid):
     iva_imp = round(importo_tot - imponibile, 2)
     descrizione = request.form.get('descrizione', '').strip()
     note = request.form.get('note', '').strip()
+    cantiere_id = request.form.get('cantiere_id') or None
     genera_rate = request.form.get('genera_rate') == '1'
 
     # Se condizioni non è manuale, calcola scadenza
@@ -16858,22 +17155,22 @@ def _salva_fattura(fid):
             fornitore_id=?,fornitore_nome=?,data_emissione=?,
             data_scadenza=?,condizioni_pagamento=?,imponibile=?,imponibile_lordo=?,sconto_importo=?,
             iva_perc=?,iva_importo=?,
-            importo_totale=?,descrizione=?,note=?,file_nome=?,file_path=? WHERE id=?""",
+            importo_totale=?,descrizione=?,note=?,cantiere_id=?,file_nome=?,file_path=? WHERE id=?""",
             (tipo, numero, cliente_id, cliente_nome, fornitore_id, fornitore_nome,
              data_em, data_scad, cond,
              imponibile, imponibile_lordo, sconto_importo,
-             iva_perc, iva_imp, importo_tot, descrizione, note, file_nome, file_path_db, fid))
+             iva_perc, iva_imp, importo_tot, descrizione, note, cantiere_id, file_nome, file_path_db, fid))
         saved_id = fid
     else:
         cur = db.execute("""INSERT INTO fatture (tipo,numero,cliente_id,cliente_nome,
             fornitore_id,fornitore_nome,data_emissione,
             data_scadenza,condizioni_pagamento,imponibile,imponibile_lordo,sconto_importo,
             iva_perc,iva_importo,importo_totale,
-            descrizione,note,file_nome,file_path,stato) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'da_pagare')""",
+            descrizione,note,cantiere_id,file_nome,file_path,stato) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'da_pagare')""",
             (tipo, numero, cliente_id, cliente_nome, fornitore_id, fornitore_nome,
              data_em, data_scad, cond,
              imponibile, imponibile_lordo, sconto_importo,
-             iva_perc, iva_imp, importo_tot, descrizione, note, file_nome, file_path_db))
+             iva_perc, iva_imp, importo_tot, descrizione, note, cantiere_id, file_nome, file_path_db))
         saved_id = cur.lastrowid
 
     if genera_rate and importo_tot > 0:
@@ -20716,6 +21013,14 @@ select option{background:#1e293b}
       <label>{{ t.spese_desc }}</label>
       <textarea name="descrizione" rows="2" placeholder="..."></textarea>
 
+      {% if cantieri %}
+      <label>Fiera / evento</label>
+      <select name="cantiere_id">
+        <option value="">Nessuna fiera</option>
+        {% for c in cantieri %}<option value="{{ c.id }}">{{ c.nome }}{% if c.citta %} · {{ c.citta }}{% endif %}</option>{% endfor %}
+      </select>
+      {% endif %}
+
       {% if veicoli %}
       <label>{{ t.spese_vehicle }}</label>
       <select name="veicolo_id">
@@ -20807,6 +21112,7 @@ def mobile_spese():
         "SELECT * FROM spese_rimborso WHERE utente_id=? ORDER BY data DESC, creato_il DESC LIMIT 20",
         (uid,)).fetchall()
     veicoli = db.execute("SELECT id,targa,marca,modello FROM veicoli ORDER BY targa").fetchall()
+    cantieri = db.execute("SELECT id,nome,citta FROM cantieri WHERE COALESCE(attivo,1)=1 ORDER BY COALESCE(data_inizio,'') DESC, nome").fetchall()
     db.close()
     lang = session.get('lang', 'it')
     t = get_lang()
@@ -20815,6 +21121,7 @@ def mobile_spese():
         categorie=CATEGORIE_SPESA,
         spese=[dict(s) for s in spese],
         veicoli=veicoli,
+        cantieri=cantieri,
         t=t, lang=lang, langs=LANGS, current_lang=lang,
         azienda=get_setting('nome_azienda', 'Azienda'))
 
@@ -20840,14 +21147,15 @@ def mobile_spese_inserisci():
 
     db = get_db()
     db.execute("""INSERT INTO spese_rimborso
-        (utente_id, data, categoria, descrizione, importo, veicolo_id, foto_nome, foto_path, stato)
-        VALUES (?,?,?,?,?,?,?,?,?)""", (
+        (utente_id, data, categoria, descrizione, importo, veicolo_id, cantiere_id, foto_nome, foto_path, stato)
+        VALUES (?,?,?,?,?,?,?,?,?,?)""", (
         uid,
         f.get('data') or date.today().isoformat(),
         f.get('categoria', 'Altro'),
         f.get('descrizione', ''),
         float(f.get('importo') or 0),
         f.get('veicolo_id') or None,
+        f.get('cantiere_id') or None,
         fn, fp, 'in_attesa'))
     safe_commit(db); db.close()
 
