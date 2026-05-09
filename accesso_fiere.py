@@ -2876,6 +2876,132 @@ input:focus,select:focus{outline:none;border-color:#0f4c81}
 {% endif %}
 </body></html>"""
 
+LEGAL_PAGE_TMPL = """<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{ title }} | Accesso Fiere</title>
+  <meta name="robots" content="index,follow">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#f5f7fb;color:#102033;font-family:'DM Sans',Arial,sans-serif;line-height:1.6}
+    .top{background:#08111f;color:#fff;padding:18px 22px}
+    .top-inner{max-width:980px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .brand{font-size:19px;font-weight:800;text-decoration:none;color:#fff}
+    .nav{display:flex;gap:12px;flex-wrap:wrap}
+    .nav a{color:#cbd5e1;text-decoration:none;font-size:14px;font-weight:700}
+    .wrap{max-width:980px;margin:0 auto;padding:34px 22px 60px}
+    .card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;box-shadow:0 16px 45px rgba(15,23,42,.08);padding:32px}
+    h1{font-size:34px;line-height:1.1;margin:0 0 8px;color:#0f172a}
+    h2{font-size:19px;margin:28px 0 8px;color:#0f172a}
+    p,li{font-size:15px;color:#475569}
+    ul{padding-left:22px}
+    .muted{color:#64748b;font-size:14px;margin-bottom:22px}
+    .box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;margin:16px 0}
+    a{color:#0f4c81}
+    @media(max-width:700px){.card{padding:22px}.top-inner{align-items:flex-start;flex-direction:column}h1{font-size:27px}}
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="top-inner">
+      <a class="brand" href="/">Accesso Fiere</a>
+      <nav class="nav">
+        <a href="/">Home</a>
+        <a href="/login">Area clienti</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/termini">Termini</a>
+      </nav>
+    </div>
+  </header>
+  <main class="wrap">
+    <section class="card">
+      {{ body|safe }}
+    </section>
+  </main>
+</body>
+</html>"""
+
+PRIVACY_BODY = """
+<h1>Privacy Policy</h1>
+<p class="muted">Ultimo aggiornamento: 9 maggio 2026</p>
+
+<div class="box">
+  <p><strong>Accesso Fiere</strong> e una piattaforma gestionale per aziende che operano nel settore fiere, eventi, allestimenti e cantieri temporanei.</p>
+  <p>Per informazioni privacy puoi scrivere a <a href="mailto:info@accessofiere.com">info@accessofiere.com</a>.</p>
+</div>
+
+<h2>1. Titolare del trattamento</h2>
+<p>Il titolare del trattamento e il soggetto che gestisce il servizio Accesso Fiere e gli account aziendali attivati sulla piattaforma. Ogni azienda cliente resta responsabile dei dati che inserisce e gestisce nel proprio ambiente.</p>
+
+<h2>2. Dati trattati</h2>
+<p>La piattaforma puo trattare, in base alle funzioni usate dall'azienda cliente:</p>
+<ul>
+  <li>dati anagrafici e di contatto di utenti, dipendenti, clienti e fornitori;</li>
+  <li>dati relativi a presenze, timbrature, ferie, permessi, rimborsi e note operative;</li>
+  <li>documenti aziendali, documenti personale, scadenze, mezzi e veicoli;</li>
+  <li>dati di fatturazione attiva e passiva collegati a clienti, fornitori, eventi e fiere;</li>
+  <li>dati tecnici necessari al funzionamento del servizio, come log applicativi, token di integrazione e informazioni dispositivo.</li>
+</ul>
+
+<h2>3. Finalita del trattamento</h2>
+<p>I dati sono trattati per fornire il servizio gestionale, consentire l'accesso degli utenti autorizzati, gestire documenti e scadenze, coordinare il personale, inviare notifiche operative, elaborare report e collegare eventuali servizi esterni autorizzati dall'azienda cliente.</p>
+
+<h2>4. Integrazione con Fatture in Cloud e provider esterni</h2>
+<p>Quando un utente autorizza il collegamento con Fatture in Cloud o con altri provider di fatturazione, Accesso Fiere usa il consenso OAuth per leggere, creare o aggiornare solo i dati necessari alle funzioni richieste, come clienti, fornitori, fatture emesse, fatture ricevute, archivio e impostazioni collegate alla fatturazione.</p>
+<p>L'accesso al provider puo essere revocato in qualunque momento dal portale del provider o dalle impostazioni del gestionale, quando disponibili.</p>
+
+<h2>5. Base giuridica</h2>
+<p>Il trattamento avviene per esecuzione del servizio richiesto dall'azienda cliente, adempimenti contrattuali, obblighi di legge applicabili e legittimo interesse alla sicurezza e al corretto funzionamento della piattaforma.</p>
+
+<h2>6. Conservazione dei dati</h2>
+<p>I dati sono conservati per il tempo necessario all'erogazione del servizio e, per documenti contabili o fiscali, secondo i termini previsti dalla normativa applicabile. L'azienda cliente puo richiedere esportazione o cancellazione dei dati compatibilmente con gli obblighi di legge.</p>
+
+<h2>7. Sicurezza</h2>
+<p>Accesso Fiere adotta misure tecniche e organizzative per proteggere account, dati e integrazioni, incluse autenticazione, separazione degli ambienti aziendali, permessi per ruolo e protezione delle credenziali di accesso ai provider.</p>
+
+<h2>8. Comunicazione a terzi</h2>
+<p>I dati possono essere comunicati a fornitori tecnici necessari al funzionamento della piattaforma, come hosting, email, notifiche, pagamento, fatturazione elettronica e servizi cloud. Tali soggetti trattano i dati nei limiti necessari all'erogazione del servizio.</p>
+
+<h2>9. Diritti degli interessati</h2>
+<p>Gli interessati possono richiedere accesso, rettifica, cancellazione, limitazione, opposizione e portabilita dei dati scrivendo a <a href="mailto:info@accessofiere.com">info@accessofiere.com</a>. Le richieste relative ai dati gestiti da una specifica azienda cliente possono essere inoltrate anche direttamente a tale azienda.</p>
+
+<h2>10. Modifiche</h2>
+<p>Questa informativa puo essere aggiornata in caso di modifiche del servizio, delle integrazioni o della normativa applicabile. La versione pubblicata su questa pagina e quella attualmente valida.</p>
+"""
+
+TERMS_BODY = """
+<h1>Termini di servizio</h1>
+<p class="muted">Ultimo aggiornamento: 9 maggio 2026</p>
+
+<h2>1. Servizio</h2>
+<p>Accesso Fiere e un gestionale cloud per aziende che operano in fiere, eventi, allestimenti e cantieri temporanei. Il servizio include funzioni per personale, documenti, scadenze, mezzi, richieste operative, notifiche e fatturazione.</p>
+
+<h2>2. Account e responsabilita</h2>
+<p>Ogni azienda cliente e responsabile degli utenti autorizzati, dei dati inseriti, dei permessi assegnati e dell'uso corretto della piattaforma.</p>
+
+<h2>3. Integrazioni esterne</h2>
+<p>Le integrazioni con provider esterni, come servizi di fatturazione elettronica, funzionano solo dopo autorizzazione dell'utente o dell'azienda cliente. Accesso Fiere usa tali autorizzazioni per svolgere le operazioni richieste nel gestionale.</p>
+
+<h2>4. Disponibilita e manutenzione</h2>
+<p>Il servizio viene mantenuto e aggiornato per garantirne continuita e sicurezza. Possono verificarsi sospensioni temporanee per manutenzione, aggiornamenti o cause tecniche esterne.</p>
+
+<h2>5. Contatti</h2>
+<p>Per informazioni sui termini di servizio puoi scrivere a <a href="mailto:info@accessofiere.com">info@accessofiere.com</a>.</p>
+"""
+
+@app.route('/privacy')
+@app.route('/privacy-policy')
+def privacy():
+    return render_template_string(LEGAL_PAGE_TMPL, title='Privacy Policy', body=PRIVACY_BODY)
+
+@app.route('/termini')
+@app.route('/terms')
+def termini():
+    return render_template_string(LEGAL_PAGE_TMPL, title='Termini di servizio', body=TERMS_BODY)
+
 @app.route('/')
 def index():
     if 'user_id' not in session:
