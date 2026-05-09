@@ -1868,13 +1868,13 @@ BASE = """<!DOCTYPE html>
 <link rel="apple-touch-icon" sizes="180x180" href="/static/pwa/icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/static/pwa/icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/static/pwa/icon-512.png">
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 :root{--bg:#eef3f8;--surface:#f8fafc;--sidebar:#07111f;--sidebar-hover:#122238;--accent:#145da0;--accent2:#00b7d8;--safety:#f59e0b;--white:#fff;--text:#172033;--text-light:#617089;--border:#dbe4ef;--card:#fff;--success:#16a34a;--warning:#f59e0b;--danger:#dc2626;--radius:12px;--shadow:0 1px 2px rgba(15,23,42,.06),0 10px 28px rgba(15,23,42,.06)}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Manrope',sans-serif;background:linear-gradient(180deg,#f8fafc 0%,var(--bg) 100%);color:var(--text);display:flex;min-height:100vh}
+body{font-family:'Inter',sans-serif;background:linear-gradient(180deg,#f8fafc 0%,var(--bg) 100%);color:var(--text);display:flex;min-height:100vh}
 .sidebar{width:248px;background:linear-gradient(180deg,#06101e 0%,#0b1628 58%,#101d32 100%);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100;box-shadow:8px 0 28px rgba(7,17,31,.18);scrollbar-width:thin;scrollbar-color:#475569 transparent}
 .sidebar::-webkit-scrollbar{width:6px}
 .sidebar::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}
@@ -2453,8 +2453,8 @@ textarea{resize:vertical;min-height:80px}
     <div class="ai-chat-title">
       <i class="fa fa-robot"></i>
       <div>
-        <div class="ai-chat-name">Assistente AI</div>
-        <div class="ai-chat-sub">Powered by Claude</div>
+        <div class="ai-chat-name">Copilota operativo</div>
+        <div class="ai-chat-sub">2 suggerimenti disponibili</div>
       </div>
     </div>
     <button onclick="toggleAiChat()" class="ai-chat-close"><i class="fa fa-times"></i></button>
@@ -2463,11 +2463,11 @@ textarea{resize:vertical;min-height:80px}
     <div class="ai-msg ai-msg-bot">
       <i class="fa fa-robot"></i>
       <div class="ai-bubble">
-        Ciao! Sono l'assistente AI del gestionale. Puoi chiedermi:<br>
-        <em>"Quante ore ha fatto Mario questo mese?"</em><br>
-        <em>"Qual è il margine attuale di EICMA?"</em><br>
-        <em>"Quanti documenti scadono nei prossimi 30 giorni?"</em><br>
-        <em>"Quante richieste presenze ho da approvare?"</em>
+        Ciao. Sono il copilota operativo di Accesso Fiere. Posso aiutarti a leggere rischi, scadenze, presenze e marginalita.<br>
+        <em>"Quali documenti rischiano di bloccare gli accessi?"</em><br>
+        <em>"Che richieste devo sbloccare adesso?"</em><br>
+        <em>"Quali fiere hanno piu ore questo mese?"</em><br>
+        <em>"Quali mezzi sono da verificare?"</em>
       </div>
     </div>
   </div>
@@ -2478,13 +2478,14 @@ textarea{resize:vertical;min-height:80px}
 </div>
 
 <style>
-#ai-chat-fab{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#7c3aed 0%,#3b82f6 100%);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;box-shadow:0 6px 20px rgba(124,58,237,.4);z-index:9998;transition:transform .15s}
-#ai-chat-fab:hover{transform:scale(1.08)}
-.ai-fab-pulse{position:absolute;width:56px;height:56px;border-radius:50%;background:#7c3aed;opacity:.4;animation:aiPulse 2s infinite;pointer-events:none}
+#ai-chat-fab{position:fixed;bottom:24px;right:24px;width:58px;height:58px;border-radius:16px;background:linear-gradient(135deg,#07111f 0%,#145da0 58%,#00b7d8 100%);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;box-shadow:0 16px 34px -18px rgba(20,93,160,.75),0 0 0 1px rgba(255,255,255,.18) inset;z-index:9998;transition:transform .15s}
+#ai-chat-fab:hover{transform:translateY(-2px)}
+#ai-chat-fab::after{content:'2';position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:999px;background:#f59e0b;color:#111827;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900}
+.ai-fab-pulse{position:absolute;width:58px;height:58px;border-radius:16px;background:#00b7d8;opacity:.22;animation:aiPulse 2.2s infinite;pointer-events:none}
 @keyframes aiPulse{0%{transform:scale(1);opacity:.4}100%{transform:scale(1.5);opacity:0}}
 #ai-chat-panel{position:fixed;bottom:90px;right:24px;width:380px;max-width:calc(100vw - 48px);height:540px;max-height:calc(100vh - 120px);background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.18);z-index:9999;display:none;flex-direction:column;overflow:hidden}
 #ai-chat-panel.open{display:flex}
-.ai-chat-header{background:linear-gradient(135deg,#7c3aed 0%,#3b82f6 100%);color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
+.ai-chat-header{background:linear-gradient(135deg,#07111f 0%,#145da0 70%,#00b7d8 100%);color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
 .ai-chat-title{display:flex;align-items:center;gap:10px}
 .ai-chat-title>i{font-size:22px}
 .ai-chat-name{font-weight:700;font-size:14px}
@@ -2729,11 +2730,11 @@ LOGIN_TMPL = """<!DOCTYPE html>
 <html lang="{{ t.get('dir','ltr') == 'rtl' and 'ar' or 'it' }}" dir="{{ t.dir }}">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Accesso Fiere - Software verticale per allestitori</title>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Manrope',sans-serif;min-height:100vh;display:flex;background:#f5f7fb;color:#102033}
+body{font-family:'Inter',sans-serif;min-height:100vh;display:flex;background:#f5f7fb;color:#102033}
 body.public-home .left{width:100%;flex:1}
 body.public-home .left-inner{max-width:1180px}
 body.public-home .hero-title{max-width:930px}
@@ -2769,7 +2770,7 @@ input:focus,select:focus{outline:none;border-color:#0f4c81}
 .lang-btn.active{border-color:#0f4c81;background:#e0f2fe;color:#0f4c81}
 .mobile-brand{display:none}.desktop-only{display:block}
 @media(max-width:900px){body{display:block;background:#f4f5f7}.left{display:none}.right{min-height:100vh;width:100%;padding:20px;border:0}.login-box{box-shadow:0 4px 28px rgba(15,23,42,.08);padding:28px 22px;border-radius:16px;max-width:390px}.desktop-only{display:none!important}.mobile-brand{display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:22px;font-size:22px;font-weight:900;color:#0f172a}.login-box h2{font-size:20px;text-align:center}.login-box p{text-align:center;margin-bottom:18px}.form-group{margin-bottom:16px}.btn{padding:13px;font-size:15px}}
-{% if t.dir == 'rtl' %}body,input,select,button{font-family:'Manrope',Arial,sans-serif}{% endif %}
+{% if t.dir == 'rtl' %}body,input,select,button{font-family:'Inter',Arial,sans-serif}{% endif %}
 </style></head>
 <body class="{{ 'public-home' if public_home else 'login-only' if not show_landing else '' }}">
 {% if show_landing %}
@@ -5489,37 +5490,44 @@ body.customize-mode .btn-link-soft{display:none}
       <div class="hero-eyebrow"><span id="hero-greet">Ciao</span>, <strong>{{ session.get('nome','') }}</strong></div>
       <div class="hero-title">Control room operativa</div>
       <div class="hero-sub"><i class="fa fa-calendar-day"></i> <span id="hero-date"></span> <i class="fa fa-clock"></i> <span id="hero-time"></span></div>
+      <div class="hero-live-status">
+        <span class="live-pill live-green"><i></i>{{ s.fiere_live }} fiere live</span>
+        <span class="live-pill live-blue"><i></i>{{ s.presenti }} operatori in campo</span>
+        <span class="live-pill {% if s.scad_doc_totali > 0 %}live-amber{% else %}live-green{% endif %}"><i></i>{{ s.scad_doc_totali }} documenti critici</span>
+        <span class="live-pill {% if s.scad_veic_totali > 0 %}live-red{% else %}live-green{% endif %}"><i></i>{{ s.scad_veic_totali }} mezzi da verificare</span>
+      </div>
     </div>
     <div class="hero-cta">
-      {% if s.richieste > 0 %}
-      <a href="/admin/richieste" class="hero-btn hero-btn-warn"><i class="fa fa-bell"></i> {{ s.richieste }} richieste in attesa</a>
+      {% if s.richieste_totali > 0 %}
+      <a href="/admin/richieste" class="hero-btn hero-btn-warn"><i class="fa fa-bell"></i> {{ s.richieste_totali }} richieste in attesa</a>
       {% endif %}
       {% if s.fiere_live > 0 %}
       <a href="/cantieri" class="hero-btn hero-btn-success"><span class="hero-pulse"></span> {{ s.fiere_live }} live oggi</a>
       {% endif %}
       <a href="/cantieri/nuovo" class="hero-btn hero-btn-primary"><i class="fa fa-plus"></i> Nuova fiera</a>
+      <div class="sync-status"><span class="sync-dot"></span> Realtime attivo <span id="hero-sync-time"></span></div>
     </div>
   </div>
 
   <div class="ops-strip">
-    <a href="/admin/richieste" class="ops-card {% if s.richieste > 0 %}ops-hot{% endif %}">
+    <a href="/admin/richieste" class="ops-card {% if s.richieste_totali > 0 %}ops-hot{% endif %}">
       <span class="ops-icon"><i class="fa fa-inbox"></i></span>
-      <span class="ops-copy"><strong>{{ s.richieste }}</strong><small>richieste da gestire</small></span>
+      <span class="ops-copy"><strong class="count-up" data-count="{{ s.richieste_totali }}">0</strong><small>richieste da gestire</small></span>
       <i class="fa fa-chevron-right"></i>
     </a>
     <a href="/documenti" class="ops-card {% if s.scad_doc_totali > 0 %}ops-danger{% endif %}">
       <span class="ops-icon"><i class="fa fa-shield-halved"></i></span>
-      <span class="ops-copy"><strong>{{ s.scad_doc_totali }}</strong><small>documenti critici</small></span>
+      <span class="ops-copy"><strong class="count-up" data-count="{{ s.scad_doc_totali }}">0</strong><small>documenti critici</small></span>
       <i class="fa fa-chevron-right"></i>
     </a>
     <a href="/veicoli" class="ops-card {% if s.scad_veic_totali > 0 %}ops-warn{% endif %}">
       <span class="ops-icon"><i class="fa fa-truck"></i></span>
-      <span class="ops-copy"><strong>{{ s.scad_veic_totali }}</strong><small>mezzi da verificare</small></span>
+      <span class="ops-copy"><strong class="count-up" data-count="{{ s.scad_veic_totali }}">0</strong><small>mezzi da verificare</small></span>
       <i class="fa fa-chevron-right"></i>
     </a>
     <a href="/cantieri" class="ops-card {% if s.fiere_live > 0 %}ops-live{% endif %}">
       <span class="ops-icon"><i class="fa fa-tower-observation"></i></span>
-      <span class="ops-copy"><strong>{{ s.fiere_live }}</strong><small>fiere live oggi</small></span>
+      <span class="ops-copy"><strong class="count-up" data-count="{{ s.fiere_live }}">0</strong><small>fiere live oggi</small></span>
       <i class="fa fa-chevron-right"></i>
     </a>
   </div>
@@ -5529,7 +5537,7 @@ body.customize-mode .btn-link-soft{display:none}
       <div class="kpi-icon"><i class="fa fa-users"></i></div>
       <div class="kpi-body">
         <div class="kpi-label">Dipendenti attivi</div>
-        <div class="kpi-value">{{ s.dip }}</div>
+        <div class="kpi-value"><span class="count-up" data-count="{{ s.dip }}">0</span></div>
         <div class="kpi-foot"><i class="fa fa-circle-check"></i> {{ s.presenti }} oggi al lavoro</div>
       </div>
       <div class="kpi-glow"></div>
@@ -5539,7 +5547,7 @@ body.customize-mode .btn-link-soft{display:none}
       <div class="kpi-icon"><i class="fa fa-clock"></i></div>
       <div class="kpi-body">
         <div class="kpi-label">Ore questo mese</div>
-        <div class="kpi-value">{{ "%.0f"|format(s.ore_mese) }}<span class="kpi-unit">h</span></div>
+        <div class="kpi-value"><span class="count-up" data-count="{{ "%.0f"|format(s.ore_mese) }}">0</span><span class="kpi-unit">h</span></div>
         <div class="kpi-foot kpi-trend {% if s.delta_ore_pct > 0 %}up{% elif s.delta_ore_pct < 0 %}down{% else %}flat{% endif %}">
           {% if s.delta_ore_pct > 0 %}<i class="fa fa-arrow-trend-up"></i> +{{ s.delta_ore_pct }}%
           {% elif s.delta_ore_pct < 0 %}<i class="fa fa-arrow-trend-down"></i> {{ s.delta_ore_pct }}%
@@ -5554,7 +5562,7 @@ body.customize-mode .btn-link-soft{display:none}
       <div class="kpi-icon"><i class="fa fa-store"></i></div>
       <div class="kpi-body">
         <div class="kpi-label">Fiere attive</div>
-        <div class="kpi-value">{{ s.cantieri }}</div>
+        <div class="kpi-value"><span class="count-up" data-count="{{ s.cantieri }}">0</span></div>
         <div class="kpi-foot">
           {% if s.fiere_live > 0 %}<span class="kpi-dot kpi-dot-live"></span> {{ s.fiere_live }} live oggi
           {% else %}<i class="fa fa-calendar"></i> nessuna live oggi{% endif %}
@@ -5563,13 +5571,13 @@ body.customize-mode .btn-link-soft{display:none}
       <div class="kpi-glow"></div>
     </a>
 
-    <a href="/admin/richieste" class="kpi-card kpi-amber {% if s.richieste > 0 %}kpi-pulse{% endif %}">
+    <a href="/admin/richieste" class="kpi-card kpi-amber {% if s.richieste_totali > 0 %}kpi-pulse{% endif %}">
       <div class="kpi-icon"><i class="fa fa-bell"></i></div>
       <div class="kpi-body">
         <div class="kpi-label">Richieste in attesa</div>
-        <div class="kpi-value">{{ s.richieste }}</div>
+        <div class="kpi-value"><span class="count-up" data-count="{{ s.richieste_totali }}">0</span></div>
         <div class="kpi-foot">
-          {% if s.richieste > 0 %}<i class="fa fa-circle-exclamation"></i> da approvare
+          {% if s.richieste_totali > 0 %}<i class="fa fa-circle-exclamation"></i> timbrature, ferie o rimborsi da approvare
           {% else %}<i class="fa fa-circle-check"></i> nessuna pendente{% endif %}
         </div>
       </div>
@@ -5580,7 +5588,7 @@ body.customize-mode .btn-link-soft{display:none}
       <div class="kpi-icon"><i class="fa fa-file-circle-exclamation"></i></div>
       <div class="kpi-body">
         <div class="kpi-label">Documenti</div>
-        <div class="kpi-value">{{ s.scad_doc_30g }}{% if s.scad_doc_scaduti > 0 %}<span class="kpi-unit" style="color:#dc2626;font-weight:800">+{{ s.scad_doc_scaduti }} scad.</span>{% endif %}</div>
+        <div class="kpi-value"><span class="count-up" data-count="{{ s.scad_doc_30g }}">0</span>{% if s.scad_doc_scaduti > 0 %}<span class="kpi-unit" style="color:#dc2626;font-weight:800">+{{ s.scad_doc_scaduti }} scad.</span>{% endif %}</div>
         <div class="kpi-foot">
           {% if s.scad_doc_totali > 0 %}<i class="fa fa-file"></i> dipendenti + aziendali in scadenza
           {% else %}<i class="fa fa-shield-check"></i> documenti in regola{% endif %}
@@ -5593,7 +5601,7 @@ body.customize-mode .btn-link-soft{display:none}
       <div class="kpi-icon"><i class="fa fa-truck"></i></div>
       <div class="kpi-body">
         <div class="kpi-label">Veicoli</div>
-        <div class="kpi-value">{{ s.scad_veic_30g }}{% if s.scad_veic_scaduti > 0 %}<span class="kpi-unit" style="color:#dc2626;font-weight:800">+{{ s.scad_veic_scaduti }} scad.</span>{% endif %}</div>
+        <div class="kpi-value"><span class="count-up" data-count="{{ s.scad_veic_30g }}">0</span>{% if s.scad_veic_scaduti > 0 %}<span class="kpi-unit" style="color:#dc2626;font-weight:800">+{{ s.scad_veic_scaduti }} scad.</span>{% endif %}</div>
         <div class="kpi-foot">
           {% if s.scad_veic_totali > 0 %}<i class="fa fa-triangle-exclamation"></i> assicurazioni/revisioni in scadenza
           {% else %}<i class="fa fa-shield-check"></i> veicoli in regola{% endif %}
@@ -5606,11 +5614,50 @@ body.customize-mode .btn-link-soft{display:none}
       <div class="kpi-icon"><i class="fa fa-euro-sign"></i></div>
       <div class="kpi-body">
         <div class="kpi-label">Rimborsi mese</div>
-        <div class="kpi-value">{{ "%.0f"|format(s.rimborsi_mese) }}<span class="kpi-unit">€</span></div>
+        <div class="kpi-value"><span class="count-up" data-count="{{ "%.0f"|format(s.rimborsi_mese) }}">0</span><span class="kpi-unit">€</span></div>
         <div class="kpi-foot"><i class="fa fa-check-double"></i> spese approvate</div>
       </div>
       <div class="kpi-glow"></div>
     </a>
+  </div>
+
+  <div class="dash-live-grid">
+    <div class="insight-card">
+      <div class="live-card-head">
+        <span><i class="fa fa-wand-magic-sparkles"></i> Copilota operativo</span>
+        <em>Insight automatici</em>
+      </div>
+      <div class="insight-list">
+        {% if s.scad_doc_totali > 0 %}
+        <a href="/documenti" class="insight-row risk-high"><strong>Rischio documentale</strong><span>{{ s.scad_doc_totali }} documento/i richiedono controllo prima degli accessi.</span></a>
+        {% endif %}
+        {% if s.scad_veic_totali > 0 %}
+        <a href="/veicoli" class="insight-row risk-mid"><strong>Asset da verificare</strong><span>{{ s.scad_veic_totali }} mezzo/i con scadenze operative da gestire.</span></a>
+        {% endif %}
+        {% if s.richieste_totali > 0 %}
+        <a href="/admin/richieste" class="insight-row risk-mid"><strong>Workflow da sbloccare</strong><span>{{ s.richieste_totali }} richiesta/e in attesa possono rallentare operativita e paghe.</span></a>
+        {% endif %}
+        {% if s.scad_doc_totali == 0 and s.scad_veic_totali == 0 and s.richieste_totali == 0 %}
+        <div class="insight-row risk-ok"><strong>Tutto conforme</strong><span>Nessuna criticita immediata su richieste, documenti e mezzi.</span></div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="timeline-card">
+      <div class="live-card-head">
+        <span><i class="fa fa-wave-square"></i> Ultime attivita</span>
+        <em>Live feed</em>
+      </div>
+      <div class="timeline-list">
+        {% for a in attivita_recenti %}
+        <a class="timeline-item" href="{{ a.url }}">
+          <span class="timeline-dot {{ a.tone }}"><i class="fa {{ a.icon }}"></i></span>
+          <span class="timeline-copy"><strong>{{ a.title }}</strong><small>{{ a.meta }}</small></span>
+        </a>
+        {% else %}
+        <div class="timeline-empty"><i class="fa fa-check-circle"></i> Nessuna attivita recente da gestire.</div>
+        {% endfor %}
+      </div>
+    </div>
   </div>
 </div>
 {% endmacro %}
@@ -5635,9 +5682,14 @@ body.customize-mode .btn-link-soft{display:none}
 .hero-greeting{color:#fff;position:relative;z-index:1}
 .hero-eyebrow{font-size:13px;color:rgba(255,255,255,.78);margin-bottom:4px}
 .hero-eyebrow strong{color:#fff;font-weight:700}
-.hero-title{font-size:22px;font-weight:800;margin-bottom:6px;letter-spacing:-.3px}
+.hero-title{font-size:22px;font-weight:800;margin-bottom:6px;letter-spacing:0}
 .hero-sub{font-size:12px;color:rgba(255,255,255,.6);display:flex;gap:14px;flex-wrap:wrap}
 .hero-sub i{margin-right:5px;font-size:11px}
+.hero-live-status{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.live-pill{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:7px 10px;font-size:11px;font-weight:900;color:#e2e8f0;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);letter-spacing:0}
+.live-pill i{width:8px;height:8px;border-radius:50%;display:inline-block;box-shadow:0 0 0 0 currentColor;animation:liveDot 2.4s infinite}
+.live-green{color:#86efac}.live-blue{color:#7dd3fc}.live-amber{color:#fbbf24}.live-red{color:#fca5a5}
+@keyframes liveDot{0%{box-shadow:0 0 0 0 currentColor}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
 .hero-cta{display:flex;gap:8px;flex-wrap:wrap;position:relative;z-index:1}
 .hero-btn{
   display:inline-flex;align-items:center;gap:7px;
@@ -5652,6 +5704,8 @@ body.customize-mode .btn-link-soft{display:none}
 .hero-btn-warn{background:#fbbf24;color:#78350f;border-color:transparent}
 .hero-btn-warn:hover{background:#f59e0b;color:#451a03}
 .hero-btn-success{background:#22c55e;color:#fff;border-color:transparent}
+.sync-status{width:100%;display:flex;align-items:center;justify-content:flex-end;gap:7px;color:rgba(255,255,255,.72);font-size:11px;font-weight:800;margin-top:2px}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 0 rgba(34,197,94,.7);animation:kpiDotPulse 2s infinite}
 .hero-pulse{
   display:inline-block;width:8px;height:8px;border-radius:50%;background:#fff;
   box-shadow:0 0 0 0 rgba(255,255,255,.7);animation:heroPulse 1.5s infinite;margin-right:2px;
@@ -5668,8 +5722,8 @@ body.customize-mode .btn-link-soft{display:none}
 .ops-card>.fa-chevron-right{margin-left:auto;color:#94a3b8;font-size:12px}
 .ops-icon{width:38px;height:38px;border-radius:10px;background:#e0f2fe;color:#0369a1;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .ops-copy{display:flex;flex-direction:column;gap:1px;min-width:0}
-.ops-copy strong{font-size:23px;line-height:1;font-weight:900;letter-spacing:-.4px}
-.ops-copy small{font-size:11px;color:var(--text-light);font-weight:800;text-transform:uppercase;letter-spacing:.35px}
+.ops-copy strong{font-size:23px;line-height:1;font-weight:900;letter-spacing:0}
+.ops-copy small{font-size:11px;color:var(--text-light);font-weight:800;text-transform:uppercase;letter-spacing:0}
 .ops-hot{border-color:#fbbf24;background:#fffbeb}.ops-hot .ops-icon{background:#fef3c7;color:#a16207}
 .ops-danger{border-color:#fca5a5;background:#fef2f2}.ops-danger .ops-icon{background:#fee2e2;color:#b91c1c}
 .ops-warn{border-color:#fdba74;background:#fff7ed}.ops-warn .ops-icon{background:#ffedd5;color:#c2410c}
@@ -5686,9 +5740,9 @@ body.customize-mode .btn-link-soft{display:none}
   display:flex;align-items:flex-start;gap:14px;
   text-decoration:none;color:inherit;
   transition:all .18s;cursor:pointer;
-  box-shadow:0 1px 2px rgba(0,0,0,.04);
+  box-shadow:0 8px 22px -20px rgba(7,17,31,.42),0 1px 2px rgba(15,23,42,.06);
 }
-.kpi-card:hover{transform:translateY(-2px);box-shadow:0 12px 28px -8px rgba(15,76,129,.25);border-color:transparent}
+.kpi-card:hover{transform:translateY(-3px);box-shadow:0 24px 46px -28px rgba(7,17,31,.55);border-color:#b9c9db}
 .kpi-card:hover .kpi-glow{opacity:1}
 .kpi-icon{
   width:46px;height:46px;border-radius:12px;
@@ -5697,8 +5751,8 @@ body.customize-mode .btn-link-soft{display:none}
   box-shadow:0 6px 16px -4px rgba(0,0,0,.18);
 }
 .kpi-body{flex:1;min-width:0;position:relative;z-index:1}
-.kpi-label{font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;color:var(--text-light);margin-bottom:4px}
-.kpi-value{font-size:30px;font-weight:800;color:var(--text);line-height:1;letter-spacing:-1px}
+.kpi-label{font-size:11px;text-transform:uppercase;letter-spacing:0;font-weight:700;color:var(--text-light);margin-bottom:4px}
+.kpi-value{font-size:39px;font-weight:900;color:var(--text);line-height:.96;letter-spacing:0;font-variant-numeric:tabular-nums}
 .kpi-unit{font-size:16px;color:var(--text-light);font-weight:600;margin-left:2px}
 .kpi-foot{font-size:11px;color:var(--text-light);margin-top:6px;font-weight:600}
 .kpi-foot i{margin-right:3px}
@@ -5729,13 +5783,41 @@ body.customize-mode .btn-link-soft{display:none}
 @keyframes kpiIconPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
 .kpi-alert{border-color:#fca5a5;background:#fef2f2}
 
+.dash-live-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-top:16px}
+.insight-card,.timeline-card{background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:0 10px 28px -24px rgba(7,17,31,.45);overflow:hidden}
+.live-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,#fbfdff,#fff)}
+.live-card-head span{display:flex;align-items:center;gap:8px;font-weight:900;color:#172033}
+.live-card-head i{color:var(--accent)}
+.live-card-head em{font-style:normal;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0;color:#94a3b8}
+.insight-list,.timeline-list{padding:10px 12px}
+.insight-row{display:block;text-decoration:none;border-radius:11px;padding:11px 12px;margin-bottom:8px;border:1px solid #e5edf5;color:var(--text);transition:all .15s}
+.insight-row:last-child{margin-bottom:0}
+.insight-row:hover{transform:translateX(2px);border-color:#bfd0e2}
+.insight-row strong{display:block;font-size:13px;font-weight:900;margin-bottom:3px}
+.insight-row span{display:block;font-size:12px;line-height:1.4;color:var(--text-light)}
+.risk-high{background:#fef2f2;border-color:#fecaca}.risk-high strong{color:#b91c1c}
+.risk-mid{background:#fffbeb;border-color:#fde68a}.risk-mid strong{color:#92400e}
+.risk-ok{background:#f0fdf4;border-color:#bbf7d0}.risk-ok strong{color:#15803d}
+.timeline-item{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--text);padding:9px 4px;border-bottom:1px solid #eef2f7}
+.timeline-item:last-child{border-bottom:none}
+.timeline-dot{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:13px}
+.timeline-dot.blue{background:#2563eb}.timeline-dot.green{background:#16a34a}.timeline-dot.amber{background:#f59e0b}.timeline-dot.red{background:#dc2626}.timeline-dot.slate{background:#475569}
+.timeline-copy{display:flex;flex-direction:column;gap:1px;min-width:0}
+.timeline-copy strong{font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.timeline-copy small{font-size:11.5px;color:var(--text-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.timeline-empty{padding:18px 8px;color:var(--text-light);font-size:13px;text-align:center}
+
 @media (max-width:760px){
   .hero-bar{padding:16px}
   .hero-title{font-size:18px}
+  .hero-live-status{gap:6px}
+  .live-pill{font-size:10px;padding:6px 8px}
+  .sync-status{justify-content:flex-start}
   .ops-strip{grid-template-columns:1fr 1fr}
   .ops-card{min-height:64px;padding:11px}
   .ops-copy strong{font-size:20px}
   .kpi-value{font-size:24px}
+  .dash-live-grid{grid-template-columns:1fr}
 }
 </style>
 
@@ -5751,8 +5833,26 @@ body.customize-mode .btn-link-soft{display:none}
     if(de) de.textContent=d.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
     var te=document.getElementById('hero-time');
     if(te) te.textContent=d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+    var se=document.getElementById('hero-sync-time');
+    if(se) se.textContent='- aggiornato ' + d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
   }
   tick();setInterval(tick,30000);
+  function animateCount(el){
+    var target=parseFloat(el.getAttribute('data-count') || '0');
+    if(!isFinite(target)){ target=0; }
+    var duration=850;
+    var start=performance.now();
+    function step(now){
+      var progress=Math.min((now-start)/duration,1);
+      var eased=1-Math.pow(1-progress,3);
+      var value=target*eased;
+      el.textContent=Math.round(value).toLocaleString('it-IT');
+      if(progress<1) requestAnimationFrame(step);
+      else el.textContent=Math.round(target).toLocaleString('it-IT');
+    }
+    requestAnimationFrame(step);
+  }
+  document.querySelectorAll('.count-up[data-count]').forEach(function(el){ animateCount(el); });
 })();
 </script>
 
@@ -5953,9 +6053,9 @@ function renderCharts() {
     canEl._rendered = true;
     const d = {{ presenze_cantiere | tojson }};
     new Chart(canEl, {
-      type:'doughnut',
-      data:{labels:d.map(x=>x.nome),datasets:[{data:d.map(x=>x.count),backgroundColor:['#e63946','#2196F3','#22c55e','#f59e0b','#8b5cf6','#ec4899'],borderWidth:2,borderColor:'#fff'}]},
-      options:{responsive:true,plugins:{legend:{position:'bottom'}}}
+      type:'bar',
+      data:{labels:d.map(x=>x.nome),datasets:[{label:'Presenze',data:d.map(x=>x.count),backgroundColor:['#145da0','#00b7d8','#16a34a','#f59e0b','#dc2626','#64748b'],borderRadius:8,borderSkipped:false,maxBarThickness:28}]},
+      options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,grid:{color:'#eef2f7'},ticks:{precision:0}},y:{grid:{display:false}}}}
     });
   }
 }
@@ -6103,8 +6203,10 @@ def dashboard():
         'presenti': db.execute("SELECT COUNT(*) FROM presenze WHERE data=? AND ora_uscita IS NULL",(today,)).fetchone()[0],
         'ferie':    db.execute("SELECT COUNT(*) FROM ferie_permessi WHERE stato='in_attesa'").fetchone()[0],
         'richieste':db.execute("SELECT COUNT(*) FROM richieste_presenze WHERE stato='in_attesa'").fetchone()[0],
+        'rimborsi_attesa': db.execute("SELECT COUNT(*) FROM spese_rimborso WHERE stato='in_attesa'").fetchone()[0],
         'cantieri': db.execute("SELECT COUNT(*) FROM cantieri WHERE attivo=1").fetchone()[0],
     }
+    s['richieste_totali'] = s['richieste'] + s['ferie'] + s['rimborsi_attesa']
 
     # KPI moderni — deltas e info accessorie
     # Ore lavorate mese in corso vs mese precedente (% delta)
@@ -6281,6 +6383,63 @@ def dashboard():
         ORDER BY cr DESC LIMIT 8
     """).fetchall()
 
+    def _dash_nome(row):
+        nome = (row['nome'] if 'nome' in row.keys() else '') or ''
+        cognome = (row['cognome'] if 'cognome' in row.keys() else '') or ''
+        return (f"{nome} {cognome}").strip() or 'Operatore'
+
+    def _safe_float(v):
+        try:
+            return float(v or 0)
+        except Exception:
+            return 0.0
+
+    attivita_recenti = []
+    for p in presenze_oggi[:4]:
+        attivita_recenti.append({
+            'title': f"{_dash_nome(p)} ha timbrato",
+            'meta': f"{p['ora_entrata'] or '--'} · {p['cantiere_nome'] or 'Fiera non specificata'}",
+            'url': '/presenze',
+            'icon': 'fa-clock',
+            'tone': 'blue'
+        })
+    for r in richieste_attesa[:4]:
+        if r['tipo'] == 'presenza':
+            attivita_recenti.append({
+                'title': f"Richiesta timbratura: {_dash_nome(r)}",
+                'meta': f"{r['data']} · {_safe_float(r['ore_totali']):.1f}h",
+                'url': '/admin/richieste',
+                'icon': 'fa-inbox',
+                'tone': 'amber'
+            })
+        else:
+            attivita_recenti.append({
+                'title': f"Rimborso da approvare: {_dash_nome(r)}",
+                'meta': f"{r['categoria'] or 'Spesa'} · € {_safe_float(r['importo']):.2f}",
+                'url': '/admin/spese?stato=in_attesa',
+                'icon': 'fa-receipt',
+                'tone': 'amber'
+            })
+    for f in ferie_attesa[:3]:
+        attivita_recenti.append({
+            'title': f"Richiesta {f['tipo']}: {_dash_nome(f)}",
+            'meta': f"{f['data_inizio']} - {f['data_fine']}",
+            'url': '/ferie',
+            'icon': 'fa-umbrella-beach',
+            'tone': 'green'
+        })
+    for d in scadenze_raw[:4]:
+        giorni = int(d['days_left'] or 0)
+        if giorni <= 30:
+            attivita_recenti.append({
+                'title': f"Scadenza: {d['titolo']}",
+                'meta': f"{d['categoria']} · tra {giorni} giorni",
+                'url': '/scadenze',
+                'icon': 'fa-triangle-exclamation',
+                'tone': 'red' if giorni <= 7 else 'amber'
+            })
+    attivita_recenti = attivita_recenti[:7]
+
     # Carico layout personalizzato (1 riga per azienda — condiviso fra admin)
     layout = _default_dashboard_layout()
     try:
@@ -6309,6 +6468,7 @@ def dashboard():
         scadenze=[dict(r) for r in scadenze_raw],
         ferie_attesa=ferie_attesa,
         richieste_attesa=[dict(r) for r in richieste_attesa],
+        attivita_recenti=attivita_recenti,
         layout=layout)
 
 
