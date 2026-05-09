@@ -13,7 +13,7 @@ from flask import (Flask, render_template_string, request,
                    redirect, url_for, session, jsonify, flash, Response, send_file,
                    get_flashed_messages, abort)
 from datetime import datetime, date, timedelta
-import sqlite3, hashlib, os, json, smtplib, io, zipfile, base64, mimetypes, threading, time
+import sqlite3, hashlib, os, json, smtplib, io, zipfile, base64, mimetypes, threading, time, secrets
 from functools import wraps
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -48,7 +48,12 @@ except ImportError:
     AI_OK = False
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'accesso-fiere-secret-2025-changeme')
+app.secret_key = os.environ.get('SECRET_KEY') or os.environ.get('ACCESSO_FIERE_SECRET_KEY') or 'startup-only-replaced-after-data-dir'
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+    SESSION_COOKIE_SECURE=os.environ.get('ACCESSO_FIERE_COOKIE_SECURE', '1') != '0',
+)
 BASE_DIR    = os.path.dirname(os.path.abspath(__file__))
 # Su Railway usa /data (volume persistente), in locale usa la cartella del file
 # IMPORTANTE: se esiste la variabile env DATA_DIR, usa quella (più affidabile del check fs)
@@ -60,6 +65,30 @@ else:
     DATA_DIR = BASE_DIR
 
 os.makedirs(DATA_DIR, exist_ok=True)
+
+def _load_app_secret_key():
+    weak_values = {'', 'accesso-fiere-secret-2025-changeme', 'startup-only-replaced-after-data-dir'}
+    env_secret = (os.environ.get('SECRET_KEY') or os.environ.get('ACCESSO_FIERE_SECRET_KEY') or '').strip()
+    if env_secret and env_secret not in weak_values and len(env_secret) >= 32:
+        return env_secret
+    secret_path = os.path.join(DATA_DIR, '.accesso_fiere_secret')
+    try:
+        if os.path.isfile(secret_path):
+            stored = open(secret_path, 'r', encoding='utf-8').read().strip()
+            if stored and len(stored) >= 32:
+                return stored
+        generated = secrets.token_urlsafe(48)
+        with open(secret_path, 'w', encoding='utf-8') as f:
+            f.write(generated)
+        try:
+            os.chmod(secret_path, 0o600)
+        except Exception:
+            pass
+        return generated
+    except Exception:
+        return secrets.token_urlsafe(48)
+
+app.secret_key = _load_app_secret_key()
 
 # Migrazione automatica: se DATA_DIR è /data (volume Railway) ma i DB sono ancora in BASE_DIR,
 # copia i file dal vecchio path. Succede la prima volta che monti il volume persistente.
@@ -1466,9 +1495,9 @@ def login_required(f):
     def d(*a,**k):
         if 'user_id' not in session:
             return redirect(url_for('login'))
-        # Verifica che l'utente sia ancora attivo (altrimenti logout forzato)
-        # Skip per super-admin SaaS (autenticato sul master DB, non sul tenant)
-        if not session.get('is_saas'):
+        # Verifica che l'utente sia ancora attivo (altrimenti logout forzato).
+        # Si salta solo per il superadmin di piattaforma, non per i tenant SaaS.
+        if not session.get('is_superadmin'):
             try:
                 db = get_db()
                 u = db.execute("SELECT attivo FROM utenti WHERE id=?", (session['user_id'],)).fetchone()
@@ -1502,8 +1531,8 @@ def admin_required(f):
     def d(*a,**k):
         if 'user_id' not in session:
             return redirect(url_for('login'))
-        # Verifica che l'admin sia ancora attivo (skip per super-admin SaaS)
-        if not session.get('is_saas'):
+        # Verifica che l'admin sia ancora attivo (skip solo per superadmin piattaforma)
+        if not session.get('is_superadmin'):
             try:
                 db = get_db()
                 u = db.execute("SELECT attivo FROM utenti WHERE id=?", (session['user_id'],)).fetchone()
@@ -2752,7 +2781,7 @@ input:focus,select:focus{outline:none;border-color:#0f4c81}
         <div class="tagline">Il sistema operativo per allestitori fieristici</div>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <a class="demo-pill" href="/login"><i class="fa fa-user-lock"></i> Area clienti</a>
+        <a class="demo-pill" href="/area-clienti"><i class="fa fa-user-lock"></i> Area clienti</a>
         <a class="demo-pill" href="mailto:info@accessofiere.com?subject=Richiesta%20demo%20Accesso%20Fiere"><i class="fa fa-calendar-check"></i> Prenota demo</a>
       </div>
     </div>
@@ -2762,7 +2791,7 @@ input:focus,select:focus{outline:none;border-color:#0f4c81}
     <p class="hero-sub">Riduci errori, velocizza gli ingressi e coordina personale, mezzi, documenti e richieste operative senza rincorrere Excel, chat e fogli sparsi.</p>
     <div class="hero-actions">
       <a class="hero-cta" href="mailto:info@accessofiere.com?subject=Demo%20Accesso%20Fiere"><i class="fa fa-play"></i> Prenota una demo</a>
-      <a class="hero-secondary" href="{{ '/login' if public_home else '#login' }}"><i class="fa fa-right-to-bracket"></i> {{ 'Area clienti' if public_home else 'Accedi al gestionale' }}</a>
+      <a class="hero-secondary" href="{{ '/area-clienti' if public_home else '#login' }}"><i class="fa fa-right-to-bracket"></i> {{ 'Area clienti' if public_home else 'Accedi al gestionale' }}</a>
     </div>
 
     <div class="metrics">
@@ -2872,6 +2901,11 @@ input:focus,select:focus{outline:none;border-color:#0f4c81}
       <i class="fa fa-rocket"></i> Registra la tua azienda
     </a>
     {% endif %}
+    <div style="text-align:center;font-size:11.5px;color:#94a3b8;margin-top:18px;line-height:1.5">
+      Usando Accesso Fiere accetti <a href="/termini" style="color:#0f4c81;font-weight:700">Termini</a>,
+      <a href="/privacy" style="color:#0f4c81;font-weight:700">Privacy</a> e
+      <a href="/cookies" style="color:#0f4c81;font-weight:700">Cookie Policy</a>.
+    </div>
 </div>
 {% endif %}
 </body></html>"""
@@ -2907,12 +2941,13 @@ LEGAL_PAGE_TMPL = """<!DOCTYPE html>
 <body>
   <header class="top">
     <div class="top-inner">
-      <a class="brand" href="/">Accesso Fiere</a>
+      <a class="brand" href="/home">Accesso Fiere</a>
       <nav class="nav">
-        <a href="/">Home</a>
-        <a href="/login">Area clienti</a>
+        <a href="/home">Home</a>
+        <a href="/area-clienti">Area clienti</a>
         <a href="/privacy">Privacy</a>
         <a href="/termini">Termini</a>
+        <a href="/cookies">Cookie</a>
       </nav>
     </div>
   </header>
@@ -2946,6 +2981,9 @@ PRIVACY_BODY = """
   <li>dati tecnici necessari al funzionamento del servizio, come log applicativi, token di integrazione e informazioni dispositivo.</li>
 </ul>
 
+<h2>2.1 Dati tecnici e cookie</h2>
+<p>Accesso Fiere usa cookie tecnici e strumenti equivalenti necessari per login, sicurezza, lingua, sessione, preferenze dell'app e funzionamento PWA. Non vengono usati cookie pubblicitari nella piattaforma.</p>
+
 <h2>3. Finalita del trattamento</h2>
 <p>I dati sono trattati per fornire il servizio gestionale, consentire l'accesso degli utenti autorizzati, gestire documenti e scadenze, coordinare il personale, inviare notifiche operative, elaborare report e collegare eventuali servizi esterni autorizzati dall'azienda cliente.</p>
 
@@ -2964,6 +3002,9 @@ PRIVACY_BODY = """
 
 <h2>8. Comunicazione a terzi</h2>
 <p>I dati possono essere comunicati a fornitori tecnici necessari al funzionamento della piattaforma, come hosting, email, notifiche, pagamento, fatturazione elettronica e servizi cloud. Tali soggetti trattano i dati nei limiti necessari all'erogazione del servizio.</p>
+
+<h2>8.1 Conservazione e servizi fiscali</h2>
+<p>Le funzioni di fatturazione elettronica possono richiedere il collegamento a provider esterni autorizzati dall'utente. Accesso Fiere conserva solo i dati necessari alle funzioni abilitate e non sostituisce gli obblighi fiscali, contabili o di conservazione a norma che restano in capo all'azienda cliente e ai provider scelti.</p>
 
 <h2>9. Diritti degli interessati</h2>
 <p>Gli interessati possono richiedere accesso, rettifica, cancellazione, limitazione, opposizione e portabilita dei dati scrivendo a <a href="mailto:info@accessofiere.com">info@accessofiere.com</a>. Le richieste relative ai dati gestiti da una specifica azienda cliente possono essere inoltrate anche direttamente a tale azienda.</p>
@@ -2985,11 +3026,69 @@ TERMS_BODY = """
 <h2>3. Integrazioni esterne</h2>
 <p>Le integrazioni con provider esterni, come servizi di fatturazione elettronica, funzionano solo dopo autorizzazione dell'utente o dell'azienda cliente. Accesso Fiere usa tali autorizzazioni per svolgere le operazioni richieste nel gestionale.</p>
 
+<h2>3.1 Uso dei dati dei provider</h2>
+<p>I dati ricevuti da provider esterni vengono usati solo per mostrare, creare, aggiornare o collegare informazioni operative nel gestionale, secondo i permessi concessi dall'utente e revocabili presso il provider.</p>
+
 <h2>4. Disponibilita e manutenzione</h2>
 <p>Il servizio viene mantenuto e aggiornato per garantirne continuita e sicurezza. Possono verificarsi sospensioni temporanee per manutenzione, aggiornamenti o cause tecniche esterne.</p>
 
 <h2>5. Contatti</h2>
 <p>Per informazioni sui termini di servizio puoi scrivere a <a href="mailto:info@accessofiere.com">info@accessofiere.com</a>.</p>
+"""
+
+COOKIE_BODY = """
+<h1>Cookie Policy</h1>
+<p class="muted">Ultimo aggiornamento: 9 maggio 2026</p>
+
+<div class="box">
+  <p>Accesso Fiere usa solo cookie tecnici e strumenti equivalenti necessari al funzionamento del servizio.</p>
+</div>
+
+<h2>1. Cookie tecnici necessari</h2>
+<p>Questi cookie servono per mantenere la sessione di accesso, proteggere l'account, ricordare la lingua, gestire preferenze essenziali e permettere il corretto funzionamento della webapp/PWA.</p>
+
+<h2>2. Cookie analitici e marketing</h2>
+<p>La piattaforma non usa cookie pubblicitari o di marketing. Eventuali strumenti analitici saranno attivati solo se configurati in modo conforme e, quando richiesto, previa informazione o consenso.</p>
+
+<h2>3. Servizi di terze parti</h2>
+<p>Alcune pagine pubbliche possono caricare risorse tecniche esterne, come font o librerie grafiche, necessarie alla presentazione del sito. Le integrazioni operative con provider esterni funzionano solo dopo autorizzazione dell'utente.</p>
+
+<h2>4. Gestione preferenze</h2>
+<p>Puoi cancellare cookie e dati locali dal browser. Se cancelli i cookie tecnici potresti dover effettuare nuovamente l'accesso.</p>
+
+<h2>5. Contatti</h2>
+<p>Per informazioni puoi scrivere a <a href="mailto:info@accessofiere.com">info@accessofiere.com</a>.</p>
+"""
+
+LEGAL_CONSENT_SNIPPET = """
+<div id="af-cookie-banner" role="dialog" aria-live="polite" style="display:none;position:fixed;left:16px;right:16px;bottom:16px;z-index:99999;background:#0f172a;color:#fff;border:1px solid rgba(255,255,255,.14);box-shadow:0 18px 50px rgba(15,23,42,.35);border-radius:14px;padding:14px 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;max-width:760px;margin:0 auto">
+  <div style="display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap">
+    <div style="flex:1;min-width:240px">
+      <div style="font-weight:800;font-size:14px;margin-bottom:4px">Privacy e cookie</div>
+      <div style="font-size:12.5px;line-height:1.45;color:rgba(255,255,255,.76)">Usiamo cookie tecnici necessari per login, sicurezza e funzionamento della webapp. Non usiamo cookie pubblicitari.</div>
+      <div style="margin-top:7px;font-size:12px">
+        <a href="/privacy" style="color:#93c5fd;font-weight:700;text-decoration:none">Privacy</a>
+        <span style="color:rgba(255,255,255,.35)"> · </span>
+        <a href="/cookies" style="color:#93c5fd;font-weight:700;text-decoration:none">Cookie Policy</a>
+        <span style="color:rgba(255,255,255,.35)"> · </span>
+        <a href="/termini" style="color:#93c5fd;font-weight:700;text-decoration:none">Termini</a>
+      </div>
+    </div>
+    <button id="af-cookie-ok" type="button" style="border:0;background:#f59e0b;color:#111827;border-radius:10px;padding:9px 14px;font-weight:900;cursor:pointer">Ho capito</button>
+  </div>
+</div>
+<script>
+(function(){
+  try{
+    if(localStorage.getItem('af_legal_notice_ok')==='1') return;
+    var b=document.getElementById('af-cookie-banner');
+    if(!b) return;
+    b.style.display='block';
+    var ok=document.getElementById('af-cookie-ok');
+    if(ok) ok.onclick=function(){localStorage.setItem('af_legal_notice_ok','1');b.style.display='none';};
+  }catch(e){}
+})();
+</script>
 """
 
 @app.route('/privacy')
@@ -3002,21 +3101,40 @@ def privacy():
 def termini():
     return render_template_string(LEGAL_PAGE_TMPL, title='Termini di servizio', body=TERMS_BODY)
 
+@app.route('/cookies')
+@app.route('/cookie-policy')
+def cookie_policy():
+    return render_template_string(LEGAL_PAGE_TMPL, title='Cookie Policy', body=COOKIE_BODY)
+
+@app.route('/home')
+@app.route('/pubblico')
+def public_home():
+    """Homepage pubblica: non entra mai nel tenant anche se esiste una sessione aperta."""
+    return render_template_string(
+        LOGIN_TMPL,
+        error=None,
+        t=get_lang(),
+        langs=LANGS,
+        current_lang=session.get('lang','it'),
+        is_mobile=False,
+        public_home=True,
+        show_landing=True
+    )
+
+@app.route('/area-clienti')
+def area_clienti():
+    """Ingresso login pubblico: elimina eventuali sessioni tenant prima di mostrare il login."""
+    reset_auth_session_keep_lang()
+    return redirect(url_for('login'))
+
 @app.route('/')
 def index():
+    if request.args.get('public') == '1':
+        return redirect(url_for('public_home'))
     if 'user_id' not in session:
         if is_mobile_request():
             return redirect(url_for('login'))
-        return render_template_string(
-            LOGIN_TMPL,
-            error=None,
-            t=get_lang(),
-            langs=LANGS,
-            current_lang=session.get('lang','it'),
-            is_mobile=False,
-            public_home=True,
-            show_landing=True
-        )
+        return redirect(url_for('public_home'))
     if session.get('ruolo') == 'admin':
         return redirect(url_for('admin_mobile') if is_mobile_request() else url_for('dashboard'))
     if session.get('ruolo') == 'amministrazione':
@@ -4361,6 +4479,8 @@ PWA_INSTALL_SCRIPT = """
 
 @app.route('/login', methods=['GET','POST'])
 def login():
+    if request.method == 'GET' and 'user_id' in session:
+        reset_auth_session_keep_lang()
     t = get_lang()
     lang_ctx = dict(t=t, langs=LANGS, current_lang=session.get('lang','it'),
                     is_mobile=is_mobile_request(), public_home=False, show_landing=False)
@@ -4379,6 +4499,7 @@ def login():
                 return render_template_string(LOGIN_TMPL, error='Abbonamento sospeso. Contatta il supporto.', **lang_ctx)
             # Inizializza/aggiorna DB tenant (sempre, aggiunge tabelle mancanti)
             db_path = get_tenant_db_path(az['id'])
+            reset_auth_session_keep_lang()
             session['azienda_id'] = az['id']
             init_db()       # crea tabelle se non esistono (idempotente)
             ensure_columns()  # aggiunge colonne/tabelle nuove
@@ -4453,6 +4574,7 @@ def login():
                 pass
 
         if utente_trovato:
+            reset_auth_session_keep_lang()
             session.update({
                 'user_id': utente_trovato['id'],
                 'nome': utente_trovato['nome'],
@@ -4494,8 +4616,8 @@ def api_session_check():
     from flask import jsonify
     if 'user_id' not in session:
         return jsonify({'active': False, 'reason': 'not_logged_in'})
-    # Super-admin SaaS: sempre attivo (autenticato sul master DB, non soggetto a 'attivo')
-    if session.get('is_saas'):
+    # Super-admin piattaforma: autenticato sul master DB, non soggetto a 'attivo' tenant.
+    if session.get('is_superadmin'):
         return jsonify({'active': True})
     try:
         db = get_db()
@@ -4600,18 +4722,10 @@ def _inject_session_poll(response):
 
 
 @app.route('/diag')
+@admin_required
 def diag():
-    """Endpoint di diagnostica: mostra dove stanno i dati e quali aziende esistono.
-    Accesso: serve essere loggati come admin, oppure passare ?key=<SECRET_KEY>."""
+    """Endpoint di diagnostica: mostra dove stanno i dati e quali aziende esistono."""
     import html as _html
-    auth_ok = False
-    if session.get('ruolo') == 'admin':
-        auth_ok = True
-    elif request.args.get('key') == app.secret_key:
-        auth_ok = True
-    if not auth_ok:
-        return 'Accesso negato. Logga come admin o usa ?key=<SECRET_KEY>', 403
-
     out = []
     out.append(f"<h2>Diagnostica dati</h2>")
     out.append(f"<p><b>DATA_DIR:</b> <code>{_html.escape(DATA_DIR)}</code></p>")
@@ -4709,6 +4823,7 @@ def _google_redirect_uri():
     return base + '/auth/google/callback'
 
 @app.route('/auth/google/debug')
+@admin_required
 def auth_google_debug():
     uri = _google_redirect_uri()
     env_uri = os.environ.get('GOOGLE_REDIRECT_URI', '(non impostata)')
@@ -6344,6 +6459,82 @@ def _amministrazione_stats():
     }
     db.close()
     return s
+
+PUBLIC_NO_TENANT_ENDPOINTS = {
+    'index', 'public_home', 'privacy', 'termini', 'cookie_policy', 'login', 'logout', 'area_clienti',
+    'set_lang', 'registrati', 'landing', 'pwa_manifest', 'pwa_service_worker', 'pwa_offline',
+    'static', 'pwa_static', 'stripe_webhook'
+}
+
+DANGEROUS_GET_ENDPOINT_HINTS = (
+    'elimina', 'delete', 'toggle', 'riattiva', 'sospendi', 'entra_azienda',
+    'reset_password', 'rimuovi', 'annulla', 'paga', 'pulisci', 'duplica',
+    'crea_evento', 'stato'
+)
+
+def reset_auth_session_keep_lang():
+    lang = session.get('lang', 'it')
+    session.clear()
+    session['lang'] = lang
+
+def _same_origin_url(value):
+    if not value:
+        return True
+    try:
+        from urllib.parse import urlparse
+        parsed = urlparse(value)
+        if not parsed.netloc:
+            return True
+        return parsed.netloc.lower() == request.host.lower()
+    except Exception:
+        return False
+
+@app.before_request
+def security_request_guard():
+    """Protegge i POST da invii cross-site e impedisce accessi privati senza sessione."""
+    endpoint = request.endpoint or ''
+    if request.method == 'GET' and endpoint not in PUBLIC_NO_TENANT_ENDPOINTS:
+        if any(hint in endpoint for hint in DANGEROUS_GET_ENDPOINT_HINTS):
+            referer = request.headers.get('Referer')
+            if not referer or not _same_origin_url(referer):
+                abort(403)
+    if request.method in ('POST', 'PUT', 'PATCH', 'DELETE'):
+        if endpoint not in {'stripe_webhook'}:
+            origin = request.headers.get('Origin')
+            referer = request.headers.get('Referer')
+            if origin and not _same_origin_url(origin):
+                abort(403)
+            if not origin and referer and not _same_origin_url(referer):
+                abort(403)
+
+@app.after_request
+def security_response_headers(resp):
+    resp.headers.setdefault('X-Content-Type-Options', 'nosniff')
+    resp.headers.setdefault('X-Frame-Options', 'DENY')
+    resp.headers.setdefault('Referrer-Policy', 'same-origin')
+    resp.headers.setdefault('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+    if session.get('user_id') and (request.endpoint or '') not in PUBLIC_NO_TENANT_ENDPOINTS:
+        resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0, private'
+        resp.headers['Pragma'] = 'no-cache'
+        resp.headers['Expires'] = '0'
+    return resp
+
+@app.after_request
+def inject_public_legal_notice(resp):
+    endpoint = request.endpoint or ''
+    if session.get('user_id') or endpoint not in PUBLIC_NO_TENANT_ENDPOINTS:
+        return resp
+    ctype = resp.headers.get('Content-Type', '')
+    if 'text/html' not in ctype:
+        return resp
+    try:
+        body = resp.get_data(as_text=True)
+    except Exception:
+        return resp
+    if '</body>' not in body or 'af-cookie-banner' in body:
+        return resp
+    resp.set_data(body.replace('</body>', LEGAL_CONSENT_SNIPPET + '</body>'))
+    return resp
 
 def _get_efatt_config():
     keys = [
@@ -27334,7 +27525,7 @@ STRIPE_PRICE_PRO   = os.environ.get('STRIPE_PRICE_PRO', '')
 STRIPE_PRICE_ENT   = os.environ.get('STRIPE_PRICE_ENT', '')
 
 SUPERADMIN_EMAIL = os.environ.get('SUPERADMIN_EMAIL', 'superadmin@gestionale.app')
-SUPERADMIN_PW    = os.environ.get('SUPERADMIN_PASSWORD', 'superadmin123')
+SUPERADMIN_PW    = os.environ.get('SUPERADMIN_PASSWORD', '')
 
 # ── Landing page ─────────────────────────────────────────────
 @app.route('/landing')
@@ -27356,6 +27547,8 @@ def registrati():
             return render_template_string(REGISTRATI_TMPL, error='Compila tutti i campi.', piano_sel=piano)
         if len(password) < 6:
             return render_template_string(REGISTRATI_TMPL, error='Password di almeno 6 caratteri.', piano_sel=piano)
+        if request.form.get('privacy_accept') != '1' or request.form.get('terms_accept') != '1':
+            return render_template_string(REGISTRATI_TMPL, error='Per creare l account devi accettare Privacy Policy e Termini di servizio.', piano_sel=piano)
         mdb = get_master_db()
         existing = mdb.execute("SELECT id FROM aziende WHERE email_admin=?", (email,)).fetchone()
         if existing:
@@ -27373,6 +27566,7 @@ def registrati():
         azienda_id = cur.lastrowid
         mdb.commit(); mdb.close()
         # Crea DB tenant e inizializza schema
+        reset_auth_session_keep_lang()
         session['azienda_id'] = azienda_id
         init_db()
         # Crea utente admin nel DB tenant
@@ -27399,6 +27593,7 @@ def registrati():
 
 # ── Stripe: crea sessione checkout ───────────────────────────
 @app.route('/abbonamento/checkout', methods=['POST'])
+@login_required
 def abbonamento_checkout():
     if not STRIPE_SECRET:
         flash('Pagamenti non ancora configurati. Contatta il supporto.', 'error')
@@ -27430,11 +27625,13 @@ def abbonamento_checkout():
         return redirect(url_for('abbonamento_gestisci'))
 
 @app.route('/abbonamento/successo')
+@login_required
 def abbonamento_successo():
     flash('✅ Abbonamento attivato! Grazie.', 'success')
     return redirect(url_for('abbonamento_gestisci'))
 
 @app.route('/abbonamento/gestisci')
+@login_required
 def abbonamento_gestisci():
     azienda_id = session.get('azienda_id')
     if not azienda_id:
@@ -27484,10 +27681,13 @@ def superadmin_required(f):
 
 @app.route('/superadmin/login', methods=['GET','POST'])
 def superadmin_login():
+    if not SUPERADMIN_PW:
+        return render_template_string(_SA_LOGIN_TMPL, error='Superadmin non configurato: imposta SUPERADMIN_PASSWORD nelle variabili ambiente.')
     if request.method == 'POST':
         email = request.form.get('email','')
         pw    = request.form.get('password','')
         if email == SUPERADMIN_EMAIL and pw == SUPERADMIN_PW:
+            reset_auth_session_keep_lang()
             session['is_superadmin'] = True
             session['superadmin_email'] = email
             return redirect(url_for('superadmin_dashboard'))
@@ -27617,7 +27817,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <div class="nav-links">
     <a href="#features">Funzionalità</a>
     <a href="#pricing">Prezzi</a>
-    <a href="/login">Accedi</a>
+    <a href="/area-clienti">Accedi</a>
     <a href="/registrati" class="cta">Prova gratis</a>
   </div>
 </nav>
@@ -27626,7 +27826,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <h1>Il Accesso Fiere per le<br><span>PMI italiane</span></h1>
   <p>Presenze, cedolini, fatture, cantieri, veicoli e molto altro.<br>Tutto in un'unica piattaforma semplice e potente.</p>
   <a href="/registrati" class="btn-hero">Inizia gratis — 14 giorni</a>
-  <a href="/login" class="btn-sec">Accedi</a>
+  <a href="/area-clienti" class="btn-sec">Accedi</a>
 </div>
 
 <div class="features" id="features">
@@ -27691,7 +27891,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div>
 
 <div class="footer">
-  <p>© 2025 GestionaleHR — Made in Italy 🇮🇹 · <a href="/privacy" style="color:rgba(255,255,255,.4)">Privacy</a> · <a href="/termini" style="color:rgba(255,255,255,.4)">Termini</a></p>
+  <p>© 2025 GestionaleHR — Made in Italy 🇮🇹 · <a href="/privacy" style="color:rgba(255,255,255,.4)">Privacy</a> · <a href="/termini" style="color:rgba(255,255,255,.4)">Termini</a> · <a href="/cookies" style="color:rgba(255,255,255,.4)">Cookie</a></p>
 </div>
 </body>
 </html>"""
@@ -27837,9 +28037,19 @@ input:focus,select:focus{outline:none;border-color:#0f4c81;box-shadow:0 0 0 3px 
           </label>
         </div>
       </div>
+      <div style="display:grid;gap:8px;margin:10px 0 12px;font-size:12.5px;color:#475569;line-height:1.4">
+        <label style="display:flex;gap:8px;align-items:flex-start;text-transform:none;letter-spacing:0;font-weight:600;color:#475569;margin:0">
+          <input type="checkbox" name="privacy_accept" value="1" required style="width:auto;margin-top:3px;flex-shrink:0">
+          <span>Ho letto e accetto la <a href="/privacy" target="_blank" rel="noopener" style="color:#0f4c81;font-weight:800">Privacy Policy</a>.</span>
+        </label>
+        <label style="display:flex;gap:8px;align-items:flex-start;text-transform:none;letter-spacing:0;font-weight:600;color:#475569;margin:0">
+          <input type="checkbox" name="terms_accept" value="1" required style="width:auto;margin-top:3px;flex-shrink:0">
+          <span>Accetto i <a href="/termini" target="_blank" rel="noopener" style="color:#0f4c81;font-weight:800">Termini di servizio</a> e prendo visione della <a href="/cookies" target="_blank" rel="noopener" style="color:#0f4c81;font-weight:800">Cookie Policy</a>.</span>
+        </label>
+      </div>
       <button type="submit" class="btn-register"><i class="fa fa-rocket"></i> Crea account e inizia gratis</button>
     </form>
-    <div class="login-link">Hai già un account? <a href="/login">Accedi →</a></div>
+    <div class="login-link">Hai già un account? <a href="/area-clienti">Accedi →</a></div>
   </div>
 </div>
 </body>
