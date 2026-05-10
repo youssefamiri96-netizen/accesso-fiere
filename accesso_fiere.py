@@ -7262,6 +7262,10 @@ CANTIERI_TMPL = """
         <a href="/cantieri/{{ c.id }}/modifica" class="btn btn-secondary btn-sm"><i class="fa fa-pen"></i></a>
         <a href="/cantieri/{{ c.id }}/toggle" class="btn btn-sm {{ 'btn-danger' if c.attivo else 'btn-green' }}" title="{{ 'Archivia' if c.attivo else 'Riattiva' }}">
           {{ 'Archivia' if c.attivo else 'Riattiva' }}</a>
+        <form method="POST" action="/cantieri/{{ c.id }}/elimina-definitivo" style="display:inline"
+              onsubmit="return confirm('Eliminare definitivamente questa fiera? I dati storici collegati verranno conservati ma non saranno più associati alla fiera.')">
+          <button class="btn btn-danger btn-sm" title="Elimina definitivamente"><i class="fa fa-trash"></i></button>
+        </form>
       </td>
     </tr>{% else %}
     <tr><td colspan="9"><div class="empty-state"><i class="fa fa-store"></i><p>Nessuna fiera registrata. <a href="/cantieri/nuovo">Aggiungi la prima fiera</a>.</p></div></td></tr>
@@ -7641,7 +7645,13 @@ FIERA_DETTAGLIO_TMPL = """
       {% if committente %}· Committente: <strong>{{ committente.nome }}</strong>{% endif %}
     </div>
   </div>
-  <a href="/cantieri/{{ c.id }}/modifica" class="btn btn-secondary btn-sm"><i class="fa fa-pen"></i> Modifica scheda</a>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <a href="/cantieri/{{ c.id }}/modifica" class="btn btn-secondary btn-sm"><i class="fa fa-pen"></i> Modifica scheda</a>
+    <form method="POST" action="/cantieri/{{ c.id }}/elimina-definitivo" style="display:inline"
+          onsubmit="return confirm('Eliminare definitivamente questa fiera? I dati storici collegati verranno conservati ma non saranno più associati alla fiera.')">
+      <button class="btn btn-danger btn-sm"><i class="fa fa-trash"></i> Elimina</button>
+    </form>
+  </div>
 </div>
 
 <div class="fdt-grid">
@@ -7924,6 +7934,83 @@ def _haversine_metri(lat1, lng1, lat2, lng2):
     return int(R * 2 * math.atan2(math.sqrt(a), math.sqrt(1-a)))
 
 
+def _estrai_pausa_da_testo(testo):
+    """Legge una pausa scritta nelle vecchie note tipo 'Pausa: 1h'."""
+    if not testo:
+        return 0.0
+    import re
+    m = re.search(r'pausa\s*[:=]\s*([0-9]+(?:[.,][0-9]+)?)\s*h?', str(testo), re.I)
+    if not m:
+        return 0.0
+    try:
+        return max(0.0, float(m.group(1).replace(',', '.')))
+    except Exception:
+        return 0.0
+
+
+def _pausa_da_richiesta(row):
+    pausa = 0.0
+    try:
+        if row and 'pausa_ore' in row.keys():
+            pausa = float(row['pausa_ore'] or 0)
+    except Exception:
+        pausa = 0.0
+    if pausa <= 0 and row and 'note' in row.keys():
+        pausa = _estrai_pausa_da_testo(row['note'])
+    return max(0.0, pausa)
+
+
+def _ripara_pause_presenze(db):
+    """Backfill leggero: recupera pause perse da richieste vecchie e note."""
+    try:
+        db.execute("""
+            UPDATE presenze
+               SET pausa_ore = (
+                   SELECT r.pausa_ore
+                     FROM richieste_presenze r
+                    WHERE r.utente_id = presenze.utente_id
+                      AND r.data = presenze.data
+                      AND (r.cantiere_id = presenze.cantiere_id OR (r.cantiere_id IS NULL AND presenze.cantiere_id IS NULL))
+                      AND COALESCE(r.pausa_ore,0) > 0
+                    ORDER BY r.id DESC
+                    LIMIT 1
+               )
+             WHERE COALESCE(pausa_ore,0) = 0
+               AND EXISTS (
+                   SELECT 1 FROM richieste_presenze r
+                    WHERE r.utente_id = presenze.utente_id
+                      AND r.data = presenze.data
+                      AND (r.cantiere_id = presenze.cantiere_id OR (r.cantiere_id IS NULL AND presenze.cantiere_id IS NULL))
+                      AND COALESCE(r.pausa_ore,0) > 0
+               )
+        """)
+        rows = db.execute("""
+            SELECT p.id AS pid, r.note
+              FROM presenze p
+              JOIN richieste_presenze r
+                ON r.utente_id = p.utente_id
+               AND r.data = p.data
+               AND (r.cantiere_id = p.cantiere_id OR (r.cantiere_id IS NULL AND p.cantiere_id IS NULL))
+             WHERE COALESCE(p.pausa_ore,0) = 0
+               AND COALESCE(r.pausa_ore,0) = 0
+               AND LOWER(COALESCE(r.note,'')) LIKE '%pausa%'
+        """).fetchall()
+        for row in rows:
+            pausa = _estrai_pausa_da_testo(row['note'])
+            if pausa > 0:
+                db.execute("UPDATE presenze SET pausa_ore=? WHERE id=?", (pausa, row['pid']))
+        safe_commit(db)
+    except Exception as e:
+        print(f'[ripara pause presenze] {e}')
+
+
+def _db_has_column(db, table, column):
+    try:
+        return any(r['name'] == column for r in db.execute(f"PRAGMA table_info({table})").fetchall())
+    except Exception:
+        return False
+
+
 @app.route('/cantieri/<int:cid>')
 @login_required
 def cantiere_dettaglio(cid):
@@ -8023,6 +8110,32 @@ def cantiere_toggle(cid):
     db.execute("UPDATE cantieri SET attivo=? WHERE id=?", (0 if c['attivo'] else 1, cid))
     safe_commit(db); db.close()
     flash('Fiera aggiornata.','success')
+    return redirect(url_for('cantieri'))
+
+
+@app.route('/cantieri/<int:cid>/elimina-definitivo', methods=['POST'])
+@admin_required
+def cantiere_elimina_definitivo(cid):
+    db = get_db()
+    c = db.execute("SELECT nome FROM cantieri WHERE id=?", (cid,)).fetchone()
+    if not c:
+        db.close()
+        flash('Fiera non trovata.', 'error')
+        return redirect(url_for('cantieri'))
+
+    # Manteniamo lo storico amministrativo, ma stacchiamo il collegamento alla fiera eliminata.
+    for tbl in ('presenze', 'richieste_presenze', 'spese_rimborso', 'fatture', 'eventi', 'contratti_clienti'):
+        if _db_has_column(db, tbl, 'cantiere_id'):
+            db.execute(f"UPDATE {tbl} SET cantiere_id=NULL WHERE cantiere_id=?", (cid,))
+
+    # Gli incarichi sono dettagli operativi della fiera, quindi vengono eliminati insieme alla fiera.
+    if _db_has_column(db, 'incarichi', 'cantiere_id'):
+        db.execute("DELETE FROM incarichi WHERE cantiere_id=?", (cid,))
+
+    db.execute("DELETE FROM cantieri WHERE id=?", (cid,))
+    safe_commit(db)
+    db.close()
+    flash(f'Fiera "{c["nome"]}" eliminata definitivamente.', 'success')
     return redirect(url_for('cantieri'))
 
 # ══════════════════════════════════════════════════════════
@@ -8220,6 +8333,16 @@ function applicaMese(val) {
     <form method="POST" action="/presenze/uscita" onsubmit="return submitConGPS(this, event)">
       <input type="hidden" name="lat">
       <input type="hidden" name="lng">
+      <div class="form-group" style="margin-bottom:12px">
+        <label style="color:rgba(255,255,255,.7);font-size:12px">Pausa da scalare</label>
+        <select name="pausa_ore" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:9px 12px;width:100%;font-size:13px">
+          <option value="0">Nessuna pausa</option>
+          <option value="0.5">30 min</option>
+          <option value="1" selected>1 ora</option>
+          <option value="1.5">1h 30m</option>
+          <option value="2">2 ore</option>
+        </select>
+      </div>
       <button class="btn" style="background:var(--accent);color:#fff;width:100%;font-size:14px;padding:12px"><i class="fa fa-sign-out-alt"></i> Registra Uscita</button>
     </form>
     {% else %}
@@ -8782,6 +8905,7 @@ function toggleModRichDip() {
 @login_required
 def presenze():
     db  = get_db()
+    _ripara_pause_presenze(db)
     uid = session['user_id']
     today = date.today().isoformat()
     mese  = date.today().strftime('%Y-%m')
@@ -8943,18 +9067,31 @@ def presenza_uscita():
     if p and not p['ora_uscita']:
         try:
             diff = datetime.strptime(now,'%H:%M:%S') - datetime.strptime(p['ora_entrata'],'%H:%M:%S')
-            ore  = round(diff.total_seconds()/3600,2)
-        except: ore = None
+            ore_lorde = round(diff.total_seconds()/3600,2)
+            pausa = float(request.form.get('pausa_ore','0') or 0)
+            pausa = max(0, min(pausa, ore_lorde))
+            ore  = round(ore_lorde - pausa, 2)
+        except:
+            ore = None
+            pausa = 0
+        if ore is None:
+            db.close()
+            flash('Impossibile calcolare le ore di uscita. Controlla la timbratura di entrata.', 'error')
+            return redirect(url_for('presenze'))
         # Calcolo distanza uscita (solo per log, non blocca)
         distanza = None
         if p['cantiere_id'] and lat is not None and lng is not None:
             cant = db.execute("SELECT lat, lng FROM cantieri WHERE id=?", (p['cantiere_id'],)).fetchone()
             if cant and cant['lat'] is not None and cant['lng'] is not None:
                 distanza = _haversine_metri(lat, lng, cant['lat'], cant['lng'])
-        db.execute("""UPDATE presenze SET ora_uscita=?, ore_totali=?,
+        db.execute("""UPDATE presenze SET ora_uscita=?, ore_totali=?, pausa_ore=?,
                       uscita_lat=?, uscita_lng=?, uscita_distanza_m=? WHERE id=?""",
-                   (now, ore, lat, lng, distanza, p['id']))
-        safe_commit(db); flash(f'Uscita alle {now} — {ore:.1f}h ✅','success')
+                   (now, ore, pausa, lat, lng, distanza, p['id']))
+        safe_commit(db)
+        if pausa > 0:
+            flash(f'Uscita alle {now} — {ore:.1f}h nette (pausa {pausa:g}h) ✅','success')
+        else:
+            flash(f'Uscita alle {now} — {ore:.1f}h ✅','success')
     db.close(); return redirect(url_for('presenze'))
 
 @app.route('/presenze/admin-inserisci', methods=['POST'])
@@ -10066,8 +10203,8 @@ def gestisci_richiesta(rid):
         ore_mod      = float(request.form.get('ore_mod') or r['ore_totali'] or 0)
         cantiere_mod = request.form.get('cantiere_mod') or r['cantiere_id']
         cantiere_mod = int(cantiere_mod) if cantiere_mod else None
-        # Pausa originale dalla richiesta (se presente)
-        pausa_orig = (r['pausa_ore'] if 'pausa_ore' in r.keys() else 0) or 0
+        # Pausa originale dalla richiesta (o recuperata dalle note vecchie)
+        pausa_orig = _pausa_da_richiesta(r)
         # Aggiorna la richiesta con i nuovi valori e approvala
         db.execute("""UPDATE richieste_presenze
                       SET data=?, ore_totali=?, cantiere_id=?, stato='approvata',
@@ -10090,7 +10227,7 @@ def gestisci_richiesta(rid):
         db.execute("UPDATE richieste_presenze SET stato='approvata', nota_admin=?, gestito_il=? WHERE id=?",
                    (nota or 'Approvata', now_str, rid))
         note_p = f"Approvata{': ' + nota if nota else ''}"
-        pausa_orig = (r['pausa_ore'] if 'pausa_ore' in r.keys() else 0) or 0
+        pausa_orig = _pausa_da_richiesta(r)
         # Controlla duplicato esatto (stesso giorno + stesso cantiere) per evitare doppioni
         ex = db.execute(
             "SELECT id FROM presenze WHERE utente_id=? AND data=? AND cantiere_id IS ?",
@@ -20389,9 +20526,9 @@ def mobile_cs_timbra():
         return redirect(url_for('mobile_cs'))
 
     cur_req = db.execute("""INSERT INTO richieste_presenze
-                            (utente_id, data, ora_entrata, ora_uscita, ore_totali, cantiere_id, note)
-                            VALUES (?,?,?,?,?,?,?)""",
-                         (target_uid, data, ora_e, ora_u, ore_nette, int(cantiere_id), nota_completa))
+                            (utente_id, data, ora_entrata, ora_uscita, ore_totali, pausa_ore, cantiere_id, note)
+                            VALUES (?,?,?,?,?,?,?,?)""",
+                         (target_uid, data, ora_e, ora_u, ore_nette, pausa, int(cantiere_id), nota_completa))
     rid_new = cur_req.lastrowid
     safe_commit(db)
 
@@ -20442,6 +20579,7 @@ def mobile():
     if session.get('ruolo') == 'caposquadra':
         return redirect(url_for('mobile_cs'))
     db = get_db()
+    _ripara_pause_presenze(db)
     uid = session['user_id']
     cantieri = db.execute(
         """SELECT id, nome, lat, lng, raggio_geofence_metri, geofence_modalita
@@ -20457,10 +20595,7 @@ def mobile():
     storico = []
     for p in storico_raw:
         row = dict(p)
-        ore = row.get('ore_totali') or 0
-        # Pausa non salvata direttamente — mostra solo ore_totali
         row['ore_nette'] = None
-        row['pausa_ore'] = None
         storico.append(row)
 
     from datetime import date
