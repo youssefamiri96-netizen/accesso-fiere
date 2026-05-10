@@ -2129,18 +2129,52 @@ textarea{resize:vertical;min-height:80px}
   .card-header{padding:14px 14px;align-items:flex-start;gap:10px;flex-wrap:wrap}
   .card-header h3{font-size:15px;line-height:1.2}
   .card-body{padding:14px}
-  .filter-bar{padding:12px;gap:8px;border-radius:12px}
-  .filter-bar input,.filter-bar select,.filter-bar .filter-search{width:100%!important;min-width:0!important;max-width:none!important}
+  .filter-bar{padding:12px;gap:8px;border-radius:12px;display:grid!important;grid-template-columns:1fr!important}
+  .filter-bar input,.filter-bar select,.filter-bar .filter-search{width:100%!important;min-width:0!important;max-width:none!important;height:46px;font-size:16px}
   .filter-bar .filter-clear{margin-left:0;text-align:center;background:#f8fafc;border:1px solid var(--border)}
+  .content form[style*="display:flex"]{display:grid!important;grid-template-columns:1fr!important;gap:10px!important;align-items:stretch!important}
+  .content form[style*="display:flex"] .form-group{width:100%!important;min-width:0!important;flex:unset!important;margin-bottom:0!important}
+  .content form[style*="display:flex"] .btn,
+  .content form[style*="display:flex"] a.btn,
+  .content form[style*="display:flex"] button{width:100%;justify-content:center}
+  input,select,textarea{font-size:16px;min-height:46px}
   .table-wrap{width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:12px}
+  .table-wrap.mobile-card-wrap{overflow:visible!important;background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important}
   table{max-width:100%}
-  .table-wrap table{min-width:720px}
+  table.mobile-card-table{display:block;width:100%!important;min-width:0!important;border-collapse:separate!important;border-spacing:0!important;font-size:14px}
+  table.mobile-card-table thead{display:none!important}
+  table.mobile-card-table tbody{display:grid;gap:12px;width:100%}
+  table.mobile-card-table tr{display:block;background:#fff;border:1px solid #dbe4ef;border-radius:18px;padding:12px 14px;box-shadow:0 16px 34px -24px rgba(15,23,42,.35);overflow:hidden}
+  table.mobile-card-table tbody tr:hover td,
+  table.mobile-card-table tbody tr:nth-child(even):not(:hover) td{background:transparent!important}
+  table.mobile-card-table td{display:grid;grid-template-columns:minmax(92px,36%) minmax(0,1fr);gap:10px;align-items:start;border-bottom:1px solid #eef2f7!important;padding:10px 0!important;font-size:14px!important;line-height:1.35;min-height:38px;word-break:break-word}
+  table.mobile-card-table td::before{content:attr(data-label);font-size:10px;line-height:1.25;text-transform:uppercase;letter-spacing:.55px;color:#64748b;font-weight:800;padding-top:2px}
+  table.mobile-card-table td[data-label=""]{display:block}
+  table.mobile-card-table td[data-label=""]::before{display:none}
+  table.mobile-card-table td:last-child{border-bottom:0!important}
+  table.mobile-card-table td.mobile-actions-cell{display:flex!important;flex-wrap:wrap;justify-content:flex-end;gap:8px;padding-top:12px!important}
+  table.mobile-card-table td.mobile-actions-cell::before{display:none}
+  table.mobile-card-table td.mobile-actions-cell .btn,
+  table.mobile-card-table td.mobile-actions-cell button,
+  table.mobile-card-table td.mobile-actions-cell form{flex:1 1 auto;min-width:44px}
+  table.mobile-card-table td.mobile-actions-cell form{display:flex!important;gap:8px;align-items:center}
+  table.mobile-card-table td.mobile-actions-cell form .btn,
+  table.mobile-card-table td.mobile-actions-cell form button{width:auto}
+  table.mobile-card-table .avatar-sm{vertical-align:middle}
+  table.mobile-card-table input[type=checkbox]{width:22px;height:22px;min-height:22px}
+  table.mobile-card-table tr.mobile-empty-row{padding:0}
+  table.mobile-card-table tr.mobile-empty-row td{display:block!important;padding:0!important;border:0!important}
+  table.mobile-card-table tr.mobile-empty-row td::before{display:none}
   th,td{padding:12px 10px;font-size:13px}
   .action-icons{flex-wrap:nowrap}
   .btn{min-height:40px;justify-content:center;white-space:normal;text-align:center}
   .btn-sm{min-height:36px}
   .alert{font-size:13px;padding:12px 14px;border-radius:12px}
   #ai-chat-fab{right:16px;bottom:16px;width:54px;height:54px}
+}
+@media(max-width:430px){
+  table.mobile-card-table td{grid-template-columns:1fr;gap:4px}
+  table.mobile-card-table td::before{padding-top:0}
 }
 </style>
 </head>
@@ -2425,12 +2459,23 @@ textarea{resize:vertical;min-height:80px}
     <a href="/admin/richieste" class="{{ 'active' if active=='richieste_admin' else '' }}"><i class="fa fa-clock"></i> Richieste</a>
     <a href="/presenze" class="{{ 'active' if active=='presenze' else '' }}"><i class="fa fa-calendar-check"></i> Presenze</a>
     <a href="/ferie" class="{{ 'active' if active=='ferie' else '' }}"><i class="fa fa-umbrella-beach"></i> Ferie</a>
+    <a href="/cantieri" class="{{ 'active' if active=='cantieri' else '' }}"><i class="fa fa-store"></i> Fiere</a>
+    <a href="/dipendenti" class="{{ 'active' if active=='dipendenti' else '' }}"><i class="fa fa-users"></i> Dipendenti</a>
+    <a href="/documenti" class="{{ 'active' if active=='documenti' else '' }}"><i class="fa fa-folder"></i> Documenti</a>
+    <a href="/veicoli" class="{{ 'active' if active=='veicoli' else '' }}"><i class="fa fa-truck"></i> Veicoli</a>
+    <a href="/fatturazione" class="{{ 'active' if active in ['fatturazione','fatturazione_attiva','fatturazione_passiva'] else '' }}"><i class="fa fa-file-invoice-dollar"></i> Fatture</a>
+    <a href="/admin/spese" class="{{ 'active' if active=='spese' else '' }}"><i class="fa fa-receipt"></i> Rimborsi</a>
     <a href="/admin/notifiche" class="{{ 'active' if active=='notifiche' else '' }}"><i class="fa fa-bell"></i> Notifiche</a>
+    <a href="/mobile/profilo"><i class="fa fa-user-gear"></i> Profilo</a>
     {% else %}
     <a href="/documenti-azienda" class="{{ 'active' if active=='documenti_azienda' else '' }}"><i class="fa fa-building-columns"></i> Documenti</a>
     <a href="/fatturazione" class="{{ 'active' if active in ['fatturazione_attiva','fatturazione_passiva'] else '' }}"><i class="fa fa-file-invoice-dollar"></i> Fatture</a>
+    <a href="/clienti" class="{{ 'active' if active=='clienti' else '' }}"><i class="fa fa-address-book"></i> Clienti</a>
+    <a href="/fornitori" class="{{ 'active' if active=='fornitori' else '' }}"><i class="fa fa-truck-fast"></i> Fornitori</a>
+    <a href="/preventivi" class="{{ 'active' if active=='preventivi' else '' }}"><i class="fa fa-file-lines"></i> Preventivi</a>
     <a href="/veicoli" class="{{ 'active' if active=='veicoli' else '' }}"><i class="fa fa-truck"></i> Veicoli</a>
     <a href="/scadenze" class="{{ 'active' if active=='scadenze' else '' }}"><i class="fa fa-triangle-exclamation"></i> Scadenze</a>
+    <a href="/mobile/profilo"><i class="fa fa-user-gear"></i> Profilo</a>
     {% endif %}
     <a href="{{ '/amministrazione?desktop=1' if session.ruolo=='amministrazione' else '/dashboard?desktop=1' }}"><i class="fa fa-desktop"></i> PC</a>
   </div>
@@ -2446,6 +2491,55 @@ textarea{resize:vertical;min-height:80px}
     {% block content %}{% endblock %}
   </div>
 </main>
+
+<script>
+(function(){
+  function normalizeLabel(text){
+    var out = (text || '').trim();
+    while(out.indexOf('  ') !== -1){ out = out.replaceAll('  ', ' '); }
+    return out;
+  }
+  function enhanceMobileTables(){
+    document.querySelectorAll('.table-wrap table').forEach(function(table){
+      if(table.dataset.mobileEnhanced === '1' || table.classList.contains('no-mobile-cards')) return;
+      var headers = Array.prototype.slice.call(table.querySelectorAll('thead th')).map(function(th){
+        return normalizeLabel(th.textContent);
+      });
+      if(!headers.length) return;
+      table.dataset.mobileEnhanced = '1';
+      table.classList.add('mobile-card-table');
+      var wrap = table.closest('.table-wrap');
+      if(wrap) wrap.classList.add('mobile-card-wrap');
+      table.querySelectorAll('tbody tr').forEach(function(row){
+        var cells = Array.prototype.slice.call(row.children);
+        if(cells.length === 1 && (cells[0].colSpan || 1) > 1){
+          row.classList.add('mobile-empty-row');
+          cells[0].setAttribute('data-label', '');
+          return;
+        }
+        cells.forEach(function(cell, idx){
+          var label = headers[idx] || '';
+          var lower = label.toLowerCase();
+          var hasAction = cell.querySelector('.btn,button,form,.action-icons,.action-icon,a[href*="/elimina"],a[href*="/modifica"],a[href*="/scarica"]');
+          if(lower === 'azioni' || lower === 'azione' || hasAction){
+            cell.classList.add('mobile-actions-cell');
+          }
+          cell.setAttribute('data-label', label);
+        });
+      });
+    });
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', enhanceMobileTables);
+  }else{
+    enhanceMobileTables();
+  }
+  window.addEventListener('resize', function(){
+    if(window.innerWidth <= 900) enhanceMobileTables();
+  });
+  setTimeout(enhanceMobileTables, 300);
+})();
+</script>
 
 {% if session.ruolo == 'admin' and ai_chat_abilitato %}
 <!-- ══════ AI ASSISTANT CHAT WIDGET ══════ -->
@@ -6668,15 +6762,15 @@ AMMINISTRAZIONE_MOBILE_TMPL = """<!DOCTYPE html>
 <html lang="it"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>Amministrazione mobile</title><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#0f172a">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"><style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#fff;min-height:100vh}.top{padding:18px;background:linear-gradient(135deg,#0f172a,#164e63);position:sticky;top:0;z-index:10;border-bottom:1px solid rgba(255,255,255,.08)}.row{display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{font-size:12px;color:rgba(255,255,255,.55);font-weight:900;text-transform:uppercase;letter-spacing:1px}h1{font-size:22px;margin-top:4px}.pill{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);color:#fff;border-radius:999px;padding:8px 11px;text-decoration:none;font-size:12px;font-weight:800}.content{padding:16px;max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.tile{min-height:116px;border-radius:16px;padding:15px;text-decoration:none;color:#fff;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:#1e293b}.tile:active{transform:scale(.98)}.tile i{font-size:24px}.label{font-size:15px;font-weight:900;line-height:1.15}.sub{font-size:12px;color:rgba(255,255,255,.55);margin-top:4px}.badge{position:absolute;right:12px;top:12px;background:#ef4444;color:#fff;min-width:22px;height:22px;border-radius:99px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;padding:0 7px}.blue{background:linear-gradient(135deg,#1e3a8a,#2563eb)}.green{background:linear-gradient(135deg,#064e3b,#10b981)}.amber{background:linear-gradient(135deg,#92400e,#f59e0b)}.purple{background:linear-gradient(135deg,#581c87,#a855f7)}.rose{background:linear-gradient(135deg,#881337,#e11d48)}.section{font-size:11px;color:rgba(255,255,255,.42);font-weight:900;text-transform:uppercase;letter-spacing:1px;margin:4px 2px -4px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#fff;min-height:100vh}.top{padding:18px;background:linear-gradient(135deg,#0f172a,#164e63);position:sticky;top:0;z-index:10;border-bottom:1px solid rgba(255,255,255,.08)}.row{display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{font-size:12px;color:rgba(255,255,255,.55);font-weight:900;text-transform:uppercase;letter-spacing:1px}h1{font-size:22px;margin-top:4px}.pill{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);color:#fff;border-radius:999px;padding:8px 11px;text-decoration:none;font-size:12px;font-weight:800;white-space:nowrap}.content{padding:16px;max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.tile{min-height:116px;border-radius:16px;padding:15px;text-decoration:none;color:#fff;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:#1e293b}.tile:active{transform:scale(.98)}.tile i{font-size:24px}.label{font-size:15px;font-weight:900;line-height:1.15}.sub{font-size:12px;color:rgba(255,255,255,.55);margin-top:4px}.badge{position:absolute;right:12px;top:12px;background:#ef4444;color:#fff;min-width:22px;height:22px;border-radius:99px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;padding:0 7px}.blue{background:linear-gradient(135deg,#1e3a8a,#2563eb)}.green{background:linear-gradient(135deg,#064e3b,#10b981)}.amber{background:linear-gradient(135deg,#92400e,#f59e0b)}.purple{background:linear-gradient(135deg,#581c87,#a855f7)}.rose{background:linear-gradient(135deg,#881337,#e11d48)}.section{font-size:11px;color:rgba(255,255,255,.42);font-weight:900;text-transform:uppercase;letter-spacing:1px;margin:4px 2px -4px}@media(max-width:380px){.grid{grid-template-columns:1fr}.tile{min-height:96px}.row{align-items:flex-start}h1{font-size:20px}}
 </style></head><body><div class="top"><div class="row"><div><div class="brand">{{ azienda_nome }}</div><h1>Amministrazione</h1></div><a class="pill" href="/amministrazione?desktop=1"><i class="fa fa-desktop"></i> PC</a></div></div>
 <div class="content"><div class="section">Documenti e scadenze</div><div class="grid">
 <a class="tile blue" href="/documenti-azienda"><div><i class="fa fa-building-columns"></i><div class="label">Documenti azienda</div><div class="sub">{{ s.docs_azienda }} documenti</div></div></a>
 <a class="tile blue" href="/documenti"><div><i class="fa fa-folder"></i><div class="label">Documenti dipendenti</div><div class="sub">{{ s.docs_dip }} documenti</div></div></a>
 <a class="tile amber" href="/scadenze">{% if s.scadenze > 0 %}<span class="badge">{{ s.scadenze }}</span>{% endif %}<div><i class="fa fa-triangle-exclamation"></i><div class="label">Scadenze</div><div class="sub">Documenti e mezzi</div></div></a>
 <a class="tile purple" href="/veicoli"><div><i class="fa fa-truck"></i><div class="label">Veicoli</div><div class="sub">{{ s.veicoli }} mezzi</div></div></a></div>
-<div class="section">Contabilita</div><div class="grid"><a class="tile green" href="/fatturazione"><div><i class="fa fa-file-invoice-dollar"></i><div class="label">Fatture attive</div><div class="sub">{{ s.fatture_attive }} documenti</div></div></a><a class="tile green" href="/fatturazione?tipo=passiva"><div><i class="fa fa-file-invoice"></i><div class="label">Fatture passive</div><div class="sub">{{ s.fatture_passive }} documenti</div></div></a><a class="tile" href="/clienti"><div><i class="fa fa-address-book"></i><div class="label">Clienti</div><div class="sub">Anagrafica</div></div></a><a class="tile" href="/fornitori"><div><i class="fa fa-truck-fast"></i><div class="label">Fornitori</div><div class="sub">Anagrafica</div></div></a></div>
-<div class="grid"><a class="tile rose" href="/logout"><div><i class="fa fa-sign-out-alt"></i><div class="label">Esci</div><div class="sub">Logout</div></div></a></div></div></body></html>"""
+<div class="section">Contabilita</div><div class="grid"><a class="tile green" href="/fatturazione"><div><i class="fa fa-file-invoice-dollar"></i><div class="label">Fatture attive</div><div class="sub">{{ s.fatture_attive }} documenti</div></div></a><a class="tile green" href="/fatturazione?tipo=passiva"><div><i class="fa fa-file-invoice"></i><div class="label">Fatture passive</div><div class="sub">{{ s.fatture_passive }} documenti</div></div></a><a class="tile" href="/clienti"><div><i class="fa fa-address-book"></i><div class="label">Clienti</div><div class="sub">Anagrafica</div></div></a><a class="tile" href="/fornitori"><div><i class="fa fa-truck-fast"></i><div class="label">Fornitori</div><div class="sub">Anagrafica</div></div></a><a class="tile" href="/preventivi"><div><i class="fa fa-file-lines"></i><div class="label">Preventivi</div><div class="sub">Offerte e documenti</div></div></a><a class="tile" href="/fatturazione/elettronica"><div><i class="fa fa-plug-circle-bolt"></i><div class="label">Provider SDI</div><div class="sub">Fatturazione elettronica</div></div></a></div>
+<div class="section">Account</div><div class="grid"><a class="tile" href="/mobile/notifiche"><div><i class="fa fa-bell"></i><div class="label">Notifiche</div><div class="sub">Messaggi e alert</div></div></a><a class="tile" href="/mobile/profilo"><div><i class="fa fa-user-gear"></i><div class="label">Profilo</div><div class="sub">Email, password, app</div></div></a><a class="tile rose" href="/logout"><div><i class="fa fa-sign-out-alt"></i><div class="label">Esci</div><div class="sub">Logout</div></div></a></div></div></body></html>"""
 
 def _amministrazione_stats():
     db = get_db()
@@ -19226,7 +19320,7 @@ input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
 </head>
 <body>
 <div class="header">
-  <a href="/mobile" class="back-btn"><i class="fa fa-arrow-left"></i></a>
+  <a href="{{ back_url }}" class="back-btn"><i class="fa fa-arrow-left"></i></a>
   <div class="header-title">{{ t.profile_title }}</div>
 </div>
 <div class="content">
@@ -19708,10 +19802,19 @@ def mobile_profilo():
     # Inietta la chiave VAPID nel HTML. Se qualcosa non va, l'errore deve
     # emergere nei log invece di trasformarsi in una chiave vuota lato browser.
     vapid_pub, _ = _get_vapid_keys()
+    ruolo = session.get('ruolo')
+    if ruolo == 'admin':
+        back_url = url_for('admin_mobile') if is_mobile_request() else url_for('dashboard')
+    elif ruolo == 'amministrazione':
+        back_url = url_for('amministrazione_mobile') if is_mobile_request() else url_for('amministrazione_home')
+    elif ruolo == 'caposquadra':
+        back_url = url_for('mobile_cs')
+    else:
+        back_url = url_for('mobile')
     return render_template_string(MOBILE_PROFILO_TMPL,
         nome=u.get('nome',''), cognome=u.get('cognome',''),
         email=u.get('email',''), mansione=u.get('mansione') or '',
-        messages=msgs, vapid_public_key=vapid_pub,
+        messages=msgs, vapid_public_key=vapid_pub, back_url=back_url,
         t=get_lang(), lang=session.get('lang','it'))
 
 @app.route('/mobile/profilo/cambia-email', methods=['POST'])
@@ -19801,6 +19904,11 @@ body{background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
 .card-title i{color:#a78bfa}
 .tab-pane{display:none}
 .tab-pane.active{display:block}
+.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.quick-tile{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px;min-height:58px}
+.quick-tile i{width:30px;height:30px;border-radius:10px;background:rgba(124,58,237,.22);display:flex;align-items:center;justify-content:center;color:#c4b5fd;flex-shrink:0}
+.quick-tile strong{display:block;font-size:13px;line-height:1.15}
+.quick-tile span{display:block;font-size:11px;color:rgba(255,255,255,.48);margin-top:2px}
 
 /* Squadra membri */
 .member-list{display:flex;flex-direction:column;gap:8px}
@@ -19869,6 +19977,27 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#7c3aed;backgr
 .ts-attesa{background:rgba(245,158,11,.2);color:#fbbf24}
 .ts-approvata{background:rgba(34,197,94,.2);color:#4ade80}
 .ts-rifiutata{background:rgba(239,68,68,.2);color:#f87171}
+@media(max-width:430px){
+  body{padding-bottom:42px}
+  .header{padding:13px 14px}
+  .user-name{font-size:16px}
+  .tabs{overflow-x:auto;justify-content:flex-start;top:68px}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:0 0 25%;min-width:78px;font-size:10px}
+  .content{padding:12px}
+  .card{padding:13px;border-radius:14px}
+  .form-row{grid-template-columns:1fr}
+  .mod-toggle{flex-direction:column}
+  .member{flex-wrap:wrap;align-items:flex-start}
+  .member-info{flex:1 1 calc(100% - 56px)}
+  .member-actions{width:100%;justify-content:flex-end}
+  input[type="text"],input[type="number"],input[type="date"],input[type="time"],select,textarea{font-size:16px;min-height:46px}
+  .submit-btn{min-height:48px}
+}
+@media(max-width:360px){
+  .quick-grid{grid-template-columns:1fr}
+  .stats-row{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -19877,6 +20006,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#7c3aed;backgr
     <div class="logo"><i class="fa fa-user-tie"></i> Caposquadra</div>
     <div style="display:flex;gap:8px;align-items:center">
       <a href="/mobile/notifiche" class="logout-btn" style="position:relative"><i class="fa fa-bell"></i>{% if unread_count and unread_count > 0 %}<span style="position:absolute;right:4px;top:3px;width:9px;height:9px;border-radius:50%;background:#ef4444;border:2px solid rgba(255,255,255,.25)"></span>{% endif %}</a>
+      <a href="/mobile/profilo" class="logout-btn"><i class="fa fa-user-gear"></i></a>
       <a href="/logout" class="logout-btn"><i class="fa fa-sign-out-alt"></i> Esci</a>
     </div>
   </div>
@@ -19905,6 +20035,16 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#7c3aed;backgr
       <div class="stat-mini"><div class="stat-val" style="color:#a78bfa">{{ mie_ore|round(0)|int }}</div><div class="stat-lbl">Mie ore</div></div>
       <div class="stat-mini"><div class="stat-val" style="color:#60a5fa">{{ ore_squadra|round(0)|int }}</div><div class="stat-lbl">Ore squadra</div></div>
       <div class="stat-mini"><div class="stat-val" style="color:#4ade80">{{ n_timbrature_squadra }}</div><div class="stat-lbl">Timbrature</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="fa fa-bolt"></i> Azioni rapide</div>
+    <div class="quick-grid">
+      <a class="quick-tile" href="/mobile/mie-ore"><i class="fa fa-list-check"></i><div><strong>Le mie ore</strong><span>Storico personale</span></div></a>
+      <a class="quick-tile" href="/mobile/ferie"><i class="fa fa-umbrella-beach"></i><div><strong>Ferie e permessi</strong><span>Richieste assenze</span></div></a>
+      <a class="quick-tile" href="/mobile/spese"><i class="fa fa-receipt"></i><div><strong>Rimborsi</strong><span>Scontrini e spese</span></div></a>
+      <a class="quick-tile" href="/mobile/profilo"><i class="fa fa-user-gear"></i><div><strong>Profilo</strong><span>Notifiche e account</span></div></a>
     </div>
   </div>
 
