@@ -2551,6 +2551,111 @@ textarea{resize:vertical;min-height:80px}
     color:#7dd3fc!important;
   }
 
+  /* Pagine legacy ancora chiare: Banca Ore, Report, Calendario Fiere */
+  .bo-card,.bo-mese-bar,.bo-info,.rep-card,.rep-info,.tim-stat,.rep-box,
+  .cal-table,.cal-events-list,.sq-card{
+    background:linear-gradient(180deg,rgba(15,31,51,.9),rgba(9,21,36,.94))!important;
+    border-color:rgba(148,163,184,.18)!important;
+    color:#dce7f5!important;
+    box-shadow:0 20px 52px -44px rgba(0,0,0,.92),inset 0 1px 0 rgba(255,255,255,.035)!important;
+  }
+  .bo-card[style*="padding:0"],.rep-card,.cal-events-list{
+    overflow:hidden;
+  }
+  .bo-info strong,.rep-info strong,.rep-card h3,.tim-stat .v,
+  .bo-mese-label,.cal-nav h2,.cal-event-name a{
+    color:#f3f7ff!important;
+  }
+  .bo-info,.rep-info{
+    border-left-color:#38a9bd!important;
+  }
+  .bo-tab,.tim-tab,.cal-table{
+    background:transparent!important;
+  }
+  .bo-tab th,.tim-tab thead th,.cal-table th{
+    background:rgba(255,255,255,.045)!important;
+    color:#91a6bf!important;
+    border-color:rgba(148,163,184,.14)!important;
+  }
+  .bo-tab td,.tim-tab tbody td{
+    color:#dce7f5!important;
+    border-bottom-color:rgba(148,163,184,.1)!important;
+  }
+  .bo-tab tbody tr:hover td,.tim-tab tbody tr:hover td{
+    background:rgba(56,169,189,.055)!important;
+  }
+  .bo-chart-row,.bo-chart-row td{
+    background:rgba(255,255,255,.02)!important;
+  }
+  .bo-monte-input{
+    background:rgba(5,14,27,.78)!important;
+    color:#e2e8f0!important;
+    border-color:rgba(148,163,184,.24)!important;
+  }
+  .bo-monte-input.bo-empty{
+    background:rgba(245,158,11,.14)!important;
+    color:#fbbf24!important;
+    border-color:rgba(245,158,11,.42)!important;
+  }
+  .bo-actions-menu{
+    background:#0b1728!important;
+    border-color:rgba(148,163,184,.18)!important;
+    box-shadow:0 22px 58px -28px rgba(0,0,0,.9)!important;
+  }
+  .bo-actions-menu a{
+    color:#dce7f5!important;
+    border-bottom-color:rgba(148,163,184,.12)!important;
+  }
+  .bo-actions-menu a:hover{
+    background:rgba(56,169,189,.08)!important;
+    color:#7dd3fc!important;
+  }
+  .bo-rett-form{
+    background:rgba(245,158,11,.11)!important;
+    border-color:rgba(245,158,11,.32)!important;
+  }
+  .bo-pos{color:#67e8a7!important}
+  .bo-neg{color:#fb7185!important}
+  .bo-zero{color:#91a6bf!important}
+  .tim-stat{
+    text-align:center;
+  }
+  .tim-stat .l{
+    color:#91a6bf!important;
+  }
+  .dip-eliminato,.dip-eliminato td{
+    background:rgba(251,113,133,.09)!important;
+  }
+  .cal-day{
+    background:rgba(255,255,255,.025)!important;
+    border-color:rgba(148,163,184,.13)!important;
+    color:#dce7f5!important;
+  }
+  .cal-day.outside{
+    background:rgba(255,255,255,.012)!important;
+    color:#63758a!important;
+  }
+  .cal-day.weekend{
+    background:rgba(255,255,255,.018)!important;
+  }
+  .cal-day.today{
+    background:rgba(56,169,189,.12)!important;
+    border-color:rgba(125,211,252,.4)!important;
+    box-shadow:inset 0 0 0 1px rgba(125,211,252,.18);
+  }
+  .cal-day .num{
+    color:#91a6bf!important;
+  }
+  .cal-day.today .num{
+    color:#fb7185!important;
+  }
+  .cal-empty{
+    color:#91a6bf!important;
+  }
+  .cal-event-row{
+    border-bottom-color:rgba(148,163,184,.12)!important;
+  }
+
   div[id^="modal"],.cust-modal{
     backdrop-filter:blur(8px);
   }
@@ -6663,11 +6768,30 @@ table tr:hover{
 }
 .map-dots{
   position:absolute;
-  inset:4px 0 0 0;
-  opacity:.26;
-  background-image:radial-gradient(circle,rgba(98,202,221,.72) 1px,transparent 1.8px);
-  background-size:10px 10px;
-  mask-image:radial-gradient(ellipse at 58% 38%,black 0 43%,transparent 70%);
+  inset:-8px -10px 0 -18px;
+  opacity:.48;
+  background:
+    radial-gradient(circle,rgba(91,229,255,.92) 1.15px,transparent 1.9px);
+  background-size:9px 9px;
+  -webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 250'%3E%3Cg fill='black'%3E%3Cpath d='M66 48c35-19 87-17 119 3 24 15 33 38 25 62-7 22-30 33-52 24-17-7-28-23-45-24-22-2-45 14-67 5-26-11-31-51 20-70z'/%3E%3Cpath d='M151 139c25-1 54 20 57 49 3 28-19 56-43 52-24-4-30-35-20-57 6-14 5-27 6-44z'/%3E%3Cpath d='M267 61c29-18 71-22 100-5 16 9 22 23 11 35-14 15-43 6-59 22-15 15-45 7-58-9-11-15-10-34 6-43z'/%3E%3Cpath d='M326 106c31-1 61 21 65 56 4 34-22 69-54 72-29 3-47-22-37-51 9-27-2-53 26-77z'/%3E%3Cpath d='M391 52c46-28 132-20 170 17 31 30 18 74-27 78-24 2-41-10-64-5-29 6-47 34-80 18-30-14-28-54 1-108z'/%3E%3Cpath d='M476 159c26-2 57 7 73 27 17 22 5 45-23 46-30 2-65-19-70-43-3-15 5-28 20-30z'/%3E%3Cpath d='M572 162c17-8 42-2 50 12 9 15-5 31-27 30-21-1-36-13-34-26 1-7 5-12 11-16z'/%3E%3C/g%3E%3C/svg%3E");
+  mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 250'%3E%3Cg fill='black'%3E%3Cpath d='M66 48c35-19 87-17 119 3 24 15 33 38 25 62-7 22-30 33-52 24-17-7-28-23-45-24-22-2-45 14-67 5-26-11-31-51 20-70z'/%3E%3Cpath d='M151 139c25-1 54 20 57 49 3 28-19 56-43 52-24-4-30-35-20-57 6-14 5-27 6-44z'/%3E%3Cpath d='M267 61c29-18 71-22 100-5 16 9 22 23 11 35-14 15-43 6-59 22-15 15-45 7-58-9-11-15-10-34 6-43z'/%3E%3Cpath d='M326 106c31-1 61 21 65 56 4 34-22 69-54 72-29 3-47-22-37-51 9-27-2-53 26-77z'/%3E%3Cpath d='M391 52c46-28 132-20 170 17 31 30 18 74-27 78-24 2-41-10-64-5-29 6-47 34-80 18-30-14-28-54 1-108z'/%3E%3Cpath d='M476 159c26-2 57 7 73 27 17 22 5 45-23 46-30 2-65-19-70-43-3-15 5-28 20-30z'/%3E%3Cpath d='M572 162c17-8 42-2 50 12 9 15-5 31-27 30-21-1-36-13-34-26 1-7 5-12 11-16z'/%3E%3C/g%3E%3C/svg%3E");
+  -webkit-mask-repeat:no-repeat;
+  mask-repeat:no-repeat;
+  -webkit-mask-size:100% 100%;
+  mask-size:100% 100%;
+  filter:drop-shadow(0 0 15px rgba(27,187,210,.28));
+}
+.map-dots::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(90deg,rgba(91,229,255,.11) 1px,transparent 1px),
+    linear-gradient(0deg,rgba(91,229,255,.08) 1px,transparent 1px);
+  background-size:80px 50px;
+  opacity:.18;
+  -webkit-mask:inherit;
+  mask:inherit;
 }
 .hero-chart-copy{
   position:absolute;
