@@ -1490,6 +1490,17 @@ def is_amministrazione_allowed(endpoint=None):
     endpoint = endpoint or request.endpoint or ''
     return endpoint in AMMINISTRAZIONE_ENDPOINTS
 
+def role_home_endpoint(ruolo=None, mobile=None):
+    ruolo = ruolo or session.get('ruolo')
+    mobile = is_mobile_request() if mobile is None else mobile
+    if ruolo == 'admin':
+        return 'admin_mobile' if mobile else 'dashboard'
+    if ruolo == 'amministrazione':
+        return 'amministrazione_mobile' if mobile else 'amministrazione_home'
+    if ruolo == 'caposquadra':
+        return 'mobile_cs'
+    return 'mobile'
+
 def login_required(f):
     @wraps(f)
     def d(*a,**k):
@@ -1501,13 +1512,15 @@ def login_required(f):
         if not session.get('is_superadmin') and not session.get('is_tenant_owner'):
             try:
                 db = get_db()
-                u = db.execute("SELECT attivo FROM utenti WHERE id=?", (session['user_id'],)).fetchone()
+                u = db.execute("SELECT attivo, ruolo FROM utenti WHERE id=?", (session['user_id'],)).fetchone()
                 db.close()
                 # Tratta NULL come attivo (compatibilità record vecchi). Solo attivo=0 esplicito blocca.
                 if not u or u['attivo'] == 0:
                     session.clear()
                     flash('Il tuo account è stato disattivato. Contatta l\'amministratore.', 'error')
                     return redirect(url_for('login'))
+                if u['ruolo'] and session.get('ruolo') != u['ruolo']:
+                    session['ruolo'] = u['ruolo']
             except Exception:
                 pass
         # Solo admin vedono le pagine admin. Caposquadra → mobile-cs, dipendenti → mobile
@@ -1524,6 +1537,13 @@ def login_required(f):
                     return redirect(url_for('amministrazione_mobile') if is_mobile_request() else url_for('amministrazione_home'))
             elif ruolo != 'admin':
                 return redirect(url_for('mobile'))
+        employee_mobile_pages = {
+            'mobile', 'mobile_inserisci', 'mobile_mie_ore', 'mobile_mie_ore_pdf',
+            'mobile_ferie', 'mobile_ferie_richiesta',
+            'mobile_spese', 'mobile_spese_inserisci'
+        }
+        if f.__name__ in employee_mobile_pages and session.get('ruolo') in ('admin', 'amministrazione', 'caposquadra'):
+            return redirect(url_for(role_home_endpoint(session.get('ruolo'), mobile=True)))
         return f(*a,**k)
     return d
 
@@ -1537,12 +1557,14 @@ def admin_required(f):
         if not session.get('is_superadmin') and not session.get('is_tenant_owner'):
             try:
                 db = get_db()
-                u = db.execute("SELECT attivo FROM utenti WHERE id=?", (session['user_id'],)).fetchone()
+                u = db.execute("SELECT attivo, ruolo FROM utenti WHERE id=?", (session['user_id'],)).fetchone()
                 db.close()
                 if not u or u['attivo'] == 0:
                     session.clear()
                     flash('Il tuo account è stato disattivato.', 'error')
                     return redirect(url_for('login'))
+                if u['ruolo'] and session.get('ruolo') != u['ruolo']:
+                    session['ruolo'] = u['ruolo']
             except Exception:
                 pass
         if session.get('ruolo') == 'amministrazione' and is_amministrazione_allowed(f.__name__):
@@ -1561,6 +1583,19 @@ def caposquadra_required(f):
     def d(*a,**k):
         if 'user_id' not in session:
             return redirect(url_for('login'))
+        if not session.get('is_superadmin') and not session.get('is_tenant_owner'):
+            try:
+                db = get_db()
+                u = db.execute("SELECT attivo, ruolo FROM utenti WHERE id=?", (session['user_id'],)).fetchone()
+                db.close()
+                if not u or u['attivo'] == 0:
+                    session.clear()
+                    flash('Il tuo account è stato disattivato.', 'error')
+                    return redirect(url_for('login'))
+                if u['ruolo'] and session.get('ruolo') != u['ruolo']:
+                    session['ruolo'] = u['ruolo']
+            except Exception:
+                pass
         if session.get('ruolo') not in ('admin', 'caposquadra'):
             flash('Accesso riservato a admin o caposquadra.','error')
             return redirect(url_for('mobile'))
@@ -6056,6 +6091,11 @@ body.customize-mode .btn-link-soft{display:none}
       </div>
     </div>
     <div class="hero-map" aria-hidden="true">
+      <div class="hero-chart-copy">
+        <span>Fatturato emesso</span>
+        <strong>{{ "%.1f"|format(s.hero_fatturato_pct_corrente) }}%</strong>
+        <small>Mese corrente · € {{ "%.0f"|format(s.hero_fatturato_mese_corrente) }}</small>
+      </div>
       <div class="map-dots"></div>
       <canvas id="heroLiveChart" class="hero-live-chart"></canvas>
     </div>
@@ -6628,6 +6668,35 @@ table tr:hover{
   background-image:radial-gradient(circle,rgba(98,202,221,.72) 1px,transparent 1.8px);
   background-size:10px 10px;
   mask-image:radial-gradient(ellipse at 58% 38%,black 0 43%,transparent 70%);
+}
+.hero-chart-copy{
+  position:absolute;
+  left:10px;
+  top:7px;
+  z-index:2;
+  display:flex;
+  flex-direction:column;
+  gap:1px;
+  color:#dff8ff;
+  text-shadow:0 2px 12px rgba(0,0,0,.42);
+}
+.hero-chart-copy span{
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.9px;
+  text-transform:uppercase;
+  color:rgba(190,236,246,.72);
+}
+.hero-chart-copy strong{
+  font-size:22px;
+  line-height:1;
+  color:#5be5ff;
+  font-weight:950;
+}
+.hero-chart-copy small{
+  font-size:10px;
+  color:rgba(226,244,248,.72);
+  font-weight:800;
 }
 .hero-live-chart{
   position:absolute;
@@ -7268,7 +7337,7 @@ function renderCharts() {
     grid:'rgba(148,163,184,.13)',
     ticks:'#8fa3bd'
   };
-  const heroTrendData = {{ hero_operativo | tojson }};
+  const heroTrendData = {{ hero_fatturato | tojson }};
   const oreData = {{ ore_settimana | tojson }};
   const cantieriData = {{ presenze_cantiere | tojson }};
 
@@ -7277,7 +7346,7 @@ function renderCharts() {
     if (!canvas || canvas._rendered) return;
     canvas._rendered = true;
     const ctx = canvas.getContext('2d');
-    const values = (heroTrendData || []).map(d => Number(d.score) || 0);
+    const values = (heroTrendData || []).map(d => Number(d.percentuale) || 0);
     if (!values.length) return;
     let metrics = {w: 0, h: 0, dpr: 1};
 
@@ -7325,6 +7394,11 @@ function renderCharts() {
         y: padY + ((maxVal - v) / range) * innerH,
         value: v
       }));
+      const livePoints = points.map((pt, i) => ({
+        x: pt.x,
+        y: Math.max(padY, Math.min(h - padY, pt.y + Math.sin(now / 620 + i * .82) * 3.2)),
+        value: pt.value
+      }));
       const progress = Math.min((now - started) / 1250, 1);
       const revealX = padX + innerW * progress;
 
@@ -7350,35 +7424,35 @@ function renderCharts() {
       fill.addColorStop(0, 'rgba(91,229,255,.28)');
       fill.addColorStop(.62, 'rgba(59,130,246,.11)');
       fill.addColorStop(1, 'rgba(91,229,255,0)');
-      buildPath(points);
-      ctx.lineTo(points[points.length - 1].x, h - padY);
-      ctx.lineTo(points[0].x, h - padY);
+      buildPath(livePoints);
+      ctx.lineTo(livePoints[livePoints.length - 1].x, h - padY);
+      ctx.lineTo(livePoints[0].x, h - padY);
       ctx.closePath();
       ctx.fillStyle = fill;
       ctx.fill();
 
-      buildPath(points);
+      buildPath(livePoints);
       ctx.strokeStyle = 'rgba(91,229,255,.24)';
       ctx.lineWidth = 10;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.stroke();
 
-      buildPath(points);
+      buildPath(livePoints);
       ctx.strokeStyle = '#1bbbd2';
       ctx.lineWidth = 3;
       ctx.stroke();
 
-      buildPath(points);
+      buildPath(livePoints);
       ctx.strokeStyle = 'rgba(125,211,252,.9)';
       ctx.lineWidth = 1.2;
       ctx.stroke();
       ctx.restore();
 
       const pulse = 1 + Math.sin(now / 260) * .18;
-      points.forEach((pt, i) => {
+      livePoints.forEach((pt, i) => {
         if (pt.x > revealX + 2) return;
-        const isLastVisible = i === points.filter(p => p.x <= revealX + 2).length - 1;
+        const isLastVisible = i === livePoints.filter(p => p.x <= revealX + 2).length - 1;
         const r = isLastVisible ? 5.2 * pulse : 3.8;
         ctx.beginPath();
         ctx.arc(pt.x, pt.y, r + 6, 0, Math.PI * 2);
@@ -7959,51 +8033,39 @@ def dashboard():
             'sigla': sigla[:3],
         })
 
-    # Mini-grafico hero: pressione operativa reale dei prossimi 30 giorni.
-    # Combina fiere/cantieri pianificati, richieste pendenti e scadenze operative.
-    hero_operativo = []
-    for i in range(7):
-        start_day = date.today() + timedelta(days=i * 5)
-        end_day = start_day + timedelta(days=4)
-        day = start_day.isoformat()
-        day_to = end_day.isoformat()
-        fiere_day = db.execute("""
-            SELECT COUNT(*) FROM cantieri
-             WHERE COALESCE(attivo,1)=1
-               AND (
-                 date(COALESCE(data_setup,data_inizio,data_live,'')) <= date(?)
-                 AND date(COALESCE(data_dismantling,data_fine,data_live,data_setup,'')) >= date(?)
-               )
-        """, (day_to, day)).fetchone()[0]
-        richieste_day = db.execute("""
-            SELECT
-              (SELECT COUNT(*) FROM richieste_presenze WHERE stato='in_attesa' AND date(data) BETWEEN date(?) AND date(?)) +
-              (SELECT COUNT(*) FROM ferie_permessi WHERE stato='in_attesa' AND date(data_inizio) <= date(?) AND date(data_fine) >= date(?)) +
-              (SELECT COUNT(*) FROM spese_rimborso WHERE stato='in_attesa' AND date(data) BETWEEN date(?) AND date(?))
-        """, (day, day_to, day_to, day, day, day_to)).fetchone()[0]
-        scadenze_day = db.execute("""
-            SELECT
-              (SELECT COUNT(*) FROM documenti WHERE data_scadenza IS NOT NULL AND data_scadenza!='' AND date(data_scadenza) BETWEEN date(?) AND date(?)) +
-              (SELECT COUNT(*) FROM documenti_dipendente WHERE data_scadenza IS NOT NULL AND data_scadenza!='' AND date(data_scadenza) BETWEEN date(?) AND date(?)) +
-              (SELECT COUNT(*) FROM documenti_veicoli WHERE data_scadenza IS NOT NULL AND data_scadenza!='' AND date(data_scadenza) BETWEEN date(?) AND date(?)) +
-              (SELECT COUNT(*) FROM contratti_clienti WHERE COALESCE(stato,'attivo')='attivo' AND data_scadenza IS NOT NULL AND data_scadenza!='' AND date(data_scadenza) BETWEEN date(?) AND date(?)) +
-              (SELECT COUNT(*) FROM veicoli WHERE COALESCE(attivo,1)=1 AND (
-                   date(COALESCE(scad_assicurazione,'')) BETWEEN date(?) AND date(?)
-                OR date(COALESCE(scad_revisione,'')) BETWEEN date(?) AND date(?)
-                OR date(COALESCE(scad_bollo,'')) BETWEEN date(?) AND date(?)
-                OR date(COALESCE(scad_tagliando,'')) BETWEEN date(?) AND date(?)
-              ))
-        """, (day, day_to, day, day_to, day, day_to, day, day_to,
-              day, day_to, day, day_to, day, day_to, day, day_to)).fetchone()[0]
-        score = int(fiere_day * 18 + richieste_day * 14 + scadenze_day * 24)
-        hero_operativo.append({
-            'data': day[5:],
-            'data_a': day_to[5:],
-            'score': score,
-            'fiere': int(fiere_day or 0),
-            'richieste': int(richieste_day or 0),
-            'scadenze': int(scadenze_day or 0),
+    # Mini-grafico hero: percentuale fatturato emesso negli ultimi 7 mesi.
+    # Usa solo fatture attive, quindi fatture emesse verso clienti.
+    hero_fatturato = []
+    mesi_fatturato = []
+    today_month = date.today().replace(day=1)
+    for i in range(6, -1, -1):
+        m_index = today_month.month - i
+        y = today_month.year
+        while m_index <= 0:
+            m_index += 12
+            y -= 1
+        m_str = f"{y:04d}-{m_index:02d}"
+        row = db.execute("""
+            SELECT COALESCE(SUM(importo_totale),0)
+              FROM fatture
+             WHERE COALESCE(tipo,'attiva')='attiva'
+               AND COALESCE(data_emissione,creato_il,'') != ''
+               AND substr(COALESCE(data_emissione,creato_il),1,7)=?
+        """, (m_str,)).fetchone()
+        importo = float((row[0] if row else 0) or 0)
+        mesi_fatturato.append({'mese': m_str, 'importo': importo})
+    totale_fatturato_periodo = sum(x['importo'] for x in mesi_fatturato)
+    for x in mesi_fatturato:
+        pct = round((x['importo'] / totale_fatturato_periodo) * 100, 1) if totale_fatturato_periodo > 0 else 0
+        hero_fatturato.append({
+            'mese': x['mese'],
+            'label': x['mese'][5:7] + '/' + x['mese'][2:4],
+            'fatturato': round(x['importo'], 2),
+            'percentuale': pct,
         })
+    s['hero_fatturato_totale'] = round(totale_fatturato_periodo, 2)
+    s['hero_fatturato_mese_corrente'] = round(mesi_fatturato[-1]['importo'], 2) if mesi_fatturato else 0
+    s['hero_fatturato_pct_corrente'] = hero_fatturato[-1]['percentuale'] if hero_fatturato else 0
 
     # Carico layout personalizzato (1 riga per azienda — condiviso fra admin)
     layout = _default_dashboard_layout()
@@ -8030,7 +8092,7 @@ def dashboard():
         s=s, presenze_oggi=presenze_oggi,
         ore_settimana=ore_settimana,
         presenze_cantiere=[dict(r) for r in presenze_cantiere],
-        hero_operativo=hero_operativo,
+        hero_fatturato=hero_fatturato,
         scadenze=scadenze_list,
         scadenze_groups=scadenze_groups,
         fiere_evidenza=fiere_evidenza,
