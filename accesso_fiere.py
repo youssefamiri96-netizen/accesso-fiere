@@ -3117,6 +3117,347 @@ body.theme-light #ai-chat-panel,body.theme-light .ai-chat-body,body.theme-light 
       {% endfor %}
     {% endwith %}
     {% block content %}{% endblock %}
+    <style>
+    @media(min-width:901px){
+      body.theme-light{
+        background:#f3f6fb!important;
+        color:#162033!important;
+      }
+      body.theme-light .main,
+      body.theme-light .content{
+        background:linear-gradient(180deg,#f8fafc 0%,#eef3f8 100%)!important;
+        color:#162033!important;
+      }
+      body.theme-light .topbar{
+        background:rgba(255,255,255,.96)!important;
+        border-bottom:1px solid #dbe5f0!important;
+        color:#162033!important;
+        box-shadow:0 10px 28px -30px rgba(15,23,42,.35)!important;
+      }
+      body.theme-light .topbar h1,
+      body.theme-light .tb-uname,
+      body.theme-light .tb-user,
+      body.theme-light .user-menu,
+      body.theme-light .sidebar-logo .company,
+      body.theme-light .sidebar .company{
+        color:#172033!important;
+      }
+      body.theme-light .tb-urole,
+      body.theme-light .sidebar-logo .sub,
+      body.theme-light .sidebar .sub,
+      body.theme-light .nav-section{
+        color:#64748b!important;
+      }
+      body.theme-light .topbar-search,
+      body.theme-light .search-bar{
+        background:#fff!important;
+        border-color:#dbe5f0!important;
+        color:#162033!important;
+        box-shadow:0 1px 2px rgba(15,23,42,.04)!important;
+      }
+      body.theme-light .topbar-search input,
+      body.theme-light .search-bar input{
+        color:#162033!important;
+        background:transparent!important;
+      }
+      body.theme-light .topbar-search input::placeholder,
+      body.theme-light .search-bar input::placeholder{
+        color:#64748b!important;
+      }
+      body.theme-light .tb-icon-btn,
+      body.theme-light .top-icon,
+      body.theme-light .btn-link-soft{
+        background:#fff!important;
+        border-color:#dbe5f0!important;
+        color:#475569!important;
+      }
+      body.theme-light .tb-avatar{
+        color:#fff!important;
+      }
+      body.theme-light .tb-menu{
+        background:#fff!important;
+        border-color:#dbe5f0!important;
+        color:#172033!important;
+        box-shadow:0 26px 58px -36px rgba(15,23,42,.38)!important;
+      }
+      body.theme-light .tb-menu-head{
+        background:#f8fafc!important;
+        border-bottom-color:#e2e8f0!important;
+      }
+      body.theme-light .tb-menu a{
+        color:#334155!important;
+        border-bottom-color:#e2e8f0!important;
+      }
+      body.theme-light .tb-menu a:hover{
+        background:#eef6fb!important;
+        color:#0f4f75!important;
+      }
+      body.theme-light .sidebar{
+        background:linear-gradient(180deg,#fff 0%,#f7f9fc 100%)!important;
+        color:#1e293b!important;
+        border-right:1px solid #dbe5f0!important;
+        box-shadow:10px 0 34px -30px rgba(15,23,42,.32)!important;
+      }
+      body.theme-light .sidebar-logo{
+        background:#fff!important;
+        border-bottom:1px solid #e2e8f0!important;
+      }
+      body.theme-light nav a,
+      body.theme-light .nav-group>summary{
+        color:#334155!important;
+      }
+      body.theme-light nav a i,
+      body.theme-light .nav-group>summary i{
+        color:#475569!important;
+      }
+      body.theme-light nav a:hover,
+      body.theme-light .nav-group>summary:hover{
+        background:#eef6fb!important;
+        color:#0f4f75!important;
+      }
+      body.theme-light nav a.active,
+      body.theme-light .nav-group>summary.active{
+        background:linear-gradient(90deg,#e0f6fb 0%,#f4fbfd 100%)!important;
+        color:#0f4f75!important;
+        border-left-color:#38a9bd!important;
+        box-shadow:inset 0 0 0 1px rgba(56,169,189,.12)!important;
+      }
+      body.theme-light nav a.active i,
+      body.theme-light .nav-group>summary.active i{
+        color:#0f9dbd!important;
+      }
+      body.theme-light .sidebar-user{
+        background:#fff!important;
+        border-top:1px solid #e2e8f0!important;
+      }
+      body.theme-light .sidebar-user .uname{
+        color:#172033!important;
+      }
+      body.theme-light .sidebar-user .urole{
+        color:#64748b!important;
+      }
+      body.theme-light .card,
+      body.theme-light .table-wrap,
+      body.theme-light .stat-card,
+      body.theme-light .panel,
+      body.theme-light .dash-panel,
+      body.theme-light .feed-card,
+      body.theme-light .widget,
+      body.theme-light .insight-card,
+      body.theme-light .timeline-card,
+      body.theme-light .ops-panel,
+      body.theme-light .bo-card,
+      body.theme-light .bo-mese-bar,
+      body.theme-light .bo-info,
+      body.theme-light .rep-card,
+      body.theme-light .rep-info,
+      body.theme-light .tim-stat,
+      body.theme-light .rep-box,
+      body.theme-light .cal-table,
+      body.theme-light .cal-events-list,
+      body.theme-light .sq-card,
+      body.theme-light .settings-card,
+      body.theme-light .form-card,
+      body.theme-light .filter-bar,
+      body.theme-light .search-box-card,
+      body.theme-light .search-section,
+      body.theme-light .search-empty,
+      body.theme-light .card-body{
+        background:#fff!important;
+        color:#172033!important;
+        border-color:#dbe5f0!important;
+        box-shadow:0 1px 2px rgba(15,23,42,.04),0 18px 46px -34px rgba(15,23,42,.38)!important;
+      }
+      body.theme-light .card-header,
+      body.theme-light .live-card-head,
+      body.theme-light .ops-panel-head,
+      body.theme-light .table-wrap>h3,
+      body.theme-light .panel-head{
+        background:#f8fafc!important;
+        border-bottom:1px solid #e2e8f0!important;
+        color:#172033!important;
+      }
+      body.theme-light h1,
+      body.theme-light h2,
+      body.theme-light h3,
+      body.theme-light h4,
+      body.theme-light .card h3,
+      body.theme-light .card-header h3,
+      body.theme-light .panel-title,
+      body.theme-light .live-card-head span,
+      body.theme-light .ops-panel-head span,
+      body.theme-light .timeline-copy strong,
+      body.theme-light .insight-row strong,
+      body.theme-light .fiera-copy strong,
+      body.theme-light table td,
+      body.theme-light strong{
+        color:#172033!important;
+      }
+      body.theme-light p,
+      body.theme-light small,
+      body.theme-light .sub,
+      body.theme-light .muted,
+      body.theme-light .text-muted,
+      body.theme-light .timeline-copy small,
+      body.theme-light .insight-row span,
+      body.theme-light .kpi-foot,
+      body.theme-light .empty-state{
+        color:#64748b!important;
+      }
+      body.theme-light table,
+      body.theme-light .bo-tab,
+      body.theme-light .tim-tab{
+        background:#fff!important;
+        color:#172033!important;
+      }
+      body.theme-light th,
+      body.theme-light table th,
+      body.theme-light .bo-tab th,
+      body.theme-light .tim-tab thead th,
+      body.theme-light .cal-table th{
+        background:#f3f6fa!important;
+        color:#475569!important;
+        border-color:#dbe5f0!important;
+      }
+      body.theme-light td,
+      body.theme-light table td,
+      body.theme-light .bo-tab td,
+      body.theme-light .tim-tab tbody td{
+        color:#1f2937!important;
+        border-bottom-color:#edf2f7!important;
+      }
+      body.theme-light table tr:hover{
+        background:#f8fafc!important;
+      }
+      body.theme-light input,
+      body.theme-light select,
+      body.theme-light textarea{
+        background:#fff!important;
+        color:#172033!important;
+        border-color:#cbd5e1!important;
+      }
+      body.theme-light input::placeholder,
+      body.theme-light textarea::placeholder{
+        color:#94a3b8!important;
+      }
+      body.theme-light .btn-secondary,
+      body.theme-light .btn-light{
+        background:#fff!important;
+        color:#172033!important;
+        border-color:#cbd5e1!important;
+      }
+      body.theme-light .kpi-card{
+        background:#fff!important;
+        color:#172033!important;
+        border-color:#dbe5f0!important;
+      }
+      body.theme-light .kpi-value,
+      body.theme-light .kpi-state-ok{
+        color:#172033!important;
+      }
+      body.theme-light .kpi-label{
+        color:#475569!important;
+      }
+      body.theme-light .hero-bar,
+      body.theme-light .page-header,
+      body.theme-light .cant-hero,
+      body.theme-light .page-hero,
+      body.theme-light .admin-hero,
+      body.theme-light .section-hero{
+        background:radial-gradient(circle at 82% 18%,rgba(56,169,189,.18),transparent 30%),linear-gradient(120deg,#fff 0%,#eef7fb 55%,#e4f1f7 100%)!important;
+        color:#172033!important;
+        border-color:#cfe1ee!important;
+        box-shadow:0 24px 58px -42px rgba(15,23,42,.36)!important;
+      }
+      body.theme-light .hero-title,
+      body.theme-light .hero-eyebrow,
+      body.theme-light .hero-intel,
+      body.theme-light .hero-sub,
+      body.theme-light .cant-hero h1,
+      body.theme-light .cant-hero p,
+      body.theme-light .page-header .page-title,
+      body.theme-light .page-header .page-desc,
+      body.theme-light .page-header .page-breadcrumb,
+      body.theme-light .page-header .page-breadcrumb a,
+      body.theme-light .page-hero h1,
+      body.theme-light .page-hero p,
+      body.theme-light .section-hero h1,
+      body.theme-light .section-hero p{
+        color:#172033!important;
+        text-shadow:none!important;
+      }
+      body.theme-light .hero-intel{
+        color:#15803d!important;
+      }
+      body.theme-light .hero-chart-copy span,
+      body.theme-light .hero-chart-copy small{
+        color:#475569!important;
+        text-shadow:none!important;
+      }
+      body.theme-light .hero-chart-copy strong{
+        color:#0f4f75!important;
+        text-shadow:none!important;
+      }
+      body.theme-light .hero-world-map{
+        opacity:.24!important;
+        mix-blend-mode:multiply!important;
+      }
+      body.theme-light .live-pill,
+      body.theme-light .status-chip,
+      body.theme-light .sync-status{
+        background:#fff!important;
+        border-color:#dbe5f0!important;
+        color:#334155!important;
+      }
+      body.theme-light .insight-row,
+      body.theme-light .timeline-item,
+      body.theme-light .fiera-chip,
+      body.theme-light .fiera-add,
+      body.theme-light .ops-risk-list div,
+      body.theme-light .report-line,
+      body.theme-light .cal-day{
+        background:#f8fafc!important;
+        border-color:#e2e8f0!important;
+        color:#172033!important;
+      }
+      body.theme-light .ops-ring::after,
+      body.theme-light .request-ring::after{
+        background:#fff!important;
+      }
+      body.theme-light .ops-ring strong,
+      body.theme-light .request-ring strong{
+        color:#172033!important;
+      }
+      body.theme-light .request-stats{
+        border-top-color:#e2e8f0!important;
+      }
+      body.theme-light .fiere-evidenza{
+        background:#fff!important;
+        color:#172033!important;
+        border-color:#dbe5f0!important;
+      }
+      body.theme-light .badge,
+      body.theme-light .tag,
+      body.theme-light .status-pill{
+        font-weight:800!important;
+      }
+      body.theme-light a:not(.btn):not(.kpi-card):not(.hero-btn){
+        color:#0f4f75!important;
+      }
+      body.theme-light .archived,
+      body.theme-light .disabled{
+        color:#64748b!important;
+      }
+      body.theme-light #ai-chat-panel,
+      body.theme-light .ai-chat-body,
+      body.theme-light .ai-chat-input,
+      body.theme-light .ai-bubble{
+        background:#fff!important;
+        color:#172033!important;
+        border-color:#dbe5f0!important;
+      }
+    }
+    </style>
   </div>
 </main>
 
@@ -6237,24 +6578,30 @@ body.customize-mode .btn-link-soft{display:none}
         <strong>{{ "%.1f"|format(s.hero_fatturato_pct_corrente) }}%</strong>
         <small>Mese corrente · € {{ "%.0f"|format(s.hero_fatturato_mese_corrente) }}</small>
       </div>
-      <svg class="hero-world-map" viewBox="0 0 780 260" aria-hidden="true" focusable="false">
+      <svg class="hero-world-map" viewBox="0 0 900 300" aria-hidden="true" focusable="false">
         <defs>
-          <pattern id="heroWorldDots" width="10" height="10" patternUnits="userSpaceOnUse">
-            <circle cx="2" cy="2" r="1.35" />
+          <pattern id="heroWorldDots" width="8" height="8" patternUnits="userSpaceOnUse">
+            <circle cx="2" cy="2" r="1.15" fill="#5be5ff" fill-opacity=".78" />
           </pattern>
+          <linearGradient id="heroWorldFade" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#1bbbd2" stop-opacity=".42"/>
+            <stop offset="46%" stop-color="#5be5ff" stop-opacity=".82"/>
+            <stop offset="100%" stop-color="#2d7cff" stop-opacity=".52"/>
+          </linearGradient>
           <filter id="heroWorldGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="1.2" result="blur" />
+            <feGaussianBlur stdDeviation="1.6" result="blur" />
             <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
           </filter>
         </defs>
         <g class="world-land" filter="url(#heroWorldGlow)">
-          <path d="M77 69c20-22 55-28 89-23 38 5 70 25 83 51 13 27-1 51-31 57-21 4-37-5-55-13-14-7-29-13-45-9-28 7-54-5-64-26-8-16 0-28 23-37z"/>
-          <path d="M155 142c30 1 58 25 62 62 3 32-18 58-43 54-28-4-36-36-24-66 6-16 4-31 5-50z"/>
-          <path d="M283 73c25-19 66-26 99-15 26 9 37 27 27 45-8 14-29 17-49 14-20-3-38 7-47 24-11 20-38 21-57 3-22-22-10-49 27-71z"/>
-          <path d="M370 122c29-7 65 9 79 39 16 34-1 77-36 93-34 15-63-5-63-41 0-18 8-35 5-51-3-19 3-33 15-40z"/>
-          <path d="M443 64c45-31 123-35 185-7 42 19 63 52 50 83-12 27-51 35-87 26-31-8-55-1-76 22-23 24-65 22-88-2-25-27-17-78 16-122z"/>
-          <path d="M585 163c34-8 78 5 98 30 20 26 7 55-29 58-41 3-88-26-91-58-1-15 7-26 22-30z"/>
-          <path d="M701 170c22-10 52-3 62 14 11 18-7 36-35 34-25-2-43-16-41-31 1-8 6-13 14-17z"/>
+          <path d="M66 91c23-22 53-34 90-39 45-6 84 3 119 26 19 13 25 28 14 42-9 12-31 13-52 12-25-2-37 6-54 27-14 18-35 28-57 20-17-6-25-21-41-26-26-9-50-5-61-22-8-13 3-28 42-40z"/>
+          <path d="M173 154c18 3 35 16 45 35 15 29 9 61-11 83-18 19-45 14-52-11-6-20 4-38 11-56 7-18 2-34 7-51z"/>
+          <path d="M282 103c24-27 65-44 113-42 36 2 62 14 76 34 10 16 5 31-13 39-20 9-43-1-63 5-21 6-32 31-56 36-24 4-49-10-61-31-8-15-7-29 4-41z"/>
+          <path d="M379 156c20-15 50-13 72 4 28 22 41 63 30 97-11 35-43 49-67 31-20-15-21-45-13-70 7-24-4-43-22-62z"/>
+          <path d="M451 92c39-35 105-50 171-39 62 10 114 42 134 84 13 28 4 54-26 66-28 12-58-3-88-4-43-1-61 36-104 37-39 1-76-23-97-58-21-34-16-63 10-86z"/>
+          <path d="M605 187c26-11 65-6 94 14 31 21 44 52 29 73-17 23-57 21-92-1-34-20-55-54-45-75 3-5 8-9 14-11z"/>
+          <path d="M746 193c23-11 54-7 71 9 17 17 9 38-18 45-28 7-63-5-72-25-5-12 2-22 19-29z"/>
+          <path d="M820 229c22-5 42 0 51 11 9 12 1 25-18 29-21 4-46-4-53-17-5-10 2-19 20-23z"/>
         </g>
       </svg>
       <canvas id="heroLiveChart" class="hero-live-chart"></canvas>
@@ -6823,19 +7170,26 @@ table tr:hover{
 }
 .hero-world-map{
   position:absolute;
-  inset:-8px -18px 0 -28px;
-  width:calc(100% + 46px);
-  height:172px;
-  opacity:.34;
+  inset:-18px -8px 0 -20px;
+  width:calc(100% + 34px);
+  height:188px;
+  opacity:.56;
   overflow:visible;
   mix-blend-mode:screen;
+  transform:translate3d(0,0,0);
+  animation:heroWorldFloat 8s ease-in-out infinite;
 }
 .hero-world-map .world-land{
   fill:url(#heroWorldDots);
   color:#5be5ff;
+  opacity:.9;
 }
 .hero-world-map circle{
   fill:rgba(91,229,255,.9);
+}
+@keyframes heroWorldFloat{
+  0%,100%{transform:translate3d(0,0,0) scale(1)}
+  50%{transform:translate3d(5px,-2px,0) scale(1.01)}
 }
 .map-dots{
   position:absolute;
@@ -6895,10 +7249,10 @@ table tr:hover{
 }
 .hero-live-chart{
   position:absolute;
-  inset:18px 0 8px 0;
+  inset:18px 4px 4px 2px;
   width:100%;
-  height:136px;
-  filter:drop-shadow(0 0 12px rgba(27,187,210,.52));
+  height:142px;
+  filter:drop-shadow(0 0 14px rgba(27,187,210,.62));
 }
 .hero-map svg{
   position:absolute;
