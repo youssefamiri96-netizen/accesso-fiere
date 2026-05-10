@@ -5603,6 +5603,18 @@ body.customize-mode .btn-link-soft{display:none}
         <span class="live-pill {% if s.scad_veic_totali > 0 %}live-amber{% else %}live-green{% endif %}"><i></i>Asset da verificare: {{ s.scad_veic_totali }}</span>
       </div>
     </div>
+    <div class="hero-map" aria-hidden="true">
+      <div class="map-dots"></div>
+      <svg viewBox="0 0 520 180" preserveAspectRatio="none">
+        <path class="map-line map-line-shadow" d="M18,135 C72,116 96,58 145,80 C195,103 208,42 258,61 C318,84 326,23 383,32 C438,41 445,96 502,58"></path>
+        <path class="map-line" d="M18,135 C72,116 96,58 145,80 C195,103 208,42 258,61 C318,84 326,23 383,32 C438,41 445,96 502,58"></path>
+      </svg>
+      <span class="map-node n1"></span>
+      <span class="map-node n2"></span>
+      <span class="map-node n3"></span>
+      <span class="map-node n4"></span>
+      <span class="map-node n5"></span>
+    </div>
     <div class="hero-cta">
       <a href="/cantieri/nuovo" class="hero-btn hero-btn-primary"><i class="fa fa-plus"></i> Nuova fiera</a>
       <div class="sync-status"><span class="sync-dot"></span><span class="sync-live">LIVE</span><span id="hero-sync-time">Sincronizzato ora</span></div>
@@ -5749,6 +5761,62 @@ body.customize-mode .btn-link-soft{display:none}
         <div class="timeline-empty"><i class="fa fa-check-circle"></i> Nessuna attivita recente. Il sistema e sincronizzato.</div>
         {% endfor %}
       </div>
+    </div>
+  </div>
+
+  <div class="ops-analytics-grid">
+    <a href="/scadenze" class="ops-panel ops-scadenze">
+      <div class="ops-panel-head"><span><i class="fa fa-calendar-days"></i> Scadenze imminenti</span><em>Vedi tutte</em></div>
+      <div class="ops-scadenze-body">
+        <div class="ops-ring ops-risk-ring" style="--ring-p:{{ s.scad_ring_pct }}%">
+          <strong>{{ s.scad_totali_dashboard }}</strong>
+          <span>totali</span>
+        </div>
+        <div class="ops-risk-list">
+          <div><span>Entro 7 giorni</span><strong class="risk-red">{{ s.scad_urgenti }}</strong></div>
+          <div><span>Entro 30 giorni</span><strong class="risk-amber">{{ s.scad_30 }}</strong></div>
+          <div><span>Entro 90 giorni</span><strong class="risk-green">{{ s.scad_90 }}</strong></div>
+        </div>
+      </div>
+    </a>
+
+    <div class="ops-panel ops-chart-panel">
+      <div class="ops-panel-head"><span><i class="fa fa-chart-column"></i> Presenze per cantiere</span><a href="/presenze">Vedi report</a></div>
+      <canvas id="chartOpsCantieri" height="168"></canvas>
+    </div>
+
+    <div class="ops-panel ops-chart-panel">
+      <div class="ops-panel-head"><span><i class="fa fa-chart-line"></i> Ore lavorate - ultimi 7 giorni</span><a href="/presenze">Vedi dettaglio</a></div>
+      <div class="ops-chart-total"><strong>{{ "%.0f"|format(s.ore_settimana_totale) }}h</strong><span>{{ s.ore_settimana_delta_label }}</span></div>
+      <canvas id="chartOpsOre" height="132"></canvas>
+    </div>
+
+    <a href="/admin/richieste" class="ops-panel ops-request-panel">
+      <div class="ops-panel-head"><span>Andamento richieste</span><em>Vedi tutte</em></div>
+      <div class="request-ring" style="--request-p:{{ s.richieste_percentuale }}%">
+        <strong>{{ s.richieste_percentuale }}%</strong>
+        <span>gestite</span>
+      </div>
+      <div class="request-stats">
+        <div><span>Totali</span><strong>{{ s.richieste_totali_mese }}</strong></div>
+        <div><span>Gestite</span><strong class="risk-green">{{ s.richieste_gestite_mese }}</strong></div>
+        <div><span>In attesa</span><strong class="risk-amber">{{ s.richieste_totali }}</strong></div>
+      </div>
+    </a>
+  </div>
+
+  <div class="ops-panel fiere-evidenza">
+    <div class="ops-panel-head"><span>Fiere in evidenza</span><a href="/cantieri">Vedi calendario</a></div>
+    <div class="fiere-strip">
+      {% for f in fiere_evidenza %}
+      <a href="/cantieri/{{ f.id }}/modifica" class="fiera-chip fiera-chip-{{ f.tone }}">
+        <span class="fiera-mark">{{ f.sigla }}</span>
+        <span class="fiera-copy"><strong>{{ f.nome }}</strong><small>{{ f.periodo }}</small></span>
+        <span class="fiera-status">{{ f.stato }}</span>
+        <span class="fiera-progress"><i style="width:{{ f.progress }}%"></i></span>
+      </a>
+      {% endfor %}
+      <a href="/cantieri/nuovo" class="fiera-add"><i class="fa fa-plus"></i> Aggiungi fiera</a>
     </div>
   </div>
 </div>
@@ -5947,6 +6015,602 @@ body.customize-mode .btn-link-soft{display:none}
 })();
 </script>
 
+<style>
+/* ═══════════ DARK CONTROL ROOM DASHBOARD ═══════════ */
+body{
+  background:
+    radial-gradient(circle at 82% 2%,rgba(22,96,130,.24),transparent 30%),
+    radial-gradient(circle at 9% 18%,rgba(15,79,117,.22),transparent 31%),
+    linear-gradient(180deg,#071321 0%,#06111f 56%,#050d18 100%) !important;
+  color:#dce7f5;
+}
+.main,.content{
+  background:transparent !important;
+}
+.content{
+  padding:22px 28px 34px;
+}
+.topbar{
+  background:rgba(4,12,23,.92) !important;
+  border-bottom:1px solid rgba(148,163,184,.18) !important;
+  color:#f8fafc !important;
+  box-shadow:0 18px 50px -46px rgba(0,0,0,.9);
+  backdrop-filter:blur(16px);
+}
+.topbar h1,.page-title,.tb-user strong{
+  color:#f8fafc !important;
+}
+.tb-user small,.topbar .muted{
+  color:#8ea2ba !important;
+}
+.topbar-search,.global-search,.search-box,input[type=search]{
+  background:rgba(8,22,38,.88) !important;
+  border-color:rgba(148,163,184,.18) !important;
+  color:#dce7f5 !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+}
+.topbar-search input,.global-search input,.search-box input{
+  color:#dce7f5 !important;
+}
+.topbar-search input::placeholder,.global-search input::placeholder,.search-box input::placeholder{
+  color:#74859a !important;
+}
+.tb-icon-btn,.topbar .icon-btn{
+  color:#b9c6d7 !important;
+  background:rgba(255,255,255,.035) !important;
+  border-color:rgba(148,163,184,.14) !important;
+}
+.tb-icon-btn:hover,.topbar .icon-btn:hover{
+  color:#fff !important;
+  background:rgba(56,169,189,.12) !important;
+}
+.sidebar{
+  background:
+    linear-gradient(180deg,rgba(5,14,27,.98),rgba(4,12,23,.98)) !important;
+  border-right:1px solid rgba(148,163,184,.14) !important;
+  box-shadow:18px 0 46px -44px rgba(0,0,0,.95);
+}
+.sidebar nav a,.sidebar .nav-link{
+  color:#aebccc !important;
+  border:1px solid transparent;
+}
+.sidebar nav a:hover,.sidebar .nav-link:hover{
+  background:rgba(56,169,189,.08) !important;
+  color:#eef7ff !important;
+}
+.sidebar nav a.active,.sidebar .nav-link.active{
+  background:linear-gradient(90deg,rgba(13,139,176,.22),rgba(13,139,176,.08)) !important;
+  color:#f8fafc !important;
+  border-color:rgba(56,169,189,.16);
+  box-shadow:inset 3px 0 0 #1bbbd2,0 12px 30px -26px rgba(27,187,210,.85);
+}
+.sidebar .nav-section,.sidebar .section-title{
+  color:#6f8095 !important;
+}
+.card,.table-wrap,.stat-card{
+  background:linear-gradient(180deg,rgba(14,28,46,.88),rgba(9,20,35,.9)) !important;
+  border:1px solid rgba(148,163,184,.18) !important;
+  color:#dce7f5;
+  box-shadow:0 22px 54px -44px rgba(0,0,0,.86),inset 0 1px 0 rgba(255,255,255,.035) !important;
+}
+.card-header{
+  background:rgba(255,255,255,.015) !important;
+  border-bottom:1px solid rgba(148,163,184,.16) !important;
+}
+.card-header h3,.card h3,.card strong,table td{
+  color:#eef5ff;
+}
+table th{
+  background:rgba(255,255,255,.035) !important;
+  color:#8fa3bd !important;
+  border-bottom-color:rgba(148,163,184,.14) !important;
+}
+table td,table tr{
+  border-color:rgba(148,163,184,.1) !important;
+}
+table tr:hover{
+  background:rgba(56,169,189,.055) !important;
+}
+.empty-state{
+  color:#8fa3bd !important;
+}
+.dash-customize-tray{
+  left:22px;
+  bottom:22px;
+}
+.btn-link-soft{
+  background:rgba(10,23,39,.92) !important;
+  border-color:rgba(148,163,184,.22) !important;
+  color:#9fb0c4 !important;
+}
+.cust-box{
+  background:#0b1728 !important;
+  border:1px solid rgba(148,163,184,.18);
+  color:#e2e8f0;
+}
+.cust-widget-item{
+  background:rgba(255,255,255,.04) !important;
+  border-color:rgba(148,163,184,.18) !important;
+  color:#dce7f5;
+}
+.cust-box .sub,.cust-widget-item .grip{
+  color:#8fa3bd !important;
+}
+
+.dash-hero{
+  margin-bottom:16px !important;
+}
+.hero-bar{
+  min-height:142px;
+  background:
+    radial-gradient(circle at 79% 8%,rgba(20,184,216,.24),transparent 28%),
+    radial-gradient(circle at 28% 120%,rgba(48,91,168,.22),transparent 35%),
+    linear-gradient(120deg,rgba(11,28,51,.96) 0%,rgba(9,22,40,.98) 45%,rgba(17,54,88,.92) 100%) !important;
+  border:1px solid rgba(82,153,205,.28) !important;
+  border-radius:15px !important;
+  padding:20px 24px !important;
+  box-shadow:0 30px 80px -48px rgba(0,0,0,.92),0 0 0 1px rgba(255,255,255,.02) inset,0 0 58px -40px rgba(27,187,210,.9) !important;
+}
+.hero-title{
+  font-size:27px !important;
+  letter-spacing:0 !important;
+  line-height:1.08;
+}
+.hero-intel{
+  color:#58e19d !important;
+  font-size:13px !important;
+  margin-top:8px !important;
+}
+.hero-sub{
+  display:none !important;
+}
+.hero-greeting{
+  max-width:690px;
+}
+.hero-map{
+  position:absolute;
+  right:188px;
+  top:12px;
+  width:min(520px,45%);
+  height:165px;
+  opacity:.92;
+  pointer-events:none;
+  z-index:0;
+}
+.map-dots{
+  position:absolute;
+  inset:4px 0 0 0;
+  opacity:.26;
+  background-image:radial-gradient(circle,rgba(98,202,221,.72) 1px,transparent 1.8px);
+  background-size:10px 10px;
+  mask-image:radial-gradient(ellipse at 58% 38%,black 0 43%,transparent 70%);
+}
+.hero-map svg{
+  position:absolute;
+  inset:20px 0 0 0;
+  width:100%;
+  height:130px;
+  overflow:visible;
+}
+.map-line{
+  fill:none;
+  stroke:#1bbbd2;
+  stroke-width:3;
+  stroke-linecap:round;
+  filter:drop-shadow(0 0 10px rgba(27,187,210,.75));
+}
+.map-line-shadow{
+  stroke:rgba(79,141,255,.26);
+  stroke-width:12;
+  filter:none;
+}
+.map-node{
+  position:absolute;
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:#5be5ff;
+  box-shadow:0 0 0 5px rgba(91,229,255,.12),0 0 22px rgba(91,229,255,.9);
+}
+.map-node.n1{left:20%;top:63%}
+.map-node.n2{left:38%;top:48%}
+.map-node.n3{left:54%;top:35%}
+.map-node.n4{left:72%;top:29%}
+.map-node.n5{left:88%;top:45%}
+.hero-cta{
+  min-width:190px;
+  justify-content:flex-end;
+}
+.hero-btn-primary{
+  border-radius:9px !important;
+  padding:11px 18px !important;
+  box-shadow:0 14px 30px -22px rgba(91,229,255,.8);
+}
+.sync-status{
+  color:#b8c7d7 !important;
+}
+.sync-live{
+  background:rgba(20,185,124,.14) !important;
+  color:#63e6aa !important;
+  border-color:rgba(99,230,170,.25) !important;
+}
+.live-pill{
+  background:rgba(255,255,255,.055) !important;
+  border-color:rgba(148,163,184,.18) !important;
+  color:#e4edf8 !important;
+  padding:7px 11px !important;
+}
+.live-green{color:#6ee7b7 !important}
+.live-blue{color:#7dd3fc !important}
+.live-amber{color:#fbbf24 !important}
+.live-red{color:#fb7185 !important}
+
+.kpi-grid{
+  grid-template-columns:repeat(6,minmax(0,1fr)) !important;
+  gap:13px !important;
+  margin-bottom:16px !important;
+}
+.kpi-card{
+  min-height:124px;
+  background:linear-gradient(180deg,rgba(18,35,57,.92),rgba(10,24,42,.95)) !important;
+  border:1px solid rgba(148,163,184,.18) !important;
+  color:#dce7f5 !important;
+  border-radius:12px !important;
+  box-shadow:0 20px 46px -42px rgba(0,0,0,.95),inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+.kpi-card:hover{
+  transform:translateY(-3px);
+  border-color:rgba(95,178,202,.34) !important;
+  box-shadow:0 26px 60px -42px rgba(0,0,0,1),0 0 34px -30px rgba(91,229,255,.85) !important;
+}
+.kpi-card::before{
+  background:linear-gradient(90deg,rgba(91,229,255,.62),rgba(91,229,255,0)) !important;
+  opacity:.48 !important;
+}
+.kpi-card::after{
+  background:rgba(91,229,255,.06) !important;
+}
+.kpi-icon{
+  width:43px !important;
+  height:43px !important;
+  border-radius:11px !important;
+}
+.kpi-label{
+  color:#91a6bf !important;
+  font-size:10.5px !important;
+}
+.kpi-value{
+  color:#f5f9ff !important;
+  font-size:34px !important;
+}
+.kpi-state-ok{
+  color:#41e093 !important;
+  font-size:23px !important;
+}
+.kpi-foot{
+  color:#8295ad !important;
+}
+.kpi-trend.up,.risk-green{color:#41e093 !important}
+.kpi-trend.down,.risk-red{color:#fb7185 !important}
+.risk-amber{color:#f59e0b !important}
+.kpi-pulse{
+  background:linear-gradient(180deg,rgba(68,46,13,.64),rgba(11,25,43,.95)) !important;
+  border-color:rgba(245,158,11,.52) !important;
+}
+.kpi-alert{
+  background:linear-gradient(180deg,rgba(78,21,32,.72),rgba(11,25,43,.95)) !important;
+  border-color:rgba(248,113,113,.55) !important;
+}
+.kpi-warn{
+  background:linear-gradient(180deg,rgba(70,46,14,.66),rgba(11,25,43,.95)) !important;
+  border-color:rgba(245,158,11,.48) !important;
+}
+
+.dash-live-grid{
+  grid-template-columns:minmax(0,1fr) minmax(0,.86fr) !important;
+  gap:16px !important;
+  margin-top:10px !important;
+}
+.insight-card,.timeline-card,.ops-panel{
+  background:linear-gradient(180deg,rgba(15,31,51,.9),rgba(9,21,36,.94)) !important;
+  border:1px solid rgba(148,163,184,.18) !important;
+  border-radius:12px !important;
+  box-shadow:0 20px 52px -44px rgba(0,0,0,.92),inset 0 1px 0 rgba(255,255,255,.035) !important;
+}
+.live-card-head,.ops-panel-head{
+  background:rgba(255,255,255,.018) !important;
+  border-bottom:1px solid rgba(148,163,184,.14) !important;
+  color:#f3f7ff !important;
+}
+.live-card-head span,.ops-panel-head span{
+  color:#f3f7ff !important;
+}
+.live-card-head em,.ops-panel-head em,.ops-panel-head a{
+  color:#a78bfa !important;
+  text-decoration:none;
+  font-style:normal;
+  font-size:11px;
+  font-weight:900;
+}
+.insight-row{
+  background:rgba(255,255,255,.035) !important;
+  border-color:rgba(148,163,184,.14) !important;
+  color:#e2e8f0 !important;
+  box-shadow:none !important;
+}
+.insight-row strong{
+  color:#f8fafc !important;
+}
+.insight-row span{
+  color:#91a6bf !important;
+}
+.insight-row a{
+  background:rgba(255,255,255,.04) !important;
+  color:#eef7ff !important;
+  border-color:rgba(148,163,184,.18) !important;
+}
+.timeline-item{
+  border-bottom-color:rgba(148,163,184,.12) !important;
+}
+.timeline-copy strong{
+  color:#f8fafc !important;
+}
+.timeline-copy small{
+  color:#8fa3bd !important;
+}
+.timeline-copy em{
+  color:#a8b8ca !important;
+  background:rgba(255,255,255,.045) !important;
+  border-color:rgba(148,163,184,.13) !important;
+}
+
+.ops-analytics-grid{
+  display:grid;
+  grid-template-columns:.95fr 1.35fr 1.25fr .95fr;
+  gap:16px;
+  margin-top:16px;
+}
+.ops-panel{
+  display:block;
+  color:#dce7f5;
+  text-decoration:none;
+  overflow:hidden;
+}
+.ops-panel-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:13px 15px;
+  font-weight:900;
+}
+.ops-panel-head i{
+  color:#7dd3fc;
+  margin-right:7px;
+}
+.ops-scadenze-body{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  padding:18px 17px 19px;
+}
+.ops-ring,.request-ring{
+  width:124px;
+  height:124px;
+  border-radius:50%;
+  flex:0 0 auto;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  background:conic-gradient(#f59e0b 0 var(--ring-p),rgba(255,255,255,.08) var(--ring-p) 100%);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 20px 44px -36px rgba(0,0,0,.9);
+}
+.ops-ring::after,.request-ring::after{
+  content:"";
+  position:absolute;
+  inset:16px;
+  border-radius:50%;
+  background:#0b1728;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+}
+.ops-ring strong,.ops-ring span,.request-ring strong,.request-ring span{
+  position:relative;
+  z-index:1;
+}
+.ops-ring strong,.request-ring strong{
+  font-size:29px;
+  color:#f8fafc;
+  line-height:1;
+}
+.ops-ring span,.request-ring span{
+  color:#91a6bf;
+  font-size:11px;
+  font-weight:800;
+  margin-top:4px;
+}
+.ops-risk-list{
+  display:grid;
+  gap:8px;
+  flex:1;
+}
+.ops-risk-list div{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(148,163,184,.12);
+  border-radius:9px;
+  padding:9px 10px;
+}
+.ops-risk-list span,.request-stats span{
+  color:#91a6bf;
+  font-size:11px;
+  font-weight:800;
+}
+.ops-risk-list strong,.request-stats strong{
+  font-size:14px;
+  font-weight:900;
+}
+.ops-chart-panel{
+  padding-bottom:12px;
+}
+.ops-chart-panel canvas{
+  padding:0 13px 7px;
+  height:168px !important;
+}
+#chartOpsOre{height:132px !important}
+#chartOre,#chartCantieri{height:230px !important}
+.ops-chart-total{
+  padding:13px 16px 0;
+  display:flex;
+  align-items:end;
+  gap:9px;
+}
+.ops-chart-total strong{
+  color:#f8fafc;
+  font-size:25px;
+  line-height:1;
+}
+.ops-chart-total span{
+  color:#41e093;
+  font-size:11px;
+  font-weight:900;
+  padding-bottom:2px;
+}
+.request-ring{
+  margin:17px auto 13px;
+  background:conic-gradient(#41e093 0 var(--request-p),rgba(255,255,255,.08) var(--request-p) 100%);
+}
+.request-stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  border-top:1px solid rgba(148,163,184,.14);
+  margin:0 14px 14px;
+  padding-top:12px;
+  text-align:center;
+}
+.request-stats div{
+  display:grid;
+  gap:3px;
+}
+
+.fiere-evidenza{
+  margin-top:16px;
+}
+.fiere-strip{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr)) minmax(220px,.9fr);
+  gap:12px;
+  padding:14px;
+}
+.fiera-chip,.fiera-add{
+  position:relative;
+  min-height:70px;
+  border-radius:10px;
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(148,163,184,.14);
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:12px;
+  text-decoration:none;
+  color:#dce7f5;
+  overflow:hidden;
+  transition:all .16s;
+}
+.fiera-chip:hover,.fiera-add:hover{
+  transform:translateY(-2px);
+  border-color:rgba(91,229,255,.26);
+  background:rgba(255,255,255,.055);
+}
+.fiera-mark{
+  width:40px;
+  height:40px;
+  border-radius:9px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-size:10px;
+  font-weight:900;
+  background:linear-gradient(135deg,#2f6f9f,#174e74);
+  flex:0 0 auto;
+}
+.fiera-chip-amber .fiera-mark{background:linear-gradient(135deg,#d99221,#ae6d14)}
+.fiera-chip-green .fiera-mark{background:linear-gradient(135deg,#149164,#0f6f50)}
+.fiera-chip-blue .fiera-mark{background:linear-gradient(135deg,#2f6f9f,#174e74)}
+.fiera-copy{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+.fiera-copy strong{
+  color:#f8fafc;
+  font-size:12px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.fiera-copy small{
+  color:#91a6bf;
+  font-weight:700;
+}
+.fiera-status{
+  margin-left:auto;
+  background:rgba(65,224,147,.12);
+  color:#67e8a7;
+  border:1px solid rgba(65,224,147,.16);
+  border-radius:999px;
+  padding:3px 7px;
+  font-size:9px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+.fiera-progress{
+  position:absolute;
+  left:12px;
+  right:12px;
+  bottom:7px;
+  height:4px;
+  border-radius:999px;
+  background:rgba(148,163,184,.18);
+}
+.fiera-progress i{
+  display:block;
+  height:100%;
+  border-radius:inherit;
+  background:linear-gradient(90deg,#41e093,#1bbbd2);
+}
+.fiera-add{
+  justify-content:center;
+  border-style:dashed;
+  color:#c4b5fd;
+  font-weight:900;
+}
+
+#chartOre,#chartCantieri,#chartOpsOre,#chartOpsCantieri{
+  max-width:100%;
+}
+@media (max-width:1500px){
+  .kpi-grid{grid-template-columns:repeat(3,minmax(0,1fr)) !important}
+  .ops-analytics-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .fiere-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:980px){
+  .content{padding:16px}
+  .hero-map{display:none}
+  .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
+  .dash-live-grid,.ops-analytics-grid,.fiere-strip{grid-template-columns:1fr !important}
+}
+@media (max-width:640px){
+  .kpi-grid{grid-template-columns:1fr !important}
+}
+</style>
+
 {% macro w_ore_settimana() %}
 <div class="card widget" data-widget-id="ore_settimana">
   <span class="widget-drag-handle"><i class="fa fa-grip-vertical"></i> Sposta</span>
@@ -6138,10 +6802,10 @@ let currentLayout = {{ layout | tojson }};
 // ════════ Grafici ════════
 function renderCharts() {
   const premiumTooltip = {
-    backgroundColor:'#0b1624',
+    backgroundColor:'#071321',
     titleColor:'#ffffff',
     bodyColor:'#dbeafe',
-    borderColor:'rgba(134,203,214,.32)',
+    borderColor:'rgba(125,211,252,.35)',
     borderWidth:1,
     padding:12,
     cornerRadius:10,
@@ -6149,35 +6813,49 @@ function renderCharts() {
     titleFont:{weight:'800',size:12},
     bodyFont:{weight:'700',size:12}
   };
-  const oreEl = document.getElementById('chartOre');
-  if (oreEl && !oreEl._rendered) {
-    oreEl._rendered = true;
-    const oreData = {{ ore_settimana | tojson }};
-    const oreCtx = oreEl.getContext('2d');
-    const oreGrad = oreCtx.createLinearGradient(0,0,0,220);
-    oreGrad.addColorStop(0,'rgba(56,169,189,.42)');
-    oreGrad.addColorStop(1,'rgba(56,169,189,.08)');
-    new Chart(oreEl, {
-      type:'bar',
-      data:{labels:oreData.map(d=>d.data),datasets:[{label:'Ore lavorate',data:oreData.map(d=>d.ore),backgroundColor:oreGrad,borderColor:'#38a9bd',borderWidth:1.5,borderRadius:8,borderSkipped:false,maxBarThickness:30}]},
-      options:{responsive:true,animation:{duration:900,easing:'easeOutQuart'},plugins:{legend:{display:false},tooltip:{...premiumTooltip,callbacks:{label:function(ctx){return ctx.parsed.y + ' ore lavorate';}}}},scales:{y:{beginAtZero:true,grid:{color:'#eaf0f6'},ticks:{color:'#64748b'}},x:{grid:{display:false},ticks:{color:'#64748b'}}}}
+  const axis = {
+    grid:'rgba(148,163,184,.13)',
+    ticks:'#8fa3bd'
+  };
+  const oreData = {{ ore_settimana | tojson }};
+  const cantieriData = {{ presenze_cantiere | tojson }};
+
+  function renderOreLine(id, compact) {
+    const el = document.getElementById(id);
+    if (!el || el._rendered) return;
+    el._rendered = true;
+    const ctx = el.getContext('2d');
+    const grad = ctx.createLinearGradient(0,0,0,compact ? 150 : 220);
+    grad.addColorStop(0,'rgba(59,130,246,.38)');
+    grad.addColorStop(.55,'rgba(27,187,210,.16)');
+    grad.addColorStop(1,'rgba(27,187,210,0)');
+    new Chart(el, {
+      type:'line',
+      data:{labels:oreData.map(d=>d.data),datasets:[{label:'Ore lavorate',data:oreData.map(d=>d.ore),fill:true,backgroundColor:grad,borderColor:'#3b82f6',borderWidth:2.2,tension:.38,pointRadius:compact ? 3 : 4,pointHoverRadius:6,pointBackgroundColor:'#7dd3fc',pointBorderColor:'#0b1728',pointBorderWidth:2}]},
+      options:{responsive:true,maintainAspectRatio:false,animation:{duration:950,easing:'easeOutQuart'},plugins:{legend:{display:false},tooltip:{...premiumTooltip,callbacks:{label:function(ctx){return ctx.parsed.y + ' ore lavorate';}}}},scales:{y:{beginAtZero:true,grid:{color:axis.grid},ticks:{color:axis.ticks}},x:{grid:{display:false},ticks:{color:axis.ticks}}}}
     });
   }
-  const canEl = document.getElementById('chartCantieri');
-  if (canEl && !canEl._rendered) {
-    canEl._rendered = true;
-    const d = {{ presenze_cantiere | tojson }};
-    const canCtx = canEl.getContext('2d');
-    const canGrad = canCtx.createLinearGradient(0,0,420,0);
-    canGrad.addColorStop(0,'rgba(15,79,117,.9)');
-    canGrad.addColorStop(.55,'rgba(56,169,189,.62)');
-    canGrad.addColorStop(1,'rgba(139,216,182,.5)');
-    new Chart(canEl, {
+
+  function renderCantieriBar(id, compact) {
+    const el = document.getElementById(id);
+    if (!el || el._rendered) return;
+    el._rendered = true;
+    const ctx = el.getContext('2d');
+    const grad = ctx.createLinearGradient(0,0,0,compact ? 170 : 220);
+    grad.addColorStop(0,'rgba(91,229,255,.9)');
+    grad.addColorStop(.5,'rgba(59,130,246,.78)');
+    grad.addColorStop(1,'rgba(65,224,147,.72)');
+    new Chart(el, {
       type:'bar',
-      data:{labels:d.map(x=>x.nome),datasets:[{label:'Presenze',data:d.map(x=>x.count),backgroundColor:canGrad,borderColor:'rgba(15,79,117,.22)',borderWidth:1,borderRadius:9,borderSkipped:false,maxBarThickness:28}]},
-      options:{indexAxis:'y',responsive:true,animation:{duration:900,easing:'easeOutQuart'},plugins:{legend:{display:false},tooltip:{...premiumTooltip,callbacks:{label:function(ctx){return ctx.parsed.x + ' presenza/e registrate';}}}},scales:{x:{beginAtZero:true,grid:{color:'#eaf0f6'},ticks:{precision:0,color:'#64748b'}},y:{grid:{display:false},ticks:{color:'#64748b'}}}}
+      data:{labels:cantieriData.map(x=>x.nome),datasets:[{label:'Presenze',data:cantieriData.map(x=>x.count),backgroundColor:grad,borderColor:'rgba(125,211,252,.34)',borderWidth:1,borderRadius:9,borderSkipped:false,maxBarThickness:compact ? 34 : 40}]},
+      options:{responsive:true,maintainAspectRatio:false,animation:{duration:900,easing:'easeOutQuart'},plugins:{legend:{display:false},tooltip:{...premiumTooltip,callbacks:{label:function(ctx){return ctx.parsed.y + ' presenza/e registrate';}}}},scales:{y:{beginAtZero:true,grid:{color:axis.grid},ticks:{precision:0,color:axis.ticks}},x:{grid:{display:false},ticks:{color:axis.ticks,maxRotation:0,autoSkip:true}}}}
     });
   }
+
+  renderOreLine('chartOre', false);
+  renderOreLine('chartOpsOre', true);
+  renderCantieriBar('chartCantieri', false);
+  renderCantieriBar('chartOpsCantieri', true);
 }
 renderCharts();
 
@@ -6381,6 +7059,20 @@ def dashboard():
         d = (date.today() - timedelta(days=i)).isoformat()
         ore = db.execute("SELECT COALESCE(SUM(ore_totali),0) FROM presenze WHERE data=?",(d,)).fetchone()[0]
         ore_settimana.append({'data': d[5:], 'ore': round(ore,1)})
+    ore_settimana_totale = sum(float(x.get('ore') or 0) for x in ore_settimana)
+    prev_start = (date.today() - timedelta(days=13)).isoformat()
+    prev_end = (date.today() - timedelta(days=7)).isoformat()
+    ore_settimana_prev = db.execute(
+        "SELECT COALESCE(SUM(ore_totali),0) FROM presenze WHERE data BETWEEN ? AND ?",
+        (prev_start, prev_end)
+    ).fetchone()[0]
+    if ore_settimana_prev:
+        ore_delta = round(((ore_settimana_totale - float(ore_settimana_prev or 0)) / float(ore_settimana_prev or 1)) * 100, 1)
+        ore_delta_label = (f"+{ore_delta}% vs 7 giorni precedenti" if ore_delta >= 0 else f"{ore_delta}% vs 7 giorni precedenti")
+    else:
+        ore_delta_label = "trend in avvio"
+    s['ore_settimana_totale'] = round(ore_settimana_totale, 1)
+    s['ore_settimana_delta_label'] = ore_delta_label
 
     # Presenze per cantiere questo mese
     presenze_cantiere = db.execute("""SELECT COALESCE(c.nome,'Non specificato') as nome, COUNT(*) as count
@@ -6503,6 +7195,11 @@ def dashboard():
         {'title': 'Prossimi 30 giorni', 'rows': [d for d in scadenze_list if d['priority_group'] == 'Prossimi 30 giorni']},
         {'title': 'Prossimi 90 giorni', 'rows': [d for d in scadenze_list if d['priority_group'] == 'Prossimi 90 giorni']},
     ]
+    s['scad_urgenti'] = len(scadenze_groups[0]['rows'])
+    s['scad_30'] = len(scadenze_groups[1]['rows'])
+    s['scad_90'] = len(scadenze_groups[2]['rows'])
+    s['scad_totali_dashboard'] = len(scadenze_list)
+    s['scad_ring_pct'] = min(100, max(0, s['scad_totali_dashboard'] * 9))
 
     ferie_attesa = db.execute("""SELECT f.*,u.nome,u.cognome FROM ferie_permessi f
         JOIN utenti u ON u.id=f.utente_id WHERE f.stato='in_attesa' LIMIT 5""").fetchall()
@@ -6602,6 +7299,87 @@ def dashboard():
             })
     attivita_recenti = attivita_recenti[:7]
 
+    richieste_mese_presenze = db.execute(
+        "SELECT COUNT(*) FROM richieste_presenze WHERE substr(COALESCE(creato_il,data),1,7)=?",
+        (mese,)
+    ).fetchone()[0]
+    richieste_mese_ferie = db.execute(
+        "SELECT COUNT(*) FROM ferie_permessi WHERE substr(COALESCE(creato_il,data_inizio),1,7)=?",
+        (mese,)
+    ).fetchone()[0]
+    richieste_mese_spese = db.execute(
+        "SELECT COUNT(*) FROM spese_rimborso WHERE substr(COALESCE(creato_il,data),1,7)=?",
+        (mese,)
+    ).fetchone()[0]
+    richieste_gestite_presenze = db.execute(
+        "SELECT COUNT(*) FROM richieste_presenze WHERE stato!='in_attesa' AND substr(COALESCE(gestito_il,creato_il,data),1,7)=?",
+        (mese,)
+    ).fetchone()[0]
+    richieste_gestite_ferie = db.execute(
+        "SELECT COUNT(*) FROM ferie_permessi WHERE stato!='in_attesa' AND substr(COALESCE(gestito_il,creato_il,data_inizio),1,7)=?",
+        (mese,)
+    ).fetchone()[0]
+    richieste_gestite_spese = db.execute(
+        "SELECT COUNT(*) FROM spese_rimborso WHERE stato!='in_attesa' AND substr(COALESCE(creato_il,data),1,7)=?",
+        (mese,)
+    ).fetchone()[0]
+    s['richieste_totali_mese'] = richieste_mese_presenze + richieste_mese_ferie + richieste_mese_spese
+    s['richieste_gestite_mese'] = richieste_gestite_presenze + richieste_gestite_ferie + richieste_gestite_spese
+    if s['richieste_totali_mese'] > 0:
+        s['richieste_percentuale'] = min(100, round((s['richieste_gestite_mese'] / s['richieste_totali_mese']) * 100))
+    elif s['richieste_totali'] == 0:
+        s['richieste_percentuale'] = 100
+    else:
+        s['richieste_percentuale'] = 0
+
+    fiere_evidenza = []
+    fiere_rows = db.execute("""
+        SELECT id,nome,citta,data_setup,data_live,data_dismantling
+          FROM cantieri
+         WHERE COALESCE(attivo,1)=1
+         ORDER BY COALESCE(data_live,data_setup,data_dismantling,'9999-12-31') ASC, nome ASC
+         LIMIT 3
+    """).fetchall()
+    today_dt = date.today()
+    for f in fiere_rows:
+        start_txt = (f['data_setup'] or f['data_live'] or '')[:10]
+        end_txt = (f['data_dismantling'] or f['data_live'] or f['data_setup'] or '')[:10]
+        periodo = "date da definire"
+        progress = 28
+        tone = "blue"
+        stato = "pianificata"
+        try:
+            start_dt = date.fromisoformat(start_txt) if start_txt else None
+            end_dt = date.fromisoformat(end_txt) if end_txt else start_dt
+            if start_dt and end_dt:
+                periodo = f"{start_dt.strftime('%d/%m')} - {end_dt.strftime('%d/%m/%Y')}"
+                total_days = max((end_dt - start_dt).days, 1)
+                elapsed = min(max((today_dt - start_dt).days, 0), total_days)
+                progress = int((elapsed / total_days) * 100) if today_dt >= start_dt else 35
+                if start_dt <= today_dt <= end_dt:
+                    tone = "amber"
+                    stato = "in corso"
+                elif today_dt < start_dt:
+                    tone = "green"
+                    stato = "confermata"
+                else:
+                    tone = "blue"
+                    stato = "chiusa"
+                    progress = 100
+        except Exception:
+            pass
+        nome_fiera = f['nome'] or 'Fiera'
+        sigla = ''.join([p[:1] for p in nome_fiera.split()[:2]]).upper() or 'AF'
+        fiere_evidenza.append({
+            'id': f['id'],
+            'nome': nome_fiera,
+            'periodo': periodo,
+            'stato': stato,
+            'progress': max(8, min(progress, 100)),
+            'tone': tone,
+            'sigla': sigla[:3],
+        })
+
     # Carico layout personalizzato (1 riga per azienda — condiviso fra admin)
     layout = _default_dashboard_layout()
     try:
@@ -6629,6 +7407,7 @@ def dashboard():
         presenze_cantiere=[dict(r) for r in presenze_cantiere],
         scadenze=scadenze_list,
         scadenze_groups=scadenze_groups,
+        fiere_evidenza=fiere_evidenza,
         ferie_attesa=ferie_attesa,
         richieste_attesa=[dict(r) for r in richieste_attesa],
         attivita_recenti=attivita_recenti,
