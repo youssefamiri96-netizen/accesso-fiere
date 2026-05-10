@@ -5589,12 +5589,18 @@ body.customize-mode .btn-link-soft{display:none}
       <div class="hero-eyebrow"><span id="hero-greet">Ciao</span>, <strong>{{ session.get('nome','') }}</strong></div>
       <div class="hero-title">Control room operativa</div>
       <div class="hero-sub"><i class="fa fa-calendar-day"></i> <span id="hero-date"></span> <i class="fa fa-clock"></i> <span id="hero-time"></span></div>
+      <div class="hero-intel">
+        {% if s.scad_doc_totali > 0 %}Controllo richiesto: {{ s.scad_doc_totali }} document{{ 'o' if s.scad_doc_totali == 1 else 'i' }} da verificare prima degli accessi.
+        {% elif s.scad_veic_totali > 0 %}Situazione sotto controllo. {{ s.scad_veic_totali }} mezz{{ 'o richiede' if s.scad_veic_totali == 1 else 'i richiedono' }} verifica.
+        {% elif s.richieste_totali > 0 %}Operativita attiva: {{ s.richieste_totali }} richiest{{ 'a' if s.richieste_totali == 1 else 'e' }} da sbloccare.
+        {% else %}Situazione sotto controllo. Nessuna criticita immediata.{% endif %}
+      </div>
       <div class="hero-live-status">
-        <span class="live-pill live-green"><i></i>{{ s.fiere_live }} fiere in setup</span>
-        <span class="live-pill {% if s.richieste_totali > 0 %}live-red{% else %}live-green{% endif %}"><i></i>{{ s.richieste_totali }} workflow bloccati</span>
-        <span class="live-pill live-blue"><i></i>{{ s.presenti }} operatori in campo</span>
-        <span class="live-pill {% if s.scad_doc_totali > 0 %}live-amber{% else %}live-green{% endif %}"><i></i>{{ s.scad_doc_totali }} documenti critici</span>
-        <span class="live-pill {% if s.scad_veic_totali > 0 %}live-red{% else %}live-green{% endif %}"><i></i>{{ s.scad_veic_totali }} mezzi da verificare</span>
+        <span class="live-pill live-green"><i></i>Setup oggi: {{ s.fiere_setup }}</span>
+        <span class="live-pill {% if s.richieste_totali > 0 %}live-amber{% else %}live-green{% endif %}"><i></i>Workflow bloccati: {{ s.richieste_totali }}</span>
+        <span class="live-pill live-blue"><i></i>Operatori live: {{ s.presenti }}</span>
+        <span class="live-pill {% if s.scad_doc_totali > 0 %}live-amber{% else %}live-green{% endif %}"><i></i>Documenti critici: {{ s.scad_doc_totali }}</span>
+        <span class="live-pill {% if s.scad_veic_totali > 0 %}live-amber{% else %}live-green{% endif %}"><i></i>Asset da verificare: {{ s.scad_veic_totali }}</span>
       </div>
     </div>
     <div class="hero-cta">
@@ -5623,7 +5629,7 @@ body.customize-mode .btn-link-soft{display:none}
           {% if s.delta_ore_pct > 0 %}<i class="fa fa-arrow-trend-up"></i> +{{ s.delta_ore_pct }}%
           {% elif s.delta_ore_pct < 0 %}<i class="fa fa-arrow-trend-down"></i> {{ s.delta_ore_pct }}%
           {% else %}<i class="fa fa-minus"></i> stabile{% endif %}
-          vs mese scorso
+          rispetto al mese scorso
         </div>
       </div>
       <div class="kpi-glow"></div>
@@ -5636,7 +5642,7 @@ body.customize-mode .btn-link-soft{display:none}
         <div class="kpi-value"><span class="count-up" data-count="{{ s.cantieri }}">{{ s.cantieri }}</span></div>
         <div class="kpi-foot">
           {% if s.fiere_live > 0 %}<span class="kpi-dot kpi-dot-live"></span> {{ s.fiere_live }} live oggi
-          {% else %}<i class="fa fa-calendar"></i> nessuna live oggi{% endif %}
+          {% else %}<i class="fa fa-calendar"></i> nessuna fiera live oggi{% endif %}
         </div>
       </div>
       <div class="kpi-glow"></div>
@@ -5646,35 +5652,47 @@ body.customize-mode .btn-link-soft{display:none}
       <div class="kpi-icon"><i class="fa fa-bell"></i></div>
       <div class="kpi-body">
         <div class="kpi-label">Richieste in attesa</div>
+        {% if s.richieste_totali > 0 %}
         <div class="kpi-value"><span class="count-up" data-count="{{ s.richieste_totali }}">{{ s.richieste_totali }}</span></div>
+        {% else %}
+        <div class="kpi-value kpi-state-ok">Tutto gestito</div>
+        {% endif %}
         <div class="kpi-foot">
           {% if s.richieste_totali > 0 %}<i class="fa fa-circle-exclamation"></i> timbrature, ferie o rimborsi da approvare
-          {% else %}<i class="fa fa-circle-check"></i> nessuna pendente{% endif %}
+          {% else %}<i class="fa fa-circle-check"></i> nessuna richiesta in attesa{% endif %}
         </div>
       </div>
       <div class="kpi-glow"></div>
     </a>
 
-    <a href="/documenti" class="kpi-card kpi-rose {% if s.scad_doc_totali > 0 %}kpi-alert{% endif %}">
+    <a href="/documenti" class="kpi-card kpi-rose {% if s.scad_doc_scaduti > 0 %}kpi-alert{% elif s.scad_doc_30g > 0 %}kpi-warn{% endif %}">
       <div class="kpi-icon"><i class="fa fa-file-circle-exclamation"></i></div>
       <div class="kpi-body">
         <div class="kpi-label">Documenti</div>
-        <div class="kpi-value"><span class="count-up" data-count="{{ s.scad_doc_30g }}">{{ s.scad_doc_30g }}</span>{% if s.scad_doc_scaduti > 0 %}<span class="kpi-unit" style="color:#dc2626;font-weight:800">+{{ s.scad_doc_scaduti }} scad.</span>{% endif %}</div>
+        {% if s.scad_doc_totali > 0 %}
+        <div class="kpi-value"><span class="count-up" data-count="{{ s.scad_doc_totali }}">{{ s.scad_doc_totali }}</span></div>
+        {% else %}
+        <div class="kpi-value kpi-state-ok">OK</div>
+        {% endif %}
         <div class="kpi-foot">
-          {% if s.scad_doc_totali > 0 %}<i class="fa fa-file"></i> dipendenti + aziendali in scadenza
-          {% else %}<i class="fa fa-shield-check"></i> documenti in regola{% endif %}
+          {% if s.scad_doc_totali > 0 %}<i class="fa fa-file"></i> {{ s.scad_doc_totali }} criticita documentale da gestire
+          {% else %}<i class="fa fa-shield-check"></i> tutti i documenti risultano conformi{% endif %}
         </div>
       </div>
       <div class="kpi-glow"></div>
     </a>
 
-    <a href="/veicoli" class="kpi-card kpi-amber {% if s.scad_veic_totali > 0 %}kpi-alert{% endif %}">
+    <a href="/veicoli" class="kpi-card kpi-amber {% if s.scad_veic_scaduti > 0 %}kpi-alert{% elif s.scad_veic_30g > 0 %}kpi-warn{% endif %}">
       <div class="kpi-icon"><i class="fa fa-truck"></i></div>
       <div class="kpi-body">
         <div class="kpi-label">Veicoli</div>
-        <div class="kpi-value"><span class="count-up" data-count="{{ s.scad_veic_30g }}">{{ s.scad_veic_30g }}</span>{% if s.scad_veic_scaduti > 0 %}<span class="kpi-unit" style="color:#dc2626;font-weight:800">+{{ s.scad_veic_scaduti }} scad.</span>{% endif %}</div>
+        {% if s.scad_veic_totali > 0 %}
+        <div class="kpi-value"><span class="count-up" data-count="{{ s.scad_veic_totali }}">{{ s.scad_veic_totali }}</span></div>
+        {% else %}
+        <div class="kpi-value kpi-state-ok">OK</div>
+        {% endif %}
         <div class="kpi-foot">
-          {% if s.scad_veic_totali > 0 %}<i class="fa fa-triangle-exclamation"></i> assicurazioni/revisioni in scadenza
+          {% if s.scad_veic_totali > 0 %}<i class="fa fa-triangle-exclamation"></i> {{ s.scad_veic_totali }} scadenz{{ 'a' if s.scad_veic_totali == 1 else 'e' }} da gestire
           {% else %}<i class="fa fa-shield-check"></i> veicoli in regola{% endif %}
         </div>
       </div>
@@ -5700,16 +5718,16 @@ body.customize-mode .btn-link-soft{display:none}
       </div>
       <div class="insight-list">
         {% if s.scad_doc_totali > 0 %}
-        <div class="insight-row risk-high"><strong>Rischio documentale</strong><span>{{ s.scad_doc_totali }} documento/i richiedono controllo prima degli accessi.</span></div>
+        <div class="insight-row risk-high"><em>Critico</em><strong>Rischio documentale</strong><span>{{ s.scad_doc_totali }} document{{ 'o richiede' if s.scad_doc_totali == 1 else 'i richiedono' }} controllo prima degli accessi.</span><a href="/documenti">Apri documenti</a></div>
         {% endif %}
         {% if s.scad_veic_totali > 0 %}
-        <div class="insight-row risk-mid"><strong>Asset da verificare</strong><span>{{ s.scad_veic_totali }} mezzo/i con scadenze operative da gestire.</span></div>
+        <div class="insight-row risk-mid"><em>Attenzione</em><strong>Asset da verificare</strong><span>{{ s.scad_veic_totali }} mezz{{ 'o con scadenza operativa' if s.scad_veic_totali == 1 else 'i con scadenze operative' }} da gestire.</span><a href="/veicoli">Apri verifica mezzi</a></div>
         {% endif %}
         {% if s.richieste_totali > 0 %}
-        <div class="insight-row risk-mid"><strong>Workflow da sbloccare</strong><span>{{ s.richieste_totali }} richiesta/e in attesa possono rallentare operativita e paghe.</span></div>
+        <div class="insight-row risk-mid"><em>Attenzione</em><strong>Workflow da sbloccare</strong><span>{{ s.richieste_totali }} richiest{{ 'a' if s.richieste_totali == 1 else 'e' }} in attesa possono rallentare operativita e paghe.</span><a href="/admin/richieste">Gestisci richieste</a></div>
         {% endif %}
         {% if s.scad_doc_totali == 0 and s.scad_veic_totali == 0 and s.richieste_totali == 0 %}
-        <div class="insight-row risk-ok"><strong>Tutto conforme</strong><span>Nessuna criticita immediata su richieste, documenti e mezzi.</span></div>
+        <div class="insight-row risk-ok"><em>Suggerimento</em><strong>Tutto conforme</strong><span>Nessuna criticita immediata su richieste, documenti e mezzi. Il sistema resta in ascolto.</span></div>
         {% endif %}
       </div>
     </div>
@@ -5728,7 +5746,7 @@ body.customize-mode .btn-link-soft{display:none}
           </span>
         </div>
         {% else %}
-        <div class="timeline-empty"><i class="fa fa-check-circle"></i> Nessuna attivita recente da gestire.</div>
+        <div class="timeline-empty"><i class="fa fa-check-circle"></i> Nessuna attivita recente. Il sistema e sincronizzato.</div>
         {% endfor %}
       </div>
     </div>
@@ -5745,7 +5763,7 @@ body.customize-mode .btn-link-soft{display:none}
     radial-gradient(circle at 15% 112%,rgba(217,146,33,.12),transparent 34%),
     linear-gradient(135deg,rgba(10,22,36,.98) 0%,rgba(13,34,52,.97) 56%,rgba(34,80,106,.9) 100%),
     repeating-linear-gradient(90deg,rgba(255,255,255,.045) 0 1px,transparent 1px 38px);
-  border-radius:18px;padding:24px 28px;margin-bottom:22px;
+  border-radius:18px;padding:19px 25px;margin-bottom:18px;
   display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px;
   border:1px solid rgba(255,255,255,.12);
   box-shadow:0 32px 72px -46px rgba(7,17,31,.92),0 0 44px -28px rgba(56,169,189,.62);
@@ -5765,7 +5783,8 @@ body.customize-mode .btn-link-soft{display:none}
 .hero-title{font-size:22px;font-weight:800;margin-bottom:6px;letter-spacing:0}
 .hero-sub{font-size:12px;color:rgba(255,255,255,.6);display:flex;gap:14px;flex-wrap:wrap}
 .hero-sub i{margin-right:5px;font-size:11px}
-.hero-live-status{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.hero-intel{margin-top:9px;font-size:13px;line-height:1.35;color:rgba(255,255,255,.84);font-weight:700;max-width:720px}
+.hero-live-status{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}
 .live-pill{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:7px 10px;font-size:11px;font-weight:900;color:#e2e8f0;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);letter-spacing:0}
 .live-pill i{width:8px;height:8px;border-radius:50%;display:inline-block;box-shadow:0 0 0 0 currentColor;animation:liveDot 2.4s infinite}
 .live-green{color:#8bd8b6}.live-blue{color:#8cc9d4}.live-amber{color:#e8bf6b}.live-red{color:#e79a9a}
@@ -5811,6 +5830,7 @@ body.customize-mode .btn-link-soft{display:none}
 .kpi-body{flex:1;min-width:0;position:relative;z-index:1}
 .kpi-label{font-size:11px;text-transform:uppercase;letter-spacing:0;font-weight:700;color:var(--text-light);margin-bottom:4px}
 .kpi-value{font-size:39px;font-weight:900;color:var(--text);line-height:.96;letter-spacing:0;font-variant-numeric:tabular-nums}
+.kpi-state-ok{font-size:24px;line-height:1.05;color:#11704f;letter-spacing:0;white-space:normal}
 .kpi-unit{font-size:16px;color:var(--text-light);font-weight:600;margin-left:2px}
 .kpi-foot{font-size:11px;color:var(--text-light);margin-top:6px;font-weight:600}
 .kpi-foot i{margin-right:3px}
@@ -5840,6 +5860,7 @@ body.customize-mode .btn-link-soft{display:none}
 .kpi-pulse .kpi-icon{animation:kpiIconPulse 1.6s infinite}
 @keyframes kpiIconPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
 .kpi-alert{border-color:#fca5a5;background:#fef2f2}
+.kpi-warn{border-color:#f7cf8d;background:#fffbeb}
 
 .dash-live-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;margin-top:22px}
 .insight-card,.timeline-card{background:rgba(255,255,255,.96);border:1px solid var(--border);border-radius:15px;box-shadow:0 22px 54px -44px rgba(7,17,31,.56);overflow:hidden;backdrop-filter:blur(8px)}
@@ -5854,9 +5875,13 @@ body.customize-mode .btn-link-soft{display:none}
 .insight-row:last-child{margin-bottom:0}
 .insight-row strong{display:block;font-size:13px;font-weight:900;margin-bottom:3px}
 .insight-row span{display:block;font-size:12px;line-height:1.4;color:var(--text-light)}
+.insight-row em{display:inline-flex;font-style:normal;font-size:9.5px;font-weight:900;text-transform:uppercase;letter-spacing:.45px;border-radius:999px;padding:2px 7px;margin-bottom:7px;background:#f1f5f9;color:#64748b}
+.insight-row a{display:inline-flex;align-items:center;justify-content:center;margin-top:10px;border-radius:8px;padding:7px 10px;text-decoration:none;font-size:11px;font-weight:900;background:#fff;color:#0f4f75;border:1px solid #dbe7f2;box-shadow:0 10px 22px -18px rgba(7,17,31,.5)}
+.insight-row a:hover{background:#eff6ff;border-color:#b8d5ee}
 .risk-high{background:#fdf2f2;border-color:#f3c7c7}.risk-high strong{color:#a83434}
 .risk-mid{background:#fffbf0;border-color:#edd9a7}.risk-mid strong{color:#865712}
 .risk-ok{background:#f0fbf6;border-color:#bfe6d3}.risk-ok strong{color:#11704f}
+.risk-high em{background:#fee2e2;color:#991b1b}.risk-mid em{background:#fef3c7;color:#92400e}.risk-ok em{background:#dcfce7;color:#15803d}
 .timeline-item{display:flex;align-items:center;gap:12px;color:var(--text);padding:10px 4px;border-bottom:1px solid #eef2f7}
 .timeline-item:last-child{border-bottom:none}
 .timeline-dot{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:13px;box-shadow:0 10px 20px -14px rgba(7,17,31,.55)}
@@ -5867,6 +5892,9 @@ body.customize-mode .btn-link-soft{display:none}
 .timeline-copy small{font-size:11.5px;color:var(--text-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .timeline-copy em{font-style:normal;font-size:10px;font-weight:900;color:#64748b;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:999px;padding:2px 7px;white-space:nowrap}
 .timeline-empty{padding:18px 8px;color:var(--text-light);font-size:13px;text-align:center}
+.scad-group-title{font-size:10.5px;font-weight:900;text-transform:uppercase;letter-spacing:.55px;color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;border-radius:999px;display:inline-flex;padding:4px 9px;margin:10px 0 4px}
+.scad-group-title:first-child{margin-top:0}
+.scadenza-bar .badge{white-space:nowrap}
 
 @media (max-width:760px){
   .hero-bar{padding:16px}
@@ -5892,7 +5920,7 @@ body.customize-mode .btn-link-soft{display:none}
     var te=document.getElementById('hero-time');
     if(te) te.textContent=d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
     var se=document.getElementById('hero-sync-time');
-    if(se) se.textContent='Sincronizzato ora · ' + d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+    if(se) se.textContent='sincronizzato ' + d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
   }
   tick();setInterval(tick,30000);
   function animateCount(el){
@@ -5949,7 +5977,7 @@ body.customize-mode .btn-link-soft{display:none}
     <td style="font-family:monospace;color:var(--success)">{{ p.ora_entrata }}</td>
     <td>{% if p.ora_uscita %}<span class="badge badge-gray">Uscito</span>{% else %}<span class="badge badge-green">● In sede</span>{% endif %}</td>
   </tr>{% endfor %}</tbody></table>
-  {% else %}<div class="empty-state"><i class="fa fa-calendar-day"></i><p>Nessuna presenza oggi</p></div>{% endif %}
+  {% else %}<div class="empty-state"><i class="fa fa-calendar-day"></i><p>Nessuna presenza registrata oggi. Il sistema resta in ascolto.</p></div>{% endif %}
   </div>
 </div>
 {% endmacro %}
@@ -5959,19 +5987,27 @@ body.customize-mode .btn-link-soft{display:none}
   <span class="widget-drag-handle"><i class="fa fa-grip-vertical"></i> Sposta</span>
   <div class="card-header"><h3><i class="fa fa-calendar-exclamation" style="color:var(--warning);margin-right:8px"></i>Scadenze imminenti</h3></div>
   <div class="card-body" style="padding:14px 22px">
-  {% for d in scadenze %}
-  <div class="scadenza-bar">
-    <div style="flex:1">
-      <div style="font-size:13.5px;font-weight:600">{{ d.titolo }}</div>
-      <div style="font-size:12px;color:var(--text-light)">
-        {% if d.categoria %}<span style="background:{% if d.categoria=='Veicolo' %}#e0e7ff;color:#3730a3{% elif d.categoria=='Documento dipendente' %}#fef3c7;color:#92400e{% elif d.categoria=='Documento azienda' %}#dbeafe;color:#1e40af{% elif d.categoria=='Documento veicolo' %}#e0e7ff;color:#4338ca{% elif d.categoria=='Contratto cliente' %}#dcfce7;color:#15803d{% else %}#f1f5f9;color:#475569{% endif %};padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;margin-right:6px">{{ d.categoria }}</span>{% endif %}
-        {{ d.data_scadenza }}{% if d.nome %} · {{ d.nome }} {{ d.cognome }}{% endif %}
+  {% if scadenze %}
+    {% for group in scadenze_groups %}
+      {% if group.rows %}
+      <div class="scad-group-title">{{ group.title }}</div>
+      {% for d in group.rows %}
+      <div class="scadenza-bar">
+        <div style="flex:1">
+          <div style="font-size:13.5px;font-weight:600">{{ d.titolo }}</div>
+          <div style="font-size:12px;color:var(--text-light)">
+            {% if d.categoria %}<span style="background:{% if d.categoria=='Veicolo' %}#e0e7ff;color:#3730a3{% elif d.categoria=='Documento dipendente' %}#fef3c7;color:#92400e{% elif d.categoria=='Documento azienda' %}#dbeafe;color:#1e40af{% elif d.categoria=='Documento veicolo' %}#e0e7ff;color:#4338ca{% elif d.categoria=='Contratto cliente' %}#dcfce7;color:#15803d{% else %}#f1f5f9;color:#475569{% endif %};padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;margin-right:6px">{{ d.categoria }}</span>{% endif %}
+            {{ d.data_scadenza }}{% if d.nome %} · {{ d.nome }} {{ d.cognome }}{% endif %}
+          </div>
+        </div>
+        <span class="badge badge-{{ d.priority_tone }}">{{ d.days_label }}</span>
       </div>
-    </div>
-    {% if d.days_left <= 7 %}<span class="badge badge-red">{{ d.days_left }}gg</span>
-    {% elif d.days_left <= 30 %}<span class="badge badge-amber">{{ d.days_left }}gg</span>
-    {% else %}<span class="badge badge-green">OK</span>{% endif %}
-  </div>{% else %}<div class="empty-state" style="padding:20px"><i class="fa fa-check-circle"></i><p>Nessuna scadenza</p></div>{% endfor %}
+      {% endfor %}
+      {% endif %}
+    {% endfor %}
+  {% else %}
+    <div class="empty-state" style="padding:20px"><i class="fa fa-check-circle"></i><p>Nessuna scadenza imminente. Tutto sotto controllo.</p></div>
+  {% endif %}
   </div>
 </div>
 {% endmacro %}
@@ -5988,7 +6024,7 @@ body.customize-mode .btn-link-soft{display:none}
   <td><span class="badge badge-purple">{{ f.tipo }}</span></td>
   <td>{{ f.data_inizio }}</td><td>{{ f.data_fine }}</td></tr>{% endfor %}
   </tbody></table>
-  {% else %}<div class="empty-state" style="padding:20px"><i class="fa fa-check-circle"></i><p>Nessuna richiesta</p></div>{% endif %}
+  {% else %}<div class="empty-state" style="padding:20px"><i class="fa fa-check-circle"></i><p>Nessuna richiesta ferie in attesa. Tutto approvato.</p></div>{% endif %}
   </div>
 </div>
 {% endmacro %}
@@ -6025,7 +6061,7 @@ body.customize-mode .btn-link-soft{display:none}
       <a href="/admin/spese?stato=in_attesa" class="btn btn-secondary btn-sm" style="flex:1;text-align:center"><i class="fa fa-receipt"></i> Tutti i rimborsi</a>
     </div>
   {% else %}
-    <div class="empty-state" style="padding:20px"><i class="fa fa-check-circle"></i><p>Nessuna richiesta in attesa</p></div>
+    <div class="empty-state" style="padding:20px"><i class="fa fa-check-circle"></i><p>Nessuna richiesta in attesa. Tutto approvato.</p></div>
   {% endif %}
   </div>
 </div>
@@ -6313,6 +6349,13 @@ def dashboard():
                                WHERE COALESCE(attivo,1)=1
                                  AND data_live IS NOT NULL AND data_dismantling IS NOT NULL
                                  AND date('now') BETWEEN data_live AND data_dismantling""").fetchone()[0]
+    fiere_setup = db.execute("""SELECT COUNT(*) FROM cantieri
+                                 WHERE COALESCE(attivo,1)=1
+                                   AND data_setup IS NOT NULL
+                                   AND date(data_setup) <= date('now')
+                                   AND (
+                                     data_live IS NULL OR date('now') < date(data_live)
+                                   )""").fetchone()[0]
     s.update({
         'ore_mese': round(ore_mese, 1),
         'ore_mese_prev': round(ore_mese_prev, 1),
@@ -6325,6 +6368,7 @@ def dashboard():
         'scad_veic_scaduti': scad_veic_scaduti,
         'scad_veic_totali': scad_veic_30g + scad_veic_scaduti,
         'fiere_live': fiere_live,
+        'fiere_setup': fiere_setup,
     })
 
     presenze_oggi = db.execute("""SELECT p.*,u.nome,u.cognome,c.nome as cantiere_nome
@@ -6430,6 +6474,35 @@ def dashboard():
            AND cc.data_scadenza IS NOT NULL AND cc.data_scadenza != ''
            AND date(cc.data_scadenza) >= date('now')
         ORDER BY data_scadenza ASC LIMIT 10""").fetchall()
+    scadenze_list = []
+    for d in scadenze_raw:
+        item = dict(d)
+        giorni = int(item.get('days_left') or 0)
+        if giorni == 0:
+            item['days_label'] = 'Scade oggi'
+        elif giorni == 1:
+            item['days_label'] = 'Scade domani'
+        elif giorni < 30:
+            item['days_label'] = f'Scade tra {giorni} giorni'
+        elif giorni < 60:
+            item['days_label'] = 'Scade tra 1 mese'
+        else:
+            item['days_label'] = f'Scade tra {round(giorni / 30)} mesi'
+        if giorni <= 7:
+            item['priority_group'] = 'Urgenti'
+            item['priority_tone'] = 'red'
+        elif giorni <= 30:
+            item['priority_group'] = 'Prossimi 30 giorni'
+            item['priority_tone'] = 'amber'
+        else:
+            item['priority_group'] = 'Prossimi 90 giorni'
+            item['priority_tone'] = 'green'
+        scadenze_list.append(item)
+    scadenze_groups = [
+        {'title': 'Urgenti', 'rows': [d for d in scadenze_list if d['priority_group'] == 'Urgenti']},
+        {'title': 'Prossimi 30 giorni', 'rows': [d for d in scadenze_list if d['priority_group'] == 'Prossimi 30 giorni']},
+        {'title': 'Prossimi 90 giorni', 'rows': [d for d in scadenze_list if d['priority_group'] == 'Prossimi 90 giorni']},
+    ]
 
     ferie_attesa = db.execute("""SELECT f.*,u.nome,u.cognome FROM ferie_permessi f
         JOIN utenti u ON u.id=f.utente_id WHERE f.stato='in_attesa' LIMIT 5""").fetchall()
@@ -6554,7 +6627,8 @@ def dashboard():
         s=s, presenze_oggi=presenze_oggi,
         ore_settimana=ore_settimana,
         presenze_cantiere=[dict(r) for r in presenze_cantiere],
-        scadenze=[dict(r) for r in scadenze_raw],
+        scadenze=scadenze_list,
+        scadenze_groups=scadenze_groups,
         ferie_attesa=ferie_attesa,
         richieste_attesa=[dict(r) for r in richieste_attesa],
         attivita_recenti=attivita_recenti,
