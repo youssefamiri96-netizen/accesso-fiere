@@ -5514,7 +5514,7 @@ body.customize-mode .btn-link-soft{display:none}
       <div class="kpi-icon"><i class="fa fa-users"></i></div>
       <div class="kpi-body">
         <div class="kpi-label">Dipendenti attivi</div>
-        <div class="kpi-value"><span class="count-up" data-count="{{ s.dip }}">0</span></div>
+        <div class="kpi-value"><span class="count-up" data-count="{{ s.dip }}">{{ s.dip }}</span></div>
         <div class="kpi-foot"><i class="fa fa-circle-check"></i> {{ s.presenti }} oggi al lavoro</div>
       </div>
       <div class="kpi-glow"></div>
@@ -5524,7 +5524,7 @@ body.customize-mode .btn-link-soft{display:none}
       <div class="kpi-icon"><i class="fa fa-clock"></i></div>
       <div class="kpi-body">
         <div class="kpi-label">Ore questo mese</div>
-        <div class="kpi-value"><span class="count-up" data-count="{{ "%.0f"|format(s.ore_mese) }}">0</span><span class="kpi-unit">h</span></div>
+        <div class="kpi-value"><span class="count-up" data-count="{{ "%.0f"|format(s.ore_mese) }}">{{ "%.0f"|format(s.ore_mese) }}</span><span class="kpi-unit">h</span></div>
         <div class="kpi-foot kpi-trend {% if s.delta_ore_pct > 0 %}up{% elif s.delta_ore_pct < 0 %}down{% else %}flat{% endif %}">
           {% if s.delta_ore_pct > 0 %}<i class="fa fa-arrow-trend-up"></i> +{{ s.delta_ore_pct }}%
           {% elif s.delta_ore_pct < 0 %}<i class="fa fa-arrow-trend-down"></i> {{ s.delta_ore_pct }}%
@@ -5539,7 +5539,7 @@ body.customize-mode .btn-link-soft{display:none}
       <div class="kpi-icon"><i class="fa fa-store"></i></div>
       <div class="kpi-body">
         <div class="kpi-label">Fiere attive</div>
-        <div class="kpi-value"><span class="count-up" data-count="{{ s.cantieri }}">0</span></div>
+        <div class="kpi-value"><span class="count-up" data-count="{{ s.cantieri }}">{{ s.cantieri }}</span></div>
         <div class="kpi-foot">
           {% if s.fiere_live > 0 %}<span class="kpi-dot kpi-dot-live"></span> {{ s.fiere_live }} live oggi
           {% else %}<i class="fa fa-calendar"></i> nessuna live oggi{% endif %}
@@ -5552,7 +5552,7 @@ body.customize-mode .btn-link-soft{display:none}
       <div class="kpi-icon"><i class="fa fa-bell"></i></div>
       <div class="kpi-body">
         <div class="kpi-label">Richieste in attesa</div>
-        <div class="kpi-value"><span class="count-up" data-count="{{ s.richieste_totali }}">0</span></div>
+        <div class="kpi-value"><span class="count-up" data-count="{{ s.richieste_totali }}">{{ s.richieste_totali }}</span></div>
         <div class="kpi-foot">
           {% if s.richieste_totali > 0 %}<i class="fa fa-circle-exclamation"></i> timbrature, ferie o rimborsi da approvare
           {% else %}<i class="fa fa-circle-check"></i> nessuna pendente{% endif %}
@@ -5565,7 +5565,7 @@ body.customize-mode .btn-link-soft{display:none}
       <div class="kpi-icon"><i class="fa fa-file-circle-exclamation"></i></div>
       <div class="kpi-body">
         <div class="kpi-label">Documenti</div>
-        <div class="kpi-value"><span class="count-up" data-count="{{ s.scad_doc_30g }}">0</span>{% if s.scad_doc_scaduti > 0 %}<span class="kpi-unit" style="color:#dc2626;font-weight:800">+{{ s.scad_doc_scaduti }} scad.</span>{% endif %}</div>
+        <div class="kpi-value"><span class="count-up" data-count="{{ s.scad_doc_30g }}">{{ s.scad_doc_30g }}</span>{% if s.scad_doc_scaduti > 0 %}<span class="kpi-unit" style="color:#dc2626;font-weight:800">+{{ s.scad_doc_scaduti }} scad.</span>{% endif %}</div>
         <div class="kpi-foot">
           {% if s.scad_doc_totali > 0 %}<i class="fa fa-file"></i> dipendenti + aziendali in scadenza
           {% else %}<i class="fa fa-shield-check"></i> documenti in regola{% endif %}
@@ -5578,7 +5578,7 @@ body.customize-mode .btn-link-soft{display:none}
       <div class="kpi-icon"><i class="fa fa-truck"></i></div>
       <div class="kpi-body">
         <div class="kpi-label">Veicoli</div>
-        <div class="kpi-value"><span class="count-up" data-count="{{ s.scad_veic_30g }}">0</span>{% if s.scad_veic_scaduti > 0 %}<span class="kpi-unit" style="color:#dc2626;font-weight:800">+{{ s.scad_veic_scaduti }} scad.</span>{% endif %}</div>
+        <div class="kpi-value"><span class="count-up" data-count="{{ s.scad_veic_30g }}">{{ s.scad_veic_30g }}</span>{% if s.scad_veic_scaduti > 0 %}<span class="kpi-unit" style="color:#dc2626;font-weight:800">+{{ s.scad_veic_scaduti }} scad.</span>{% endif %}</div>
         <div class="kpi-foot">
           {% if s.scad_veic_totali > 0 %}<i class="fa fa-triangle-exclamation"></i> assicurazioni/revisioni in scadenza
           {% else %}<i class="fa fa-shield-check"></i> veicoli in regola{% endif %}
@@ -5591,7 +5591,7 @@ body.customize-mode .btn-link-soft{display:none}
       <div class="kpi-icon"><i class="fa fa-euro-sign"></i></div>
       <div class="kpi-body">
         <div class="kpi-label">Rimborsi mese</div>
-        <div class="kpi-value"><span class="count-up" data-count="{{ "%.0f"|format(s.rimborsi_mese) }}">0</span><span class="kpi-unit">€</span></div>
+        <div class="kpi-value"><span class="count-up" data-count="{{ "%.0f"|format(s.rimborsi_mese) }}">{{ "%.0f"|format(s.rimborsi_mese) }}</span><span class="kpi-unit">€</span></div>
         <div class="kpi-foot"><i class="fa fa-check-double"></i> spese approvate</div>
       </div>
       <div class="kpi-glow"></div>
@@ -5804,6 +5804,11 @@ body.customize-mode .btn-link-soft{display:none}
   function animateCount(el){
     var target=parseFloat(el.getAttribute('data-count') || '0');
     if(!isFinite(target)){ target=0; }
+    var current=parseFloat((el.textContent || '').replace(/[.]/g,'').replace(',','.'));
+    if(isFinite(current) && Math.round(current) === Math.round(target)){
+      el.textContent=Math.round(target).toLocaleString('it-IT');
+      return;
+    }
     var duration=850;
     var start=performance.now();
     function step(now){
@@ -8024,8 +8029,47 @@ def cantiere_toggle(cid):
 #  PRESENZE  (con cantiere)
 # ══════════════════════════════════════════════════════════
 PRES_TMPL = """
+<style>
+.presenze-mobile-list{display:none}
+.presenza-mobile-card{background:#fff;border:1px solid var(--border);border-radius:18px;box-shadow:0 14px 34px rgba(15,23,42,.08);overflow:hidden}
+.pmc-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px;border-bottom:1px solid #eef2f7}
+.pmc-person{display:flex;align-items:center;gap:12px;min-width:0}
+.pmc-person strong{display:block;font-size:15px;color:var(--text);line-height:1.2}
+.pmc-person small{display:block;color:var(--text-light);font-size:12px;margin-top:3px}
+.pmc-date{background:#eef6ff;color:#0f4c81;border:1px solid #dbeafe;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;white-space:nowrap}
+.pmc-body{padding:14px 16px 16px}
+.pmc-fiera{display:flex;align-items:center;gap:8px;color:#334155;font-size:13px;margin-bottom:12px}
+.pmc-times{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.pmc-times div{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 8px;min-width:0}
+.pmc-times span{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:#64748b;font-weight:800;margin-bottom:5px}
+.pmc-times strong{display:block;font-size:15px;color:#0f172a;line-height:1.1;word-break:break-word}
+.pmc-times .pmc-pausa{background:#fffbeb;border-color:#fde68a}
+.pmc-times .pmc-pausa strong{color:#92400e}
+.pmc-note{margin-top:12px;background:#f8fafc;border-left:3px solid #cbd5e1;border-radius:10px;padding:10px 12px;color:#475569;font-size:13px}
+.pmc-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+.pmc-actions .btn{min-height:40px}
+@media (max-width:760px){
+  .presenze-filter-card{border-radius:18px}
+  .presenze-filter-form{display:grid!important;grid-template-columns:1fr 1fr;gap:12px!important;align-items:stretch!important}
+  .presenze-filter-form .form-group{margin:0!important;min-width:0!important;width:auto!important;flex:unset!important}
+  .presenze-filter-form input,.presenze-filter-form select{height:52px!important;font-size:16px!important}
+  .presenze-filter-form button,.presenze-filter-form a{height:52px!important;width:100%;justify-content:center;font-size:15px}
+  .presenze-filter-form .btn-green{grid-column:1/-1}
+  .presenze-table-desktop{display:none!important}
+  .presenze-mobile-list{display:grid;gap:14px;padding:14px;background:#f8fafc;border-top:1px solid var(--border)}
+  .presenze-history-card{border-radius:18px;overflow:hidden}
+  .presenze-history-card>.card-header{position:sticky;top:0;background:#fff;z-index:2}
+  .pmc-times{grid-template-columns:1fr 1fr}
+  #bulk-bar{width:100%;justify-content:flex-start;overflow-x:auto;padding-bottom:4px}
+}
+@media (max-width:430px){
+  .presenze-filter-form{grid-template-columns:1fr}
+  .pmc-head{align-items:flex-start;flex-direction:column}
+  .pmc-date{align-self:flex-start}
+}
+</style>
 {% if session.ruolo=='admin' %}
-<div class="card" style="margin-bottom:20px;border-left:4px solid var(--accent2)" id="inserisci">
+<div class="card presenze-manual-card" style="margin-bottom:20px;border-left:4px solid var(--accent2)" id="inserisci">
   <div class="card-header" style="cursor:pointer" onclick="var f=document.getElementById('form-manuale');f.style.display=f.style.display=='none'?'block':'none'">
     <h3><i class="fa fa-pen-to-square" style="color:var(--accent2);margin-right:8px"></i>Inserisci presenza manualmente</h3>
     <span style="font-size:12px;color:var(--text-light)">clicca per aprire/chiudere</span>
@@ -8110,10 +8154,10 @@ function toggleJolly(val) {
 }
 </script>
 
-<div class="card" style="margin-bottom:20px">
+<div class="card presenze-filter-card" style="margin-bottom:20px">
   <div class="card-header"><h3>Filtra</h3></div>
   <div class="card-body">
-  <form method="GET" style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap" id="form-filtro-pres">
+  <form method="GET" class="presenze-filter-form" style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap" id="form-filtro-pres">
     <div class="form-group" style="margin:0;flex:1;min-width:140px"><label>Dipendente</label>
       <select name="uid"><option value="">Tutti</option>
       {% for u in tutti_utenti %}<option value="{{ u.id }}" {{ 'selected' if filtro_uid==u.id|string }}>{{ u.nome }} {{ u.cognome }}</option>{% endfor %}
@@ -8244,7 +8288,7 @@ window.submitConGPS = function(form, ev) {
 };
 </script>
 
-<div class="card">
+<div class="card presenze-history-card">
   <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
     <h3>Storico presenze</h3>
     {% if session.ruolo=='admin' %}
@@ -8256,7 +8300,7 @@ window.submitConGPS = function(form, ev) {
     </div>
     {% endif %}
   </div>
-  <div class="table-wrap">
+  <div class="table-wrap presenze-table-desktop">
   <table id="tbl-presenze">
     <thead><tr>
       {% if session.ruolo=='admin' %}
@@ -8305,6 +8349,47 @@ window.submitConGPS = function(form, ev) {
     {% endfor %}
     </tbody>
   </table>
+  </div>
+  <div class="presenze-mobile-list" aria-label="Storico presenze mobile">
+    {% for p in presenze %}
+    <article class="presenza-mobile-card">
+      <div class="pmc-head">
+        <div class="pmc-person">
+          <span class="avatar-sm" style="{% if not p.utente_id or p.nome_jolly %}background:linear-gradient(135deg,#d97706,#f59e0b){% endif %}">
+            {{ p.nome[0] }}{{ p.cognome[0] }}
+          </span>
+          <div>
+            <strong>{{ p.nome }} {{ p.cognome }}</strong>
+            <small>{% if p.nome_jolly %}Jolly esterno{% else %}Dipendente{% endif %}</small>
+          </div>
+        </div>
+        <span class="pmc-date">{{ p.data }}</span>
+      </div>
+      <div class="pmc-body">
+        <div class="pmc-fiera">
+          <i class="fa fa-store"></i>
+          <span>{{ p.cantiere_nome or 'Nessuna fiera collegata' }}</span>
+        </div>
+        <div class="pmc-times">
+          <div><span>Entrata</span><strong style="color:var(--success)">{{ p.ora_entrata or '-' }}</strong></div>
+          <div><span>Uscita</span><strong>{{ p.ora_uscita or '-' }}</strong></div>
+          <div class="pmc-pausa"><span>Pausa</span><strong>{{ ("%.1f"|format(p.pausa_ore)) ~ 'h' if p.pausa_ore else '0h' }}</strong></div>
+          <div><span>Ore</span><strong>{{ "%.1f"|format(p.ore_totali) if p.ore_totali else '-' }}</strong></div>
+        </div>
+        {% if p.note %}
+        <div class="pmc-note">{{ p.note }}</div>
+        {% endif %}
+        {% if session.ruolo=='admin' %}
+        <div class="pmc-actions">
+          <button type="button" onclick="var b=document.querySelector('#row-{{ p.id }} .btn[title=Modifica]'); if(b) b.click();" class="btn btn-secondary btn-sm"><i class="fa fa-pen"></i> Modifica</button>
+          <a href="/presenze/{{ p.id }}/elimina" class="btn btn-danger btn-sm" onclick="return confirm('Eliminare?')"><i class="fa fa-trash"></i></a>
+        </div>
+        {% endif %}
+      </div>
+    </article>
+    {% else %}
+    <div class="empty-state"><i class="fa fa-history"></i><p>Nessuna presenza trovata</p></div>
+    {% endfor %}
   </div>
 </div>
 
