@@ -6057,15 +6057,7 @@ body.customize-mode .btn-link-soft{display:none}
     </div>
     <div class="hero-map" aria-hidden="true">
       <div class="map-dots"></div>
-      <svg viewBox="0 0 520 180" preserveAspectRatio="none">
-        <path class="map-line map-line-shadow" d="M18,135 C72,116 96,58 145,80 C195,103 208,42 258,61 C318,84 326,23 383,32 C438,41 445,96 502,58"></path>
-        <path class="map-line" d="M18,135 C72,116 96,58 145,80 C195,103 208,42 258,61 C318,84 326,23 383,32 C438,41 445,96 502,58"></path>
-      </svg>
-      <span class="map-node n1"></span>
-      <span class="map-node n2"></span>
-      <span class="map-node n3"></span>
-      <span class="map-node n4"></span>
-      <span class="map-node n5"></span>
+      <canvas id="heroLiveChart" class="hero-live-chart"></canvas>
     </div>
     <div class="hero-cta">
       <a href="/cantieri/nuovo" class="hero-btn hero-btn-primary"><i class="fa fa-plus"></i> Nuova fiera</a>
@@ -6636,6 +6628,13 @@ table tr:hover{
   background-image:radial-gradient(circle,rgba(98,202,221,.72) 1px,transparent 1.8px);
   background-size:10px 10px;
   mask-image:radial-gradient(ellipse at 58% 38%,black 0 43%,transparent 70%);
+}
+.hero-live-chart{
+  position:absolute;
+  inset:18px 0 8px 0;
+  width:100%;
+  height:136px;
+  filter:drop-shadow(0 0 12px rgba(27,187,210,.52));
 }
 .hero-map svg{
   position:absolute;
@@ -7269,8 +7268,135 @@ function renderCharts() {
     grid:'rgba(148,163,184,.13)',
     ticks:'#8fa3bd'
   };
+  const heroTrendData = {{ hero_operativo | tojson }};
   const oreData = {{ ore_settimana | tojson }};
   const cantieriData = {{ presenze_cantiere | tojson }};
+
+  function renderHeroLiveChart() {
+    const canvas = document.getElementById('heroLiveChart');
+    if (!canvas || canvas._rendered) return;
+    canvas._rendered = true;
+    const ctx = canvas.getContext('2d');
+    const values = (heroTrendData || []).map(d => Number(d.score) || 0);
+    if (!values.length) return;
+    let metrics = {w: 0, h: 0, dpr: 1};
+
+    function syncSize() {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = Math.max(1, rect.width);
+      const h = Math.max(1, rect.height);
+      if (metrics.w !== w || metrics.h !== h || metrics.dpr !== dpr) {
+        metrics = {w, h, dpr};
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      return metrics;
+    }
+
+    function buildPath(points) {
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 0; i < points.length - 1; i++) {
+        const p0 = points[i];
+        const p1 = points[i + 1];
+        const mx = (p0.x + p1.x) / 2;
+        const my = (p0.y + p1.y) / 2;
+        ctx.quadraticCurveTo(p0.x, p0.y, mx, my);
+      }
+      ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+    }
+
+    const started = performance.now();
+    function draw(now) {
+      const {w, h} = syncSize();
+      ctx.clearRect(0, 0, w, h);
+
+      const padX = 10;
+      const padY = 14;
+      const maxVal = Math.max(...values, 1);
+      const minVal = Math.min(0, ...values);
+      const range = Math.max(1, maxVal - minVal);
+      const innerW = Math.max(1, w - padX * 2);
+      const innerH = Math.max(1, h - padY * 2);
+      const points = values.map((v, i) => ({
+        x: padX + (values.length === 1 ? innerW / 2 : (innerW / (values.length - 1)) * i),
+        y: padY + ((maxVal - v) / range) * innerH,
+        value: v
+      }));
+      const progress = Math.min((now - started) / 1250, 1);
+      const revealX = padX + innerW * progress;
+
+      ctx.save();
+      ctx.globalAlpha = .22;
+      ctx.strokeStyle = 'rgba(125,211,252,.22)';
+      ctx.lineWidth = 1;
+      for (let i = 1; i < 4; i++) {
+        const y = padY + innerH * (i / 4);
+        ctx.beginPath();
+        ctx.moveTo(padX, y);
+        ctx.lineTo(w - padX, y);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, revealX, h);
+      ctx.clip();
+
+      const fill = ctx.createLinearGradient(0, padY, 0, h - padY);
+      fill.addColorStop(0, 'rgba(91,229,255,.28)');
+      fill.addColorStop(.62, 'rgba(59,130,246,.11)');
+      fill.addColorStop(1, 'rgba(91,229,255,0)');
+      buildPath(points);
+      ctx.lineTo(points[points.length - 1].x, h - padY);
+      ctx.lineTo(points[0].x, h - padY);
+      ctx.closePath();
+      ctx.fillStyle = fill;
+      ctx.fill();
+
+      buildPath(points);
+      ctx.strokeStyle = 'rgba(91,229,255,.24)';
+      ctx.lineWidth = 10;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+
+      buildPath(points);
+      ctx.strokeStyle = '#1bbbd2';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      buildPath(points);
+      ctx.strokeStyle = 'rgba(125,211,252,.9)';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+      ctx.restore();
+
+      const pulse = 1 + Math.sin(now / 260) * .18;
+      points.forEach((pt, i) => {
+        if (pt.x > revealX + 2) return;
+        const isLastVisible = i === points.filter(p => p.x <= revealX + 2).length - 1;
+        const r = isLastVisible ? 5.2 * pulse : 3.8;
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, r + 6, 0, Math.PI * 2);
+        ctx.fillStyle = isLastVisible ? 'rgba(91,229,255,.13)' : 'rgba(91,229,255,.08)';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, r, 0, Math.PI * 2);
+        ctx.fillStyle = '#5be5ff';
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(7,19,33,.88)';
+        ctx.stroke();
+      });
+
+      requestAnimationFrame(draw);
+    }
+    requestAnimationFrame(draw);
+  }
 
   function renderOreLine(id, compact) {
     const el = document.getElementById(id);
@@ -7304,6 +7430,7 @@ function renderCharts() {
     });
   }
 
+  renderHeroLiveChart();
   renderOreLine('chartOre', false);
   renderOreLine('chartOpsOre', true);
   renderCantieriBar('chartCantieri', false);
@@ -7832,6 +7959,52 @@ def dashboard():
             'sigla': sigla[:3],
         })
 
+    # Mini-grafico hero: pressione operativa reale dei prossimi 30 giorni.
+    # Combina fiere/cantieri pianificati, richieste pendenti e scadenze operative.
+    hero_operativo = []
+    for i in range(7):
+        start_day = date.today() + timedelta(days=i * 5)
+        end_day = start_day + timedelta(days=4)
+        day = start_day.isoformat()
+        day_to = end_day.isoformat()
+        fiere_day = db.execute("""
+            SELECT COUNT(*) FROM cantieri
+             WHERE COALESCE(attivo,1)=1
+               AND (
+                 date(COALESCE(data_setup,data_inizio,data_live,'')) <= date(?)
+                 AND date(COALESCE(data_dismantling,data_fine,data_live,data_setup,'')) >= date(?)
+               )
+        """, (day_to, day)).fetchone()[0]
+        richieste_day = db.execute("""
+            SELECT
+              (SELECT COUNT(*) FROM richieste_presenze WHERE stato='in_attesa' AND date(data) BETWEEN date(?) AND date(?)) +
+              (SELECT COUNT(*) FROM ferie_permessi WHERE stato='in_attesa' AND date(data_inizio) <= date(?) AND date(data_fine) >= date(?)) +
+              (SELECT COUNT(*) FROM spese_rimborso WHERE stato='in_attesa' AND date(data) BETWEEN date(?) AND date(?))
+        """, (day, day_to, day_to, day, day, day_to)).fetchone()[0]
+        scadenze_day = db.execute("""
+            SELECT
+              (SELECT COUNT(*) FROM documenti WHERE data_scadenza IS NOT NULL AND data_scadenza!='' AND date(data_scadenza) BETWEEN date(?) AND date(?)) +
+              (SELECT COUNT(*) FROM documenti_dipendente WHERE data_scadenza IS NOT NULL AND data_scadenza!='' AND date(data_scadenza) BETWEEN date(?) AND date(?)) +
+              (SELECT COUNT(*) FROM documenti_veicoli WHERE data_scadenza IS NOT NULL AND data_scadenza!='' AND date(data_scadenza) BETWEEN date(?) AND date(?)) +
+              (SELECT COUNT(*) FROM contratti_clienti WHERE COALESCE(stato,'attivo')='attivo' AND data_scadenza IS NOT NULL AND data_scadenza!='' AND date(data_scadenza) BETWEEN date(?) AND date(?)) +
+              (SELECT COUNT(*) FROM veicoli WHERE COALESCE(attivo,1)=1 AND (
+                   date(COALESCE(scad_assicurazione,'')) BETWEEN date(?) AND date(?)
+                OR date(COALESCE(scad_revisione,'')) BETWEEN date(?) AND date(?)
+                OR date(COALESCE(scad_bollo,'')) BETWEEN date(?) AND date(?)
+                OR date(COALESCE(scad_tagliando,'')) BETWEEN date(?) AND date(?)
+              ))
+        """, (day, day_to, day, day_to, day, day_to, day, day_to,
+              day, day_to, day, day_to, day, day_to, day, day_to)).fetchone()[0]
+        score = int(fiere_day * 18 + richieste_day * 14 + scadenze_day * 24)
+        hero_operativo.append({
+            'data': day[5:],
+            'data_a': day_to[5:],
+            'score': score,
+            'fiere': int(fiere_day or 0),
+            'richieste': int(richieste_day or 0),
+            'scadenze': int(scadenze_day or 0),
+        })
+
     # Carico layout personalizzato (1 riga per azienda — condiviso fra admin)
     layout = _default_dashboard_layout()
     try:
@@ -7857,6 +8030,7 @@ def dashboard():
         s=s, presenze_oggi=presenze_oggi,
         ore_settimana=ore_settimana,
         presenze_cantiere=[dict(r) for r in presenze_cantiere],
+        hero_operativo=hero_operativo,
         scadenze=scadenze_list,
         scadenze_groups=scadenze_groups,
         fiere_evidenza=fiere_evidenza,
