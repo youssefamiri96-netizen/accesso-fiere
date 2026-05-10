@@ -1879,6 +1879,10 @@ def render_page(tmpl, **ctx):
                                'totale_scaduti':0,'totale_in_scadenza':0,
                                'veicoli_in_scadenza':0,'docs_dip_in_scadenza':0,'docs_az_in_scadenza':0}
     ctx.setdefault('azienda_nome', get_setting('azienda','Accesso Fiere'))
+    theme_mode = (get_setting('tema_gestionale', 'dark') or 'dark').strip().lower()
+    if theme_mode not in ('dark', 'light'):
+        theme_mode = 'dark'
+    ctx.setdefault('theme_mode', theme_mode)
     # AI chat disponibile solo se la API key Anthropic è configurata
     try:
         ctx['ai_chat_abilitato'] = AI_OK and bool(get_setting('anthropic_api_key', '').strip())
@@ -2768,9 +2772,41 @@ textarea{resize:vertical;min-height:80px}
   table.mobile-card-table td{grid-template-columns:1fr;gap:4px}
   table.mobile-card-table td::before{padding-top:0}
 }
+@media(min-width:901px){
+body.theme-light{--bg:#f3f6fb;--surface:#f7f9fc;--card:#fff;--text:#162033;--text-light:#64748b;--border:#dbe5f0;background:linear-gradient(180deg,#f8fafc 0%,#eef3f8 100%)!important;color:#162033!important}
+body.theme-light .main,body.theme-light .content{background:linear-gradient(180deg,#f8fafc 0%,#eef3f8 100%)!important;color:#162033!important}
+body.theme-light .sidebar{background:linear-gradient(180deg,#fff 0%,#f6f9fc 100%)!important;border-right:1px solid #dbe5f0!important;box-shadow:10px 0 34px -30px rgba(15,23,42,.32)!important}
+body.theme-light .sidebar-logo{background:#fff!important;border-bottom:1px solid #e2e8f0!important}
+body.theme-light .sidebar-logo .company,body.theme-light .topbar h1,body.theme-light h1,body.theme-light h2,body.theme-light h3,body.theme-light .card-header h3,body.theme-light .panel-title{color:#172033!important}
+body.theme-light .sidebar-logo .sub,body.theme-light .nav-section,body.theme-light .muted,body.theme-light .text-muted,body.theme-light .sub,body.theme-light .kpi-foot,body.theme-light .timeline-meta,body.theme-light .empty-state{color:#64748b!important}
+body.theme-light .nav-section::before{background:#cbd5e1!important}
+body.theme-light nav a,body.theme-light .nav-group>summary{color:#48576b!important}
+body.theme-light nav a:hover,body.theme-light .nav-group>summary:hover{background:#eef6fb!important;color:#0f4f75!important}
+body.theme-light nav a.active,body.theme-light .nav-group>summary.active{background:linear-gradient(90deg,#e0f6fb 0%,#f4fbfd 100%)!important;color:#0f4f75!important;border-left-color:#38a9bd!important;box-shadow:inset 0 0 0 1px rgba(56,169,189,.12)!important}
+body.theme-light .topbar{background:rgba(255,255,255,.92)!important;border-bottom:1px solid #dbe5f0!important;box-shadow:0 10px 28px -30px rgba(15,23,42,.35)!important;backdrop-filter:blur(14px)}
+body.theme-light .search-bar,body.theme-light .user-menu,body.theme-light .top-icon,body.theme-light .btn-link-soft{background:#fff!important;border-color:#dbe5f0!important;color:#42526a!important}
+body.theme-light input,body.theme-light select,body.theme-light textarea{background:#fff!important;color:#172033!important;border-color:#d9e3ee!important}
+body.theme-light .card,body.theme-light .panel,body.theme-light .dash-panel,body.theme-light .feed-card,body.theme-light .widget,body.theme-light .bo-card,body.theme-light .bo-mese-bar,body.theme-light .bo-info,body.theme-light .rep-card,body.theme-light .rep-info,body.theme-light .tim-stat,body.theme-light .rep-box,body.theme-light .cal-table,body.theme-light .cal-events-list,body.theme-light .sq-card{background:#fff!important;color:#172033!important;border-color:#dbe5f0!important;box-shadow:0 1px 2px rgba(15,23,42,.04),0 18px 46px -34px rgba(15,23,42,.38)!important}
+body.theme-light table,body.theme-light .bo-tab,body.theme-light .tim-tab{background:#fff!important;color:#172033!important}
+body.theme-light th,body.theme-light .bo-tab th,body.theme-light .tim-tab thead th,body.theme-light .cal-table th{background:#f3f6fa!important;color:#6b7d93!important;border-color:#dbe5f0!important}
+body.theme-light td,body.theme-light .bo-tab td,body.theme-light .tim-tab tbody td{color:#243247!important;border-bottom-color:#edf2f7!important}
+body.theme-light .kpi-card{background:#fff!important;color:#172033!important;border-color:#dbe5f0!important;box-shadow:0 18px 42px -34px rgba(15,23,42,.38)!important}
+body.theme-light .kpi-value,body.theme-light .kpi-state-ok{color:#172033!important}
+body.theme-light .kpi-label{color:#64748b!important}
+body.theme-light .hero-bar{background:radial-gradient(circle at 80% 12%,rgba(56,169,189,.16),transparent 30%),linear-gradient(120deg,#fff 0%,#eff6fb 52%,#e3f1f7 100%)!important;border-color:#cfe1ee!important;box-shadow:0 24px 58px -42px rgba(15,23,42,.36),inset 0 1px 0 rgba(255,255,255,.85)!important}
+body.theme-light .hero-title,body.theme-light .hero-eyebrow,body.theme-light .hero-chart-copy span,body.theme-light .hero-chart-copy small{color:#172033!important;text-shadow:none!important}
+body.theme-light .hero-chart-copy strong{color:#0f4f75!important;text-shadow:none!important}
+body.theme-light .hero-world-map{opacity:.28;mix-blend-mode:multiply}
+body.theme-light .live-pill{background:#fff!important;border-color:#dbe5f0!important;color:#334155!important}
+body.theme-light .sync-status{color:#64748b!important}
+body.theme-light .cal-day{background:#fff!important;border-color:#e2e8f0!important;color:#172033!important}
+body.theme-light .cal-day.outside{background:#f8fafc!important;color:#94a3b8!important}
+body.theme-light .cal-day.today{background:#eff6ff!important;border-color:#93c5fd!important}
+body.theme-light #ai-chat-panel,body.theme-light .ai-chat-body,body.theme-light .ai-chat-input,body.theme-light .ai-bubble{background:#fff!important;color:#172033!important;border-color:#dbe5f0!important}
+}
 </style>
 </head>
-<body>
+<body class="theme-{{ theme_mode }}">
 <aside class="sidebar">
   <div class="sidebar-logo">
     {%- if ha_logo_az %}
@@ -6201,7 +6237,26 @@ body.customize-mode .btn-link-soft{display:none}
         <strong>{{ "%.1f"|format(s.hero_fatturato_pct_corrente) }}%</strong>
         <small>Mese corrente · € {{ "%.0f"|format(s.hero_fatturato_mese_corrente) }}</small>
       </div>
-      <div class="map-dots"></div>
+      <svg class="hero-world-map" viewBox="0 0 780 260" aria-hidden="true" focusable="false">
+        <defs>
+          <pattern id="heroWorldDots" width="10" height="10" patternUnits="userSpaceOnUse">
+            <circle cx="2" cy="2" r="1.35" />
+          </pattern>
+          <filter id="heroWorldGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="1.2" result="blur" />
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <g class="world-land" filter="url(#heroWorldGlow)">
+          <path d="M77 69c20-22 55-28 89-23 38 5 70 25 83 51 13 27-1 51-31 57-21 4-37-5-55-13-14-7-29-13-45-9-28 7-54-5-64-26-8-16 0-28 23-37z"/>
+          <path d="M155 142c30 1 58 25 62 62 3 32-18 58-43 54-28-4-36-36-24-66 6-16 4-31 5-50z"/>
+          <path d="M283 73c25-19 66-26 99-15 26 9 37 27 27 45-8 14-29 17-49 14-20-3-38 7-47 24-11 20-38 21-57 3-22-22-10-49 27-71z"/>
+          <path d="M370 122c29-7 65 9 79 39 16 34-1 77-36 93-34 15-63-5-63-41 0-18 8-35 5-51-3-19 3-33 15-40z"/>
+          <path d="M443 64c45-31 123-35 185-7 42 19 63 52 50 83-12 27-51 35-87 26-31-8-55-1-76 22-23 24-65 22-88-2-25-27-17-78 16-122z"/>
+          <path d="M585 163c34-8 78 5 98 30 20 26 7 55-29 58-41 3-88-26-91-58-1-15 7-26 22-30z"/>
+          <path d="M701 170c22-10 52-3 62 14 11 18-7 36-35 34-25-2-43-16-41-31 1-8 6-13 14-17z"/>
+        </g>
+      </svg>
       <canvas id="heroLiveChart" class="hero-live-chart"></canvas>
     </div>
     <div class="hero-cta">
@@ -6766,10 +6821,26 @@ table tr:hover{
   pointer-events:none;
   z-index:0;
 }
+.hero-world-map{
+  position:absolute;
+  inset:-8px -18px 0 -28px;
+  width:calc(100% + 46px);
+  height:172px;
+  opacity:.34;
+  overflow:visible;
+  mix-blend-mode:screen;
+}
+.hero-world-map .world-land{
+  fill:url(#heroWorldDots);
+  color:#5be5ff;
+}
+.hero-world-map circle{
+  fill:rgba(91,229,255,.9);
+}
 .map-dots{
   position:absolute;
   inset:-8px -10px 0 -18px;
-  opacity:.48;
+  opacity:.08;
   background:
     radial-gradient(circle,rgba(91,229,255,.92) 1.15px,transparent 1.9px);
   background-size:9px 9px;
@@ -24449,6 +24520,24 @@ IMP_TMPL = """
   </div>
 </div>
 <div class="card" style="margin-top:20px">
+  <div class="card-header"><h3><i class="fa fa-palette"></i> Aspetto gestionale</h3></div>
+  <div class="card-body">
+    <form method="POST" action="/admin/impostazioni/tema">
+      <div class="form-group">
+        <label>Tema del portale desktop</label>
+        <select name="tema_gestionale">
+          <option value="dark" {{ 'selected' if cfg.tema_gestionale != 'light' else '' }}>Dark premium</option>
+          <option value="light" {{ 'selected' if cfg.tema_gestionale == 'light' else '' }}>Chiaro classico</option>
+        </select>
+        <div style="font-size:12px;color:var(--text-light);margin-top:6px">
+          Il tema viene applicato a tutto il gestionale desktop dell'azienda. La parte mobile operativa resta ottimizzata come app.
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Salva tema</button>
+    </form>
+  </div>
+</div>
+<div class="card" style="margin-top:20px">
   <div class="card-header"><h3><i class="fa fa-envelope"></i> Email notifiche</h3></div>
   <div class="card-body">
     <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#1e40af">
@@ -24632,8 +24721,10 @@ def impostazioni():
     db = get_db()
     keys = ['azienda','sede_legale','partita_iva','attivita_azienda','email_notifiche',
             'smtp_host','smtp_port','smtp_user','smtp_pass','anthropic_api_key',
-            'google_client_id','google_client_secret','app_url']
+            'google_client_id','google_client_secret','app_url','tema_gestionale']
     cfg = {k: get_setting(k,'') for k in keys}
+    if cfg.get('tema_gestionale') not in ('dark', 'light'):
+        cfg['tema_gestionale'] = 'dark'
     db.close()
     return render_page(IMP_TMPL, page_title='Impostazioni', active='impostazioni', cfg=cfg, ai_ok=AI_OK)
 
@@ -24665,6 +24756,19 @@ def impostazioni_password():
         db.execute("UPDATE utenti SET password=? WHERE ruolo='admin'", (h,))
         safe_commit(db); db.close()
         flash('Password aggiornata!','success')
+    return redirect(url_for('impostazioni'))
+
+
+@app.route('/admin/impostazioni/tema', methods=['POST'])
+@admin_required
+def impostazioni_tema():
+    tema = (request.form.get('tema_gestionale') or 'dark').strip().lower()
+    if tema not in ('dark', 'light'):
+        tema = 'dark'
+    db = get_db()
+    db.execute("INSERT OR REPLACE INTO impostazioni (chiave,valore) VALUES (?,?)", ('tema_gestionale', tema))
+    safe_commit(db); db.close()
+    flash('Tema gestionale salvato!', 'success')
     return redirect(url_for('impostazioni'))
 
 
