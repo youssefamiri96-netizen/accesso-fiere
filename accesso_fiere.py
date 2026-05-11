@@ -9311,6 +9311,8 @@ def _efatt_float(value, default=0.0):
         return default
 
 def _efatt_doc_amount(doc):
+    if not isinstance(doc, dict):
+        return 0.0
     for k in ('amount_gross', 'amount_total', 'gross_total', 'total', 'amount', 'amount_due'):
         if k in doc and doc.get(k) not in (None, ''):
             return _efatt_float(doc.get(k), 0)
@@ -9321,12 +9323,16 @@ def _efatt_doc_amount(doc):
     return 0.0
 
 def _efatt_doc_net(doc, gross):
+    if not isinstance(doc, dict):
+        return round(gross / 1.22, 2) if gross else 0.0
     for k in ('amount_net', 'net_total', 'amount_without_vat', 'taxable_amount'):
         if doc.get(k) not in (None, ''):
             return _efatt_float(doc.get(k), 0)
     return round(gross / 1.22, 2) if gross else 0.0
 
 def _efatt_entity_name(doc):
+    if not isinstance(doc, dict):
+        return 'Fornitore'
     entity = doc.get('entity') if isinstance(doc.get('entity'), dict) else {}
     supplier = doc.get('supplier') if isinstance(doc.get('supplier'), dict) else {}
     return (
@@ -9335,6 +9341,8 @@ def _efatt_entity_name(doc):
     )
 
 def _efatt_import_received_document(db, doc):
+    if not isinstance(doc, dict):
+        return False
     provider_id = str(doc.get('id') or doc.get('document_id') or '').strip()
     if not provider_id:
         return False
@@ -9378,6 +9386,8 @@ def _efatt_import_received_document(db, doc):
     return True
 
 def _efatt_import_issued_document(db, doc):
+    if not isinstance(doc, dict):
+        return False
     provider_id = str(doc.get('id') or doc.get('document_id') or '').strip()
     if not provider_id:
         return False
@@ -9444,8 +9454,11 @@ def _efatt_sync_passive_documents(db=None, max_pages=3):
                 'fieldset': 'detailed',
             }, db=db)
             docs = data.get('data') if isinstance(data, dict) else []
+            if docs is None:
+                docs = []
             if isinstance(docs, dict):
                 docs = docs.get('items') or docs.get('received_documents') or []
+            docs = [d for d in (docs or []) if isinstance(d, dict)]
             if not docs:
                 break
             for doc in docs:
@@ -9453,7 +9466,7 @@ def _efatt_sync_passive_documents(db=None, max_pages=3):
                     imported += 1
                 else:
                     updated += 1
-            pagination = data.get('pagination') if isinstance(data, dict) else {}
+            pagination = data.get('pagination') if isinstance(data, dict) and isinstance(data.get('pagination'), dict) else {}
             last_page = int(pagination.get('last_page') or pagination.get('total_pages') or page)
             if page >= last_page:
                 break
@@ -9480,8 +9493,11 @@ def _efatt_sync_active_documents(db=None, max_pages=3):
                     'fieldset': 'detailed',
                 }, db=db)
                 docs = data.get('data') if isinstance(data, dict) else []
+                if docs is None:
+                    docs = []
                 if isinstance(docs, dict):
                     docs = docs.get('items') or docs.get('issued_documents') or []
+                docs = [d for d in (docs or []) if isinstance(d, dict)]
                 if not docs:
                     break
                 for doc in docs:
@@ -9489,7 +9505,7 @@ def _efatt_sync_active_documents(db=None, max_pages=3):
                         imported += 1
                     else:
                         updated += 1
-                pagination = data.get('pagination') if isinstance(data, dict) else {}
+                pagination = data.get('pagination') if isinstance(data, dict) and isinstance(data.get('pagination'), dict) else {}
                 last_page = int(pagination.get('last_page') or pagination.get('total_pages') or page)
                 if page >= last_page:
                     break
@@ -9658,7 +9674,7 @@ def _efatt_push_active_invoice(fid, send_to_sdi=True):
                 raw_response = sent
                 email_note = ''
                 try:
-                    email_resp = _efatt_send_issued_email(db, company_id, provider_doc_id, f)
+                    email_resp = _efatt_send_issued_email(db, company_id, provider_doc_id, f) or {}
                     if email_resp.get('skipped'):
                         email_note = ' Email cliente non inviata: indirizzo mancante in anagrafica.'
                     else:
@@ -20165,8 +20181,8 @@ def _efatt_post_oauth_autosetup(provider):
 
         # === STEP 5: Primo allineamento documenti esistenti ===
         try:
-            attive = _efatt_sync_active_documents(db=db, max_pages=5)
-            passive = _efatt_sync_passive_documents(db=db, max_pages=5)
+            attive = _efatt_sync_active_documents(db=db, max_pages=5) or {}
+            passive = _efatt_sync_passive_documents(db=db, max_pages=5) or {}
             steps.append((
                 'Sincronizzazione iniziale',
                 True,
@@ -20305,8 +20321,8 @@ def fatturazione_sync_passive():
     Usa provider_doc_id come chiave anti-duplicato.
     """
     try:
-        active = _efatt_sync_active_documents(max_pages=5)
-        passive = _efatt_sync_passive_documents(max_pages=5)
+        active = _efatt_sync_active_documents(max_pages=5) or {}
+        passive = _efatt_sync_passive_documents(max_pages=5) or {}
         imported = active.get('imported', 0) + passive.get('imported', 0)
         updated = active.get('updated', 0) + passive.get('updated', 0)
         if imported or updated:
@@ -20322,7 +20338,7 @@ def fatturazione_sync_passive():
     except Exception as e:
         print(f'[sync fatture] errore: {e}')
         flash(f'Errore imprevisto: {str(e)[:200]}', 'error')
-    return redirect(url_for('fatturazione', tipo='passiva'))
+    return redirect(url_for('fatturazione', tipo=(request.form.get('next_tipo') or request.args.get('next_tipo') or 'passiva')))
 
 # ══════════════════════════════════════════════════════════════
 @app.route('/fatturazione/<int:fid>/invia-sdi', methods=['POST'])
@@ -20894,15 +20910,18 @@ def _efatt_maybe_auto_sync_async(azienda_id):
                             return
                     except Exception:
                         pass
-                result = _efatt_sync_passive_documents(db=db, max_pages=3)
+                active_result = _efatt_sync_active_documents(db=db, max_pages=3) or {}
+                result = _efatt_sync_passive_documents(db=db, max_pages=3) or {}
+                imp_att = active_result.get('imported', 0)
+                upd_att = active_result.get('updated', 0)
                 imp = result.get('imported', 0)
                 upd = result.get('updated', 0)
-                if imp or upd:
-                    print(f'[auto-sync passive] tenant={az_id}: {imp} nuove, {upd} aggiornate')
+                if imp or upd or imp_att or upd_att:
+                    print(f'[auto-sync fatture] tenant={az_id}: attive {imp_att} nuove/{upd_att} aggiornate; passive {imp} nuove/{upd} aggiornate')
             except EFattAPIError as e:
-                print(f'[auto-sync passive] tenant={az_id} api error: {str(e)[:200]}')
+                print(f'[auto-sync fatture] tenant={az_id} api error: {str(e)[:200]}')
             except Exception as e:
-                print(f'[auto-sync passive] tenant={az_id} errore: {str(e)[:200]}')
+                print(f'[auto-sync fatture] tenant={az_id} errore: {str(e)[:200]}')
             finally:
                 if db:
                     try: db.close()
@@ -20982,16 +21001,15 @@ FATT_LIST_TMPL = """
   <a href="/fatturazione?tipo=passiva" style="padding:10px 18px;text-decoration:none;font-weight:700;font-size:14px;border-bottom:3px solid {% if tipo=='passiva' %}#dc2626{% else %}transparent{% endif %};color:{% if tipo=='passiva' %}#dc2626{% else %}#64748b{% endif %};margin-bottom:-2px">
     <i class="fa fa-arrow-down-long"></i> Passiva (noi paghiamo)
   </a>
-  {% if tipo=='passiva' %}
   <div style="margin-left:auto;display:flex;gap:8px;align-items:center;padding-bottom:6px">
     <form method="POST" action="/fatturazione/sync-passive" style="display:inline">
-      <button type="submit" class="btn btn-primary btn-sm" title="Importa le fatture ricevute da Fatture in Cloud">
+      <input type="hidden" name="next_tipo" value="{{ tipo }}">
+      <button type="submit" class="btn btn-primary btn-sm" title="Importa e aggiorna fatture attive e passive da Fatture in Cloud">
         <i class="fa fa-cloud-arrow-down"></i> Sincronizza da Fatture in Cloud
       </button>
     </form>
     <a href="/fatturazione/elettronica" class="btn btn-secondary btn-sm" title="Configura provider"><i class="fa fa-plug"></i> Provider</a>
   </div>
-  {% endif %}
 </div>
 
 <!-- Statistiche -->
