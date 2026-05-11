@@ -2924,8 +2924,7 @@ body.theme-light #ai-chat-panel,body.theme-light .ai-chat-body,body.theme-light 
     <div class="nav-section">Business</div>
     <a href="/clienti" class="{{ 'active' if active=='clienti' }}"><i class="fa fa-address-book"></i> Clienti</a>
     <a href="/fornitori" class="{{ 'active' if active=='fornitori' }}"><i class="fa fa-truck-fast"></i> Fornitori</a>
-    <a href="/fatturazione" class="{{ 'active' if active=='fatturazione_attiva' }}"><i class="fa fa-file-invoice-dollar"></i> Fatt. Attiva</a>
-    <a href="/fatturazione?tipo=passiva" class="{{ 'active' if active=='fatturazione_passiva' }}"><i class="fa fa-file-invoice"></i> Fatt. Passiva</a>
+    <a href="/fatturazione" class="{{ 'active' if active in ['fatturazione','fatturazione_attiva','fatturazione_passiva'] }}"><i class="fa fa-file-invoice-dollar"></i> Fatturazione</a>
     <a href="/preventivi" class="{{ 'active' if active=='preventivi' }}"><i class="fa fa-file-invoice"></i> Preventivi</a>
     <a href="/calendario" class="{{ 'active' if active=='calendario' }}"><i class="fa fa-calendar"></i> Calendario</a>
     <a href="/contratti-clienti" class="{{ 'active' if active=='contratti_clienti' }}"><i class="fa fa-file-signature"></i> Contratti Clienti</a>
@@ -3153,7 +3152,7 @@ body.theme-light #ai-chat-panel,body.theme-light .ai-chat-body,body.theme-light 
     <a href="/mobile/profilo"><i class="fa fa-user-gear"></i> Profilo</a>
     {% else %}
     <a href="/documenti-azienda" class="{{ 'active' if active=='documenti_azienda' else '' }}"><i class="fa fa-building-columns"></i> Documenti</a>
-    <a href="/fatturazione" class="{{ 'active' if active in ['fatturazione_attiva','fatturazione_passiva'] else '' }}"><i class="fa fa-file-invoice-dollar"></i> Fatture</a>
+    <a href="/fatturazione" class="{{ 'active' if active in ['fatturazione','fatturazione_attiva','fatturazione_passiva'] else '' }}"><i class="fa fa-file-invoice-dollar"></i> Fatture</a>
     <a href="/clienti" class="{{ 'active' if active=='clienti' else '' }}"><i class="fa fa-address-book"></i> Clienti</a>
     <a href="/fornitori" class="{{ 'active' if active=='fornitori' else '' }}"><i class="fa fa-truck-fast"></i> Fornitori</a>
     <a href="/preventivi" class="{{ 'active' if active=='preventivi' else '' }}"><i class="fa fa-file-lines"></i> Preventivi</a>
@@ -20541,6 +20540,8 @@ def fatturazione_sync_passive():
         flash(f'Errore imprevisto: {str(e)[:200]}', 'error')
     next_tipo = request.form.get('next_tipo') or request.args.get('next_tipo') or 'passiva'
     anno = _efatt_valid_year(request.form.get('anno') or request.args.get('anno') or sync_year, default_current=True)
+    if next_tipo == 'overview':
+        return redirect(url_for('fatturazione', anno=anno, sync_year=sync_year))
     redirect_args = {'tipo': next_tipo, 'anno': anno, 'sync_year': sync_year}
     return redirect(url_for('fatturazione', **redirect_args))
 
@@ -21183,6 +21184,98 @@ def _efatt_get_health_status(db):
     return out
 
 
+
+def _fatt_overview_data(db, anno):
+    today_s = date.today().isoformat()
+    base = {'total': 0.0, 'paid': 0.0, 'residual': 0.0, 'count': 0, 'paid_count': 0, 'partial_count': 0, 'overdue_count': 0, 'payment_pct': 0.0}
+    summaries = {'attiva': dict(base), 'passiva': dict(base)}
+    rows = db.execute("""
+        SELECT f.*,
+               COALESCE((SELECT SUM(r.importo) FROM rate_fattura r
+                         WHERE r.fattura_id=f.id AND r.stato='pagata'),0) AS pagato
+          FROM fatture f
+         WHERE substr(COALESCE(f.data_emissione, f.creato_il, ''),1,4)=?
+         ORDER BY COALESCE(f.data_emissione, f.creato_il, '') DESC
+    """, (anno,)).fetchall()
+    scadute = []
+    for row in rows:
+        tipo = row['tipo'] or 'attiva'
+        if tipo not in summaries:
+            tipo = 'attiva'
+        total = float(row['importo_totale'] or 0)
+        paid = float(row['pagato'] or 0)
+        if row['stato'] == 'pagata' and paid <= 0:
+            paid = total
+        paid = max(0.0, min(paid, total))
+        residual = max(total - paid, 0.0)
+        due_row = db.execute("""
+            SELECT MIN(data_scadenza) AS due
+              FROM rate_fattura
+             WHERE fattura_id=? AND stato!='pagata'
+               AND data_scadenza IS NOT NULL AND data_scadenza!=''
+        """, (row['id'],)).fetchone()
+        due = (due_row['due'] if due_row else None) or row['data_scadenza'] or ''
+        is_overdue = bool(residual > 0 and due and due < today_s)
+        s = summaries[tipo]
+        s['total'] += total
+        s['paid'] += paid
+        s['residual'] += residual
+        s['count'] += 1
+        if residual <= 0.01 and total > 0:
+            s['paid_count'] += 1
+        elif paid > 0:
+            s['partial_count'] += 1
+        if is_overdue:
+            s['overdue_count'] += 1
+            controparte = row['cliente_nome'] if tipo == 'attiva' else (row['fornitore_nome'] or row['cliente_nome'])
+            scadute.append({'id': row['id'], 'tipo': tipo, 'tipo_label': 'Attiva' if tipo == 'attiva' else 'Passiva', 'numero': row['numero'] or '-', 'controparte': controparte or '-', 'due': due, 'residual': round(residual, 2), 'url': f"/fatturazione/{row['id']}"})
+    for s in summaries.values():
+        s['total'] = round(s['total'], 2)
+        s['paid'] = round(s['paid'], 2)
+        s['residual'] = round(s['residual'], 2)
+        s['payment_pct'] = round((s['paid'] / s['total']) * 100, 1) if s['total'] > 0 else 0.0
+    months = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic']
+    monthly_active, monthly_passive, monthly_active_paid, monthly_passive_paid = [], [], [], []
+    for month in range(1, 13):
+        m_str = f'{anno}-{month:02d}'
+        row_a = db.execute("SELECT COALESCE(SUM(importo_totale),0) FROM fatture WHERE COALESCE(tipo,'attiva')='attiva' AND substr(COALESCE(data_emissione,creato_il,''),1,7)=?", (m_str,)).fetchone()
+        row_p = db.execute("SELECT COALESCE(SUM(importo_totale),0) FROM fatture WHERE tipo='passiva' AND substr(COALESCE(data_emissione,creato_il,''),1,7)=?", (m_str,)).fetchone()
+        pay_a = db.execute("""SELECT COALESCE(SUM(r.importo),0) FROM rate_fattura r JOIN fatture f ON f.id=r.fattura_id
+                              WHERE r.stato='pagata' AND COALESCE(f.tipo,'attiva')='attiva'
+                                AND substr(COALESCE(NULLIF(r.data_pagamento,''), f.data_emissione, r.data_scadenza, ''),1,7)=?""", (m_str,)).fetchone()
+        pay_p = db.execute("""SELECT COALESCE(SUM(r.importo),0) FROM rate_fattura r JOIN fatture f ON f.id=r.fattura_id
+                              WHERE r.stato='pagata' AND f.tipo='passiva'
+                                AND substr(COALESCE(NULLIF(r.data_pagamento,''), f.data_emissione, r.data_scadenza, ''),1,7)=?""", (m_str,)).fetchone()
+        monthly_active.append(round(row_a[0] or 0, 2))
+        monthly_passive.append(round(row_p[0] or 0, 2))
+        monthly_active_paid.append(round(pay_a[0] or 0, 2))
+        monthly_passive_paid.append(round(pay_p[0] or 0, 2))
+    totals = {'saldo_emesso': round(summaries['attiva']['total'] - summaries['passiva']['total'], 2), 'saldo_cassa': round(summaries['attiva']['paid'] - summaries['passiva']['paid'], 2), 'totale_scadute': summaries['attiva']['overdue_count'] + summaries['passiva']['overdue_count']}
+    return {'summary': summaries, 'totals': totals, 'months_labels': months, 'monthly_active': monthly_active, 'monthly_passive': monthly_passive, 'monthly_active_paid': monthly_active_paid, 'monthly_passive_paid': monthly_passive_paid, 'payment_mix': [summaries['attiva']['paid'], summaries['attiva']['residual'], summaries['passiva']['paid'], summaries['passiva']['residual']], 'scadute': sorted(scadute, key=lambda x: x['due'])[:8]}
+
+FATT_OVERVIEW_TMPL = """
+<style>
+.fatt-home{display:grid;gap:18px}.fh-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:2px}.fh-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.fh-select{height:36px;padding:0 34px 0 12px;border:1px solid rgba(148,163,184,.35);border-radius:8px;background:#102238;color:#e5f0ff;font-size:13px;font-weight:800}.fh-card{background:#122238;border:1px solid rgba(148,163,184,.22);border-radius:10px;box-shadow:var(--shadow)}.fh-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}.fh-kpi{background:#102238;border-radius:10px;padding:16px;border:1px solid rgba(148,163,184,.25)}.fh-kpi .lbl{font-size:12px;color:#8fa3bd;font-weight:800;margin-bottom:7px}.fh-kpi .val{font-size:25px;font-weight:900;color:#f8fafc}.fh-kpi .hint{font-size:12px;color:#8fa3bd;margin-top:5px}.fh-split{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}.fh-flow{padding:18px;background:#0f1f33;border:1px solid rgba(148,163,184,.25);border-radius:10px}.fh-flow-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:12px}.fh-flow-title{font-size:17px;font-weight:900;color:#f8fafc}.fh-flow-total{font-size:28px;font-weight:900;margin:4px 0}.fh-flow.attiva .fh-flow-total{color:#22c55e}.fh-flow.passiva .fh-flow-total{color:#f97316}.fh-progress{height:9px;background:#26364a;border-radius:99px;overflow:hidden;margin:12px 0}.fh-progress span{display:block;height:100%;border-radius:99px}.fh-flow.attiva .fh-progress span{background:linear-gradient(90deg,#22c55e,#38bdf8)}.fh-flow.passiva .fh-progress span{background:linear-gradient(90deg,#f97316,#facc15)}.fh-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.fh-metric{background:#0b1726;border:1px solid rgba(148,163,184,.18);border-radius:8px;padding:9px}.fh-metric b{display:block;color:#e5f0ff}.fh-metric span{font-size:11px;color:#8fa3bd}.fh-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:14px}.fh-table{width:100%;border-collapse:collapse}.fh-table th,.fh-table td{padding:10px;border-bottom:1px solid rgba(148,163,184,.16);font-size:13px}.fh-table th{text-align:left;color:#8fa3bd;font-size:11px}.fh-empty{padding:24px;text-align:center;color:#8fa3bd}.fh-pill{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:4px 9px;font-size:11px;font-weight:800}.fh-pill.green{background:#dcfce7;color:#15803d}.fh-pill.orange{background:#ffedd5;color:#c2410c}@media(max-width:900px){.fh-grid{grid-template-columns:1fr}.fh-metrics{grid-template-columns:1fr}.fh-actions{width:100%}.fh-actions>*{flex:1}}
+</style>
+<div class="fatt-home">
+  <div class="fh-toolbar"><div><h2 style="margin:0;color:#f8fafc;font-size:22px">Cruscotto fatturazione</h2><div style="color:#8fa3bd;font-size:13px;margin-top:3px">Attive, passive, pagamenti e scadenze in un unico punto.</div></div>
+    <div class="fh-actions"><form method="GET" action="/fatturazione" style="margin:0"><select name="anno" class="fh-select" onchange="this.form.submit()">{% for y in available_years %}<option value="{{ y }}" {{ 'selected' if y|string == anno|string }}>{{ y }}</option>{% endfor %}</select></form>
+      <form method="POST" action="/fatturazione/sync-passive" style="margin:0"><input type="hidden" name="next_tipo" value="overview"><input type="hidden" name="anno" value="{{ anno }}"><input type="hidden" name="sync_year" value="{{ anno }}"><button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-cloud-arrow-down"></i> Sincronizza {{ anno }}</button></form>
+      <a href="/fatturazione/elettronica" class="btn btn-secondary btn-sm"><i class="fa fa-plug"></i> Provider</a></div></div>
+  <div class="fh-kpis"><div class="fh-kpi"><div class="lbl">Saldo emesso</div><div class="val">&euro; {{ "%.0f"|format(totals.saldo_emesso) }}</div><div class="hint">Attive meno passive nell'anno</div></div><div class="fh-kpi"><div class="lbl">Saldo cassa</div><div class="val">&euro; {{ "%.0f"|format(totals.saldo_cassa) }}</div><div class="hint">Incassato meno pagato</div></div><div class="fh-kpi"><div class="lbl">Da incassare</div><div class="val">&euro; {{ "%.0f"|format(summary.attiva.residual) }}</div><div class="hint">Residuo fatture attive</div></div><div class="fh-kpi"><div class="lbl">Da pagare</div><div class="val">&euro; {{ "%.0f"|format(summary.passiva.residual) }}</div><div class="hint">Residuo fatture passive</div></div><div class="fh-kpi"><div class="lbl">Scadute aperte</div><div class="val">{{ totals.totale_scadute }}</div><div class="hint">Attive e passive non chiuse</div></div></div>
+  <div class="fh-split">
+    <div class="fh-flow attiva"><div class="fh-flow-head"><div><div class="fh-flow-title"><i class="fa fa-arrow-up-long"></i> Fatturazione attiva</div><div style="color:#8fa3bd;font-size:12px">Clienti pagano noi</div></div><a class="btn btn-primary btn-sm" href="/fatturazione?tipo=attiva&anno={{ anno }}">Apri attive</a></div><div class="fh-flow-total">&euro; {{ "%.0f"|format(summary.attiva.total) }}</div><div style="color:#8fa3bd;font-size:12px">Incassato {{ summary.attiva.payment_pct }}%</div><div class="fh-progress"><span style="width:{{ summary.attiva.payment_pct }}%"></span></div><div class="fh-metrics"><div class="fh-metric"><b>&euro; {{ "%.0f"|format(summary.attiva.paid) }}</b><span>Incassato</span></div><div class="fh-metric"><b>&euro; {{ "%.0f"|format(summary.attiva.residual) }}</b><span>Residuo</span></div><div class="fh-metric"><b>{{ summary.attiva.overdue_count }}</b><span>Scadute</span></div></div><div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><a class="btn btn-secondary btn-sm" href="/fatturazione/nuova?tipo=attiva"><i class="fa fa-plus"></i> Nuova attiva</a><a class="btn btn-secondary btn-sm" href="/fatturazione/clienti"><i class="fa fa-users"></i> Clienti</a></div></div>
+    <div class="fh-flow passiva"><div class="fh-flow-head"><div><div class="fh-flow-title"><i class="fa fa-arrow-down-long"></i> Fatturazione passiva</div><div style="color:#8fa3bd;font-size:12px">Noi paghiamo fornitori</div></div><a class="btn btn-primary btn-sm" href="/fatturazione?tipo=passiva&anno={{ anno }}">Apri passive</a></div><div class="fh-flow-total">&euro; {{ "%.0f"|format(summary.passiva.total) }}</div><div style="color:#8fa3bd;font-size:12px">Pagato {{ summary.passiva.payment_pct }}%</div><div class="fh-progress"><span style="width:{{ summary.passiva.payment_pct }}%"></span></div><div class="fh-metrics"><div class="fh-metric"><b>&euro; {{ "%.0f"|format(summary.passiva.paid) }}</b><span>Pagato</span></div><div class="fh-metric"><b>&euro; {{ "%.0f"|format(summary.passiva.residual) }}</b><span>Residuo</span></div><div class="fh-metric"><b>{{ summary.passiva.overdue_count }}</b><span>Scadute</span></div></div><div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><a class="btn btn-secondary btn-sm" href="/fatturazione/nuova?tipo=passiva"><i class="fa fa-plus"></i> Nuova passiva</a><a class="btn btn-secondary btn-sm" href="/fornitori"><i class="fa fa-truck-fast"></i> Fornitori</a></div></div>
+  </div>
+  <div class="fh-grid"><div class="fh-card"><div class="card-header"><h3><i class="fa fa-chart-column" style="color:var(--accent2)"></i> Confronto mensile {{ anno }}</h3></div><div class="card-body"><canvas id="fattOverviewMonthly" height="230"></canvas></div></div><div class="fh-card"><div class="card-header"><h3><i class="fa fa-chart-pie" style="color:var(--accent2)"></i> Avanzamento pagamenti</h3></div><div class="card-body"><canvas id="fattOverviewStatus" height="230"></canvas></div></div></div>
+  <div class="fh-card"><div class="card-header"><h3><i class="fa fa-triangle-exclamation" style="color:#f97316"></i> Scadenze aperte piu urgenti</h3></div>{% if scadute %}<div class="table-wrap"><table class="fh-table"><thead><tr><th>Tipo</th><th>N.</th><th>Cliente/Fornitore</th><th>Scadenza</th><th style="text-align:right">Residuo</th><th></th></tr></thead><tbody>{% for f in scadute %}<tr><td><span class="fh-pill {{ 'green' if f.tipo=='attiva' else 'orange' }}">{{ f.tipo_label }}</span></td><td><strong>{{ f.numero }}</strong></td><td>{{ f.controparte }}</td><td style="color:#fca5a5;font-weight:800">{{ f.due }}</td><td style="text-align:right;font-weight:900">&euro; {{ "%.2f"|format(f.residual) }}</td><td style="text-align:right"><a class="btn btn-secondary btn-sm" href="{{ f.url }}"><i class="fa fa-eye"></i></a></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="fh-empty"><i class="fa fa-circle-check" style="font-size:26px;color:#22c55e"></i><div style="margin-top:8px">Nessuna scadenza aperta urgente per {{ anno }}.</div></div>{% endif %}</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script><script>
+new Chart(document.getElementById('fattOverviewMonthly'),{type:'bar',data:{labels:{{ months_labels|tojson }},datasets:[{label:'Attive emesse',data:{{ monthly_active|tojson }},backgroundColor:'rgba(34,197,94,.22)',borderColor:'#22c55e',borderWidth:2,borderRadius:5},{label:'Passive ricevute',data:{{ monthly_passive|tojson }},backgroundColor:'rgba(249,115,22,.20)',borderColor:'#f97316',borderWidth:2,borderRadius:5},{label:'Incassato',data:{{ monthly_active_paid|tojson }},type:'line',borderColor:'#38bdf8',backgroundColor:'rgba(56,189,248,.12)',tension:.35},{label:'Pagato',data:{{ monthly_passive_paid|tojson }},type:'line',borderColor:'#facc15',backgroundColor:'rgba(250,204,21,.12)',tension:.35}]},options:{responsive:true,plugins:{legend:{position:'top'}},scales:{y:{beginAtZero:true,ticks:{callback:v=>'\\u20ac'+v}}}}});
+new Chart(document.getElementById('fattOverviewStatus'),{type:'doughnut',data:{labels:['Incassato attive','Residuo attive','Pagato passive','Residuo passive'],datasets:[{data:{{ payment_mix|tojson }},backgroundColor:['#22c55e','#ef4444','#f97316','#facc15'],borderColor:'#102238',borderWidth:2}]},options:{plugins:{legend:{position:'bottom'}},cutout:'62%'}});
+</script>
+"""
+
 FATT_LIST_TMPL = """
 <style>
 .stat-fatt{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px}
@@ -21204,6 +21297,9 @@ FATT_LIST_TMPL = """
 
 <!-- Tabs attiva/passiva -->
 <div style="display:flex;gap:8px;margin-bottom:20px;border-bottom:2px solid var(--border)">
+  <a href="/fatturazione?anno={{ anno }}" style="padding:10px 18px;text-decoration:none;font-weight:700;font-size:14px;border-bottom:3px solid transparent;color:#64748b;margin-bottom:-2px">
+    <i class="fa fa-chart-pie"></i> Riepilogo
+  </a>
   <a href="/fatturazione?tipo=attiva&anno={{ anno }}" style="padding:10px 18px;text-decoration:none;font-weight:700;font-size:14px;border-bottom:3px solid {% if tipo=='attiva' %}#2563eb{% else %}transparent{% endif %};color:{% if tipo=='attiva' %}#2563eb{% else %}#64748b{% endif %};margin-bottom:-2px">
     <i class="fa fa-arrow-up-long"></i> Attiva (clienti pagano noi)
   </a>
@@ -22269,16 +22365,21 @@ Se un campo non esiste metti "". Date in formato YYYY-MM-DD."""
 @admin_required
 def fatturazione():
     db = get_db()
-    tipo = request.args.get('tipo', 'attiva')
-    if tipo not in ('attiva', 'passiva'):
-        tipo = 'attiva'
-    filtro_stato = request.args.get('stato', '')
-    q = request.args.get('q', '').strip()
+    tipo_arg = (request.args.get('tipo') or '').strip()
     anno = _efatt_valid_year(request.args.get('anno'), default_current=True)
     sync_year = _efatt_valid_year(request.args.get('sync_year') or anno, default_current=True)
     available_years = _fatture_available_years(db)
     if anno not in available_years:
         available_years.insert(0, anno)
+    if tipo_arg not in ('attiva', 'passiva'):
+        overview = _fatt_overview_data(db, anno)
+        db.close()
+        return render_page(FATT_OVERVIEW_TMPL, page_title='Fatturazione', active='fatturazione',
+            anno=anno, current_year=date.today().year, sync_year=sync_year,
+            available_years=available_years, **overview)
+    tipo = tipo_arg
+    filtro_stato = request.args.get('stato', '')
+    q = request.args.get('q', '').strip()
 
     # Auto-sync fatture passive in background (throttle 6h, non blocca la response)
     if tipo == 'passiva':
