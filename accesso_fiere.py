@@ -2939,7 +2939,7 @@ body.theme-light #ai-chat-panel,body.theme-light .ai-chat-body,body.theme-light 
       <div class="topbar-search">
         <i class="fa fa-search"></i>
         <input type="text" placeholder="Cerca tutto nel gestionale..." id="topbar-search-input" value="{{ q if active=='search' and q is defined else '' }}" onkeydown="tbSearch(event)">
-        <kbd>Ã¢ÂÅ½</kbd>
+        <kbd>Enter</kbd>
       </div>
     </div>
     <div class="topbar-actions">
@@ -21194,20 +21194,20 @@ FATT_LIST_TMPL = """
 <!-- Statistiche -->
 <div class="stat-fatt">
   <div class="sf rosso">
-    <div class="val">Ã¢â€šÂ¬ {{ "%.0f"|format(tot_da_pagare) }}</div>
-    <div class="lbl">{% if tipo=='attiva' %}Ã°Å¸â€œâ€¹ Da incassare{% else %}Ã°Å¸â€œâ€¹ Da pagare{% endif %}</div>
+    <div class="val">&euro; {{ "%.0f"|format(tot_da_pagare) }}</div>
+    <div class="lbl"><i class="fa fa-file-invoice"></i> {% if tipo=='attiva' %}Da incassare{% else %}Da pagare{% endif %}</div>
   </div>
   <div class="sf amber">
-    <div class="val">Ã¢â€šÂ¬ {{ "%.0f"|format(tot_parziale) }}</div>
-    <div class="lbl">Ã¢ÂÂ³ Parzialmente pagate</div>
+    <div class="val">&euro; {{ "%.0f"|format(tot_parziale) }}</div>
+    <div class="lbl"><i class="fa fa-hourglass-half"></i> Parzialmente pagate</div>
   </div>
   <div class="sf verde">
-    <div class="val">Ã¢â€šÂ¬ {{ "%.0f"|format(tot_pagato) }}</div>
-    <div class="lbl">{% if tipo=='attiva' %}Ã¢Å“â€¦ Incassato totale{% else %}Ã¢Å“â€¦ Pagato totale{% endif %}</div>
+    <div class="val">&euro; {{ "%.0f"|format(tot_pagato) }}</div>
+    <div class="lbl"><i class="fa fa-check"></i> {% if tipo=='attiva' %}Incassato totale{% else %}Pagato totale{% endif %}</div>
   </div>
   <div class="sf blu">
     <div class="val">{{ n_scadute }}</div>
-    <div class="lbl">Ã¢Å¡Â Ã¯Â¸Â Scadute</div>
+    <div class="lbl"><i class="fa fa-triangle-exclamation"></i> Scadute</div>
   </div>
 </div>
 
@@ -21230,7 +21230,7 @@ FATT_LIST_TMPL = """
 <!-- Top controparti -->
 {% if top_clienti %}
 <div class="card" style="margin-bottom:20px">
-  <div class="card-header"><h3><i class="fa fa-trophy" style="color:#f59e0b"></i> {% if tipo=='attiva' %}Clienti piÃƒÂ¹ puntuali{% else %}Fornitori/controparti piÃƒÂ¹ frequenti{% endif %}</h3></div>
+  <div class="card-header"><h3><i class="fa fa-trophy" style="color:#f59e0b"></i> {% if tipo=='attiva' %}Clienti piu puntuali{% else %}Fornitori/controparti piu frequenti{% endif %}</h3></div>
   <div class="card-body">
     {% for c in top_clienti %}
     <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
@@ -21273,7 +21273,7 @@ FATT_LIST_TMPL = """
     </label>
     <select name="stato" onchange="this.form.submit()" style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px">
       <option value="">Tutti gli stati</option>
-      <option value="da_emettere" {{ 'selected' if filtro_stato=='da_emettere' }}>Ã¢ÂÂ³ Da emettere</option>
+      <option value="da_emettere" {{ 'selected' if filtro_stato=='da_emettere' }}>Da emettere</option>
       <option value="da_pagare" {{ 'selected' if filtro_stato=='da_pagare' }}>Da pagare</option>
       <option value="parziale" {{ 'selected' if filtro_stato=='parziale' }}>Parzialmente pagate</option>
       <option value="pagata" {{ 'selected' if filtro_stato=='pagata' }}>Pagate</option>
@@ -21307,11 +21307,11 @@ FATT_LIST_TMPL = """
 <tr class="fatt-row" style="border-bottom:{% if has_rate and not all_paid %}none{% else %}1px solid var(--border){% endif %}">
   <td style="text-align:center;color:#9fb3c8;font-size:11px;white-space:nowrap">
     <input type="checkbox" name="fattura_ids" value="{{ f.id }}" form="bulk-delete-form" class="fatt-check" onchange="updateBulkCount()" style="width:15px;height:15px;vertical-align:middle">
-    {% if has_rate and all_paid %}<span style="color:#16a34a;font-size:13px">Ã¢Å“â€¦</span>{% endif %}
+    {% if has_rate and all_paid %}<span style="color:#16a34a;font-size:13px"><i class="fa fa-check"></i></span>{% endif %}
   </td>
   <td><strong>{{ f.numero }}</strong></td>
   <td>
-    {% if tipo=='passiva' %}{{ f.fornitore_nome or f.cliente_nome or 'Ã¢â‚¬â€œ' }}{% else %}{{ f.cliente_nome or 'Ã¢â‚¬â€œ' }}{% endif %}
+    {% if tipo=='passiva' %}{{ f.fornitore_nome or f.cliente_nome or '-' }}{% else %}{{ f.cliente_nome or '-' }}{% endif %}
     {% if tipo=='attiva' and f.sdi_stato and f.sdi_stato != 'non_inviata' %}
       {% set sdi_pill = {
         'creata_provider': ('Sincronizzata', '#3b82f6'),
@@ -21328,22 +21328,22 @@ FATT_LIST_TMPL = """
       {% endif %}
     {% endif %}
   </td>
-  <td style="font-family:monospace;font-size:12px">{{ f.data_emissione or 'Ã¢â‚¬â€œ' }}</td>
+  <td style="font-family:monospace;font-size:12px">{{ f.data_emissione or '-' }}</td>
   <td style="font-family:monospace;font-size:12px;{{ 'color:#dc2626;font-weight:700' if f.scadenza_scaduta and f.stato_display != 'pagata' else '' }}">
-    {{ f.scadenza_display or 'Ã¢â‚¬â€œ' }}{% if f.scadenza_scaduta and f.stato_display != 'pagata' %} Ã¢Å¡Â Ã¯Â¸Â{% endif %}
+    {{ f.scadenza_display or '-' }}{% if f.scadenza_scaduta and f.stato_display != 'pagata' %} <i class="fa fa-triangle-exclamation"></i>{% endif %}
   </td>
-  <td><strong>Ã¢â€šÂ¬ {{ "%.2f"|format(f.importo_totale) }}</strong></td>
-  <td style="color:#16a34a;font-weight:600">Ã¢â€šÂ¬ {{ "%.2f"|format(f.pagato) }}</td>
+  <td><strong>&euro; {{ "%.2f"|format(f.importo_totale) }}</strong></td>
+  <td style="color:#16a34a;font-weight:600">&euro; {{ "%.2f"|format(f.pagato) }}</td>
   <td style="{{ 'color:#dc2626;font-weight:600' if f.residuo > 0 else 'color:#64748b' }}">
-    {% if f.residuo > 0 %}Ã¢â€šÂ¬ {{ "%.2f"|format(f.residuo) }}{% else %}Ã¢â‚¬â€œ{% endif %}
+    {% if f.residuo > 0 %}&euro; {{ "%.2f"|format(f.residuo) }}{% else %}-{% endif %}
   </td>
   <td>
-    {% if f.stato_display == 'da_emettere' %}<span class="badge-fatt" style="background:#f3e8ff;color:#7c3aed">Ã¢ÂÂ³ Da emettere</span>
-    {% elif f.stato_display == 'pagata' %}<span class="badge-fatt bf-pag">Ã¢Å“â€¦ Pagata</span>
-    {% elif f.stato_display == 'parziale' %}<span class="badge-fatt bf-parz">Ã¢ÂÂ³ Parziale</span>
-    {% elif f.stato_display == 'scaduta' %}<span class="badge-fatt bf-scad">Ã¢Å¡Â Ã¯Â¸Â Scaduta</span>
-    {% elif f.stato_display == 'annullata' %}<span class="badge-fatt bf-annul">Ã¢Å“â€” Annullata</span>
-    {% else %}<span class="badge-fatt bf-da">Ã°Å¸â€œâ€¹ Da pagare</span>{% endif %}
+    {% if f.stato_display == 'da_emettere' %}<span class="badge-fatt" style="background:#f3e8ff;color:#7c3aed"><i class="fa fa-hourglass-half"></i> Da emettere</span>
+    {% elif f.stato_display == 'pagata' %}<span class="badge-fatt bf-pag"><i class="fa fa-check"></i> Pagata</span>
+    {% elif f.stato_display == 'parziale' %}<span class="badge-fatt bf-parz"><i class="fa fa-hourglass-half"></i> Parziale</span>
+    {% elif f.stato_display == 'scaduta' %}<span class="badge-fatt bf-scad"><i class="fa fa-triangle-exclamation"></i> Scaduta</span>
+    {% elif f.stato_display == 'annullata' %}<span class="badge-fatt bf-annul"><i class="fa fa-xmark"></i> Annullata</span>
+    {% else %}<span class="badge-fatt bf-da"><i class="fa fa-file-invoice"></i> Da pagare</span>{% endif %}
   </td>
   <td style="display:flex;gap:6px;align-items:center">
     {% if f.stato_display == 'da_emettere' %}
@@ -21395,7 +21395,7 @@ FATT_LIST_TMPL = """
         <td style="padding:7px 10px;text-align:center;color:#9fb3c8">-</td>
         <td style="padding:7px 10px;text-align:center">
           {% if r.scaduta %}<span class="badge-fatt bf-scad" style="font-size:11px">Scaduta</span>
-          {% else %}<span class="badge-fatt bf-da" style="font-size:11px">Da pagare</span>{% endif %}
+    {% else %}<span class="badge-fatt bf-da"><i class="fa fa-file-invoice"></i> Da pagare</span>{% endif %}
         </td>
         <td style="padding:7px 10px;color:#b9cbe0">{{ r.note or '-' }}</td>
         <td style="padding:7px 10px">
@@ -21417,7 +21417,7 @@ FATT_LIST_TMPL = """
 {% macro thead() %}
 <thead><tr style="background:#0f172a;color:#fff">
   <th style="width:42px;padding:10px 8px"></th>
-  <th style="padding:10px 8px;font-size:12px">NÃ‚Â°</th>
+  <th style="padding:10px 8px;font-size:12px">N&deg;</th>
   <th style="padding:10px 8px;font-size:12px">{% if tipo=='passiva' %}FORNITORE/CLIENTE{% else %}CLIENTE{% endif %}</th>
   <th style="padding:10px 8px;font-size:12px">DATA</th>
   <th style="padding:10px 8px;font-size:12px">SCADENZA</th>
@@ -21441,7 +21441,7 @@ FATT_LIST_TMPL = """
 
 {% if con_rate_attive %}
 <div style="margin-bottom:6px;display:flex;align-items:center;gap:10px">
-  <h3 style="margin:0;font-size:15px;color:#e5f0ff"><i class="fa fa-list-check" style="color:#f59e0b;margin-right:6px"></i>Da pagare Ã¢â‚¬â€ con rate</h3>
+  <h3 style="margin:0;font-size:15px;color:#e5f0ff"><i class="fa fa-list-check" style="color:#f59e0b;margin-right:6px"></i>Da pagare - con rate</h3>
   <span style="background:#fef3c7;color:#92400e;border-radius:20px;padding:2px 10px;font-size:12px;font-weight:600">{{ con_rate_attive|length }}</span>
 </div>
 <div class="card" style="margin-bottom:24px;border-top:3px solid #f59e0b">
@@ -21464,7 +21464,7 @@ FATT_LIST_TMPL = """
 
 {% if senza_rate_attive %}
 <div style="margin-bottom:6px;display:flex;align-items:center;gap:10px">
-  <h3 style="margin:0;font-size:15px;color:#e5f0ff"><i class="fa fa-file-invoice-dollar" style="color:#3b82f6;margin-right:6px"></i>Da pagare Ã¢â‚¬â€ senza rate</h3>
+  <h3 style="margin:0;font-size:15px;color:#e5f0ff"><i class="fa fa-file-invoice-dollar" style="color:#3b82f6;margin-right:6px"></i>Da pagare - senza rate</h3>
   <span style="background:#dbeafe;color:#1e40af;border-radius:20px;padding:2px 10px;font-size:12px;font-weight:600">{{ senza_rate_attive|length }}</span>
 </div>
 <div class="card" style="margin-bottom:24px;border-top:3px solid #3b82f6">
@@ -21490,7 +21490,7 @@ FATT_LIST_TMPL = """
   <button onclick="togglePagate()" id="btn-pagate" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:0">
     <h3 style="margin:0;font-size:15px;color:#64748b"><i class="fa fa-circle-check" style="color:#16a34a;margin-right:6px"></i>Completamente pagate</h3>
     <span style="background:#dcfce7;color:#15803d;border-radius:20px;padding:2px 10px;font-size:12px;font-weight:600">{{ pagate|length }}</span>
-    <span id="ico-pagate" style="color:#94a3b8;font-size:12px">Ã¢â€“Â¶ mostra</span>
+    <span id="ico-pagate" style="color:#94a3b8;font-size:12px">&gt; mostra</span>
   </button>
 </div>
 <div id="sezione-pagate" style="display:none;margin-bottom:24px">
@@ -21515,7 +21515,7 @@ function togglePagate() {
   const ico = document.getElementById('ico-pagate');
   const open = s.style.display !== 'none';
   s.style.display = open ? 'none' : 'block';
-  ico.textContent = open ? 'Ã¢â€“Â¶ mostra' : 'Ã¢â€“Â¼ nascondi';
+  ico.textContent = open ? '> mostra' : 'v nascondi';
 }
 function updateBulkCount() {
   const checks = Array.from(document.querySelectorAll('.fatt-check'));
@@ -21579,7 +21579,7 @@ new Chart(ctx2, {
       { label: 'Incassato', data: {{ mesi_incassato | tojson }}, backgroundColor: 'rgba(34,197,94,.2)', borderColor: '#22c55e', borderWidth: 2, borderRadius: 6 }
     ]
   },
-  options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true, ticks: { callback: v => 'Ã¢â€šÂ¬'+v } } } }
+  options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true, ticks: { callback: v => '\u20ac' + v } } } }
 });
 </script>
 """
