@@ -780,8 +780,18 @@ def init_db():
         "ALTER TABLE fatture ADD COLUMN sdi_identificativo TEXT",
         "ALTER TABLE fatture ADD COLUMN sdi_messaggio TEXT",
         "ALTER TABLE fatture ADD COLUMN provider_doc_id TEXT",
+        "ALTER TABLE fatture ADD COLUMN provider TEXT",
+        "ALTER TABLE fatture ADD COLUMN provider_raw_json TEXT",
+        "ALTER TABLE fatture ADD COLUMN provider_synced_at TEXT",
+        "CREATE INDEX IF NOT EXISTS idx_fatture_provider_doc ON fatture(provider, provider_doc_id)",
         "ALTER TABLE fatture ADD COLUMN imponibile_lordo REAL DEFAULT 0",
         "ALTER TABLE fatture ADD COLUMN sconto_importo REAL DEFAULT 0",
+        # Doc type per distinguere fatture standard / note di credito
+        # Valori: 'invoice' (default), 'credit_note'
+        "ALTER TABLE fatture ADD COLUMN doc_type TEXT DEFAULT 'invoice'",
+        # Riferimento a fattura originale per le note di credito
+        "ALTER TABLE fatture ADD COLUMN fattura_riferimento_id INTEGER",
+        "CREATE INDEX IF NOT EXISTS idx_fatture_riferimento ON fatture(fattura_riferimento_id)",
         "ALTER TABLE clienti ADD COLUMN codice_fiscale TEXT",
         "ALTER TABLE clienti ADD COLUMN citta TEXT",
         "ALTER TABLE clienti ADD COLUMN cap TEXT",
@@ -1334,6 +1344,13 @@ def ensure_columns():
                 "ALTER TABLE fatture ADD COLUMN sdi_identificativo TEXT",
                 "ALTER TABLE fatture ADD COLUMN sdi_messaggio TEXT",
                 "ALTER TABLE fatture ADD COLUMN provider_doc_id TEXT",
+                "ALTER TABLE fatture ADD COLUMN provider TEXT",
+                "ALTER TABLE fatture ADD COLUMN provider_raw_json TEXT",
+                "ALTER TABLE fatture ADD COLUMN provider_synced_at TEXT",
+                "CREATE INDEX IF NOT EXISTS idx_fatture_provider_doc ON fatture(provider, provider_doc_id)",
+                "ALTER TABLE fatture ADD COLUMN doc_type TEXT DEFAULT 'invoice'",
+                "ALTER TABLE fatture ADD COLUMN fattura_riferimento_id INTEGER",
+                "CREATE INDEX IF NOT EXISTS idx_fatture_riferimento ON fatture(fattura_riferimento_id)",
                 "ALTER TABLE spese_rimborso ADD COLUMN cantiere_id INTEGER",
                 """CREATE TABLE IF NOT EXISTS fornitori (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1479,7 +1496,7 @@ AMMINISTRAZIONE_ENDPOINTS = {
     'documenti_azienda','documenti_azienda_nuovo','documenti_azienda_modifica','documenti_azienda_scarica','documenti_azienda_elimina','documenti_azienda_zip',
     'scadenze','scadenze_pulisci_fantasma',
     'veicoli','veicolo_nuovo','veicolo_detail','veicolo_modifica','veicolo_salva_scadenze','veicolo_elimina','veicolo_documenti','veicolo_upload','veicolo_applica_ai','veicolo_scarica','veicolo_anteprima','veicolo_elimina_doc',
-    'fatturazione','fatturazione_elettronica_setup','fatturazione_elettronica_save','fatturazione_elettronica_attive','fatturazione_elettronica_attive_avvia','fatturazione_elettronica_connect','fatturazione_elettronica_callback','fatturazione_elettronica_disconnect','fatturazione_elettronica_delega','fatturazione_elettronica_delega_avvia','fatturazione_elettronica_delega_rientro','fatturazione_elettronica_delega_completa','fatturazione_nuova','fatturazione_modifica','fatturazione_dettaglio','fatturazione_allega_emessa','fatturazione_elimina','fatturazione_aggiungi_rata','fatturazione_paga_rata','fatturazione_annulla_paga_rata','fatturazione_elimina_rata','fatturazione_file','fatturazione_clienti','fatturazione_nuovo_cliente','fatturazione_elimina_cliente',
+    'fatturazione','fatturazione_elettronica_setup','fatturazione_elettronica_save','fatturazione_elettronica_attive','fatturazione_elettronica_attive_avvia','fatturazione_elettronica_connect','fatturazione_elettronica_callback','fatturazione_elettronica_disconnect','fatturazione_elettronica_delega','fatturazione_elettronica_delega_avvia','fatturazione_elettronica_delega_rientro','fatturazione_elettronica_delega_completa','fatturazione_nuova','fatturazione_modifica','fatturazione_dettaglio','fatturazione_allega_emessa','fatturazione_elimina','fatturazione_aggiungi_rata','fatturazione_paga_rata','fatturazione_annulla_paga_rata','fatturazione_elimina_rata','fatturazione_file','fatturazione_clienti','fatturazione_nuovo_cliente','fatturazione_elimina_cliente','fatturazione_sync_passive','fatturazione_invia_sdi','fatturazione_push_provider','fatturazione_aggiorna_stato_sdi','fatturazione_nota_credito_nuova','fatturazione_elettronica_genera_secret',
     'clienti_lista','cliente_nuovo','cliente_modifica','cliente_elimina','cliente_ai_estrai',
     'fornitori_lista','fornitore_nuovo','fornitore_modifica','fornitore_elimina',
     'preventivi','preventivo_nuovo','preventivo_modifica','preventivo_pdf','preventivo_duplica','preventivo_stato','preventivo_elimina',
@@ -8904,7 +8921,7 @@ def _amministrazione_stats():
 PUBLIC_NO_TENANT_ENDPOINTS = {
     'index', 'public_home', 'privacy', 'termini', 'cookie_policy', 'login', 'logout', 'area_clienti',
     'set_lang', 'registrati', 'landing', 'pwa_manifest', 'pwa_service_worker', 'pwa_offline',
-    'static', 'pwa_static', 'stripe_webhook'
+    'static', 'pwa_static', 'stripe_webhook', 'fattureincloud_webhook'
 }
 
 DANGEROUS_GET_ENDPOINT_HINTS = (
@@ -8940,7 +8957,7 @@ def security_request_guard():
             if not referer or not _same_origin_url(referer):
                 abort(403)
     if request.method in ('POST', 'PUT', 'PATCH', 'DELETE'):
-        if endpoint not in {'stripe_webhook'}:
+        if endpoint not in {'stripe_webhook', 'fattureincloud_webhook'}:
             origin = request.headers.get('Origin')
             referer = request.headers.get('Referer')
             if origin and not _same_origin_url(origin):
@@ -9141,6 +9158,392 @@ def _efatt_platform_oauth_credentials(provider_id):
         ).strip()
         return client_id, client_secret
     return '', ''
+
+class EFattAPIError(Exception):
+    def __init__(self, message, status=None, body=''):
+        super().__init__(message)
+        self.status = status
+        self.body = body or ''
+
+def _efatt_db_get(db, key, default=''):
+    try:
+        row = db.execute("SELECT valore FROM impostazioni WHERE chiave=?", (key,)).fetchone()
+        return row['valore'] if row and row['valore'] is not None else default
+    except Exception:
+        return default
+
+def _efatt_db_set(db, key, value):
+    db.execute("INSERT OR REPLACE INTO impostazioni (chiave,valore) VALUES (?,?)", (key, value or ''))
+
+def _get_efatt_config_from_db(db):
+    keys = [
+        'efatt_provider', 'efatt_codice_destinatario', 'efatt_api_key',
+        'efatt_company_id', 'efatt_delega_stato', 'efatt_delega_note',
+        'efatt_webhook_secret', 'efatt_oauth_client_id', 'efatt_oauth_client_secret',
+        'efatt_oauth_scopes', 'efatt_oauth_status', 'efatt_oauth_connected_at',
+        'efatt_oauth_provider_user', 'efatt_access_token', 'efatt_refresh_token',
+        'efatt_token_expires_at', 'efatt_delega_url_fattureincloud',
+        'efatt_delega_url_aruba', 'efatt_delega_url_acube', 'efatt_delega_provider',
+        'efatt_delega_started_at', 'efatt_delega_completed_at',
+        'efatt_attive_url_fattureincloud', 'efatt_attive_url_aruba',
+        'efatt_attive_url_acube', 'efatt_attive_provider'
+    ]
+    cfg = {k: _efatt_db_get(db, k, '') for k in keys}
+    cfg['efatt_oauth_scopes'] = _efatt_clean_scopes(cfg.get('efatt_oauth_scopes', ''))
+    return cfg
+
+def _efatt_http_json(method, url, payload=None, headers=None, timeout=25):
+    import urllib.request, urllib.error
+    data = None
+    req_headers = {'Accept': 'application/json'}
+    if headers:
+        req_headers.update(headers)
+    if payload is not None:
+        data = json.dumps(payload).encode('utf-8')
+        req_headers.setdefault('Content-Type', 'application/json')
+    req = urllib.request.Request(url, data=data, headers=req_headers, method=method.upper())
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            raw = resp.read().decode('utf-8', errors='ignore')
+            return json.loads(raw or '{}') if raw else {}
+    except urllib.error.HTTPError as e:
+        body = e.read().decode('utf-8', errors='ignore')
+        raise EFattAPIError(body[:700] or str(e), status=e.code, body=body)
+    except Exception as e:
+        raise EFattAPIError(str(e))
+
+def _efatt_token_expired(expires_at):
+    if not expires_at:
+        return False
+    try:
+        exp = datetime.fromisoformat(str(expires_at).replace('Z', '+00:00')).replace(tzinfo=None)
+        return exp <= datetime.now() + timedelta(minutes=5)
+    except Exception:
+        return False
+
+def _efatt_refresh_access_token(db, cfg=None):
+    cfg = cfg or _get_efatt_config_from_db(db)
+    provider = (cfg.get('efatt_provider') or 'fattureincloud').strip()
+    if provider != 'fattureincloud':
+        raise EFattAPIError('Refresh token automatico disponibile solo per Fatture in Cloud.')
+    refresh_token = (cfg.get('efatt_refresh_token') or '').strip()
+    if not refresh_token:
+        raise EFattAPIError('Refresh token provider assente: ricollega Fatture in Cloud.')
+    client_id, client_secret = _efatt_platform_oauth_credentials(provider)
+    if not client_id or not client_secret:
+        raise EFattAPIError('Credenziali OAuth piattaforma mancanti su Railway.')
+    data = _efatt_http_json('POST', 'https://api-v2.fattureincloud.it/oauth/token', {
+        'grant_type': 'refresh_token',
+        'client_id': client_id,
+        'client_secret': client_secret,
+        'refresh_token': refresh_token,
+    }, headers={'Content-Type': 'application/json', 'Accept': 'application/json'})
+    access_token = data.get('access_token', '')
+    new_refresh = data.get('refresh_token', refresh_token)
+    expires_in = int(data.get('expires_in') or 0)
+    expires_at = (datetime.now() + timedelta(seconds=expires_in)).isoformat(timespec='seconds') if expires_in else ''
+    if access_token:
+        _efatt_db_set(db, 'efatt_access_token', access_token)
+        _efatt_db_set(db, 'efatt_refresh_token', new_refresh)
+        _efatt_db_set(db, 'efatt_token_expires_at', expires_at)
+        _efatt_db_set(db, 'efatt_oauth_status', 'connected')
+        safe_commit(db)
+        return access_token
+    raise EFattAPIError('Il provider non ha restituito un nuovo access_token.')
+
+def _efatt_api_request(method, path, payload=None, query=None, db=None):
+    import urllib.parse
+    own_db = db is None
+    if own_db:
+        db = get_db()
+    try:
+        cfg = _get_efatt_config_from_db(db)
+        token = (cfg.get('efatt_access_token') or '').strip()
+        if not token:
+            raise EFattAPIError('Provider non collegato: manca access_token.')
+        if _efatt_token_expired(cfg.get('efatt_token_expires_at')):
+            token = _efatt_refresh_access_token(db, cfg)
+        url = 'https://api-v2.fattureincloud.it' + path
+        if query:
+            url += '?' + urllib.parse.urlencode({k: v for k, v in query.items() if v is not None and v != ''})
+        headers = {'Authorization': 'Bearer ' + token, 'Accept': 'application/json'}
+        try:
+            return _efatt_http_json(method, url, payload, headers=headers)
+        except EFattAPIError as e:
+            if e.status == 401 and (cfg.get('efatt_refresh_token') or '').strip():
+                token = _efatt_refresh_access_token(db, cfg)
+                headers['Authorization'] = 'Bearer ' + token
+                return _efatt_http_json(method, url, payload, headers=headers)
+            raise
+    finally:
+        if own_db:
+            db.close()
+
+def _efatt_pick_company_id(db):
+    cfg = _get_efatt_config_from_db(db)
+    if (cfg.get('efatt_company_id') or '').strip():
+        return cfg['efatt_company_id'].strip()
+    data = _efatt_api_request('GET', '/user/companies', db=db)
+    raw = data.get('data') if isinstance(data, dict) else []
+    if isinstance(raw, dict):
+        companies = raw.get('companies') or raw.get('items') or []
+    else:
+        companies = raw or []
+    if not companies:
+        raise EFattAPIError('Nessuna azienda trovata nell account Fatture in Cloud autorizzato.')
+    company = companies[0]
+    company_id = str(company.get('id') or company.get('company_id') or '').strip()
+    if not company_id:
+        raise EFattAPIError('Fatture in Cloud non ha restituito il company_id.')
+    name = company.get('name') or company.get('email') or company_id
+    _efatt_db_set(db, 'efatt_company_id', company_id)
+    _efatt_db_set(db, 'efatt_oauth_provider_user', str(name))
+    safe_commit(db)
+    return company_id
+
+def _efatt_float(value, default=0.0):
+    try:
+        if value is None or value == '':
+            return default
+        return float(str(value).replace(',', '.'))
+    except Exception:
+        return default
+
+def _efatt_doc_amount(doc):
+    for k in ('amount_gross', 'amount_total', 'gross_total', 'total', 'amount', 'amount_due'):
+        if k in doc and doc.get(k) not in (None, ''):
+            return _efatt_float(doc.get(k), 0)
+    totals = doc.get('totals') if isinstance(doc.get('totals'), dict) else {}
+    for k in ('amount_gross', 'gross_total', 'total'):
+        if totals.get(k) not in (None, ''):
+            return _efatt_float(totals.get(k), 0)
+    return 0.0
+
+def _efatt_doc_net(doc, gross):
+    for k in ('amount_net', 'net_total', 'amount_without_vat', 'taxable_amount'):
+        if doc.get(k) not in (None, ''):
+            return _efatt_float(doc.get(k), 0)
+    return round(gross / 1.22, 2) if gross else 0.0
+
+def _efatt_entity_name(doc):
+    entity = doc.get('entity') if isinstance(doc.get('entity'), dict) else {}
+    supplier = doc.get('supplier') if isinstance(doc.get('supplier'), dict) else {}
+    return (
+        entity.get('name') or supplier.get('name') or doc.get('entity_name') or
+        doc.get('supplier_name') or doc.get('name') or 'Fornitore'
+    )
+
+def _efatt_import_received_document(db, doc):
+    provider_id = str(doc.get('id') or doc.get('document_id') or '').strip()
+    if not provider_id:
+        return False
+    existing = db.execute(
+        "SELECT id FROM fatture WHERE provider=? AND provider_doc_id=? LIMIT 1",
+        ('fattureincloud', provider_id)
+    ).fetchone()
+    numero = str(doc.get('number') or doc.get('numeration') or doc.get('display_number') or provider_id)
+    data_em = str(doc.get('date') or doc.get('created_at') or '')[:10] or date.today().isoformat()
+    gross = _efatt_doc_amount(doc)
+    net = _efatt_doc_net(doc, gross)
+    iva = round(gross - net, 2)
+    entity_name = _efatt_entity_name(doc)
+    payments = doc.get('payments_list') if isinstance(doc.get('payments_list'), list) else []
+    data_scad = ''
+    pagata = False
+    if payments:
+        data_scad = str(payments[0].get('due_date') or payments[0].get('date') or '')[:10]
+        pagata = all((p.get('status') or '').lower() in ('paid', 'pagata') for p in payments)
+    descr = doc.get('description') or doc.get('subject') or doc.get('visible_subject') or 'Fattura passiva importata da Fatture in Cloud'
+    stato = 'pagata' if pagata else 'da_pagare'
+    raw_json = json.dumps(doc, ensure_ascii=False, default=str)
+    synced_at = datetime.now().isoformat(timespec='seconds')
+    if existing:
+        db.execute("""UPDATE fatture SET numero=?, fornitore_nome=?, data_emissione=?,
+                      data_scadenza=?, imponibile=?, iva_importo=?, importo_totale=?,
+                      descrizione=?, stato=?, sdi_stato='ricevuta', provider_raw_json=?,
+                      provider_synced_at=? WHERE id=?""",
+                   (numero, entity_name, data_em, data_scad, net, iva, gross, descr,
+                    stato, raw_json, synced_at, existing['id']))
+        return False
+    db.execute("""INSERT INTO fatture
+                  (tipo, numero, fornitore_nome, data_emissione, data_scadenza,
+                   imponibile, iva_perc, iva_importo, importo_totale, descrizione,
+                   stato, sdi_stato, provider, provider_doc_id, provider_raw_json,
+                   provider_synced_at)
+                  VALUES ('passiva',?,?,?,?,?,?,?,?,?,'da_pagare','ricevuta',
+                          'fattureincloud',?,?,?)""",
+               (numero, entity_name, data_em, data_scad, net, 22, iva, gross, descr,
+                provider_id, raw_json, synced_at))
+    return True
+
+def _efatt_sync_passive_documents(db=None, max_pages=3):
+    own_db = db is None
+    if own_db:
+        db = get_db()
+    try:
+        company_id = _efatt_pick_company_id(db)
+        imported = updated = 0
+        for page in range(1, max_pages + 1):
+            data = _efatt_api_request('GET', f'/c/{company_id}/received_documents', query={
+                'page': page,
+                'per_page': 100,
+                'fieldset': 'detailed',
+            }, db=db)
+            docs = data.get('data') if isinstance(data, dict) else []
+            if isinstance(docs, dict):
+                docs = docs.get('items') or docs.get('received_documents') or []
+            if not docs:
+                break
+            for doc in docs:
+                if _efatt_import_received_document(db, doc):
+                    imported += 1
+                else:
+                    updated += 1
+            pagination = data.get('pagination') if isinstance(data, dict) else {}
+            last_page = int(pagination.get('last_page') or pagination.get('total_pages') or page)
+            if page >= last_page:
+                break
+        _efatt_db_set(db, 'efatt_passive_last_sync', datetime.now().isoformat(timespec='seconds'))
+        safe_commit(db)
+        return {'imported': imported, 'updated': updated}
+    finally:
+        if own_db:
+            db.close()
+
+def _efatt_build_issued_payload(db, f):
+    cliente = None
+    if f['cliente_id']:
+        cliente = db.execute("SELECT * FROM clienti WHERE id=?", (f['cliente_id'],)).fetchone()
+    entity = {'name': f['cliente_nome'] or 'Cliente'}
+    if cliente:
+        if cliente['partita_iva']:
+            entity['vat_number'] = cliente['partita_iva']
+        if cliente['codice_fiscale']:
+            entity['tax_code'] = cliente['codice_fiscale']
+        if cliente['indirizzo']:
+            entity['address_street'] = cliente['indirizzo']
+        if cliente['cap']:
+            entity['address_postal_code'] = cliente['cap']
+        if cliente['citta']:
+            entity['address_city'] = cliente['citta']
+        if cliente['paese']:
+            entity['country'] = cliente['paese']
+    descrizione = f['descrizione'] or ('Fattura ' + (f['numero'] or ''))
+    imponibile = _efatt_float(f['imponibile'], 0)
+    if not imponibile:
+        totale = _efatt_float(f['importo_totale'], 0)
+        imponibile = round(totale / 1.22, 2) if totale else 0
+    # Determina il tipo documento: 'invoice' o 'credit_note'
+    doc_type_local = (f['doc_type'] if 'doc_type' in f.keys() else None) or 'invoice'
+    fic_type = 'credit_note' if doc_type_local == 'credit_note' else 'invoice'
+    doc = {
+        'type': fic_type,
+        'entity': entity,
+        'date': f['data_emissione'] or date.today().isoformat(),
+        'subject': descrizione[:255],
+        'visible_subject': descrizione[:255],
+        'e_invoice': True,
+        'items_list': [{
+            'name': descrizione[:255],
+            'qty': 1,
+            'net_price': round(imponibile, 2),
+            'vat': {'id': 0},
+        }],
+        'payments_list': [{
+            'amount': round(_efatt_float(f['importo_totale'], 0), 2),
+            'due_date': f['data_scadenza'] or f['data_emissione'] or date.today().isoformat(),
+            'status': 'not_paid',
+        }],
+    }
+    # Per le note di credito, aggiungi riferimento alla fattura originale se presente
+    if fic_type == 'credit_note':
+        rif_id = f['fattura_riferimento_id'] if 'fattura_riferimento_id' in f.keys() else None
+        if rif_id:
+            try:
+                orig = db.execute("SELECT numero, data_emissione, provider_doc_id FROM fatture WHERE id=?",
+                                  (rif_id,)).fetchone()
+                if orig:
+                    # FiC supporta `related_document` per legare alla fattura originale
+                    if orig['provider_doc_id']:
+                        doc['related_document'] = {'id': int(orig['provider_doc_id'])} \
+                            if str(orig['provider_doc_id']).isdigit() else {'id_string': str(orig['provider_doc_id'])}
+                    # Aggiungo come riferimento testuale nel subject se non c'è già
+                    rif_txt = f"Riferimento fattura {orig['numero']} del {orig['data_emissione']}"
+                    if rif_txt not in (doc.get('subject') or ''):
+                        doc['subject'] = (doc.get('subject', '') + ' — ' + rif_txt)[:255]
+            except Exception as e:
+                print(f'[credit_note] errore lettura fattura riferimento: {e}')
+    # Gestione numerazione: FiC supporta `number` (progressivo intero) e
+    # `numeration` (sezione, es. anno). Provo a parsare formati comuni:
+    # "001", "2026/001", "1/2026", "001-2026", "1A".
+    numero = str(f['numero'] or '').strip()
+    if numero:
+        import re as _re
+        m = _re.match(r'^\s*(\d+)\s*[\/\-]\s*(\d+)\s*$', numero)
+        if m:
+            a, b = m.group(1), m.group(2)
+            if len(a) == 4 and a.startswith(('19', '20')):
+                doc['number'] = int(b)
+                doc['numeration'] = a
+            elif len(b) == 4 and b.startswith(('19', '20')):
+                doc['number'] = int(a)
+                doc['numeration'] = b
+            else:
+                doc['number'] = int(a)
+        elif numero.isdigit():
+            doc['number'] = int(numero)
+    return {'data': doc, 'options': {'fix_payments': True}}
+
+def _efatt_push_active_invoice(fid, send_to_sdi=True):
+    db = get_db()
+    try:
+        f = db.execute("SELECT * FROM fatture WHERE id=?", (fid,)).fetchone()
+        if not f:
+            raise EFattAPIError('Fattura non trovata.')
+        if (f['tipo'] or 'attiva') != 'attiva':
+            raise EFattAPIError('Solo le fatture attive possono essere inviate al provider.')
+        company_id = _efatt_pick_company_id(db)
+        provider_doc_id = (f['provider_doc_id'] or '').strip()
+        raw_response = {}
+        if not provider_doc_id:
+            payload = _efatt_build_issued_payload(db, f)
+            created = _efatt_api_request('POST', f'/c/{company_id}/issued_documents', payload=payload, db=db)
+            raw_response = created
+            created_data = created.get('data') if isinstance(created, dict) else {}
+            provider_doc_id = str(created_data.get('id') or created.get('id') or '').strip()
+            if not provider_doc_id:
+                raise EFattAPIError('Fattura creata sul provider, ma manca id documento nella risposta.')
+            db.execute("""UPDATE fatture SET provider='fattureincloud', provider_doc_id=?,
+                          provider_raw_json=?, provider_synced_at=?, sdi_stato='creata_provider',
+                          sdi_messaggio=? WHERE id=?""",
+                       (provider_doc_id, json.dumps(created, ensure_ascii=False, default=str),
+                        datetime.now().isoformat(timespec='seconds'), 'Creata su Fatture in Cloud', fid))
+            safe_commit(db)
+        if send_to_sdi:
+            try:
+                sent = _efatt_api_request(
+                    'POST',
+                    f'/c/{company_id}/issued_documents/{provider_doc_id}/e_invoice/send',
+                    payload={'data': {}},
+                    db=db
+                )
+                raw_response = sent
+                db.execute("""UPDATE fatture SET sdi_stato='inviata_sdi',
+                              sdi_identificativo=?, sdi_messaggio=?, provider_raw_json=?,
+                              provider_synced_at=? WHERE id=?""",
+                           (provider_doc_id, 'Inviata allo SDI tramite Fatture in Cloud',
+                            json.dumps(sent, ensure_ascii=False, default=str),
+                            datetime.now().isoformat(timespec='seconds'), fid))
+                safe_commit(db)
+            except EFattAPIError as e:
+                db.execute("""UPDATE fatture SET sdi_stato='errore_sdi',
+                              sdi_messaggio=?, provider_synced_at=? WHERE id=?""",
+                           ((e.body or str(e))[:700], datetime.now().isoformat(timespec='seconds'), fid))
+                safe_commit(db)
+                raise
+        return raw_response
+    finally:
+        db.close()
 
 @app.route('/amministrazione')
 @login_required
@@ -18971,6 +19374,113 @@ EFATT_SETUP_TMPL = """
       </form>
     </div>
   </div>
+
+  {# ── Card stato salute fatturazione elettronica ── #}
+  <div class="ef-card">
+    <h3 style="margin-top:0"><i class="fa fa-heart-pulse" style="color:#dc2626"></i> Stato del collegamento</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px">
+      <div style="padding:12px;background:#f8fafc;border-radius:10px;border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--text-light);font-weight:700;text-transform:uppercase;margin-bottom:4px">Provider</div>
+        <div style="font-weight:800">
+          {% if health.collegato %}
+          <span style="color:#16a34a">● Collegato</span>
+          {% else %}
+          <span style="color:#dc2626">● Non collegato</span>
+          {% endif %}
+          <span style="color:var(--text-light);font-weight:600;font-size:12px"> · {{ health.provider }}</span>
+        </div>
+      </div>
+      <div style="padding:12px;background:#f8fafc;border-radius:10px;border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--text-light);font-weight:700;text-transform:uppercase;margin-bottom:4px">Codice destinatario</div>
+        <div style="font-weight:800">
+          {% if health.codice_destinatario_set %}
+          <span style="color:#16a34a">● Configurato</span>
+          {% else %}
+          <span style="color:#d97706">● Non configurato</span>
+          {% endif %}
+        </div>
+      </div>
+      <div style="padding:12px;background:#f8fafc;border-radius:10px;border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--text-light);font-weight:700;text-transform:uppercase;margin-bottom:4px">Webhook secret</div>
+        <div style="font-weight:800">
+          {% if health.webhook_secret_set %}
+          <span style="color:#16a34a">● Generato</span>
+          {% else %}
+          <span style="color:#d97706">● Da generare</span>
+          {% endif %}
+        </div>
+      </div>
+      <div style="padding:12px;background:#f8fafc;border-radius:10px;border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--text-light);font-weight:700;text-transform:uppercase;margin-bottom:4px">Ultima sync passive</div>
+        <div style="font-weight:800;font-size:13px">
+          {% if health.last_passive_sync %}{{ health.last_passive_sync[:16] }}{% else %}<span style="color:var(--text-light)">mai</span>{% endif %}
+        </div>
+      </div>
+      <div style="padding:12px;background:#fff7ed;border-radius:10px;border:1px solid #fed7aa">
+        <div style="font-size:11px;color:#9a3412;font-weight:700;text-transform:uppercase;margin-bottom:4px">Da inviare a SDI</div>
+        <div style="font-weight:800;font-size:22px;color:#9a3412">{{ health.n_attive_da_inviare }}</div>
+      </div>
+      <div style="padding:12px;background:#fef2f2;border-radius:10px;border:1px solid #fecaca">
+        <div style="font-size:11px;color:#991b1b;font-weight:700;text-transform:uppercase;margin-bottom:4px">Scartate</div>
+        <div style="font-weight:800;font-size:22px;color:#991b1b">{{ health.n_attive_scartate }}</div>
+      </div>
+      <div style="padding:12px;background:#f0fdf4;border-radius:10px;border:1px solid #bbf7d0">
+        <div style="font-size:11px;color:#166534;font-weight:700;text-transform:uppercase;margin-bottom:4px">Inviate / consegnate</div>
+        <div style="font-weight:800;font-size:22px;color:#166534">{{ health.n_attive_inviate }}</div>
+      </div>
+      <div style="padding:12px;background:#eff6ff;border-radius:10px;border:1px solid #bfdbfe">
+        <div style="font-size:11px;color:#1e40af;font-weight:700;text-transform:uppercase;margin-bottom:4px">Passive (30 gg)</div>
+        <div style="font-weight:800;font-size:22px;color:#1e40af">{{ health.n_passive_30gg }}</div>
+      </div>
+    </div>
+  </div>
+
+  {# ── Card configurazione Webhook su Fatture in Cloud ── #}
+  <div class="ef-card" style="border-left:4px solid #0ea5e9">
+    <h3 style="margin-top:0"><i class="fa fa-rss" style="color:#0ea5e9"></i> Webhook Fatture in Cloud</h3>
+    <p class="ef-muted">
+      Il webhook serve a ricevere gli eventi in tempo reale: fatture passive in arrivo, ricevute SDI di consegna o scarto.
+      Configura questi due valori nel pannello sviluppatore di Fatture in Cloud (sezione "Webhook" del tuo account).
+    </p>
+    <div style="margin-top:18px">
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;color:var(--text-light);margin-bottom:6px">URL endpoint webhook (incolla questo)</div>
+      <div style="display:flex;gap:8px;align-items:stretch">
+        <input id="wh-url" type="text" readonly value="{{ webhook_url }}" style="flex:1;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-family:monospace;font-size:13px;background:#f8fafc">
+        <button type="button" class="btn btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('wh-url').value).then(()=>this.innerHTML='<i class=fa fa-check></i> Copiato')"><i class="fa fa-copy"></i> Copia</button>
+      </div>
+    </div>
+    <div style="margin-top:16px">
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;color:var(--text-light);margin-bottom:6px">Secret per firma HMAC</div>
+      {% if health.webhook_secret_set %}
+      <div style="display:flex;gap:8px;align-items:stretch">
+        <input id="wh-secret" type="password" readonly value="{{ cfg.efatt_webhook_secret }}" style="flex:1;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-family:monospace;font-size:13px;background:#f8fafc">
+        <button type="button" class="btn btn-secondary" onclick="var i=document.getElementById('wh-secret');i.type=i.type=='password'?'text':'password';this.innerHTML=i.type=='text'?'<i class=fa fa-eye-slash></i> Nascondi':'<i class=fa fa-eye></i> Mostra'"><i class="fa fa-eye"></i> Mostra</button>
+        <button type="button" class="btn btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('wh-secret').value).then(()=>this.innerHTML='<i class=fa fa-check></i> Copiato')"><i class="fa fa-copy"></i> Copia</button>
+      </div>
+      <form method="POST" action="/fatturazione/elettronica/genera-secret" style="margin-top:10px" onsubmit="return confirm('Rigenerare il secret invaliderà la firma attuale: ricordati di aggiornarlo anche nel pannello Fatture in Cloud. Procedere?')">
+        <button type="submit" class="btn btn-sm" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a"><i class="fa fa-rotate"></i> Rigenera secret</button>
+      </form>
+      {% else %}
+      <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:12px;color:#92400e;font-size:13px;margin-bottom:10px">
+        ⚠️ Nessun secret configurato. Senza secret, il webhook accetterà eventi non firmati. Per sicurezza, genera un secret e configuralo anche sul pannello Fatture in Cloud.
+      </div>
+      <form method="POST" action="/fatturazione/elettronica/genera-secret">
+        <button type="submit" class="btn btn-primary"><i class="fa fa-key"></i> Genera secret sicuro</button>
+      </form>
+      {% endif %}
+    </div>
+    <details style="margin-top:18px;padding:12px;background:#f8fafc;border-radius:10px;border:1px solid var(--border)">
+      <summary style="cursor:pointer;font-weight:700;font-size:13px"><i class="fa fa-circle-info"></i> Quali eventi vanno abilitati</summary>
+      <div class="ef-muted" style="margin-top:10px">
+        Eventi consigliati sul pannello Fatture in Cloud:
+        <ul style="margin:8px 0 0 18px;padding:0">
+          <li><code>received_documents.create</code> — nuova fattura passiva ricevuta dal SDI</li>
+          <li><code>issued_documents.e_invoices.send</code> — fattura attiva inviata al SDI</li>
+          <li><code>issued_documents.e_invoices.notification</code> — aggiornamenti di stato SDI (consegna, scarto, mancata consegna)</li>
+        </ul>
+      </div>
+    </details>
+  </div>
 </div>
 """
 
@@ -19103,13 +19613,29 @@ EFATT_DELEGA_AVVIO_TMPL = """
 @app.route('/fatturazione/elettronica')
 @admin_required
 def fatturazione_elettronica_setup():
+    db = get_db()
+    health = _efatt_get_health_status(db)
+    db.close()
     return render_page(
         EFATT_SETUP_TMPL,
         page_title='Fatturazione elettronica',
         active='fatturazione_attiva',
         cfg=_get_efatt_config(),
-        providers=_efatt_provider_options()
+        providers=_efatt_provider_options(),
+        health=health,
+        webhook_url=get_public_base_url() + '/webhooks/fattureincloud',
     )
+
+
+@app.route('/fatturazione/elettronica/genera-secret', methods=['POST'])
+@admin_required
+def fatturazione_elettronica_genera_secret():
+    """Genera (o rigenera) il webhook secret da configurare su Fatture in Cloud."""
+    import secrets as _secrets
+    new_secret = _secrets.token_urlsafe(32)
+    set_setting('efatt_webhook_secret', new_secret)
+    flash('🔑 Nuovo webhook secret generato. Copialo e incollalo nelle impostazioni webhook di Fatture in Cloud.', 'success')
+    return redirect(url_for('fatturazione_elettronica_setup'))
 
 @app.route('/fatturazione/elettronica/salva', methods=['POST'])
 @admin_required
@@ -19353,6 +19879,589 @@ def fatturazione_elettronica_disconnect():
     flash('Provider disconnesso dal gestionale.', 'success')
     return redirect(url_for('fatturazione_elettronica_setup'))
 
+
+# ══════════════════════════════════════════════════════════════
+#  SYNC FATTURE PASSIVE — pull da Fatture in Cloud
+# ══════════════════════════════════════════════════════════════
+@app.route('/fatturazione/sync-passive', methods=['POST', 'GET'])
+@admin_required
+def fatturazione_sync_passive():
+    """Importa le fatture passive da Fatture in Cloud nel gestionale.
+    Chiama l'API /received_documents e crea/aggiorna le righe nella tabella `fatture`
+    con tipo='passiva'. Usa provider_doc_id come chiave anti-duplicato.
+    """
+    try:
+        result = _efatt_sync_passive_documents(max_pages=5)
+        imported = result.get('imported', 0)
+        updated = result.get('updated', 0)
+        if imported or updated:
+            flash(f'✅ Sincronizzazione completata: {imported} nuove fatture importate, {updated} aggiornate.', 'success')
+        else:
+            flash('Sincronizzazione completata. Nessuna fattura nuova trovata.', 'info')
+    except EFattAPIError as e:
+        msg = str(e)
+        if 'non collegato' in msg.lower() or 'access_token' in msg.lower():
+            flash('Provider non collegato. Vai in Fatturazione Elettronica → Connetti Fatture in Cloud.', 'error')
+        else:
+            flash(f'Errore sincronizzazione: {msg[:300]}', 'error')
+    except Exception as e:
+        print(f'[sync passive] errore: {e}')
+        flash(f'Errore imprevisto: {str(e)[:200]}', 'error')
+    return redirect(url_for('fatturazione', tipo='passiva'))
+
+
+# ══════════════════════════════════════════════════════════════
+#  CREA + INVIA FATTURA ATTIVA A SDI tramite Fatture in Cloud
+# ══════════════════════════════════════════════════════════════
+@app.route('/fatturazione/<int:fid>/invia-sdi', methods=['POST'])
+@admin_required
+def fatturazione_invia_sdi(fid):
+    """Crea la fattura su Fatture in Cloud (se non già esistente) e la invia allo SDI.
+    Lo stato locale viene aggiornato a 'creata_provider' → 'inviata_sdi' → 'errore_sdi'.
+    """
+    db = get_db()
+    f = db.execute("SELECT * FROM fatture WHERE id=?", (fid,)).fetchone()
+    db.close()
+    if not f:
+        flash('Fattura non trovata.', 'error')
+        return redirect(url_for('fatturazione'))
+    if (f['tipo'] or 'attiva') != 'attiva':
+        flash('Solo le fatture attive possono essere inviate allo SDI.', 'error')
+        return redirect(url_for('fatturazione_dettaglio', fid=fid))
+    try:
+        _efatt_push_active_invoice(fid, send_to_sdi=True)
+        flash(f'✅ Fattura {f["numero"]} inviata correttamente allo SDI tramite Fatture in Cloud.', 'success')
+    except EFattAPIError as e:
+        msg = str(e)
+        if 'non collegato' in msg.lower():
+            flash('Provider non collegato. Vai in Fatturazione Elettronica → Connetti.', 'error')
+        else:
+            flash(f'❌ Errore invio SDI: {msg[:400]}', 'error')
+    except Exception as e:
+        print(f'[invia sdi] errore fattura {fid}: {e}')
+        flash(f'❌ Errore imprevisto: {str(e)[:200]}', 'error')
+    return redirect(url_for('fatturazione_dettaglio', fid=fid))
+
+
+@app.route('/fatturazione/<int:fid>/push-provider', methods=['POST'])
+@admin_required
+def fatturazione_push_provider(fid):
+    """Crea la fattura su Fatture in Cloud SENZA inviarla allo SDI.
+    Utile quando si vuole solo sincronizzare l'anagrafica/dati prima dell'invio.
+    """
+    db = get_db()
+    f = db.execute("SELECT * FROM fatture WHERE id=?", (fid,)).fetchone()
+    db.close()
+    if not f:
+        flash('Fattura non trovata.', 'error')
+        return redirect(url_for('fatturazione'))
+    try:
+        _efatt_push_active_invoice(fid, send_to_sdi=False)
+        flash(f'✅ Fattura {f["numero"]} creata su Fatture in Cloud (non ancora inviata allo SDI).', 'success')
+    except EFattAPIError as e:
+        flash(f'❌ Errore: {str(e)[:400]}', 'error')
+    except Exception as e:
+        print(f'[push provider] errore fattura {fid}: {e}')
+        flash(f'❌ Errore imprevisto: {str(e)[:200]}', 'error')
+    return redirect(url_for('fatturazione_dettaglio', fid=fid))
+
+
+@app.route('/fatturazione/<int:fid>/aggiorna-stato-sdi', methods=['POST', 'GET'])
+@admin_required
+def fatturazione_aggiorna_stato_sdi(fid):
+    """Richiede a Fatture in Cloud lo stato corrente di una fattura inviata allo SDI
+    e aggiorna i campi sdi_stato/sdi_messaggio locali."""
+    db = get_db()
+    try:
+        f = db.execute("SELECT * FROM fatture WHERE id=?", (fid,)).fetchone()
+        if not f:
+            flash('Fattura non trovata.', 'error')
+            return redirect(url_for('fatturazione'))
+        if not (f['provider_doc_id'] or '').strip():
+            flash('Questa fattura non è ancora stata sincronizzata su Fatture in Cloud.', 'error')
+            return redirect(url_for('fatturazione_dettaglio', fid=fid))
+        company_id = _efatt_pick_company_id(db)
+        try:
+            # Fatture in Cloud: get_issued_document include il blocco e_invoice con lo stato SDI
+            doc_data = _efatt_api_request(
+                'GET',
+                f'/c/{company_id}/issued_documents/{f["provider_doc_id"]}',
+                query={'fieldset': 'detailed'},
+                db=db
+            )
+            doc = doc_data.get('data') if isinstance(doc_data, dict) else doc_data
+            e_invoice_info = (doc or {}).get('e_invoice', {}) or {}
+            sdi_status = (
+                e_invoice_info.get('status')
+                or e_invoice_info.get('sdi_state')
+                or (doc or {}).get('ei_status')
+                or ''
+            )
+            sdi_messaggio = (e_invoice_info.get('description') or e_invoice_info.get('error') or '')[:600]
+            # Mappa stati di FiC sui nostri stati interni
+            stato_map = {
+                'not_sent': 'creata_provider',
+                'waiting': 'inviata_sdi',
+                'queued': 'inviata_sdi',
+                'sent': 'inviata_sdi',
+                'processing': 'inviata_sdi',
+                'delivered': 'consegnata_sdi',
+                'accepted': 'consegnata_sdi',
+                'rejected': 'errore_sdi',
+                'rejected_pa': 'errore_sdi',
+                'failed': 'errore_sdi',
+                'failed_delivery': 'mancata_consegna_sdi',
+                'not_delivered': 'mancata_consegna_sdi',
+            }
+            stato_locale = stato_map.get(str(sdi_status).lower(), f['sdi_stato'] or 'inviata_sdi')
+            db.execute("""UPDATE fatture SET sdi_stato=?, sdi_messaggio=?,
+                          provider_raw_json=?, provider_synced_at=? WHERE id=?""",
+                       (stato_locale,
+                        sdi_messaggio or f'Stato SDI: {sdi_status or "sconosciuto"}',
+                        json.dumps(doc, ensure_ascii=False, default=str),
+                        datetime.now().isoformat(timespec='seconds'),
+                        fid))
+            safe_commit(db)
+            flash(f'Stato SDI aggiornato: {sdi_status or stato_locale}.', 'success')
+        except EFattAPIError as e:
+            flash(f'Errore lettura stato SDI: {str(e)[:300]}', 'error')
+    finally:
+        db.close()
+    return redirect(url_for('fatturazione_dettaglio', fid=fid))
+
+
+# ══════════════════════════════════════════════════════════════
+#  NOTE DI CREDITO — stornano fatture attive già inviate
+# ══════════════════════════════════════════════════════════════
+@app.route('/fatturazione/<int:fid>/nota-credito/nuova', methods=['GET', 'POST'])
+@admin_required
+def fatturazione_nota_credito_nuova(fid):
+    """Crea una nota di credito che storna la fattura `fid`.
+    La nota di credito eredita cliente, importi, descrizione e linka la fattura originale.
+    Si può poi inviare allo SDI con la stessa route di una fattura.
+    """
+    db = get_db()
+    f_orig = db.execute("SELECT * FROM fatture WHERE id=?", (fid,)).fetchone()
+    if not f_orig:
+        db.close()
+        flash('Fattura non trovata.', 'error')
+        return redirect(url_for('fatturazione'))
+    if (f_orig['tipo'] or 'attiva') != 'attiva':
+        db.close()
+        flash('Si possono creare note di credito solo per fatture attive.', 'error')
+        return redirect(url_for('fatturazione_dettaglio', fid=fid))
+
+    if request.method == 'POST':
+        try:
+            importo_str = (request.form.get('importo') or '').strip()
+            importo = _efatt_float(importo_str, _efatt_float(f_orig['importo_totale'], 0))
+            if importo <= 0:
+                db.close()
+                flash('Importo non valido.', 'error')
+                return redirect(url_for('fatturazione_nota_credito_nuova', fid=fid))
+            motivo = (request.form.get('motivo') or '').strip() or 'Storno fattura'
+            # Calcolo imponibile partendo dal totale (IVA 22% di default)
+            iva_perc = _efatt_float(f_orig['iva_perc'], 22)
+            divisor = 1 + (iva_perc / 100.0)
+            imponibile_nc = round(importo / divisor, 2) if divisor else 0
+            iva_imp_nc = round(importo - imponibile_nc, 2)
+            # Numero automatico: ultimo + 1 nello stesso anno con prefisso "NC"
+            anno = (f_orig['data_emissione'] or date.today().isoformat())[:4]
+            cnt = db.execute("""SELECT COUNT(*) AS n FROM fatture
+                                WHERE doc_type='credit_note'
+                                  AND substr(COALESCE(data_emissione,''),1,4)=?""",
+                             (anno,)).fetchone()
+            progressivo = int(cnt['n'] or 0) + 1
+            numero_nc = f'NC/{progressivo:03d}/{anno}'
+            descrizione_nc = f"Nota di credito a storno fattura {f_orig['numero']} del {f_orig['data_emissione']}. {motivo}"
+            cur = db.execute("""INSERT INTO fatture
+                (tipo, doc_type, numero, cliente_id, cliente_nome,
+                 data_emissione, data_scadenza,
+                 imponibile, iva_perc, iva_importo, importo_totale,
+                 descrizione, note, condizioni_pagamento, stato,
+                 fattura_riferimento_id)
+                VALUES ('attiva','credit_note',?,?,?,
+                        ?,?,?,?,?,?,?,?,?,'da_emettere',?)""",
+                (numero_nc, f_orig['cliente_id'], f_orig['cliente_nome'],
+                 date.today().isoformat(), date.today().isoformat(),
+                 imponibile_nc, iva_perc, iva_imp_nc, importo,
+                 descrizione_nc, motivo, 'immediato', fid))
+            new_fid = cur.lastrowid
+            safe_commit(db)
+            db.close()
+            flash(f'✅ Nota di credito {numero_nc} creata. Ora puoi inviarla allo SDI.', 'success')
+            return redirect(url_for('fatturazione_dettaglio', fid=new_fid))
+        except Exception as e:
+            db.close()
+            print(f'[nota credito] errore creazione: {e}')
+            flash(f'Errore creazione nota di credito: {str(e)[:200]}', 'error')
+            return redirect(url_for('fatturazione_dettaglio', fid=fid))
+
+    # GET: mostra form
+    f_dict = dict(f_orig)
+    db.close()
+    return render_page(NOTA_CREDITO_NUOVA_TMPL, page_title='Nuova nota di credito',
+                       active='fatturazione', f=f_dict)
+
+
+NOTA_CREDITO_NUOVA_TMPL = """
+<div style="max-width:680px;margin:0 auto">
+  <div style="margin-bottom:16px"><a href="/fatturazione/{{ f.id }}" class="btn btn-secondary btn-sm"><i class="fa fa-arrow-left"></i> Torna alla fattura</a></div>
+  <div class="card">
+    <div class="card-header"><h3><i class="fa fa-rotate-left" style="color:#dc2626"></i> Nuova nota di credito</h3></div>
+    <div class="card-body">
+      <div style="background:#fef3c7;border-left:3px solid #d97706;padding:12px 14px;border-radius:8px;margin-bottom:18px;font-size:13px">
+        <strong>Stai stornando la fattura {{ f.numero }}</strong> del {{ f.data_emissione }} a <strong>{{ f.cliente_nome }}</strong> (€ {{ "%.2f"|format(f.importo_totale or 0) }}).<br>
+        La nota di credito verrà creata in stato <em>"Da emettere"</em>. Potrai poi inviarla allo SDI con il pulsante dedicato.
+      </div>
+      <form method="POST" action="/fatturazione/{{ f.id }}/nota-credito/nuova">
+        <div style="margin-bottom:14px">
+          <label style="display:block;font-size:13px;font-weight:700;margin-bottom:6px">Importo da stornare (€, IVA inclusa)</label>
+          <input type="number" name="importo" step="0.01" min="0.01" max="{{ '%.2f'|format(f.importo_totale or 0) }}" value="{{ '%.2f'|format(f.importo_totale or 0) }}" required style="padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;width:100%">
+          <div style="font-size:11px;color:var(--text-light);margin-top:4px">Massimo: € {{ "%.2f"|format(f.importo_totale or 0) }} (storno totale)</div>
+        </div>
+        <div style="margin-bottom:18px">
+          <label style="display:block;font-size:13px;font-weight:700;margin-bottom:6px">Motivo dello storno</label>
+          <textarea name="motivo" rows="3" placeholder="Es. Reso merce, errore importo, abbuono..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;resize:vertical"></textarea>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <a href="/fatturazione/{{ f.id }}" class="btn btn-secondary">Annulla</a>
+          <button type="submit" class="btn btn-primary"><i class="fa fa-rotate-left"></i> Crea nota di credito</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+"""
+
+
+# ══════════════════════════════════════════════════════════════
+#  WEBHOOK FATTURE IN CLOUD — eventi push da provider
+# ══════════════════════════════════════════════════════════════
+@app.route('/webhooks/fattureincloud', methods=['POST'])
+def fattureincloud_webhook():
+    """Endpoint che riceve gli eventi push da Fatture in Cloud.
+    Eventi tipici: it.fattureincloud.webhooks.received_documents.create,
+                   it.fattureincloud.webhooks.issued_documents.e_invoices.send,
+                   it.fattureincloud.webhooks.issued_documents.e_invoices.notification, ...
+    Il provider firma il payload con HMAC-SHA256 usando un secret condiviso.
+
+    IMPORTANTE: Fatture in Cloud è multi-tenant, quindi nel payload c'è
+    `company_id`. Dobbiamo trovare a quale azienda (tenant) di Accesso Fiere
+    corrisponde, basandoci su `efatt_company_id` salvato per ogni tenant.
+    """
+    import hmac, hashlib
+    raw_body = request.get_data() or b''
+    signature_received = request.headers.get('X-Webhook-Signature') or request.headers.get('X-FIC-Signature') or ''
+
+    # Parsing payload JSON
+    try:
+        payload = json.loads(raw_body.decode('utf-8')) if raw_body else {}
+    except Exception:
+        return jsonify({'ok': False, 'error': 'invalid_json'}), 400
+
+    company_id = str(
+        payload.get('company_id')
+        or (payload.get('data') or {}).get('company_id')
+        or (payload.get('context') or {}).get('company_id')
+        or ''
+    ).strip()
+    event_type = str(payload.get('event') or payload.get('type') or '').strip()
+
+    # Cerco il tenant corrispondente nel master DB
+    target_azienda_id = None
+    try:
+        mdb = get_master_db()
+        tenants = mdb.execute("SELECT id FROM aziende WHERE stato='attiva'").fetchall()
+        mdb.close()
+    except Exception as e:
+        print(f'[FIC webhook] impossibile leggere tenant: {e}')
+        return jsonify({'ok': False, 'error': 'master_db_error'}), 500
+
+    for t in tenants:
+        try:
+            session_backup = dict(session) if session else {}
+            with app.test_request_context('/'):
+                session['azienda_id'] = t['id']
+                tdb = get_db()
+                try:
+                    cfg_company = (
+                        tdb.execute("SELECT valore FROM impostazioni WHERE chiave='efatt_company_id'").fetchone() or [None]
+                    )
+                    saved_company = (cfg_company[0] if cfg_company else '') or ''
+                    saved_secret = (
+                        tdb.execute("SELECT valore FROM impostazioni WHERE chiave='efatt_webhook_secret'").fetchone() or [None]
+                    )
+                    secret = (saved_secret[0] if saved_secret else '') or ''
+                finally:
+                    tdb.close()
+            if saved_company.strip() == company_id and company_id:
+                target_azienda_id = t['id']
+                webhook_secret = secret
+                break
+        except Exception as e:
+            print(f'[FIC webhook] errore check tenant {t["id"]}: {e}')
+
+    if not target_azienda_id:
+        print(f'[FIC webhook] company_id={company_id} non corrisponde a nessun tenant. Evento={event_type}')
+        return jsonify({'ok': True, 'note': 'tenant_not_found'}), 200
+
+    # Verifica firma HMAC se il secret è configurato
+    if webhook_secret:
+        expected_sig = hmac.new(
+            webhook_secret.encode('utf-8'),
+            raw_body,
+            hashlib.sha256
+        ).hexdigest()
+        # Confronto sicuro
+        sig_clean = (signature_received or '').replace('sha256=', '').strip().lower()
+        if not hmac.compare_digest(expected_sig.lower(), sig_clean):
+            print(f'[FIC webhook] firma non valida per tenant {target_azienda_id}, event={event_type}')
+            return jsonify({'ok': False, 'error': 'invalid_signature'}), 401
+
+    # Esegui logica nel contesto del tenant corretto
+    try:
+        with app.test_request_context('/'):
+            session['azienda_id'] = target_azienda_id
+            db = get_db()
+            try:
+                handled = _handle_fic_webhook_event(db, event_type, payload)
+                safe_commit(db)
+            finally:
+                db.close()
+            # Notifiche admin DOPO chiusura db (evita lock SQLite)
+            pend_sdi = payload.get('_pending_admin_notification')
+            if pend_sdi:
+                try:
+                    icone = {'consegnata_sdi': '✅', 'errore_sdi': '❌', 'mancata_consegna_sdi': '⚠️'}
+                    titoli = {
+                        'consegnata_sdi': 'Fattura consegnata',
+                        'errore_sdi': 'Fattura scartata dallo SDI',
+                        'mancata_consegna_sdi': 'Mancata consegna fattura',
+                    }
+                    sl = pend_sdi['stato_locale']
+                    notifica_admins(
+                        f'{icone.get(sl, "📨")} {titoli.get(sl, "Aggiornamento SDI")}',
+                        f'Fattura {pend_sdi["numero"]} a {pend_sdi["cliente_nome"] or "cliente"}: {pend_sdi["sdi_msg"][:120]}',
+                        f'/fatturazione/{pend_sdi["fattura_id"]}',
+                        'fattura_sdi'
+                    )
+                except Exception as e:
+                    print(f'[FIC webhook] errore notifica sdi: {e}')
+            pend_pass = payload.get('_pending_passive_notification')
+            if pend_pass:
+                try:
+                    notifica_admins(
+                        '📥 Nuova fattura passiva',
+                        f'Ricevuta nuova fattura da {pend_pass["entity_name"]}: {pend_pass["numero"]}',
+                        '/fatturazione?tipo=passiva',
+                        'fattura_passiva'
+                    )
+                except Exception as e:
+                    print(f'[FIC webhook] errore notifica passive: {e}')
+        print(f'[FIC webhook] tenant={target_azienda_id} event={event_type} handled={handled}')
+        return jsonify({'ok': True, 'event': event_type, 'handled': handled}), 200
+    except Exception as e:
+        print(f'[FIC webhook] errore processing tenant={target_azienda_id} event={event_type}: {e}')
+        return jsonify({'ok': False, 'error': str(e)[:200]}), 500
+
+
+def _handle_fic_webhook_event(db, event_type, payload):
+    """Gestisce i tipi di evento push da Fatture in Cloud.
+    Ritorna una stringa breve con l'azione eseguita (per i log).
+    """
+    et = (event_type or '').lower()
+    data_block = payload.get('data') or {}
+
+    # — Nuova fattura PASSIVA ricevuta
+    if 'received_documents' in et and ('create' in et or 'new' in et):
+        doc_id = str(data_block.get('id') or data_block.get('document_id') or '').strip()
+        if doc_id:
+            try:
+                company_id = _efatt_pick_company_id(db)
+                doc_data = _efatt_api_request(
+                    'GET',
+                    f'/c/{company_id}/received_documents/{doc_id}',
+                    query={'fieldset': 'detailed'},
+                    db=db
+                )
+                doc = doc_data.get('data') if isinstance(doc_data, dict) else doc_data
+                if doc:
+                    _efatt_import_received_document(db, doc)
+                    payload['_pending_passive_notification'] = {
+                        'entity_name': _efatt_entity_name(doc),
+                        'numero': doc.get('number') or doc_id,
+                    }
+                    return 'imported_passive_invoice'
+            except Exception as e:
+                print(f'[FIC webhook] errore import passive: {e}')
+                return 'error'
+        return 'no_doc_id'
+
+    # — Stato SDI cambiato per fattura ATTIVA
+    if 'issued_documents' in et and ('e_invoice' in et or 'sdi' in et or 'notification' in et):
+        doc_id = str(data_block.get('id') or data_block.get('document_id') or '').strip()
+        if not doc_id:
+            return 'no_doc_id'
+        fattura = db.execute(
+            "SELECT id FROM fatture WHERE provider='fattureincloud' AND provider_doc_id=? LIMIT 1",
+            (doc_id,)
+        ).fetchone()
+        if not fattura:
+            return 'invoice_not_found_locally'
+        ei_info = data_block.get('e_invoice') or payload.get('e_invoice') or {}
+        sdi_status = (ei_info.get('status') or data_block.get('status') or '').lower()
+        sdi_msg = (ei_info.get('description') or ei_info.get('error') or data_block.get('description') or '')[:600]
+        stato_map = {
+            'sent': 'inviata_sdi', 'queued': 'inviata_sdi', 'processing': 'inviata_sdi',
+            'delivered': 'consegnata_sdi', 'accepted': 'consegnata_sdi',
+            'rejected': 'errore_sdi', 'rejected_pa': 'errore_sdi', 'failed': 'errore_sdi',
+            'failed_delivery': 'mancata_consegna_sdi', 'not_delivered': 'mancata_consegna_sdi',
+        }
+        stato_locale = stato_map.get(sdi_status, 'inviata_sdi')
+        db.execute("""UPDATE fatture SET sdi_stato=?, sdi_messaggio=?,
+                      provider_synced_at=? WHERE id=?""",
+                   (stato_locale,
+                    sdi_msg or f'Stato SDI aggiornato via webhook: {sdi_status or "n/d"}',
+                    datetime.now().isoformat(timespec='seconds'),
+                    fattura['id']))
+        f_row = db.execute("SELECT numero, cliente_nome FROM fatture WHERE id=?", (fattura['id'],)).fetchone()
+        # Salva flag per inviare notifica DOPO il commit (evita lock SQLite)
+        if stato_locale in ('consegnata_sdi', 'errore_sdi', 'mancata_consegna_sdi'):
+            payload['_pending_admin_notification'] = {
+                'stato_locale': stato_locale,
+                'numero': f_row['numero'] if f_row else '?',
+                'cliente_nome': f_row['cliente_nome'] if f_row else 'cliente',
+                'sdi_msg': sdi_msg,
+                'fattura_id': fattura['id'],
+            }
+        return f'sdi_status_updated:{stato_locale}'
+
+    return 'event_ignored'
+
+
+# Label leggibili per gli stati SDI (usate nei template)
+SDI_STATO_LABELS = {
+    'non_inviata': ('Non inviata', '#94a3b8'),
+    'creata_provider': ('Creata su provider', '#3b82f6'),
+    'inviata_sdi': ('Inviata allo SDI', '#0ea5e9'),
+    'consegnata_sdi': ('Consegnata', '#16a34a'),
+    'errore_sdi': ('Scartata', '#dc2626'),
+    'mancata_consegna_sdi': ('Mancata consegna', '#d97706'),
+    'ricevuta': ('Ricevuta da SDI', '#16a34a'),
+}
+
+
+# ══════════════════════════════════════════════════════════════
+#  SYNC FALLBACK AUTOMATICO — recupera passive perdute dai webhook
+# ══════════════════════════════════════════════════════════════
+# Cache in memoria: ultima volta che abbiamo lanciato un auto-sync per ogni tenant.
+# Evita di chiamare l'API ad ogni navigazione admin.
+_efatt_last_auto_sync = {}  # {azienda_id: timestamp_epoch}
+_EFATT_AUTO_SYNC_INTERVAL = 6 * 3600  # 6 ore
+
+
+def _efatt_maybe_auto_sync_async(azienda_id):
+    """Se sono passate >6h dall'ultima sincronizzazione passive per questo tenant,
+    lancia un thread in background che fa la sync. Throttle in memoria.
+    Idempotente: il fallback è solo un safety net, l'aggiornamento principale
+    arriva via webhook quando il provider è correttamente configurato.
+    """
+    import time as _t
+    if not azienda_id:
+        return
+    last = _efatt_last_auto_sync.get(azienda_id, 0)
+    now = _t.time()
+    if (now - last) < _EFATT_AUTO_SYNC_INTERVAL:
+        return
+    # Marca subito per evitare race tra request concorrenti
+    _efatt_last_auto_sync[azienda_id] = now
+
+    def _bg_sync(az_id):
+        with app.test_request_context('/'):
+            session['azienda_id'] = az_id
+            db = None
+            try:
+                db = get_db()
+                # Verifica che il provider sia collegato
+                row = db.execute("SELECT valore FROM impostazioni WHERE chiave='efatt_access_token'").fetchone()
+                if not row or not (row['valore'] or '').strip():
+                    return  # non collegato, niente sync
+                # Verifica che sia passato abbastanza tempo dalla sync precedente (anti-doppione)
+                last_row = db.execute("SELECT valore FROM impostazioni WHERE chiave='efatt_passive_last_sync'").fetchone()
+                if last_row and last_row['valore']:
+                    try:
+                        last_dt = datetime.fromisoformat(last_row['valore'])
+                        delta = (datetime.now() - last_dt).total_seconds()
+                        if delta < _EFATT_AUTO_SYNC_INTERVAL:
+                            return
+                    except Exception:
+                        pass
+                result = _efatt_sync_passive_documents(db=db, max_pages=3)
+                imp = result.get('imported', 0)
+                upd = result.get('updated', 0)
+                if imp or upd:
+                    print(f'[auto-sync passive] tenant={az_id}: {imp} nuove, {upd} aggiornate')
+            except EFattAPIError as e:
+                print(f'[auto-sync passive] tenant={az_id} api error: {str(e)[:200]}')
+            except Exception as e:
+                print(f'[auto-sync passive] tenant={az_id} errore: {str(e)[:200]}')
+            finally:
+                if db:
+                    try: db.close()
+                    except Exception: pass
+
+    import threading
+    threading.Thread(target=_bg_sync, args=(azienda_id,), daemon=True).start()
+
+
+def _efatt_get_health_status(db):
+    """Restituisce un dizionario con lo stato di salute della fatturazione elettronica:
+    - collegato (bool)
+    - provider (str)
+    - last_passive_sync (str ISO o '')
+    - n_attive_da_inviare (int)
+    - n_attive_scartate (int)
+    - n_attive_inviate (int)
+    - n_passive_30gg (int)
+    Tutto wrapped in try/except per non rompere mai la pagina chiamante.
+    """
+    out = {
+        'collegato': False, 'provider': '', 'last_passive_sync': '',
+        'n_attive_da_inviare': 0, 'n_attive_scartate': 0, 'n_attive_inviate': 0,
+        'n_passive_30gg': 0, 'webhook_secret_set': False,
+        'codice_destinatario_set': False,
+    }
+    try:
+        row = db.execute("SELECT chiave, valore FROM impostazioni WHERE chiave LIKE 'efatt_%'").fetchall()
+        cfg = {r['chiave']: (r['valore'] or '') for r in row}
+        out['collegato'] = bool((cfg.get('efatt_access_token') or '').strip())
+        out['provider'] = (cfg.get('efatt_provider') or 'fattureincloud').strip()
+        out['last_passive_sync'] = cfg.get('efatt_passive_last_sync', '')
+        out['webhook_secret_set'] = bool((cfg.get('efatt_webhook_secret') or '').strip())
+        out['codice_destinatario_set'] = bool((cfg.get('efatt_codice_destinatario') or '').strip())
+    except Exception as e:
+        print(f'[efatt_health] errore lettura impostazioni: {e}')
+    try:
+        r1 = db.execute("""SELECT
+            SUM(CASE WHEN COALESCE(sdi_stato,'non_inviata') IN ('non_inviata','creata_provider') THEN 1 ELSE 0 END) AS da_inviare,
+            SUM(CASE WHEN sdi_stato='errore_sdi' THEN 1 ELSE 0 END) AS scartate,
+            SUM(CASE WHEN sdi_stato IN ('inviata_sdi','consegnata_sdi') THEN 1 ELSE 0 END) AS inviate
+            FROM fatture WHERE COALESCE(tipo,'attiva')='attiva'""").fetchone()
+        out['n_attive_da_inviare'] = int(r1['da_inviare'] or 0)
+        out['n_attive_scartate'] = int(r1['scartate'] or 0)
+        out['n_attive_inviate'] = int(r1['inviate'] or 0)
+    except Exception:
+        pass
+    try:
+        r2 = db.execute("""SELECT COUNT(*) AS n FROM fatture
+            WHERE tipo='passiva' AND data_emissione >= date('now','-30 day')""").fetchone()
+        out['n_passive_30gg'] = int(r2['n'] or 0)
+    except Exception:
+        pass
+    return out
+
+
 FATT_LIST_TMPL = """
 <style>
 .stat-fatt{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px}
@@ -19376,6 +20485,16 @@ FATT_LIST_TMPL = """
   <a href="/fatturazione?tipo=passiva" style="padding:10px 18px;text-decoration:none;font-weight:700;font-size:14px;border-bottom:3px solid {% if tipo=='passiva' %}#dc2626{% else %}transparent{% endif %};color:{% if tipo=='passiva' %}#dc2626{% else %}#64748b{% endif %};margin-bottom:-2px">
     <i class="fa fa-arrow-down-long"></i> Passiva (noi paghiamo)
   </a>
+  {% if tipo=='passiva' %}
+  <div style="margin-left:auto;display:flex;gap:8px;align-items:center;padding-bottom:6px">
+    <form method="POST" action="/fatturazione/sync-passive" style="display:inline">
+      <button type="submit" class="btn btn-primary btn-sm" title="Importa le fatture ricevute da Fatture in Cloud">
+        <i class="fa fa-cloud-arrow-down"></i> Sincronizza da Fatture in Cloud
+      </button>
+    </form>
+    <a href="/fatturazione/elettronica" class="btn btn-secondary btn-sm" title="Configura provider"><i class="fa fa-plug"></i> Provider</a>
+  </div>
+  {% endif %}
 </div>
 
 <!-- Statistiche -->
@@ -19473,7 +20592,24 @@ FATT_LIST_TMPL = """
     {% if has_rate and all_paid %}<span style="color:#16a34a;font-size:13px">✅</span>{% endif %}
   </td>
   <td><strong>{{ f.numero }}</strong></td>
-  <td>{% if tipo=='passiva' %}{{ f.fornitore_nome or f.cliente_nome or '–' }}{% else %}{{ f.cliente_nome or '–' }}{% endif %}</td>
+  <td>
+    {% if tipo=='passiva' %}{{ f.fornitore_nome or f.cliente_nome or '–' }}{% else %}{{ f.cliente_nome or '–' }}{% endif %}
+    {% if tipo=='attiva' and f.sdi_stato and f.sdi_stato != 'non_inviata' %}
+      {% set sdi_pill = {
+        'creata_provider': ('Sincronizzata', '#3b82f6'),
+        'inviata_sdi': ('Inviata SDI', '#0ea5e9'),
+        'consegnata_sdi': ('Consegnata', '#16a34a'),
+        'errore_sdi': ('Scartata', '#dc2626'),
+        'mancata_consegna_sdi': ('Non consegnata', '#d97706'),
+      } %}
+      {% set p = sdi_pill.get(f.sdi_stato) %}
+      {% if p %}
+      <span title="{{ f.sdi_messaggio or p[0] }}" style="display:inline-block;background:{{ p[1] }}1a;color:{{ p[1] }};padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;margin-left:6px;vertical-align:middle">
+        <i class="fa fa-paper-plane" style="font-size:9px"></i> {{ p[0] }}
+      </span>
+      {% endif %}
+    {% endif %}
+  </td>
   <td style="font-family:monospace;font-size:12px">{{ f.data_emissione or '–' }}</td>
   <td style="font-family:monospace;font-size:12px;{{ 'color:#dc2626;font-weight:700' if f.scadenza_scaduta and f.stato_display != 'pagata' else '' }}">
     {{ f.scadenza_display or '–' }}{% if f.scadenza_scaduta and f.stato_display != 'pagata' %} ⚠️{% endif %}
@@ -19719,7 +20855,11 @@ FATT_DETAIL_TMPL = """
 
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
   <div class="card">
-    <div class="card-header"><h3><i class="fa fa-file-invoice-dollar" style="color:var(--accent2)"></i> Fattura {{ f.numero }}</h3></div>
+    <div class="card-header"><h3><i class="fa fa-file-invoice-dollar" style="color:var(--accent2)"></i> Fattura {{ f.numero }}
+      {% if f.doc_type == 'credit_note' %}
+      <span style="background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700;margin-left:8px"><i class="fa fa-rotate-left"></i> Nota di credito</span>
+      {% endif %}
+    </h3></div>
     <div class="card-body">
       <table style="width:100%;font-size:14px"><tbody>
         <tr><td style="color:var(--text-light);padding:5px 0;width:45%">Cliente</td><td><strong>{{ f.cliente_nome }}</strong></td></tr>
@@ -19743,6 +20883,61 @@ FATT_DETAIL_TMPL = """
     </div>
   </div>
 </div>
+
+{# ════════ STATO SDI / FATTURAZIONE ELETTRONICA ════════ #}
+{% if f.tipo != 'passiva' %}
+<div class="card" style="margin-bottom:20px;border-left:4px solid {{ sdi_color }}">
+  <div class="card-header">
+    <h3><i class="fa fa-paper-plane" style="color:{{ sdi_color }}"></i> Fatturazione elettronica (SDI)</h3>
+    <span style="background:{{ sdi_color }};color:#fff;padding:5px 12px;border-radius:99px;font-weight:700;font-size:12px">{{ sdi_label }}</span>
+  </div>
+  <div class="card-body">
+    <table style="width:100%;font-size:14px;margin-bottom:14px"><tbody>
+      <tr><td style="color:var(--text-light);padding:5px 0;width:45%">Provider</td><td>{{ f.provider or '—' }}</td></tr>
+      {% if f.provider_doc_id %}
+      <tr><td style="color:var(--text-light);padding:5px 0">ID documento provider</td><td style="font-family:monospace">{{ f.provider_doc_id }}</td></tr>
+      {% endif %}
+      {% if f.provider_synced_at %}
+      <tr><td style="color:var(--text-light);padding:5px 0">Ultima sincronizzazione</td><td style="font-family:monospace">{{ f.provider_synced_at }}</td></tr>
+      {% endif %}
+      {% if f.sdi_messaggio %}
+      <tr><td style="color:var(--text-light);padding:5px 0">Messaggio</td><td>{{ f.sdi_messaggio }}</td></tr>
+      {% endif %}
+    </tbody></table>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      {% if f.sdi_stato in (None, '', 'non_inviata') %}
+      <form method="POST" action="/fatturazione/{{ f.id }}/invia-sdi" style="display:inline" onsubmit="return confirm('Confermi l invio della fattura {{ f.numero }} allo SDI tramite Fatture in Cloud? L operazione non è reversibile.')">
+        <button type="submit" class="btn btn-primary"><i class="fa fa-paper-plane"></i> Invia allo SDI</button>
+      </form>
+      <form method="POST" action="/fatturazione/{{ f.id }}/push-provider" style="display:inline">
+        <button type="submit" class="btn btn-secondary"><i class="fa fa-cloud-arrow-up"></i> Solo sincronizza (senza inviare)</button>
+      </form>
+      {% elif f.sdi_stato == 'creata_provider' %}
+      <form method="POST" action="/fatturazione/{{ f.id }}/invia-sdi" style="display:inline" onsubmit="return confirm('Confermi l invio della fattura {{ f.numero }} allo SDI?')">
+        <button type="submit" class="btn btn-primary"><i class="fa fa-paper-plane"></i> Invia allo SDI</button>
+      </form>
+      <form method="POST" action="/fatturazione/{{ f.id }}/aggiorna-stato-sdi" style="display:inline">
+        <button type="submit" class="btn btn-secondary"><i class="fa fa-sync"></i> Aggiorna stato</button>
+      </form>
+      {% elif f.sdi_stato in ('inviata_sdi', 'consegnata_sdi', 'mancata_consegna_sdi', 'errore_sdi') %}
+      <form method="POST" action="/fatturazione/{{ f.id }}/aggiorna-stato-sdi" style="display:inline">
+        <button type="submit" class="btn btn-secondary"><i class="fa fa-sync"></i> Aggiorna stato da SDI</button>
+      </form>
+      {% if f.sdi_stato == 'errore_sdi' %}
+      <form method="POST" action="/fatturazione/{{ f.id }}/invia-sdi" style="display:inline" onsubmit="return confirm('La fattura precedente è stata scartata. Confermi un nuovo invio?')">
+        <button type="submit" class="btn btn-primary"><i class="fa fa-redo"></i> Reinvia allo SDI</button>
+      </form>
+      {% endif %}
+      {% if f.sdi_stato == 'consegnata_sdi' and f.doc_type != 'credit_note' %}
+      <a href="/fatturazione/{{ f.id }}/nota-credito/nuova" class="btn btn-secondary" style="color:#dc2626;border-color:#fca5a5">
+        <i class="fa fa-rotate-left"></i> Crea nota di credito
+      </a>
+      {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}
 
 <!-- Rate / Piano pagamenti -->
 <div class="card" style="margin-bottom:20px">
@@ -20300,6 +21495,13 @@ def fatturazione():
     filtro_stato = request.args.get('stato', '')
     q = request.args.get('q', '').strip()
 
+    # Auto-sync fatture passive in background (throttle 6h, non blocca la response)
+    if tipo == 'passiva':
+        try:
+            _efatt_maybe_auto_sync_async(session.get('azienda_id'))
+        except Exception as e:
+            print(f'[fatturazione] errore trigger auto-sync: {e}')
+
     sql = """SELECT f.*, 
              COALESCE((SELECT SUM(r.importo) FROM rate_fattura r WHERE r.fattura_id=f.id AND r.stato='pagata'),0) as pagato
              FROM fatture f WHERE COALESCE(f.tipo,'attiva')=?"""
@@ -20608,8 +21810,13 @@ def fatturazione_dettaglio(fid):
     pagato_tot = sum(r['importo'] for r in rate if r['stato'] == 'pagata')
     residuo = (f['importo_totale'] or 0) - pagato_tot
 
+    # Stato SDI per la card "Fatturazione elettronica"
+    sdi_key = (f['sdi_stato'] or 'non_inviata').strip() or 'non_inviata'
+    sdi_label, sdi_color = SDI_STATO_LABELS.get(sdi_key, (sdi_key.replace('_', ' ').title(), '#64748b'))
+
     return render_page(FATT_DETAIL_TMPL, page_title=f'Fattura {f["numero"]}', active='fatturazione',
         f=dict(f), rate=rate, pagato_tot=pagato_tot, residuo=residuo, today=date.today().isoformat(),
+        sdi_label=sdi_label, sdi_color=sdi_color,
         ai_allegato=session.pop('fatt_allegato_msg', None))
 
 
