@@ -1496,7 +1496,7 @@ AMMINISTRAZIONE_ENDPOINTS = {
     'documenti_azienda','documenti_azienda_nuovo','documenti_azienda_modifica','documenti_azienda_scarica','documenti_azienda_elimina','documenti_azienda_zip',
     'scadenze','scadenze_pulisci_fantasma',
     'veicoli','veicolo_nuovo','veicolo_detail','veicolo_modifica','veicolo_salva_scadenze','veicolo_elimina','veicolo_documenti','veicolo_upload','veicolo_applica_ai','veicolo_scarica','veicolo_anteprima','veicolo_elimina_doc',
-    'fatturazione','fatturazione_elettronica_setup','fatturazione_elettronica_save','fatturazione_elettronica_attive','fatturazione_elettronica_attive_avvia','fatturazione_elettronica_connect','fatturazione_elettronica_callback','fatturazione_elettronica_disconnect','fatturazione_elettronica_delega','fatturazione_elettronica_delega_avvia','fatturazione_elettronica_delega_rientro','fatturazione_elettronica_delega_completa','fatturazione_nuova','fatturazione_modifica','fatturazione_dettaglio','fatturazione_allega_emessa','fatturazione_elimina','fatturazione_aggiungi_rata','fatturazione_paga_rata','fatturazione_annulla_paga_rata','fatturazione_elimina_rata','fatturazione_file','fatturazione_clienti','fatturazione_nuovo_cliente','fatturazione_elimina_cliente','fatturazione_sync_passive','fatturazione_invia_sdi','fatturazione_push_provider','fatturazione_aggiorna_stato_sdi','fatturazione_nota_credito_nuova','fatturazione_elettronica_genera_secret',
+    'fatturazione','fatturazione_elettronica_setup','fatturazione_elettronica_save','fatturazione_elettronica_attive','fatturazione_elettronica_attive_avvia','fatturazione_elettronica_connect','fatturazione_elettronica_callback','fatturazione_elettronica_disconnect','fatturazione_elettronica_delega','fatturazione_elettronica_delega_avvia','fatturazione_elettronica_delega_rientro','fatturazione_elettronica_delega_completa','fatturazione_nuova','fatturazione_modifica','fatturazione_dettaglio','fatturazione_allega_emessa','fatturazione_elimina','fatturazione_aggiungi_rata','fatturazione_paga_rata','fatturazione_annulla_paga_rata','fatturazione_elimina_rata','fatturazione_file','fatturazione_clienti','fatturazione_nuovo_cliente','fatturazione_elimina_cliente','fatturazione_sync_passive','fatturazione_invia_sdi','fatturazione_push_provider','fatturazione_aggiorna_stato_sdi','fatturazione_nota_credito_nuova','fatturazione_elettronica_genera_secret','fatturazione_elettronica_registra_webhook',
     'clienti_lista','cliente_nuovo','cliente_modifica','cliente_elimina','cliente_ai_estrai',
     'fornitori_lista','fornitore_nuovo','fornitore_modifica','fornitore_elimina',
     'preventivi','preventivo_nuovo','preventivo_modifica','preventivo_pdf','preventivo_duplica','preventivo_stato','preventivo_elimina',
@@ -8921,7 +8921,8 @@ def _amministrazione_stats():
 PUBLIC_NO_TENANT_ENDPOINTS = {
     'index', 'public_home', 'privacy', 'termini', 'cookie_policy', 'login', 'logout', 'area_clienti',
     'set_lang', 'registrati', 'landing', 'pwa_manifest', 'pwa_service_worker', 'pwa_offline',
-    'static', 'pwa_static', 'stripe_webhook', 'fattureincloud_webhook'
+    'static', 'pwa_static', 'stripe_webhook', 'fattureincloud_webhook',
+    'fatturazione_elettronica_callback',
 }
 
 DANGEROUS_GET_ENDPOINT_HINTS = (
@@ -19460,6 +19461,9 @@ EFATT_SETUP_TMPL = """
       <form method="POST" action="/fatturazione/elettronica/genera-secret" style="margin-top:10px" onsubmit="return confirm('Rigenerare il secret invaliderà la firma attuale: ricordati di aggiornarlo anche nel pannello Fatture in Cloud. Procedere?')">
         <button type="submit" class="btn btn-sm" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a"><i class="fa fa-rotate"></i> Rigenera secret</button>
       </form>
+      <form method="POST" action="/fatturazione/elettronica/registra-webhook" style="margin-top:10px;display:inline-block">
+        <button type="submit" class="btn btn-sm btn-primary"><i class="fa fa-cloud-arrow-up"></i> Registra webhook ora su Fatture in Cloud</button>
+      </form>
       {% else %}
       <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:12px;color:#92400e;font-size:13px;margin-bottom:10px">
         ⚠️ Nessun secret configurato. Senza secret, il webhook accetterà eventi non firmati. Per sicurezza, genera un secret e configuralo anche sul pannello Fatture in Cloud.
@@ -19784,10 +19788,22 @@ def fatturazione_elettronica_connect():
         flash("L'app Accesso Fiere non e ancora registrata/configurata su Fatture in Cloud. Questa e una configurazione unica della piattaforma, non del cliente.", 'error')
         return redirect(url_for('fatturazione_elettronica_setup'))
 
-    import urllib.parse
-    state = base64.urlsafe_b64encode(os.urandom(24)).decode('ascii').rstrip('=')
+    import urllib.parse, hmac as _hmac, hashlib as _hashlib, time as _t
+    # State firmato: contiene azienda_id + provider + timestamp + nonce, firmato HMAC-SHA256
+    # con SECRET_KEY. Sopravvive a perdita di sessione cross-site (SameSite=Lax).
+    azienda_id = session.get('azienda_id') or 0
+    nonce = base64.urlsafe_b64encode(os.urandom(16)).decode('ascii').rstrip('=')
+    ts = int(_t.time())
+    state_data = f'{azienda_id}.{provider}.{ts}.{nonce}'
+    secret_key = app.config.get('SECRET_KEY') or os.environ.get('SECRET_KEY', 'fallback-secret-change-me')
+    if isinstance(secret_key, str):
+        secret_key = secret_key.encode('utf-8')
+    sig = _hmac.new(secret_key, state_data.encode('utf-8'), _hashlib.sha256).hexdigest()[:32]
+    state = state_data + '.' + sig
+    # Manteniamo anche la session-version come fallback (non ci affidiamo solo a quella)
     session['efatt_oauth_state'] = state
     session['efatt_oauth_provider'] = provider
+
     redirect_uri = _efatt_callback_url()
     params = {
         'response_type': 'code',
@@ -19798,9 +19814,45 @@ def fatturazione_elettronica_connect():
     }
     return redirect('https://api-v2.fattureincloud.it/oauth/authorize?' + urllib.parse.urlencode(params))
 
+
+def _efatt_verify_signed_state(state):
+    """Verifica uno state firmato e ritorna (azienda_id, provider) se valido, altrimenti None.
+    Lo state ha la forma: <azienda_id>.<provider>.<timestamp>.<nonce>.<sig>
+    Tolleranza temporale: 1 ora.
+    """
+    import hmac as _hmac, hashlib as _hashlib, time as _t
+    if not state or state.count('.') < 4:
+        return None
+    parts = state.rsplit('.', 1)
+    if len(parts) != 2:
+        return None
+    state_data, sig = parts[0], parts[1]
+    secret_key = app.config.get('SECRET_KEY') or os.environ.get('SECRET_KEY', 'fallback-secret-change-me')
+    if isinstance(secret_key, str):
+        secret_key = secret_key.encode('utf-8')
+    expected = _hmac.new(secret_key, state_data.encode('utf-8'), _hashlib.sha256).hexdigest()[:32]
+    if not _hmac.compare_digest(expected, sig):
+        return None
+    # Parse state_data
+    pieces = state_data.split('.')
+    if len(pieces) != 4:
+        return None
+    try:
+        az_id = int(pieces[0])
+        prov = pieces[1]
+        ts = int(pieces[2])
+    except (ValueError, IndexError):
+        return None
+    # Anti-replay: scadenza 1h
+    if abs(_t.time() - ts) > 3600:
+        return None
+    return (az_id, prov)
+
+
 @app.route('/fatturazione/elettronica/callback')
-@admin_required
 def fatturazione_elettronica_callback():
+    # NOTA: rimosso @admin_required perché la sessione potrebbe essere persa dal redirect
+    # cross-site (cookie SameSite). La sicurezza è garantita dalla firma HMAC dello state.
     error = request.args.get('error')
     if error:
         error_description = request.args.get('error_description', '')
@@ -19813,17 +19865,41 @@ def fatturazione_elettronica_callback():
                 msg += ' - ' + error_description
         flash(msg, 'error')
         return redirect(url_for('fatturazione_elettronica_setup'))
+
     state = request.args.get('state', '')
-    if not state or state != session.get('efatt_oauth_state'):
-        flash('Sessione di collegamento non valida. Riprova dal pulsante Connetti provider.', 'error')
-        return redirect(url_for('fatturazione_elettronica_setup'))
+    # Verifica firma HMAC (preferita, sopravvive a perdita di sessione)
+    verified = _efatt_verify_signed_state(state)
+    if not verified:
+        # Fallback: prova match con session (per retrocompatibilità durante deploy)
+        if not state or state != session.get('efatt_oauth_state'):
+            flash('Sessione di collegamento non valida o scaduta. Riprova dal pulsante "Collega provider".', 'error')
+            return redirect(url_for('fatturazione_elettronica_setup'))
+        # Se session-match, recupera azienda da session
+        verified = (session.get('azienda_id') or 0, session.get('efatt_oauth_provider') or '')
+
+    state_azienda_id, state_provider = verified
+
+    # Se la sessione è persa, ripristino il contesto tenant dallo state firmato.
+    # Questo è SICURO perché lo state è firmato con SECRET_KEY del server.
+    if not session.get('azienda_id') and state_azienda_id:
+        session['azienda_id'] = state_azienda_id
+        # Recupera info azienda
+        try:
+            mdb = get_master_db()
+            az = mdb.execute("SELECT nome FROM aziende WHERE id=?", (state_azienda_id,)).fetchone()
+            mdb.close()
+            if az:
+                session['azienda_nome'] = az['nome']
+        except Exception:
+            pass
+
     code = request.args.get('code', '')
     if not code:
         flash('Il provider non ha restituito il codice OAuth.', 'error')
         return redirect(url_for('fatturazione_elettronica_setup'))
 
     cfg = _get_efatt_config()
-    provider = session.get('efatt_oauth_provider') or (cfg.get('efatt_provider') or '').strip()
+    provider = state_provider or (cfg.get('efatt_provider') or '').strip()
     client_id, client_secret = _efatt_platform_oauth_credentials(provider)
     if not client_secret:
         flash("L'app Accesso Fiere non e ancora configurata per completare il consenso OAuth del provider.", 'error')
@@ -19865,11 +19941,194 @@ def fatturazione_elettronica_callback():
     set_setting('efatt_oauth_connected_at', datetime.now().isoformat(timespec='seconds'))
     session.pop('efatt_oauth_state', None)
     session.pop('efatt_oauth_provider', None)
-    if access_token:
-        flash('Provider collegato correttamente. Token: ' + _efatt_token_mask(access_token), 'success')
-    else:
+
+    if not access_token:
         flash('Il provider ha risposto ma non ha restituito access_token. Verifica app OAuth e scope.', 'error')
+        return redirect(url_for('fatturazione_elettronica_setup'))
+
+    # ═══════════════════════════════════════════════════════════════
+    # AUTO-CONFIGURAZIONE post-OAuth: setta tutto in automatico
+    # ═══════════════════════════════════════════════════════════════
+    autosetup_steps = _efatt_post_oauth_autosetup(provider)
+    setup_summary = []
+    for step_name, ok, detail in autosetup_steps:
+        emoji = '✅' if ok else '⚠️'
+        setup_summary.append(f'{emoji} {step_name}: {detail}')
+    flash('Provider <strong>' + provider + '</strong> collegato. ' + '<br>'.join(setup_summary), 'success')
     return redirect(url_for('fatturazione_elettronica_setup'))
+
+
+def _efatt_post_oauth_autosetup(provider):
+    """Dopo OAuth riuscito, esegue automaticamente tutto il setup:
+    1. Recupera company_id dal provider (chiama /user/companies)
+    2. Genera webhook secret se manca
+    3. Registra/aggiorna il webhook su Fatture in Cloud via API
+    4. Imposta il codice destinatario standard del provider
+    Ritorna una lista di tuple (step_name, success_bool, detail_str) per il flash.
+    """
+    import secrets as _secrets
+    steps = []
+    if provider != 'fattureincloud':
+        steps.append(('Auto-setup', False, f'Provider {provider} non supporta auto-setup, configura manualmente.'))
+        return steps
+
+    db = get_db()
+    try:
+        # === STEP 1: Recupera company_id ===
+        try:
+            company_id = _efatt_pick_company_id(db)
+            steps.append(('Account', True, f'Company ID rilevato ({company_id})'))
+        except Exception as e:
+            steps.append(('Account', False, f'Errore recupero account: {str(e)[:120]}'))
+            return steps
+
+        # === STEP 2: Codice destinatario standard ===
+        codice_attuale = (
+            db.execute("SELECT valore FROM impostazioni WHERE chiave='efatt_codice_destinatario'").fetchone() or [None]
+        )
+        codice_attuale = (codice_attuale[0] if codice_attuale else '') or ''
+        # Codice destinatario standard di Fatture in Cloud
+        codice_fic_standard = 'M5UXCR1'
+        if not codice_attuale:
+            db.execute("INSERT OR REPLACE INTO impostazioni (chiave,valore) VALUES (?,?)",
+                       ('efatt_codice_destinatario', codice_fic_standard))
+            safe_commit(db)
+            steps.append(('Codice destinatario', True, f'Impostato {codice_fic_standard} (standard Fatture in Cloud)'))
+        else:
+            steps.append(('Codice destinatario', True, f'Già configurato ({codice_attuale})'))
+
+        # === STEP 3: Webhook secret ===
+        secret_row = db.execute("SELECT valore FROM impostazioni WHERE chiave='efatt_webhook_secret'").fetchone()
+        current_secret = (secret_row[0] if secret_row else '') or ''
+        if not current_secret:
+            current_secret = _secrets.token_urlsafe(32)
+            db.execute("INSERT OR REPLACE INTO impostazioni (chiave,valore) VALUES (?,?)",
+                       ('efatt_webhook_secret', current_secret))
+            safe_commit(db)
+            steps.append(('Webhook secret', True, 'Generato nuovo secret sicuro'))
+        else:
+            steps.append(('Webhook secret', True, 'Già configurato'))
+
+        # === STEP 4: Registra webhook su Fatture in Cloud ===
+        webhook_url = get_public_base_url() + '/webhooks/fattureincloud'
+        try:
+            registered = _efatt_register_webhook_remote(db, company_id, webhook_url, current_secret)
+            if registered.get('updated'):
+                steps.append(('Webhook su provider', True, f'Aggiornato (ID: {registered.get("id","?")})'))
+            elif registered.get('created'):
+                steps.append(('Webhook su provider', True, f'Registrato (ID: {registered.get("id","?")})'))
+            else:
+                steps.append(('Webhook su provider', True, registered.get('note', 'OK')))
+        except EFattAPIError as e:
+            # Non bloccare il login: il webhook si può configurare a mano
+            steps.append(('Webhook su provider', False,
+                          f'Registrazione automatica fallita ({str(e)[:80]}). Configura manualmente da Setup → Webhook.'))
+        except Exception as e:
+            steps.append(('Webhook su provider', False, f'Errore: {str(e)[:120]}'))
+
+    finally:
+        db.close()
+    return steps
+
+
+def _efatt_register_webhook_remote(db, company_id, webhook_url, secret):
+    """Registra o aggiorna il webhook su Fatture in Cloud.
+    FiC espone /c/{company_id}/settings/webhook_subscriptions per gestire le subscription.
+    Logica:
+      1. GET lista esistenti
+      2. Se ce n'è una con lo stesso URL, PUT per aggiornarla
+      3. Altrimenti POST per crearla nuova
+    Eventi sottoscritti: i 3 fondamentali per il nostro flusso.
+    """
+    types_wanted = [
+        'it.fattureincloud.webhooks.received_documents.create',
+        'it.fattureincloud.webhooks.issued_documents.e_invoices.send',
+        'it.fattureincloud.webhooks.issued_documents.e_invoices.notification',
+    ]
+    base_path = f'/c/{company_id}/settings/webhook_subscriptions'
+
+    # 1. Lista subscription esistenti
+    existing = None
+    try:
+        list_resp = _efatt_api_request('GET', base_path, db=db)
+        items = list_resp.get('data') if isinstance(list_resp, dict) else []
+        if isinstance(items, dict):
+            items = items.get('items') or items.get('webhook_subscriptions') or []
+        for item in (items or []):
+            if (item.get('sink') or '').rstrip('/') == webhook_url.rstrip('/'):
+                existing = item
+                break
+    except EFattAPIError as e:
+        # Se l'endpoint non esiste o non è autorizzato, segnaliamo ma non blocchiamo
+        if e.status in (404, 403):
+            return {'note': f'Lista webhook non accessibile (HTTP {e.status}). Configura manualmente.'}
+        raise
+
+    sub_payload = {
+        'data': {
+            'sink': webhook_url,
+            'verified': True,
+            'types': types_wanted,
+            # FiC usa "verification_token" o "config" come secret per la firma — variano per versione API
+            'config': {'secret': secret},
+        }
+    }
+
+    if existing and existing.get('id'):
+        # Aggiorna
+        sub_id = existing['id']
+        try:
+            _efatt_api_request('PUT', f'{base_path}/{sub_id}', payload=sub_payload, db=db)
+            return {'updated': True, 'id': sub_id}
+        except EFattAPIError as e:
+            # Se PUT fallisce, prova a cancellare e ricreare
+            if e.status in (400, 422):
+                try:
+                    _efatt_api_request('DELETE', f'{base_path}/{sub_id}', db=db)
+                except Exception:
+                    pass
+                created = _efatt_api_request('POST', base_path, payload=sub_payload, db=db)
+                created_data = created.get('data') if isinstance(created, dict) else {}
+                return {'created': True, 'id': str(created_data.get('id', '?'))}
+            raise
+    else:
+        # Crea nuova
+        created = _efatt_api_request('POST', base_path, payload=sub_payload, db=db)
+        created_data = created.get('data') if isinstance(created, dict) else {}
+        return {'created': True, 'id': str(created_data.get('id', '?'))}
+
+
+@app.route('/fatturazione/elettronica/registra-webhook', methods=['POST'])
+@admin_required
+def fatturazione_elettronica_registra_webhook():
+    """Forza la registrazione/aggiornamento del webhook su Fatture in Cloud.
+    Usato dal pulsante 'Registra webhook ora' nella card setup.
+    """
+    db = get_db()
+    try:
+        secret_row = db.execute("SELECT valore FROM impostazioni WHERE chiave='efatt_webhook_secret'").fetchone()
+        secret = (secret_row[0] if secret_row else '') or ''
+        if not secret:
+            db.close()
+            flash('Prima genera il webhook secret, poi registra il webhook.', 'error')
+            return redirect(url_for('fatturazione_elettronica_setup'))
+        company_id = _efatt_pick_company_id(db)
+        webhook_url = get_public_base_url() + '/webhooks/fattureincloud'
+        result = _efatt_register_webhook_remote(db, company_id, webhook_url, secret)
+        if result.get('updated'):
+            flash(f'✅ Webhook aggiornato su Fatture in Cloud (ID {result.get("id")}).', 'success')
+        elif result.get('created'):
+            flash(f'✅ Webhook registrato su Fatture in Cloud (ID {result.get("id")}).', 'success')
+        else:
+            flash('⚠️ ' + result.get('note', 'Operazione completata senza modifiche.'), 'info')
+    except EFattAPIError as e:
+        flash(f'❌ Errore registrazione webhook: {str(e)[:250]}', 'error')
+    except Exception as e:
+        flash(f'❌ Errore imprevisto: {str(e)[:200]}', 'error')
+    finally:
+        db.close()
+    return redirect(url_for('fatturazione_elettronica_setup'))
+
 
 @app.route('/fatturazione/elettronica/disconnetti')
 @admin_required
