@@ -6629,9 +6629,9 @@ body.customize-mode .btn-link-soft{display:none}
     </div>
     <div class="hero-map" aria-hidden="true">
       <div class="hero-chart-copy">
-        <span>Fatturato emesso</span>
+        <span>Incassato su emesso</span>
         <strong>{{ "%.1f"|format(s.hero_fatturato_pct_corrente) }}%</strong>
-        <small>Mese corrente - Emesso &euro; {{ "%.0f"|format(s.hero_fatturato_mese_corrente) }} - Incassato &euro; {{ "%.0f"|format(s.hero_incassato_mese_corrente) }}</small>
+        <small>Anno {{ s.hero_fatturato_anno }} - Emesso &euro; {{ "%.0f"|format(s.hero_fatturato_mese_corrente) }} - Incassato &euro; {{ "%.0f"|format(s.hero_incassato_mese_corrente) }}</small>
       </div>
       <svg class="hero-world-map" viewBox="0 0 900 300" aria-hidden="true" focusable="false">
         <defs>
@@ -8657,18 +8657,14 @@ def dashboard():
             'sigla': sigla[:3],
         })
 
-    # Mini-grafico hero: percentuale fatturato emesso negli ultimi 7 mesi.
-    # Usa solo fatture attive, quindi fatture emesse verso clienti.
+    # Mini-grafico hero: fatturato attivo dell'anno corrente.
+    # Prima usava solo il mese corrente, quindi in dashboard apparivano importi
+    # molto piu bassi rispetto al cruscotto fatturazione annuale.
     hero_fatturato = []
     mesi_fatturato = []
-    today_month = date.today().replace(day=1)
-    for i in range(6, -1, -1):
-        m_index = today_month.month - i
-        y = today_month.year
-        while m_index <= 0:
-            m_index += 12
-            y -= 1
-        m_str = f"{y:04d}-{m_index:02d}"
+    dashboard_year = date.today().year
+    for month in range(1, 13):
+        m_str = f"{dashboard_year:04d}-{month:02d}"
         row = db.execute("""
             SELECT COALESCE(SUM(importo_totale),0)
               FROM fatture
@@ -8687,10 +8683,24 @@ def dashboard():
         importo = float((row[0] if row else 0) or 0)
         incassato = float((row_paid[0] if row_paid else 0) or 0)
         mesi_fatturato.append({'mese': m_str, 'importo': importo, 'incassato': incassato})
-    totale_fatturato_periodo = sum(x['importo'] for x in mesi_fatturato)
-    totale_incassato_periodo = sum(x['incassato'] for x in mesi_fatturato)
+    row_year_total = db.execute("""
+        SELECT COALESCE(SUM(importo_totale),0)
+          FROM fatture
+         WHERE COALESCE(tipo,'attiva')='attiva'
+           AND substr(COALESCE(data_emissione,creato_il,''),1,4)=?
+    """, (str(dashboard_year),)).fetchone()
+    row_year_paid = db.execute("""
+        SELECT COALESCE(SUM(r.importo),0)
+          FROM rate_fattura r
+          JOIN fatture f ON f.id = r.fattura_id
+         WHERE r.stato='pagata'
+           AND COALESCE(f.tipo,'attiva')='attiva'
+           AND substr(COALESCE(f.data_emissione,f.creato_il,''),1,4)=?
+    """, (str(dashboard_year),)).fetchone()
+    totale_fatturato_periodo = float((row_year_total[0] if row_year_total else 0) or 0)
+    totale_incassato_periodo = float((row_year_paid[0] if row_year_paid else 0) or 0)
     for x in mesi_fatturato:
-        pct = round((x['importo'] / totale_fatturato_periodo) * 100, 1) if totale_fatturato_periodo > 0 else 0
+        pct = round((x['incassato'] / x['importo']) * 100, 1) if x['importo'] > 0 else 0
         hero_fatturato.append({
             'mese': x['mese'],
             'label': x['mese'][5:7] + '/' + x['mese'][2:4],
@@ -8700,9 +8710,10 @@ def dashboard():
         })
     s['hero_fatturato_totale'] = round(totale_fatturato_periodo, 2)
     s['hero_incassato_totale'] = round(totale_incassato_periodo, 2)
-    s['hero_fatturato_mese_corrente'] = round(mesi_fatturato[-1]['importo'], 2) if mesi_fatturato else 0
-    s['hero_incassato_mese_corrente'] = round(mesi_fatturato[-1]['incassato'], 2) if mesi_fatturato else 0
-    s['hero_fatturato_pct_corrente'] = hero_fatturato[-1]['percentuale'] if hero_fatturato else 0
+    s['hero_fatturato_anno'] = dashboard_year
+    s['hero_fatturato_mese_corrente'] = round(totale_fatturato_periodo, 2)
+    s['hero_incassato_mese_corrente'] = round(totale_incassato_periodo, 2)
+    s['hero_fatturato_pct_corrente'] = round((totale_incassato_periodo / totale_fatturato_periodo) * 100, 1) if totale_fatturato_periodo > 0 else 0
 
     # Carico layout personalizzato (1 riga per azienda Ã¢â‚¬â€ condiviso fra admin)
     layout = _default_dashboard_layout()
