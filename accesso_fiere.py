@@ -1495,7 +1495,7 @@ AMMINISTRAZIONE_ENDPOINTS = {
     'documenti_azienda','documenti_azienda_nuovo','documenti_azienda_modifica','documenti_azienda_scarica','documenti_azienda_elimina','documenti_azienda_zip',
     'scadenze','scadenze_pulisci_fantasma',
     'veicoli','veicolo_nuovo','veicolo_detail','veicolo_modifica','veicolo_salva_scadenze','veicolo_elimina','veicolo_documenti','veicolo_upload','veicolo_applica_ai','veicolo_scarica','veicolo_anteprima','veicolo_elimina_doc',
-    'fatturazione','fatturazione_elettronica_setup','fatturazione_elettronica_save','fatturazione_elettronica_attive','fatturazione_elettronica_attive_avvia','fatturazione_elettronica_connect','fatturazione_elettronica_callback','fatturazione_elettronica_disconnect','fatturazione_elettronica_delega','fatturazione_elettronica_delega_avvia','fatturazione_elettronica_delega_rientro','fatturazione_elettronica_delega_completa','fatturazione_nuova','fatturazione_modifica','fatturazione_dettaglio','fatturazione_allega_emessa','fatturazione_elimina','fatturazione_elimina_selezionate','fatturazione_aggiungi_rata','fatturazione_paga_rata','fatturazione_annulla_paga_rata','fatturazione_elimina_rata','fatturazione_file','fatturazione_clienti','fatturazione_nuovo_cliente','fatturazione_elimina_cliente','fatturazione_sync_passive','fatturazione_invia_sdi','fatturazione_push_provider','fatturazione_aggiorna_stato_sdi','fatturazione_nota_credito_nuova','fatturazione_elettronica_genera_secret','fatturazione_elettronica_registra_webhook',
+    'fatturazione','fatturazione_live_status','fatturazione_elettronica_setup','fatturazione_elettronica_save','fatturazione_elettronica_attive','fatturazione_elettronica_attive_avvia','fatturazione_elettronica_connect','fatturazione_elettronica_callback','fatturazione_elettronica_disconnect','fatturazione_elettronica_delega','fatturazione_elettronica_delega_avvia','fatturazione_elettronica_delega_rientro','fatturazione_elettronica_delega_completa','fatturazione_nuova','fatturazione_modifica','fatturazione_dettaglio','fatturazione_allega_emessa','fatturazione_elimina','fatturazione_elimina_selezionate','fatturazione_aggiungi_rata','fatturazione_paga_rata','fatturazione_annulla_paga_rata','fatturazione_elimina_rata','fatturazione_file','fatturazione_clienti','fatturazione_nuovo_cliente','fatturazione_elimina_cliente','fatturazione_sync_passive','fatturazione_invia_sdi','fatturazione_push_provider','fatturazione_aggiorna_stato_sdi','fatturazione_nota_credito_nuova','fatturazione_elettronica_genera_secret','fatturazione_elettronica_registra_webhook',
     'clienti_lista','cliente_nuovo','cliente_modifica','cliente_elimina','cliente_ai_estrai',
     'fornitori_lista','fornitore_nuovo','fornitore_modifica','fornitore_elimina',
     'preventivi','preventivo_nuovo','preventivo_modifica','preventivo_pdf','preventivo_duplica','preventivo_stato','preventivo_elimina',
@@ -21074,9 +21074,45 @@ SDI_STATO_LABELS = {
 #  SYNC FALLBACK AUTOMATICO Ã¢â‚¬â€ recupera passive perdute dai webhook
 # Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 # Cache in memoria: ultima volta che abbiamo lanciato un auto-sync per ogni tenant.
-# Evita di chiamare l'API ad ogni navigazione admin.
+# Il throttle vero viene salvato anche nel DB tenant, cosi piu worker gunicorn
+# non chiamano il provider in continuazione.
 _efatt_last_auto_sync = {}  # {azienda_id: timestamp_epoch}
-_EFATT_AUTO_SYNC_INTERVAL = 6 * 3600  # 6 ore
+_efatt_auto_sync_thread_started = False
+_efatt_auto_sync_start_lock = threading.Lock()
+try:
+    _EFATT_AUTO_SYNC_INTERVAL = max(60, int(os.environ.get('EFATT_AUTO_SYNC_INTERVAL_SECONDS', '120') or 120))
+except Exception:
+    _EFATT_AUTO_SYNC_INTERVAL = 120
+try:
+    _EFATT_AUTO_SYNC_LOOP_INTERVAL = max(30, int(os.environ.get('EFATT_AUTO_SYNC_LOOP_SECONDS', '60') or 60))
+except Exception:
+    _EFATT_AUTO_SYNC_LOOP_INTERVAL = 60
+try:
+    _EFATT_AUTO_SYNC_MAX_PAGES = max(1, int(os.environ.get('EFATT_AUTO_SYNC_MAX_PAGES', '5') or 5))
+except Exception:
+    _EFATT_AUTO_SYNC_MAX_PAGES = 5
+
+
+def _efatt_auto_sync_claim(db, min_interval=None):
+    """Prenota una sync automatica salvando il timestamp nel DB tenant."""
+    min_interval = int(min_interval or _EFATT_AUTO_SYNC_INTERVAL)
+    key = 'efatt_auto_last_sync_started'
+    now_dt = datetime.now()
+    try:
+        row = db.execute("SELECT valore FROM impostazioni WHERE chiave=?", (key,)).fetchone()
+        if row and (row['valore'] or '').strip():
+            try:
+                last_dt = datetime.fromisoformat((row['valore'] or '').strip())
+                if (now_dt - last_dt).total_seconds() < min_interval:
+                    return False
+            except Exception:
+                pass
+        _efatt_db_set(db, key, now_dt.isoformat(timespec='seconds'))
+        safe_commit(db)
+        return True
+    except Exception as e:
+        print(f'[auto-sync fatture] claim non riuscito: {str(e)[:160]}')
+        return False
 
 
 def _efatt_maybe_auto_sync_async(azienda_id):
@@ -21090,9 +21126,8 @@ def _efatt_maybe_auto_sync_async(azienda_id):
         return
     last = _efatt_last_auto_sync.get(azienda_id, 0)
     now = _t.time()
-    if (now - last) < _EFATT_AUTO_SYNC_INTERVAL:
+    if (now - last) < 20:
         return
-    # Marca subito per evitare race tra request concorrenti
     _efatt_last_auto_sync[azienda_id] = now
 
     def _bg_sync(az_id):
@@ -21101,27 +21136,35 @@ def _efatt_maybe_auto_sync_async(azienda_id):
             db = None
             try:
                 db = get_db()
-                # Verifica che il provider sia collegato
-                row = db.execute("SELECT valore FROM impostazioni WHERE chiave='efatt_access_token'").fetchone()
-                if not row or not (row['valore'] or '').strip():
-                    return  # non collegato, niente sync
-                # Verifica che sia passato abbastanza tempo dalla sync precedente (anti-doppione)
-                last_row = db.execute("SELECT valore FROM impostazioni WHERE chiave='efatt_passive_last_sync'").fetchone()
-                if last_row and last_row['valore']:
-                    try:
-                        last_dt = datetime.fromisoformat(last_row['valore'])
-                        delta = (datetime.now() - last_dt).total_seconds()
-                        if delta < _EFATT_AUTO_SYNC_INTERVAL:
-                            return
-                    except Exception:
-                        pass
+                cfg_rows = db.execute("""
+                    SELECT chiave, valore FROM impostazioni
+                     WHERE chiave IN ('efatt_access_token','efatt_provider')
+                """).fetchall()
+                cfg = {r['chiave']: (r['valore'] or '') for r in cfg_rows}
+                if not (cfg.get('efatt_access_token') or '').strip():
+                    return
+                if (cfg.get('efatt_provider') or 'fattureincloud').strip() != 'fattureincloud':
+                    return
+                if not _efatt_auto_sync_claim(db):
+                    return
                 anno_corrente_sync = str(date.today().year)
-                active_result = _efatt_sync_active_documents(db=db, max_pages=3, sync_year=anno_corrente_sync) or {}
-                result = _efatt_sync_passive_documents(db=db, max_pages=3, sync_year=anno_corrente_sync) or {}
+                active_result = _efatt_sync_active_documents(
+                    db=db, max_pages=_EFATT_AUTO_SYNC_MAX_PAGES, sync_year=anno_corrente_sync
+                ) or {}
+                result = _efatt_sync_passive_documents(
+                    db=db, max_pages=_EFATT_AUTO_SYNC_MAX_PAGES, sync_year=anno_corrente_sync
+                ) or {}
                 imp_att = active_result.get('imported', 0)
                 upd_att = active_result.get('updated', 0)
                 imp = result.get('imported', 0)
                 upd = result.get('updated', 0)
+                _efatt_db_set(db, 'efatt_auto_last_sync_finished', datetime.now().isoformat(timespec='seconds'))
+                _efatt_db_set(
+                    db,
+                    'efatt_auto_last_sync_status',
+                    f'attive {imp_att} nuove/{upd_att} aggiornate; passive {imp} nuove/{upd} aggiornate'
+                )
+                safe_commit(db)
                 if imp or upd or imp_att or upd_att:
                     print(f'[auto-sync fatture] tenant={az_id}: attive {imp_att} nuove/{upd_att} aggiornate; passive {imp} nuove/{upd} aggiornate')
             except EFattAPIError as e:
@@ -21130,11 +21173,68 @@ def _efatt_maybe_auto_sync_async(azienda_id):
                 print(f'[auto-sync fatture] tenant={az_id} errore: {str(e)[:200]}')
             finally:
                 if db:
-                    try: db.close()
-                    except Exception: pass
+                    try:
+                        db.close()
+                    except Exception:
+                        pass
 
-    import threading
     threading.Thread(target=_bg_sync, args=(azienda_id,), daemon=True).start()
+
+
+@app.before_request
+def _efatt_auto_sync_on_admin_request():
+    """Ogni navigazione admin sveglia il polling automatico, senza bloccare pagina."""
+    try:
+        endpoint = request.endpoint or ''
+        if endpoint in {'static', 'pwa_static', 'fattureincloud_webhook', 'stripe_webhook'}:
+            return
+        if session.get('azienda_id') and session.get('ruolo') in ('admin', 'amministrazione'):
+            _efatt_maybe_auto_sync_async(session.get('azienda_id'))
+    except Exception as e:
+        print(f'[auto-sync fatture] request trigger errore: {str(e)[:160]}')
+
+
+def _efatt_connected_tenant_ids():
+    """Ritorna gli ID dei tenant attivi; la verifica token avviene nel DB tenant."""
+    ids = []
+    try:
+        mdb = get_master_db()
+        try:
+            rows = mdb.execute("SELECT id FROM aziende WHERE stato IS NULL OR stato!='sospesa'").fetchall()
+            ids = [r['id'] for r in rows if r['id']]
+        finally:
+            mdb.close()
+    except Exception as e:
+        print(f'[auto-sync fatture] lettura tenant fallita: {str(e)[:160]}')
+    return ids
+
+
+def _efatt_sync_all_connected_tenants_once():
+    for azienda_id in _efatt_connected_tenant_ids():
+        _efatt_maybe_auto_sync_async(azienda_id)
+
+
+def _efatt_start_live_sync_worker():
+    """Avvia il controllo automatico continuo per tutti i tenant collegati."""
+    global _efatt_auto_sync_thread_started
+    if os.environ.get('EFATT_LIVE_SYNC_DISABLED', '').strip() == '1':
+        return
+    with _efatt_auto_sync_start_lock:
+        if _efatt_auto_sync_thread_started:
+            return
+        _efatt_auto_sync_thread_started = True
+
+    def _loop():
+        time.sleep(15)
+        while True:
+            try:
+                _efatt_sync_all_connected_tenants_once()
+            except Exception as e:
+                print(f'[auto-sync fatture] loop errore: {str(e)[:200]}')
+            time.sleep(_EFATT_AUTO_SYNC_LOOP_INTERVAL)
+
+    threading.Thread(target=_loop, daemon=True, name='efatt-live-sync').start()
+    print(f'[auto-sync fatture] worker live avviato: polling ogni {_EFATT_AUTO_SYNC_LOOP_INTERVAL}s, sync min ogni {_EFATT_AUTO_SYNC_INTERVAL}s', flush=True)
 
 
 def _efatt_get_health_status(db):
@@ -21183,6 +21283,46 @@ def _efatt_get_health_status(db):
         pass
     return out
 
+
+
+def _fatt_live_version(db, anno, tipo=''):
+    """Firma leggera dei dati fatture usata dal refresh automatico della pagina."""
+    tipo = (tipo or '').strip()
+    anno = _efatt_valid_year(anno, default_current=True)
+    params = [anno]
+    where_tipo = ''
+    if tipo in ('attiva', 'passiva'):
+        where_tipo = " AND COALESCE(f.tipo,'attiva')=?"
+        params.append(tipo)
+    try:
+        row = db.execute(f"""
+            SELECT COUNT(*) AS n,
+                   COALESCE(SUM(COALESCE(f.importo_totale,0)),0) AS totale,
+                   COALESCE(MAX(COALESCE(f.provider_synced_at,'')),'') AS last_sync
+              FROM fatture f
+             WHERE substr(COALESCE(f.data_emissione, f.creato_il, ''),1,4)=?
+                   {where_tipo}
+        """, params).fetchone()
+        rate = db.execute(f"""
+            SELECT COUNT(*) AS n,
+                   COALESCE(SUM(CASE WHEN r.stato='pagata' THEN COALESCE(r.importo,0) ELSE 0 END),0) AS pagato,
+                   COALESCE(MAX(COALESCE(r.data_pagamento, r.data_scadenza, '')),'') AS last_rate
+              FROM rate_fattura r
+              JOIN fatture f ON f.id=r.fattura_id
+             WHERE substr(COALESCE(f.data_emissione, f.creato_il, ''),1,4)=?
+                   {where_tipo}
+        """, params).fetchone()
+        return '|'.join([
+            str(row['n'] if row else 0),
+            f"{float(row['totale'] if row else 0):.2f}",
+            str(row['last_sync'] if row else ''),
+            str(rate['n'] if rate else 0),
+            f"{float(rate['pagato'] if rate else 0):.2f}",
+            str(rate['last_rate'] if rate else ''),
+        ])
+    except Exception as e:
+        print(f'[fatt live] errore versione: {str(e)[:160]}')
+        return datetime.now().isoformat(timespec='seconds')
 
 
 def _fatt_overview_data(db, anno):
@@ -21273,6 +21413,26 @@ FATT_OVERVIEW_TMPL = """
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script><script>
 new Chart(document.getElementById('fattOverviewMonthly'),{type:'bar',data:{labels:{{ months_labels|tojson }},datasets:[{label:'Attive emesse',data:{{ monthly_active|tojson }},backgroundColor:'rgba(34,197,94,.22)',borderColor:'#22c55e',borderWidth:2,borderRadius:5},{label:'Passive ricevute',data:{{ monthly_passive|tojson }},backgroundColor:'rgba(249,115,22,.20)',borderColor:'#f97316',borderWidth:2,borderRadius:5},{label:'Incassato',data:{{ monthly_active_paid|tojson }},type:'line',borderColor:'#38bdf8',backgroundColor:'rgba(56,189,248,.12)',tension:.35},{label:'Pagato',data:{{ monthly_passive_paid|tojson }},type:'line',borderColor:'#facc15',backgroundColor:'rgba(250,204,21,.12)',tension:.35}]},options:{responsive:true,plugins:{legend:{position:'top'}},scales:{y:{beginAtZero:true,ticks:{callback:v=>'\\u20ac'+v}}}}});
 new Chart(document.getElementById('fattOverviewStatus'),{type:'doughnut',data:{labels:['Incassato attive','Residuo attive','Pagato passive','Residuo passive'],datasets:[{data:{{ payment_mix|tojson }},backgroundColor:['#22c55e','#ef4444','#f97316','#facc15'],borderColor:'#102238',borderWidth:2}]},options:{plugins:{legend:{position:'bottom'}},cutout:'62%'}});
+(function(){
+  let liveVersion={{ live_version|tojson }};
+  const url=new URL('/fatturazione/live-status', window.location.origin);
+  url.searchParams.set('anno', {{ anno|tojson }});
+  function canReload(){
+    const a=document.activeElement;
+    return !document.hidden && (!a || !['INPUT','TEXTAREA','SELECT'].includes(a.tagName));
+  }
+  async function checkLive(){
+    try{
+      const r=await fetch(url.toString(), {cache:'no-store', headers:{'X-Requested-With':'fetch'}});
+      if(!r.ok) return;
+      const d=await r.json();
+      if(!d.ok || !d.version) return;
+      if(liveVersion && d.version!==liveVersion && canReload()) window.location.reload();
+      liveVersion=d.version;
+    }catch(e){}
+  }
+  setInterval(checkLive, 60000);
+})();
 </script>
 """
 
@@ -21716,6 +21876,27 @@ new Chart(ctx2, {
   },
   options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true, ticks: { callback: v => '\u20ac' + v } } } }
 });
+(function(){
+  let liveVersion={{ live_version|tojson }};
+  const url=new URL('/fatturazione/live-status', window.location.origin);
+  url.searchParams.set('anno', {{ anno|tojson }});
+  url.searchParams.set('tipo', {{ tipo|tojson }});
+  function canReload(){
+    const a=document.activeElement;
+    return !document.hidden && (!a || !['INPUT','TEXTAREA','SELECT'].includes(a.tagName));
+  }
+  async function checkLive(){
+    try{
+      const r=await fetch(url.toString(), {cache:'no-store', headers:{'X-Requested-With':'fetch'}});
+      if(!r.ok) return;
+      const d=await r.json();
+      if(!d.ok || !d.version) return;
+      if(liveVersion && d.version!==liveVersion && canReload()) window.location.reload();
+      liveVersion=d.version;
+    }catch(e){}
+  }
+  setInterval(checkLive, 60000);
+})();
 </script>
 """
 
@@ -22373,15 +22554,16 @@ def fatturazione():
         available_years.insert(0, anno)
     if tipo_arg not in ('attiva', 'passiva'):
         overview = _fatt_overview_data(db, anno)
+        live_version = _fatt_live_version(db, anno)
         db.close()
         return render_page(FATT_OVERVIEW_TMPL, page_title='Fatturazione', active='fatturazione',
             anno=anno, current_year=date.today().year, sync_year=sync_year,
-            available_years=available_years, **overview)
+            available_years=available_years, live_version=live_version, **overview)
     tipo = tipo_arg
     filtro_stato = request.args.get('stato', '')
     q = request.args.get('q', '').strip()
 
-    # Auto-sync fatture passive in background (throttle 6h, non blocca la response)
+    # Auto-sync in background: sicurezza extra oltre ai webhook provider.
     if tipo == 'passiva':
         try:
             _efatt_maybe_auto_sync_async(session.get('azienda_id'))
@@ -22514,6 +22696,7 @@ def fatturazione():
         mesi_fatturato.append(round(row_f[0] or 0, 2))
         mesi_incassato.append(round(row_p[0] or 0, 2))
 
+    live_version = _fatt_live_version(db, anno, tipo)
     db.close()
     active_key = 'fatturazione_attiva' if tipo == 'attiva' else 'fatturazione_passiva'
     page_title = 'Fatturazione Attiva' if tipo == 'attiva' else 'Fatturazione Passiva'
@@ -22523,7 +22706,24 @@ def fatturazione():
         n_da_pagare=n_da_pagare, n_parziale=n_parziale, n_pagate=n_pagate, n_scadute=n_scadute_c, n_scadute_c=n_scadute_c,
         top_clienti=top_clienti, today=date.today().isoformat(),
         current_year=date.today().year, anno=anno, sync_year=sync_year, available_years=available_years,
-        mesi_labels=mesi_labels, mesi_fatturato=mesi_fatturato, mesi_incassato=mesi_incassato)
+        mesi_labels=mesi_labels, mesi_fatturato=mesi_fatturato, mesi_incassato=mesi_incassato,
+        live_version=live_version)
+
+
+@app.route('/fatturazione/live-status')
+@admin_required
+def fatturazione_live_status():
+    db = get_db()
+    try:
+        anno = _efatt_valid_year(request.args.get('anno'), default_current=True)
+        tipo = (request.args.get('tipo') or '').strip()
+        return jsonify({
+            'ok': True,
+            'version': _fatt_live_version(db, anno, tipo),
+            'synced_at': datetime.now().isoformat(timespec='seconds'),
+        })
+    finally:
+        db.close()
 
 
 @app.route('/fatturazione/nuova', methods=['GET', 'POST'])
@@ -33072,6 +33272,11 @@ with app.app_context():
         ensure_columns()
     except Exception as _e:
         print(f'[ENSURE_COLUMNS] Warning: {_e}')
+
+try:
+    _efatt_start_live_sync_worker()
+except Exception as _e:
+    print(f'[EFATT_LIVE_SYNC] Warning: {_e}')
 
 # (ensure_columns viene chiamata solo all'avvio, vedi fondo file)
 
