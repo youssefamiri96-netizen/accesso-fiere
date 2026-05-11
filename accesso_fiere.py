@@ -11850,7 +11850,7 @@ function toggleModRichDip() {
 {% if mie_richieste %}
 <div class="card" style="margin-top:16px">
   <div class="card-header"><h3>Le mie richieste</h3></div>
-  <div class="table-wrap"><table>
+  <div class="table-wrap fatt-detail-payment"><table>
     <thead><tr><th>Data</th><th>Fiera</th><th>Entrata</th><th>Uscita</th><th>Ore</th><th>Motivo</th><th>Stato</th><th>Risposta</th></tr></thead>
     <tbody>{% for r in mie_richieste %}
     <tr>
@@ -21913,6 +21913,19 @@ new Chart(ctx2, {
 
 # Ã¢â€â‚¬Ã¢â€â‚¬ Template dettaglio fattura Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 FATT_DETAIL_TMPL = """
+<style>
+.fatt-detail-payment{background:#0b1726!important;border-color:rgba(148,163,184,.22)!important;box-shadow:none!important}
+.fatt-detail-payment table{background:#0b1726!important;color:#dbeafe!important}
+.fatt-detail-payment tbody tr{background:#0f1f33!important}
+.fatt-detail-payment tbody tr[style*="background:#fef2f2"]{background:#3a1f2a!important}
+.fatt-detail-payment tbody tr[style*="background:#f0fdf4"]{background:#113326!important}
+.fatt-detail-payment tbody tr:hover td{background:rgba(56,169,189,.06)!important}
+.fatt-detail-payment th{background:#14243a!important;color:#8fa3bd!important;border-color:rgba(148,163,184,.22)!important}
+.fatt-detail-payment td{background:transparent!important;color:#dbeafe!important;border-color:rgba(148,163,184,.16)!important}
+.fatt-detail-payment td[style*="color:var(--text-light)"]{color:#8fa3bd!important}
+.fatt-detail-payment input[type="date"]{background:#1f2937!important;color:#f8fafc!important;border-color:rgba(148,163,184,.35)!important}
+.fatt-detail-payment .btn-pay-dark{background:linear-gradient(135deg,#16a34a,#15803d)!important;color:#fff!important;border:1px solid rgba(134,239,172,.35)!important}
+</style>
 <div style="margin-bottom:16px;display:flex;gap:10px">
   <a href="/fatturazione" class="btn btn-secondary btn-sm"><i class="fa fa-arrow-left"></i> Fatture</a>
   <a href="/fatturazione/{{ f.id }}/modifica" class="btn btn-secondary btn-sm"><i class="fa fa-pen"></i> Modifica</a>
@@ -22032,7 +22045,7 @@ FATT_DETAIL_TMPL = """
         {% if r.stato != 'pagata' %}
         <form method="POST" action="/fatturazione/rata/{{ r.id }}/paga">
           <input type="date" name="data_pag" value="{{ today }}" style="padding:4px 8px;font-size:11px;border:1px solid var(--border);border-radius:6px;width:130px">
-          <button type="submit" class="btn btn-sm" style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;margin-top:4px"><i class="fa fa-check"></i> Segna pagata</button>
+          <button type="submit" class="btn btn-sm btn-pay-dark" style="margin-top:4px"><i class="fa fa-check"></i> Segna pagata</button>
         </form>
         {% else %}
         <form method="POST" action="/fatturazione/rata/{{ r.id }}/annulla-paga">
