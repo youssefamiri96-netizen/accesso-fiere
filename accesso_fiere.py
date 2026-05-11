@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """
-Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢â€”
-Ã¢â€¢â€˜   ACCESSO FIERE v1  Ã¢â‚¬â€œ  Gestionale Allestitori Fieristici  Ã¢â€¢â€˜
-Ã¢â€¢â€˜   Gestionale per allestitori fieristici: Fiere, Personale,              Ã¢â€¢â€˜
-Ã¢â€¢â€˜   Veicoli, Documenti, Preventivi, Report mensile          Ã¢â€¢â€˜
-Ã¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+ACCESSO FIERE v1 - Gestionale Allestitori Fieristici
+Gestionale per allestitori fieristici: fiere, personale,
+veicoli, documenti, preventivi e report mensile.
+
 Installa:  pip install flask openpyxl
 Avvio:     python gestionale.py
 """
@@ -13,7 +12,7 @@ from flask import (Flask, render_template_string, request,
                    redirect, url_for, session, jsonify, flash, Response, send_file,
                    get_flashed_messages, abort)
 from datetime import datetime, date, timedelta
-import sqlite3, hashlib, os, json, smtplib, io, zipfile, base64, mimetypes, threading, time, secrets
+import sqlite3, hashlib, os, json, smtplib, io, zipfile, base64, mimetypes, threading, time, secrets, re
 from functools import wraps
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -1822,6 +1821,46 @@ def check_scadenze_email():
 # Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 #  RENDER HELPER
 # Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+_MOJIBAKE_RUN_RE = re.compile(r'[^\x00-\x7F]+')
+
+def _fix_mojibake_run(run):
+    value = run
+    for _ in range(5):
+        raw = bytearray()
+        for ch in value:
+            code = ord(ch)
+            if code <= 255:
+                raw.append(code)
+            else:
+                try:
+                    raw.extend(ch.encode('cp1252'))
+                except UnicodeEncodeError:
+                    return value
+        try:
+            fixed = raw.decode('utf-8')
+        except UnicodeDecodeError:
+            return value
+        if fixed == value:
+            return value
+        value = fixed
+    return value
+
+def _fix_mojibake_text(value):
+    if not isinstance(value, str) or not any(c in value for c in ('\u00c3', '\u00c2', '\u00e2')):
+        return value
+    previous = value
+    for _ in range(3):
+        fixed = _MOJIBAKE_RUN_RE.sub(lambda m: _fix_mojibake_run(m.group(0)), previous)
+        if fixed == previous:
+            return fixed
+        previous = fixed
+    return previous
+
+_flask_render_template_string = render_template_string
+
+def render_template_string(*args, **kwargs):
+    return _fix_mojibake_text(_flask_render_template_string(*args, **kwargs))
+
 def render_page(tmpl, **ctx):
     ctx.setdefault('lang', session.get('lang', 'it'))
     ctx.setdefault('current_lang', session.get('lang', 'it'))
@@ -32938,5 +32977,3 @@ with app.app_context():
 if __name__ == '__main__':
     debug = os.environ.get('RAILWAY_ENVIRONMENT') is None
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=debug)
-
-
