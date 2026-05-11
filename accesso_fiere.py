@@ -20068,7 +20068,53 @@ def documenti_azienda_zip():
 # Ã¢â€â‚¬Ã¢â€â‚¬ Template lista fatture Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 EFATT_SETUP_TMPL = """
 <style>
-.ef-wrap{max-width:1120px;margin:0 auto}.ef-layout{display:grid;grid-template-columns:1fr 1fr;gap:18px}.ef-card{background:#132238!important;border:1px solid rgba(125,159,199,.28)!important;border-radius:14px;padding:22px;box-shadow:var(--shadow);margin-bottom:16px;color:#eaf3ff!important}.ef-card h2,.ef-card h3,.ef-card strong{color:#f8fbff}.ef-muted{font-size:13px;color:#9fb2c7!important;line-height:1.5}.ef-status{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:900}.ef-ok{background:#123d2d!important;color:#75f0a0!important;border:1px solid #1f8f55}.ef-warn{background:#3b2c11!important;color:#ffd36b!important;border:1px solid #a66a10}.ef-bad{background:#3b1720!important;color:#ff9aa8!important;border:1px solid #963346}.ef-providers{display:grid;grid-template-columns:1fr;gap:10px;margin:18px 0}.ef-provider{position:relative;display:block;border:2px solid rgba(125,159,199,.24)!important;border-radius:12px;padding:14px;cursor:pointer;background:#0b1726!important;transition:.18s;color:#eaf3ff!important}.ef-provider:hover{border-color:#38bdf8!important;box-shadow:0 10px 28px rgba(0,0,0,.22)}.ef-provider input{position:absolute;opacity:0}.ef-provider:has(input:checked){border-color:#0ea5e9!important;background:#0e3652!important}.ef-provider strong{display:block;font-size:16px;margin-bottom:4px}.ef-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:16px}.ef-hub-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}.ef-hub-card{background:#0b1726!important;border:1px solid rgba(125,159,199,.25);border-radius:12px;padding:16px}.ef-field{display:grid;gap:6px;margin-top:10px}.ef-field label{font-size:12px;font-weight:800;color:#b8c8dc}.ef-field input{width:100%;background:#071221!important;color:#eaf3ff!important;border:1px solid rgba(125,159,199,.35)!important;border-radius:9px;padding:10px 12px}.ef-inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.ef-copybox{background:#071221!important;color:#dbeafe!important;border:1px solid rgba(125,159,199,.35)!important;border-radius:9px;padding:10px 12px;font-family:monospace;overflow:auto}.ef-card [style*="background:#f8fafc"],.ef-card [style*="background:#fff7ed"],.ef-card [style*="background:#fef2f2"],.ef-card [style*="background:#f0fdf4"],.ef-card [style*="background:#eff6ff"],.ef-card [style*="background:#fef3c7"]{background:#0b1726!important;color:#eaf3ff!important;border-color:rgba(125,159,199,.28)!important}.ef-card input[readonly]{background:#071221!important;color:#dbeafe!important;border-color:rgba(125,159,199,.35)!important}@media(max-width:900px){.ef-layout{grid-template-columns:1fr}}
+.ef-wrap{max-width:1160px;margin:0 auto}
+.ef-layout{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.ef-card{background:#132238!important;border:1px solid rgba(125,159,199,.28)!important;border-radius:14px;padding:22px;box-shadow:var(--shadow);margin-bottom:16px;color:#eaf3ff!important}
+.ef-card h2,.ef-card h3,.ef-card strong{color:#f8fbff}
+.ef-muted{font-size:13px;color:#9fb2c7!important;line-height:1.5}
+.ef-status{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:900;white-space:nowrap}
+.ef-ok{background:#123d2d!important;color:#75f0a0!important;border:1px solid #1f8f55}
+.ef-warn{background:#3b2c11!important;color:#ffd36b!important;border:1px solid #a66a10}
+.ef-bad{background:#3b1720!important;color:#ff9aa8!important;border:1px solid #963346}
+.ef-providers{display:grid;grid-template-columns:1fr;gap:10px;margin:18px 0}
+.ef-provider{position:relative;display:block;border:2px solid rgba(125,159,199,.24)!important;border-radius:12px;padding:14px;cursor:pointer;background:#0b1726!important;transition:.18s;color:#eaf3ff!important}
+.ef-provider:hover{border-color:#38bdf8!important;box-shadow:0 10px 28px rgba(0,0,0,.22)}
+.ef-provider input{position:absolute;opacity:0}
+.ef-provider:has(input:checked){border-color:#0ea5e9!important;background:#0e3652!important}
+.ef-provider strong{display:block;font-size:16px;margin-bottom:4px}
+.ef-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:16px}
+.ef-hub-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:16px;align-items:stretch}
+.ef-hub-card{position:relative;display:flex;flex-direction:column;gap:12px;min-height:405px;background:#0b1726!important;border:1px solid rgba(125,159,199,.25);border-radius:14px;padding:18px;overflow:hidden;box-shadow:0 18px 42px rgba(0,0,0,.18)}
+.ef-hub-card:before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:#23c3df}
+.ef-hub-card.ef-fic:before{background:#2fc76f}
+.ef-hub-card.ef-aruba:before{background:#23c3df}
+.ef-hub-card.ef-acube:before{background:#f2b84b}
+.ef-provider-title{display:grid;grid-template-columns:42px 1fr auto;gap:12px;align-items:center}
+.ef-provider-icon{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:#10263d;color:#39d6f2;border:1px solid rgba(57,214,242,.32);font-size:18px}
+.ef-fic .ef-provider-icon{color:#54e28a;border-color:rgba(84,226,138,.32)}
+.ef-acube .ef-provider-icon{color:#ffd36b;border-color:rgba(255,211,107,.32)}
+.ef-provider-title h3{margin:0;font-size:20px;line-height:1.1}
+.ef-card-subtitle{font-size:12px;color:#8fa5bd;font-weight:800;margin-top:4px;text-transform:uppercase}
+.ef-chips{display:flex;gap:8px;flex-wrap:wrap}
+.ef-chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 9px;background:#10263d;border:1px solid rgba(125,159,199,.22);font-size:11px;font-weight:900;color:#bad5ee}
+.ef-field{display:grid;gap:7px;margin-top:10px}
+.ef-field label,.ef-mini-label{font-size:12px;font-weight:900;color:#b8c8dc}
+.ef-field input,.ef-endpoint input{width:100%;height:39px;background:#071221!important;color:#eaf3ff!important;border:1px solid rgba(125,159,199,.35)!important;border-radius:9px;padding:9px 12px;outline:none}
+.ef-field input:focus,.ef-endpoint input:focus{border-color:#27c7e8!important;box-shadow:0 0 0 3px rgba(39,199,232,.12)}
+.ef-field input:-webkit-autofill,.ef-field input:-webkit-autofill:hover,.ef-field input:-webkit-autofill:focus{-webkit-box-shadow:0 0 0 1000px #071221 inset!important;-webkit-text-fill-color:#eaf3ff!important;caret-color:#eaf3ff}
+.ef-inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ef-endpoint{display:grid;grid-template-columns:minmax(0,1fr) 42px;gap:8px;margin-top:6px}
+.ef-endpoint input{font-family:monospace;font-size:12px;text-overflow:ellipsis}
+.ef-copy-btn{height:39px;width:42px;border:1px solid rgba(125,159,199,.35);border-radius:9px;background:#10263d;color:#dbeafe;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.ef-copy-btn:hover{border-color:#27c7e8;color:#67e8f9}
+.ef-hub-card form{display:flex;flex-direction:column;flex:1}
+.ef-hub-card .ef-actions{margin-top:auto}
+.ef-hub-card .btn{border-radius:9px;min-height:39px;padding:9px 14px}
+.ef-card [style*="background:#f8fafc"],.ef-card [style*="background:#fff7ed"],.ef-card [style*="background:#fef2f2"],.ef-card [style*="background:#f0fdf4"],.ef-card [style*="background:#eff6ff"],.ef-card [style*="background:#fef3c7"]{background:#0b1726!important;color:#eaf3ff!important;border-color:rgba(125,159,199,.28)!important}
+.ef-card input[readonly]{background:#071221!important;color:#dbeafe!important;border-color:rgba(125,159,199,.35)!important}
+.ef-wrap>.ef-layout,.ef-wrap>.ef-card[style*="border-left:4px solid #0ea5e9"]{display:none!important}
+@media(max-width:900px){.ef-layout{grid-template-columns:1fr}.ef-provider-title{grid-template-columns:38px 1fr}.ef-provider-title .ef-status{grid-column:1 / -1;width:max-content}.ef-hub-card{min-height:0}}
 </style>
 <div class="ef-wrap">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px;flex-wrap:wrap">
@@ -20088,9 +20134,13 @@ EFATT_SETUP_TMPL = """
       <span class="ef-status ef-ok">Codice Aruba KRRH6B9</span>
     </div>
     <div class="ef-hub-grid">
-      <div class="ef-hub-card">
-        <div class="ef-inline" style="justify-content:space-between">
-          <h3 style="margin:0">Fatture in Cloud</h3>
+      <div class="ef-hub-card ef-fic">
+        <div class="ef-provider-title">
+          <div class="ef-provider-icon"><i class="fa fa-cloud"></i></div>
+          <div>
+            <h3>Fatture in Cloud</h3>
+            <div class="ef-card-subtitle">Consenso OAuth</div>
+          </div>
           {% if provider_status.fattureincloud.connected %}
             <span class="ef-status ef-ok">Collegato</span>
           {% else %}
@@ -20098,6 +20148,11 @@ EFATT_SETUP_TMPL = """
           {% endif %}
         </div>
         <p class="ef-muted">Il cliente clicca, entra su Fatture in Cloud e autorizza Accesso Fiere. Zero API key da copiare.</p>
+        <div class="ef-chips">
+          <span class="ef-chip"><i class="fa fa-bolt"></i> Sync live</span>
+          <span class="ef-chip"><i class="fa fa-paper-plane"></i> Invio SDI</span>
+          <span class="ef-chip"><i class="fa fa-envelope"></i> Email cliente</span>
+        </div>
         {% if provider_status.fattureincloud.user %}<div class="ef-muted">Account: <strong>{{ provider_status.fattureincloud.user }}</strong></div>{% endif %}
         <form method="POST" action="/fatturazione/elettronica/attive/avvia" class="ef-actions">
           <input type="hidden" name="provider" value="fattureincloud">
@@ -20105,9 +20160,13 @@ EFATT_SETUP_TMPL = """
         </form>
       </div>
 
-      <div class="ef-hub-card">
-        <div class="ef-inline" style="justify-content:space-between">
-          <h3 style="margin:0">Aruba</h3>
+      <div class="ef-hub-card ef-aruba">
+        <div class="ef-provider-title">
+          <div class="ef-provider-icon"><i class="fa fa-building-columns"></i></div>
+          <div>
+            <h3>Aruba</h3>
+            <div class="ef-card-subtitle">API + codice KRRH6B9</div>
+          </div>
           {% if provider_status.aruba.connected %}
             <span class="ef-status ef-ok">Collegato</span>
           {% else %}
@@ -20115,8 +20174,17 @@ EFATT_SETUP_TMPL = """
           {% endif %}
         </div>
         <p class="ef-muted">Inserisci le credenziali API Aruba una sola volta. Accesso Fiere importa attive/passive e usa il codice destinatario Aruba.</p>
-        <div class="ef-muted" style="margin-bottom:6px">Endpoint push opzionale Aruba</div>
-        <div class="ef-copybox">{{ aruba_webhook_url }}</div>
+        <div class="ef-chips">
+          <span class="ef-chip"><i class="fa fa-download"></i> Attive/passive</span>
+          <span class="ef-chip"><i class="fa fa-rotate"></i> Polling live</span>
+        </div>
+        <div>
+          <div class="ef-mini-label">Endpoint push opzionale</div>
+          <div class="ef-endpoint">
+            <input id="aruba-webhook-url" type="text" readonly value="{{ aruba_webhook_url }}">
+            <button class="ef-copy-btn" type="button" title="Copia endpoint Aruba" onclick="navigator.clipboard.writeText(document.getElementById('aruba-webhook-url').value).then(()=>this.innerHTML='<i class=&quot;fa fa-check&quot;></i>')"><i class="fa fa-copy"></i></button>
+          </div>
+        </div>
         <form method="POST" action="/fatturazione/elettronica/aruba/collega">
           <div class="ef-field">
             <label>Username API Aruba</label>
@@ -20139,9 +20207,13 @@ EFATT_SETUP_TMPL = """
         </form>
       </div>
 
-      <div class="ef-hub-card">
-        <div class="ef-inline" style="justify-content:space-between">
-          <h3 style="margin:0">A-Cube</h3>
+      <div class="ef-hub-card ef-acube">
+        <div class="ef-provider-title">
+          <div class="ef-provider-icon"><i class="fa fa-cubes"></i></div>
+          <div>
+            <h3>A-Cube</h3>
+            <div class="ef-card-subtitle">API key + Legal Entity</div>
+          </div>
           {% if provider_status.acube.connected %}
             <span class="ef-status ef-ok">Configurato</span>
           {% else %}
@@ -20149,7 +20221,17 @@ EFATT_SETUP_TMPL = """
           {% endif %}
         </div>
         <p class="ef-muted">Salva API key e Legal Entity. I webhook A-Cube possono usare questo endpoint pubblico per notificare fatture e stati.</p>
-        <div class="ef-copybox">{{ acube_webhook_url }}</div>
+        <div class="ef-chips">
+          <span class="ef-chip"><i class="fa fa-key"></i> API protetta</span>
+          <span class="ef-chip"><i class="fa fa-rss"></i> Webhook</span>
+        </div>
+        <div>
+          <div class="ef-mini-label">Endpoint webhook</div>
+          <div class="ef-endpoint">
+            <input id="acube-webhook-url" type="text" readonly value="{{ acube_webhook_url }}">
+            <button class="ef-copy-btn" type="button" title="Copia endpoint A-Cube" onclick="navigator.clipboard.writeText(document.getElementById('acube-webhook-url').value).then(()=>this.innerHTML='<i class=&quot;fa fa-check&quot;></i>')"><i class="fa fa-copy"></i></button>
+          </div>
+        </div>
         <form method="POST" action="/fatturazione/elettronica/acube/collega">
           <div class="ef-field">
             <label>API key A-Cube</label>
