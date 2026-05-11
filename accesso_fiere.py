@@ -1495,7 +1495,7 @@ AMMINISTRAZIONE_ENDPOINTS = {
     'documenti_azienda','documenti_azienda_nuovo','documenti_azienda_modifica','documenti_azienda_scarica','documenti_azienda_elimina','documenti_azienda_zip',
     'scadenze','scadenze_pulisci_fantasma',
     'veicoli','veicolo_nuovo','veicolo_detail','veicolo_modifica','veicolo_salva_scadenze','veicolo_elimina','veicolo_documenti','veicolo_upload','veicolo_applica_ai','veicolo_scarica','veicolo_anteprima','veicolo_elimina_doc',
-    'fatturazione','fatturazione_live_status','fatturazione_elettronica_setup','fatturazione_elettronica_save','fatturazione_elettronica_attive','fatturazione_elettronica_attive_avvia','fatturazione_elettronica_connect','fatturazione_elettronica_callback','fatturazione_elettronica_disconnect','fatturazione_elettronica_delega','fatturazione_elettronica_delega_avvia','fatturazione_elettronica_delega_rientro','fatturazione_elettronica_delega_completa','fatturazione_nuova','fatturazione_modifica','fatturazione_dettaglio','fatturazione_allega_emessa','fatturazione_elimina','fatturazione_elimina_selezionate','fatturazione_aggiungi_rata','fatturazione_paga_rata','fatturazione_annulla_paga_rata','fatturazione_elimina_rata','fatturazione_file','fatturazione_clienti','fatturazione_nuovo_cliente','fatturazione_elimina_cliente','fatturazione_sync_passive','fatturazione_invia_sdi','fatturazione_push_provider','fatturazione_aggiorna_stato_sdi','fatturazione_nota_credito_nuova','fatturazione_elettronica_genera_secret','fatturazione_elettronica_registra_webhook',
+    'fatturazione','fatturazione_live_status','fatturazione_elettronica_setup','fatturazione_elettronica_save','fatturazione_elettronica_attive','fatturazione_elettronica_attive_avvia','fatturazione_elettronica_aruba_collega','fatturazione_elettronica_acube_collega','fatturazione_elettronica_connect','fatturazione_elettronica_callback','fatturazione_elettronica_disconnect','fatturazione_elettronica_delega','fatturazione_elettronica_delega_avvia','fatturazione_elettronica_delega_rientro','fatturazione_elettronica_delega_completa','fatturazione_nuova','fatturazione_modifica','fatturazione_dettaglio','fatturazione_allega_emessa','fatturazione_elimina','fatturazione_elimina_selezionate','fatturazione_aggiungi_rata','fatturazione_paga_rata','fatturazione_annulla_paga_rata','fatturazione_elimina_rata','fatturazione_file','fatturazione_clienti','fatturazione_nuovo_cliente','fatturazione_elimina_cliente','fatturazione_sync_passive','fatturazione_invia_sdi','fatturazione_push_provider','fatturazione_aggiorna_stato_sdi','fatturazione_nota_credito_nuova','fatturazione_elettronica_genera_secret','fatturazione_elettronica_registra_webhook',
     'clienti_lista','cliente_nuovo','cliente_modifica','cliente_elimina','cliente_ai_estrai',
     'fornitori_lista','fornitore_nuovo','fornitore_modifica','fornitore_elimina',
     'preventivi','preventivo_nuovo','preventivo_modifica','preventivo_pdf','preventivo_duplica','preventivo_stato','preventivo_elimina',
@@ -8983,7 +8983,7 @@ def _amministrazione_stats():
 PUBLIC_NO_TENANT_ENDPOINTS = {
     'index', 'public_home', 'privacy', 'termini', 'cookie_policy', 'login', 'logout', 'area_clienti',
     'set_lang', 'registrati', 'landing', 'pwa_manifest', 'pwa_service_worker', 'pwa_offline',
-    'static', 'pwa_static', 'stripe_webhook', 'fattureincloud_webhook',
+    'static', 'pwa_static', 'stripe_webhook', 'fattureincloud_webhook', 'acube_webhook', 'aruba_webhook',
     'fatturazione_elettronica_callback',
 }
 
@@ -9020,7 +9020,7 @@ def security_request_guard():
             if not referer or not _same_origin_url(referer):
                 abort(403)
     if request.method in ('POST', 'PUT', 'PATCH', 'DELETE'):
-        if endpoint not in {'stripe_webhook', 'fattureincloud_webhook'}:
+        if endpoint not in {'stripe_webhook', 'fattureincloud_webhook', 'acube_webhook', 'aruba_webhook'}:
             origin = request.headers.get('Origin')
             referer = request.headers.get('Referer')
             if origin and not _same_origin_url(origin):
@@ -9068,7 +9068,13 @@ def _get_efatt_config():
         'efatt_delega_url_aruba', 'efatt_delega_url_acube', 'efatt_delega_provider',
         'efatt_delega_started_at', 'efatt_delega_completed_at',
         'efatt_attive_url_fattureincloud', 'efatt_attive_url_aruba',
-        'efatt_attive_url_acube', 'efatt_attive_provider'
+        'efatt_attive_url_acube', 'efatt_attive_provider',
+        'efatt_aruba_username', 'efatt_aruba_password', 'efatt_aruba_piva',
+        'efatt_aruba_token', 'efatt_aruba_refresh_token',
+        'efatt_aruba_token_expires_at', 'efatt_aruba_status',
+        'efatt_aruba_last_login', 'efatt_aruba_use_demo',
+        'efatt_acube_api_key', 'efatt_acube_legal_entity_id',
+        'efatt_acube_base_url', 'efatt_acube_status'
     ]
     cfg = {k: get_setting(k, '') for k in keys}
     cfg['efatt_oauth_scopes'] = _efatt_clean_scopes(cfg.get('efatt_oauth_scopes', ''))
@@ -9249,7 +9255,13 @@ def _get_efatt_config_from_db(db):
         'efatt_delega_url_aruba', 'efatt_delega_url_acube', 'efatt_delega_provider',
         'efatt_delega_started_at', 'efatt_delega_completed_at',
         'efatt_attive_url_fattureincloud', 'efatt_attive_url_aruba',
-        'efatt_attive_url_acube', 'efatt_attive_provider'
+        'efatt_attive_url_acube', 'efatt_attive_provider',
+        'efatt_aruba_username', 'efatt_aruba_password', 'efatt_aruba_piva',
+        'efatt_aruba_token', 'efatt_aruba_refresh_token',
+        'efatt_aruba_token_expires_at', 'efatt_aruba_status',
+        'efatt_aruba_last_login', 'efatt_aruba_use_demo',
+        'efatt_acube_api_key', 'efatt_acube_legal_entity_id',
+        'efatt_acube_base_url', 'efatt_acube_status'
     ]
     cfg = {k: _efatt_db_get(db, k, '') for k in keys}
     cfg['efatt_oauth_scopes'] = _efatt_clean_scopes(cfg.get('efatt_oauth_scopes', ''))
@@ -9275,6 +9287,26 @@ def _efatt_http_json(method, url, payload=None, headers=None, timeout=25):
     except Exception as e:
         raise EFattAPIError(str(e))
 
+def _efatt_http_form(method, url, payload=None, headers=None, timeout=25):
+    import urllib.request, urllib.error, urllib.parse
+    data = urllib.parse.urlencode(payload or {}).encode('utf-8')
+    req_headers = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+    }
+    if headers:
+        req_headers.update(headers)
+    req = urllib.request.Request(url, data=data, headers=req_headers, method=method.upper())
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            raw = resp.read().decode('utf-8', errors='ignore')
+            return json.loads(raw or '{}') if raw else {}
+    except urllib.error.HTTPError as e:
+        body = e.read().decode('utf-8', errors='ignore')
+        raise EFattAPIError(body[:700] or str(e), status=e.code, body=body)
+    except Exception as e:
+        raise EFattAPIError(str(e))
+
 def _efatt_token_expired(expires_at):
     if not expires_at:
         return False
@@ -9283,6 +9315,122 @@ def _efatt_token_expired(expires_at):
         return exp <= datetime.now() + timedelta(minutes=5)
     except Exception:
         return False
+
+def _aruba_use_demo(cfg=None):
+    cfg = cfg or {}
+    env = (os.environ.get('ARUBA_FE_ENV') or os.environ.get('EFATT_ARUBA_ENV') or '').strip().lower()
+    if env in ('demo', 'sandbox', 'test'):
+        return True
+    if env in ('prod', 'production'):
+        return False
+    return str(cfg.get('efatt_aruba_use_demo') or '').strip() == '1'
+
+def _aruba_auth_base(cfg=None):
+    cfg = cfg or {}
+    if os.environ.get('ARUBA_FE_AUTH_URL'):
+        return os.environ['ARUBA_FE_AUTH_URL'].rstrip('/')
+    return 'https://demoauth.fatturazioneelettronica.aruba.it' if _aruba_use_demo(cfg) else 'https://auth.fatturazioneelettronica.aruba.it'
+
+def _aruba_api_base(cfg=None):
+    cfg = cfg or {}
+    if os.environ.get('ARUBA_FE_API_URL'):
+        return os.environ['ARUBA_FE_API_URL'].rstrip('/')
+    return 'https://demows.fatturazioneelettronica.aruba.it' if _aruba_use_demo(cfg) else 'https://ws.fatturazioneelettronica.aruba.it'
+
+def _aruba_login(db, username=None, password=None, cfg=None):
+    cfg = cfg or _get_efatt_config_from_db(db)
+    username = (username or cfg.get('efatt_aruba_username') or '').strip()
+    password = (password or cfg.get('efatt_aruba_password') or '').strip()
+    if not username or not password:
+        raise EFattAPIError('Credenziali Aruba mancanti: inserisci username e password API.')
+    data = _efatt_http_form('POST', _aruba_auth_base(cfg) + '/auth/signin', {
+        'grant_type': 'password',
+        'username': username,
+        'password': password,
+    })
+    access_token = (data.get('access_token') or data.get('token') or '').strip()
+    refresh_token = (data.get('refresh_token') or data.get('refreshToken') or '').strip()
+    expires_in = int(data.get('expires_in') or 1800)
+    expires_at = (datetime.now() + timedelta(seconds=expires_in)).isoformat(timespec='seconds')
+    if not access_token:
+        raise EFattAPIError('Aruba non ha restituito access_token. Verifica username/password API.')
+    _efatt_db_set(db, 'efatt_provider', 'aruba')
+    _efatt_db_set(db, 'efatt_attive_provider', 'aruba')
+    _efatt_db_set(db, 'efatt_delega_provider', 'aruba')
+    _efatt_db_set(db, 'efatt_oauth_status', 'connected')
+    _efatt_db_set(db, 'efatt_oauth_connected_at', datetime.now().isoformat(timespec='seconds'))
+    _efatt_db_set(db, 'efatt_oauth_provider_user', username)
+    _efatt_db_set(db, 'efatt_access_token', access_token)
+    _efatt_db_set(db, 'efatt_refresh_token', refresh_token)
+    _efatt_db_set(db, 'efatt_token_expires_at', expires_at)
+    _efatt_db_set(db, 'efatt_aruba_username', username)
+    _efatt_db_set(db, 'efatt_aruba_password', password)
+    _efatt_db_set(db, 'efatt_aruba_token', access_token)
+    _efatt_db_set(db, 'efatt_aruba_refresh_token', refresh_token)
+    _efatt_db_set(db, 'efatt_aruba_token_expires_at', expires_at)
+    _efatt_db_set(db, 'efatt_aruba_status', 'connected')
+    _efatt_db_set(db, 'efatt_aruba_last_login', datetime.now().isoformat(timespec='seconds'))
+    if not (cfg.get('efatt_codice_destinatario') or '').strip():
+        _efatt_db_set(db, 'efatt_codice_destinatario', 'KRRH6B9')
+    safe_commit(db)
+    return access_token
+
+def _aruba_refresh_access_token(db, cfg=None):
+    cfg = cfg or _get_efatt_config_from_db(db)
+    refresh_token = (cfg.get('efatt_aruba_refresh_token') or cfg.get('efatt_refresh_token') or '').strip()
+    if not refresh_token:
+        return _aruba_login(db, cfg=cfg)
+    try:
+        data = _efatt_http_form('POST', _aruba_auth_base(cfg) + '/auth/refresh', {
+            'grant_type': 'refresh_token',
+            'refresh_token': refresh_token,
+        })
+    except EFattAPIError:
+        return _aruba_login(db, cfg=cfg)
+    access_token = (data.get('access_token') or data.get('token') or '').strip()
+    new_refresh = (data.get('refresh_token') or data.get('refreshToken') or refresh_token).strip()
+    expires_in = int(data.get('expires_in') or 1800)
+    expires_at = (datetime.now() + timedelta(seconds=expires_in)).isoformat(timespec='seconds')
+    if not access_token:
+        return _aruba_login(db, cfg=cfg)
+    for key, value in (
+        ('efatt_access_token', access_token),
+        ('efatt_refresh_token', new_refresh),
+        ('efatt_token_expires_at', expires_at),
+        ('efatt_aruba_token', access_token),
+        ('efatt_aruba_refresh_token', new_refresh),
+        ('efatt_aruba_token_expires_at', expires_at),
+        ('efatt_aruba_status', 'connected'),
+    ):
+        _efatt_db_set(db, key, value)
+    safe_commit(db)
+    return access_token
+
+def _aruba_api_request(method, path, payload=None, query=None, db=None):
+    import urllib.parse
+    own_db = db is None
+    if own_db:
+        db = get_db()
+    try:
+        cfg = _get_efatt_config_from_db(db)
+        token = (cfg.get('efatt_aruba_token') or cfg.get('efatt_access_token') or '').strip()
+        if not token or _efatt_token_expired(cfg.get('efatt_aruba_token_expires_at') or cfg.get('efatt_token_expires_at')):
+            token = _aruba_refresh_access_token(db, cfg)
+        url = _aruba_api_base(cfg) + path
+        if query:
+            url += '?' + urllib.parse.urlencode({k: v for k, v in query.items() if v is not None and v != ''})
+        headers = {'Authorization': 'Bearer ' + token, 'Accept': 'application/json'}
+        try:
+            return _efatt_http_json(method, url, payload, headers=headers)
+        except EFattAPIError as e:
+            if e.status == 401:
+                token = _aruba_login(db, cfg=cfg)
+                headers['Authorization'] = 'Bearer ' + token
+                return _efatt_http_json(method, url, payload, headers=headers)
+            raise
+    finally:
+        if own_db:
+            db.close()
 
 def _efatt_refresh_access_token(db, cfg=None):
     cfg = cfg or _get_efatt_config_from_db(db)
@@ -9479,6 +9627,7 @@ def _efatt_doc_is_paid(doc):
 def _efatt_sync_payment_rows(db, fattura_id, doc, gross, default_due_date=''):
     """Ricrea le rate locali leggendo lo stato pagamenti del provider."""
     payments = doc.get('payments_list') if isinstance(doc, dict) and isinstance(doc.get('payments_list'), list) else []
+    provider_label = 'Aruba' if isinstance(doc, dict) and doc.get('_provider') == 'aruba' else ('A-Cube' if isinstance(doc, dict) and doc.get('_provider') == 'acube' else 'Fatture in Cloud')
     db.execute("DELETE FROM rate_fattura WHERE fattura_id=?", (fattura_id,))
     if not payments:
         stato = 'pagata' if _efatt_doc_is_paid(doc) else 'da_pagare'
@@ -9488,7 +9637,7 @@ def _efatt_sync_payment_rows(db, fattura_id, doc, gross, default_due_date=''):
                       VALUES (?,?,?,?,?,?,?)""",
                    (fattura_id, 1, round(_efatt_float(gross, 0), 2),
                     default_due_date or None, data_pag or None if stato == 'pagata' else None,
-                    stato, 'Sincronizzata da Fatture in Cloud'))
+                    stato, 'Sincronizzata da ' + provider_label))
         _aggiorna_stato_fattura(fattura_id, db)
         return
     for idx, payment in enumerate(payments, start=1):
@@ -9497,7 +9646,7 @@ def _efatt_sync_payment_rows(db, fattura_id, doc, gross, default_due_date=''):
         paid = _efatt_payment_is_paid(payment)
         paid_date = str(payment.get('paid_date') or payment.get('payment_date') or payment.get('date') or due_date or default_due_date or '')[:10]
         status_raw = str(payment.get('status') or '').strip()
-        note = 'Sincronizzata da Fatture in Cloud'
+        note = 'Sincronizzata da ' + provider_label
         if status_raw:
             note += f' ({status_raw})'
         db.execute("""INSERT INTO rate_fattura
@@ -9511,12 +9660,13 @@ def _efatt_sync_payment_rows(db, fattura_id, doc, gross, default_due_date=''):
 def _efatt_import_received_document(db, doc):
     if not isinstance(doc, dict):
         return False
+    provider_name = str(doc.get('_provider') or 'fattureincloud').strip() or 'fattureincloud'
     provider_id = str(doc.get('id') or doc.get('document_id') or '').strip()
     if not provider_id:
         return False
     existing = db.execute(
         "SELECT id FROM fatture WHERE provider=? AND provider_doc_id=? LIMIT 1",
-        ('fattureincloud', provider_id)
+        (provider_name, provider_id)
     ).fetchone()
     numero = str(doc.get('number') or doc.get('numeration') or doc.get('display_number') or provider_id)
     data_em = str(doc.get('date') or doc.get('created_at') or '')[:10] or date.today().isoformat()
@@ -9530,7 +9680,8 @@ def _efatt_import_received_document(db, doc):
     if payments:
         data_scad = str(payments[0].get('due_date') or payments[0].get('date') or '')[:10]
         pagata = all((p.get('status') or '').lower() in ('paid', 'pagata') for p in payments)
-    descr = doc.get('description') or doc.get('subject') or doc.get('visible_subject') or 'Fattura passiva importata da Fatture in Cloud'
+    provider_label = 'Aruba' if provider_name == 'aruba' else ('A-Cube' if provider_name == 'acube' else 'Fatture in Cloud')
+    descr = doc.get('description') or doc.get('subject') or doc.get('visible_subject') or ('Fattura passiva importata da ' + provider_label)
     stato = 'pagata' if pagata else 'da_pagare'
     raw_json = json.dumps(doc, ensure_ascii=False, default=str)
     synced_at = datetime.now().isoformat(timespec='seconds')
@@ -9548,22 +9699,23 @@ def _efatt_import_received_document(db, doc):
                    imponibile, iva_perc, iva_importo, importo_totale, descrizione,
                    stato, sdi_stato, provider, provider_doc_id, provider_raw_json,
                    provider_synced_at)
-                  VALUES ('passiva',?,?,?,?,?,?,?,?,?,'da_pagare','ricevuta',
-                          'fattureincloud',?,?,?)""",
+                  VALUES ('passiva',?,?,?,?,?,?,?,?,?,?,'ricevuta',
+                          ?,?,?,?)""",
                (numero, entity_name, data_em, data_scad, net, 22, iva, gross, descr,
-                provider_id, raw_json, synced_at))
+                stato, provider_name, provider_id, raw_json, synced_at))
     _efatt_sync_payment_rows(db, cur.lastrowid, doc, gross, data_scad)
     return True
 
 def _efatt_import_issued_document(db, doc):
     if not isinstance(doc, dict):
         return False
+    provider_name = str(doc.get('_provider') or 'fattureincloud').strip() or 'fattureincloud'
     provider_id = str(doc.get('id') or doc.get('document_id') or '').strip()
     if not provider_id:
         return False
     existing = db.execute(
         "SELECT id FROM fatture WHERE provider=? AND provider_doc_id=? LIMIT 1",
-        ('fattureincloud', provider_id)
+        (provider_name, provider_id)
     ).fetchone()
     doc_type = 'credit_note' if (doc.get('type') or '').lower() == 'credit_note' else 'invoice'
     numero = str(doc.get('number') or doc.get('numeration') or doc.get('display_number') or provider_id)
@@ -9579,7 +9731,8 @@ def _efatt_import_issued_document(db, doc):
     if payments:
         data_scad = str(payments[0].get('due_date') or payments[0].get('date') or '')[:10]
         pagata = all((p.get('status') or '').lower() in ('paid', 'pagata') for p in payments)
-    descr = doc.get('subject') or doc.get('visible_subject') or doc.get('description') or 'Fattura attiva importata da Fatture in Cloud'
+    provider_label = 'Aruba' if provider_name == 'aruba' else ('A-Cube' if provider_name == 'acube' else 'Fatture in Cloud')
+    descr = doc.get('subject') or doc.get('visible_subject') or doc.get('description') or ('Fattura attiva importata da ' + provider_label)
     e_invoice = doc.get('e_invoice') if isinstance(doc.get('e_invoice'), dict) else {}
     sdi_status = (e_invoice.get('status') or '').lower()
     stato_map = {
@@ -9606,17 +9759,254 @@ def _efatt_import_issued_document(db, doc):
                    imponibile, iva_perc, iva_importo, importo_totale, descrizione,
                    stato, sdi_stato, provider, provider_doc_id, provider_raw_json,
                    provider_synced_at)
-                  VALUES ('attiva',?,?,?,?,?,?,?,?,?,?,?,?, 'fattureincloud',?,?,?)""",
+                  VALUES ('attiva',?,?,?,?,?,?,?,?,?,?,?,?, ?,?,?,?)""",
                (doc_type, numero, cliente_nome, data_em, data_scad, net, 22, iva, gross, descr,
-                stato, sdi_locale, provider_id, raw_json, synced_at))
+                stato, sdi_locale, provider_name, provider_id, raw_json, synced_at))
     _efatt_sync_payment_rows(db, cur.lastrowid, doc, gross, data_scad)
     return True
+
+def _aruba_doc_endpoint(direction):
+    return '/api/v2/invoices-out' if direction == 'active' else '/api/v2/invoices-in'
+
+def _aruba_doc_detail_endpoint(direction):
+    return '/api/v2/invoices-out/detail' if direction == 'active' else '/api/v2/invoices-in/detail'
+
+def _aruba_v1_endpoint(direction):
+    return '/services/invoice/out/findByUsername' if direction == 'active' else '/services/invoice/in/findByUsername'
+
+def _aruba_doc_range(sync_year):
+    year = _efatt_valid_year(sync_year, default_current=True)
+    return (
+        f'{year}-01-01T00:00:00',
+        f'{year}-12-31T23:59:59',
+        year,
+    )
+
+def _aruba_extract_content(data):
+    if isinstance(data, list):
+        return data
+    if not isinstance(data, dict):
+        return []
+    for key in ('content', 'data', 'items', 'documents', 'result', 'results'):
+        value = data.get(key)
+        if isinstance(value, list):
+            return value
+        if isinstance(value, dict):
+            nested = _aruba_extract_content(value)
+            if nested:
+                return nested
+    invoices = data.get('invoices')
+    if isinstance(invoices, list) and data.get('id'):
+        return [data]
+    return []
+
+def _aruba_expand_batches(items):
+    out = []
+    for item in items or []:
+        if not isinstance(item, dict):
+            continue
+        invoices = item.get('invoices') if isinstance(item.get('invoices'), list) else []
+        if invoices:
+            for idx, inv in enumerate(invoices, start=1):
+                merged = dict(item)
+                merged['_invoice_line'] = inv if isinstance(inv, dict) else {}
+                merged['_invoice_index'] = idx
+                out.append(merged)
+        else:
+            out.append(item)
+    return out
+
+def _aruba_sdi_status(status):
+    value = str(status or '').lower().strip()
+    if value in ('scartata', 'scartato', 'rejected', 'invalid'):
+        return 'rejected'
+    if value in ('consegnata', 'accettata', 'decorrenza termini', 'ricevuta', 'valid', 'accepted'):
+        return 'delivered'
+    if value in ('non consegnata', 'recapito impossibile', 'failed_delivery', 'not_delivered'):
+        return 'not_delivered'
+    if value in ('errore elaborazione', 'errore', 'failed'):
+        return 'failed'
+    if value in ('presa in carico', 'inviata', 'queued', 'processing', 'sent'):
+        return 'sent'
+    return value
+
+def _aruba_normalize_document(item, direction):
+    if not isinstance(item, dict):
+        return {}
+    inv = item.get('_invoice_line') if isinstance(item.get('_invoice_line'), dict) else {}
+    sender = item.get('sender') if isinstance(item.get('sender'), dict) else {}
+    receiver = item.get('receiver') if isinstance(item.get('receiver'), dict) else {}
+    base_id = str(item.get('id') or item.get('invoiceId') or item.get('idSdi') or item.get('filename') or '').strip()
+    inv_no = str(inv.get('number') or item.get('number') or '').strip()
+    provider_id = base_id or inv_no
+    if inv_no and inv_no not in provider_id:
+        provider_id = (provider_id + ':' + inv_no).strip(':')
+    if not provider_id:
+        return {}
+    gross = _efatt_float(inv.get('totalDocument') or item.get('totalDocument') or item.get('amount') or 0, 0)
+    vat = _efatt_float(inv.get('totalVat') or item.get('totalVat') or 0, 0)
+    net_payable = _efatt_float(inv.get('netPayable') or item.get('netPayable') or 0, 0)
+    net = round(gross - vat, 2) if gross and vat else (net_payable or round(gross / 1.22, 2) if gross else 0)
+    doc_date = str(inv.get('invoiceDate') or item.get('invoiceDate') or item.get('creationDate') or item.get('date') or '')[:10]
+    if not doc_date:
+        doc_date = date.today().isoformat()
+    status = inv.get('status') or item.get('status') or item.get('statusDescription') or ''
+    entity = sender if direction == 'passive' else receiver
+    entity_name = entity.get('description') or entity.get('name') or ('Fornitore' if direction == 'passive' else 'Cliente')
+    due_date = str(inv.get('dueDate') or item.get('dueDate') or doc_date)[:10]
+    doc = {
+        '_provider': 'aruba',
+        'id': provider_id,
+        'document_id': provider_id,
+        'type': 'credit_note' if str(inv.get('documentType') or item.get('documentType') or '').upper() in ('TD04', 'TD08') else 'invoice',
+        'number': inv_no or provider_id,
+        'date': doc_date,
+        'created_at': str(item.get('creationDate') or doc_date),
+        'amount_gross': round(gross, 2),
+        'amount_net': round(net, 2),
+        'amount_total': round(gross, 2),
+        'entity': {'name': entity_name},
+        'entity_name': entity_name,
+        'supplier': {'name': entity_name},
+        'supplier_name': entity_name,
+        'description': ('Fattura passiva importata da Aruba' if direction == 'passive' else 'Fattura attiva importata da Aruba'),
+        'payments_list': [{
+            'amount': round(gross, 2),
+            'due_date': due_date,
+            'status': 'not_paid',
+        }],
+        'e_invoice': {'status': _aruba_sdi_status(status)},
+        'aruba_status': status,
+        'filename': item.get('filename') or '',
+        'id_sdi': item.get('idSdi') or '',
+        'raw_aruba': item,
+    }
+    return doc
+
+def _aruba_find_documents(db, direction, sync_year, max_pages=3):
+    cfg = _get_efatt_config_from_db(db)
+    start_date, end_date, _year = _aruba_doc_range(sync_year)
+    username = (cfg.get('efatt_aruba_username') or '').strip()
+    piva = (cfg.get('efatt_aruba_piva') or '').strip()
+    docs = []
+
+    # V1 Aruba accetta range ampi; lo usiamo per non fare 365 chiamate.
+    query = {
+        'username': username,
+        'page': 1,
+        'size': 100,
+        'startDate': start_date,
+        'endDate': end_date,
+    }
+    if piva and direction == 'active':
+        query.update({'countrySender': 'IT', 'vatcodeSender': piva})
+    if piva and direction == 'passive':
+        query.update({'countryReceiver': 'IT', 'vatcodeReceiver': piva})
+    try:
+        for page in range(1, max_pages + 1):
+            query['page'] = page
+            data = _aruba_api_request('GET', _aruba_v1_endpoint(direction), query=query, db=db)
+            items = _aruba_expand_batches(_aruba_extract_content(data))
+            docs.extend(items)
+            last_page = int((data.get('totalPages') if isinstance(data, dict) else 0) or page)
+            if not items or page >= last_page:
+                break
+        return docs
+    except EFattAPIError as first_error:
+        # Fallback V2 ufficiale: lavora a finestre di 2 giorni. Lo limitiamo alle pagine richieste.
+        docs = []
+        start = date(int(_year), 1, 1)
+        end = date(int(_year), 12, 31)
+        while start <= end:
+            stop = min(start + timedelta(days=1), end)
+            v2_query = {
+                'page': 1,
+                'size': 100,
+                'creationStartDate': start.isoformat() + 'T00:00:00',
+                'creationEndDate': stop.isoformat() + 'T23:59:59',
+            }
+            if piva and direction == 'active':
+                v2_query.update({'senderCountry': 'IT', 'senderVatcode': piva})
+            if piva and direction == 'passive':
+                v2_query.update({'receiverCountry': 'IT', 'receiverVatcode': piva})
+            for page in range(1, max_pages + 1):
+                v2_query['page'] = page
+                data = _aruba_api_request('GET', _aruba_doc_endpoint(direction), query=v2_query, db=db)
+                items = _aruba_expand_batches(_aruba_extract_content(data))
+                docs.extend(items)
+                last_page = int((data.get('totalPages') if isinstance(data, dict) else 0) or page)
+                if not items or page >= last_page:
+                    break
+            start = stop + timedelta(days=1)
+        if not docs:
+            raise first_error
+        return docs
+
+def _efatt_sync_aruba_documents(db=None, max_pages=3, sync_year='', direction='passive'):
+    own_db = db is None
+    if own_db:
+        db = get_db()
+    try:
+        cfg = _get_efatt_config_from_db(db)
+        if not (cfg.get('efatt_aruba_username') or '').strip():
+            raise EFattAPIError('Aruba non configurato: inserisci username API.')
+        if not (cfg.get('efatt_aruba_token') or cfg.get('efatt_access_token') or '').strip():
+            _aruba_login(db, cfg=cfg)
+        imported = updated = 0
+        for item in _aruba_find_documents(db, direction, sync_year, max_pages=max_pages):
+            doc = _aruba_normalize_document(item, direction)
+            if not doc or not _efatt_doc_matches_year(doc, sync_year):
+                continue
+            if direction == 'active':
+                created = _efatt_import_issued_document(db, doc)
+            else:
+                created = _efatt_import_received_document(db, doc)
+            if created:
+                imported += 1
+            else:
+                updated += 1
+        if direction == 'active':
+            _efatt_db_set(db, 'efatt_active_last_sync', datetime.now().isoformat(timespec='seconds'))
+            _efatt_db_set(db, 'efatt_aruba_active_last_sync', datetime.now().isoformat(timespec='seconds'))
+        else:
+            _efatt_db_set(db, 'efatt_passive_last_sync', datetime.now().isoformat(timespec='seconds'))
+            _efatt_db_set(db, 'efatt_aruba_passive_last_sync', datetime.now().isoformat(timespec='seconds'))
+        safe_commit(db)
+        return {'imported': imported, 'updated': updated}
+    finally:
+        if own_db:
+            db.close()
+
+def _efatt_sync_acube_documents(db=None, max_pages=3, sync_year='', direction='passive'):
+    own_db = db is None
+    if own_db:
+        db = get_db()
+    try:
+        cfg = _get_efatt_config_from_db(db)
+        if not (cfg.get('efatt_acube_api_key') or '').strip():
+            raise EFattAPIError('A-Cube non configurato: manca API key.')
+        if not (cfg.get('efatt_acube_legal_entity_id') or '').strip():
+            raise EFattAPIError('A-Cube non configurato: manca Legal Entity ID.')
+        # Il connettore viene salvato qui; la sync puntuale dipende dal contratto API Italia
+        # attivo sul tenant A-Cube. I webhook continueranno a tenere vivo il flusso realtime.
+        _efatt_db_set(db, 'efatt_acube_status', 'configured')
+        safe_commit(db)
+        return {'imported': 0, 'updated': 0, 'note': 'A-Cube configurato: abilita endpoint documenti/webhook dal pannello provider.'}
+    finally:
+        if own_db:
+            db.close()
 
 def _efatt_sync_passive_documents(db=None, max_pages=3, sync_year=''):
     own_db = db is None
     if own_db:
         db = get_db()
     try:
+        cfg = _get_efatt_config_from_db(db)
+        provider = (cfg.get('efatt_provider') or 'fattureincloud').strip()
+        if provider == 'aruba':
+            return _efatt_sync_aruba_documents(db=db, max_pages=max_pages, sync_year=sync_year, direction='passive')
+        if provider == 'acube':
+            return _efatt_sync_acube_documents(db=db, max_pages=max_pages, sync_year=sync_year, direction='passive')
         company_id = _efatt_pick_company_id(db)
         year_query = _efatt_year_query(sync_year)
         imported = updated = 0
@@ -9672,6 +10062,12 @@ def _efatt_sync_active_documents(db=None, max_pages=3, sync_year=''):
     if own_db:
         db = get_db()
     try:
+        cfg = _get_efatt_config_from_db(db)
+        provider = (cfg.get('efatt_provider') or 'fattureincloud').strip()
+        if provider == 'aruba':
+            return _efatt_sync_aruba_documents(db=db, max_pages=max_pages, sync_year=sync_year, direction='active')
+        if provider == 'acube':
+            return _efatt_sync_acube_documents(db=db, max_pages=max_pages, sync_year=sync_year, direction='active')
         company_id = _efatt_pick_company_id(db)
         year_query = _efatt_year_query(sync_year)
         imported = updated = 0
@@ -9854,6 +10250,10 @@ def _efatt_push_active_invoice(fid, send_to_sdi=True):
             raise EFattAPIError('Fattura non trovata.')
         if (f['tipo'] or 'attiva') != 'attiva':
             raise EFattAPIError('Solo le fatture attive possono essere inviate al provider.')
+        cfg = _get_efatt_config_from_db(db)
+        provider = (cfg.get('efatt_provider') or 'fattureincloud').strip()
+        if provider != 'fattureincloud':
+            raise EFattAPIError('Invio diretto fatture attive al provider disponibile oggi per Fatture in Cloud. Per ' + provider + ' il collegamento importa e aggiorna le fatture; la creazione XML/API richiede il tracciato provider.')
         company_id = _efatt_pick_company_id(db)
         provider_doc_id = (f['provider_doc_id'] or '').strip()
         raw_response = {}
@@ -19668,7 +20068,7 @@ def documenti_azienda_zip():
 # Ã¢â€â‚¬Ã¢â€â‚¬ Template lista fatture Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 EFATT_SETUP_TMPL = """
 <style>
-.ef-wrap{max-width:1120px;margin:0 auto}.ef-layout{display:grid;grid-template-columns:1fr 1fr;gap:18px}.ef-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:22px;box-shadow:var(--shadow);margin-bottom:16px}.ef-muted{font-size:13px;color:var(--text-light);line-height:1.5}.ef-status{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:900}.ef-ok{background:#dcfce7;color:#166534}.ef-warn{background:#fef3c7;color:#92400e}.ef-bad{background:#fee2e2;color:#991b1b}.ef-providers{display:grid;grid-template-columns:1fr;gap:10px;margin:18px 0}.ef-provider{position:relative;display:block;border:2px solid #e2e8f0;border-radius:12px;padding:14px;cursor:pointer;background:#fff;transition:.18s}.ef-provider:hover{border-color:#38bdf8;box-shadow:0 10px 28px rgba(15,23,42,.08)}.ef-provider input{position:absolute;opacity:0}.ef-provider:has(input:checked){border-color:#0ea5e9;background:#f0f9ff}.ef-provider strong{display:block;font-size:16px;margin-bottom:4px}.ef-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:16px}@media(max-width:900px){.ef-layout{grid-template-columns:1fr}}
+.ef-wrap{max-width:1120px;margin:0 auto}.ef-layout{display:grid;grid-template-columns:1fr 1fr;gap:18px}.ef-card{background:#132238!important;border:1px solid rgba(125,159,199,.28)!important;border-radius:14px;padding:22px;box-shadow:var(--shadow);margin-bottom:16px;color:#eaf3ff!important}.ef-card h2,.ef-card h3,.ef-card strong{color:#f8fbff}.ef-muted{font-size:13px;color:#9fb2c7!important;line-height:1.5}.ef-status{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:900}.ef-ok{background:#123d2d!important;color:#75f0a0!important;border:1px solid #1f8f55}.ef-warn{background:#3b2c11!important;color:#ffd36b!important;border:1px solid #a66a10}.ef-bad{background:#3b1720!important;color:#ff9aa8!important;border:1px solid #963346}.ef-providers{display:grid;grid-template-columns:1fr;gap:10px;margin:18px 0}.ef-provider{position:relative;display:block;border:2px solid rgba(125,159,199,.24)!important;border-radius:12px;padding:14px;cursor:pointer;background:#0b1726!important;transition:.18s;color:#eaf3ff!important}.ef-provider:hover{border-color:#38bdf8!important;box-shadow:0 10px 28px rgba(0,0,0,.22)}.ef-provider input{position:absolute;opacity:0}.ef-provider:has(input:checked){border-color:#0ea5e9!important;background:#0e3652!important}.ef-provider strong{display:block;font-size:16px;margin-bottom:4px}.ef-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:16px}.ef-hub-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}.ef-hub-card{background:#0b1726!important;border:1px solid rgba(125,159,199,.25);border-radius:12px;padding:16px}.ef-field{display:grid;gap:6px;margin-top:10px}.ef-field label{font-size:12px;font-weight:800;color:#b8c8dc}.ef-field input{width:100%;background:#071221!important;color:#eaf3ff!important;border:1px solid rgba(125,159,199,.35)!important;border-radius:9px;padding:10px 12px}.ef-inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.ef-copybox{background:#071221!important;color:#dbeafe!important;border:1px solid rgba(125,159,199,.35)!important;border-radius:9px;padding:10px 12px;font-family:monospace;overflow:auto}.ef-card [style*="background:#f8fafc"],.ef-card [style*="background:#fff7ed"],.ef-card [style*="background:#fef2f2"],.ef-card [style*="background:#f0fdf4"],.ef-card [style*="background:#eff6ff"],.ef-card [style*="background:#fef3c7"]{background:#0b1726!important;color:#eaf3ff!important;border-color:rgba(125,159,199,.28)!important}.ef-card input[readonly]{background:#071221!important;color:#dbeafe!important;border-color:rgba(125,159,199,.35)!important}@media(max-width:900px){.ef-layout{grid-template-columns:1fr}}
 </style>
 <div class="ef-wrap">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px;flex-wrap:wrap">
@@ -19678,6 +20078,99 @@ EFATT_SETUP_TMPL = """
     </div>
     <a href="/fatturazione" class="btn btn-secondary"><i class="fa fa-arrow-left"></i> Fatture</a>
   </div>
+
+  <div class="ef-card">
+    <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px">
+      <div>
+        <h3 style="margin:0 0 4px"><i class="fa fa-plug"></i> Collegamento provider guidato</h3>
+        <div class="ef-muted">Scegli il provider e inserisci solo le credenziali essenziali. Il gestionale poi usa lo stesso collegamento per attive, passive, sync automatica e stati SDI.</div>
+      </div>
+      <span class="ef-status ef-ok">Codice Aruba KRRH6B9</span>
+    </div>
+    <div class="ef-hub-grid">
+      <div class="ef-hub-card">
+        <div class="ef-inline" style="justify-content:space-between">
+          <h3 style="margin:0">Fatture in Cloud</h3>
+          {% if provider_status.fattureincloud.connected %}
+            <span class="ef-status ef-ok">Collegato</span>
+          {% else %}
+            <span class="ef-status ef-warn">Da collegare</span>
+          {% endif %}
+        </div>
+        <p class="ef-muted">Il cliente clicca, entra su Fatture in Cloud e autorizza Accesso Fiere. Zero API key da copiare.</p>
+        {% if provider_status.fattureincloud.user %}<div class="ef-muted">Account: <strong>{{ provider_status.fattureincloud.user }}</strong></div>{% endif %}
+        <form method="POST" action="/fatturazione/elettronica/attive/avvia" class="ef-actions">
+          <input type="hidden" name="provider" value="fattureincloud">
+          <button class="btn btn-primary" type="submit"><i class="fa fa-right-to-bracket"></i> Collega con consenso</button>
+        </form>
+      </div>
+
+      <div class="ef-hub-card">
+        <div class="ef-inline" style="justify-content:space-between">
+          <h3 style="margin:0">Aruba</h3>
+          {% if provider_status.aruba.connected %}
+            <span class="ef-status ef-ok">Collegato</span>
+          {% else %}
+            <span class="ef-status ef-warn">Da collegare</span>
+          {% endif %}
+        </div>
+        <p class="ef-muted">Inserisci le credenziali API Aruba una sola volta. Accesso Fiere importa attive/passive e usa il codice destinatario Aruba.</p>
+        <div class="ef-muted" style="margin-bottom:6px">Endpoint push opzionale Aruba</div>
+        <div class="ef-copybox">{{ aruba_webhook_url }}</div>
+        <form method="POST" action="/fatturazione/elettronica/aruba/collega">
+          <div class="ef-field">
+            <label>Username API Aruba</label>
+            <input name="username" value="{{ cfg.efatt_aruba_username or '' }}" autocomplete="username" required>
+          </div>
+          <div class="ef-field">
+            <label>Password API Aruba</label>
+            <input name="password" type="password" placeholder="{% if cfg.efatt_aruba_password %}Lascia vuoto per mantenere quella salvata{% else %}Password Aruba{% endif %}" autocomplete="current-password">
+          </div>
+          <div class="ef-field">
+            <label>Partita IVA azienda</label>
+            <input name="piva" value="{{ cfg.efatt_aruba_piva or '' }}" placeholder="Es. 12345678901">
+          </div>
+          <label class="ef-inline" style="margin-top:10px;font-size:13px;color:#b8c8dc">
+            <input type="checkbox" name="use_demo" value="1" style="width:auto" {% if provider_status.aruba.demo %}checked{% endif %}> Usa ambiente demo Aruba
+          </label>
+          <div class="ef-actions">
+            <button class="btn btn-primary" type="submit"><i class="fa fa-link"></i> Collega Aruba</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="ef-hub-card">
+        <div class="ef-inline" style="justify-content:space-between">
+          <h3 style="margin:0">A-Cube</h3>
+          {% if provider_status.acube.connected %}
+            <span class="ef-status ef-ok">Configurato</span>
+          {% else %}
+            <span class="ef-status ef-warn">Da configurare</span>
+          {% endif %}
+        </div>
+        <p class="ef-muted">Salva API key e Legal Entity. I webhook A-Cube possono usare questo endpoint pubblico per notificare fatture e stati.</p>
+        <div class="ef-copybox">{{ acube_webhook_url }}</div>
+        <form method="POST" action="/fatturazione/elettronica/acube/collega">
+          <div class="ef-field">
+            <label>API key A-Cube</label>
+            <input name="api_key" type="password" placeholder="{% if cfg.efatt_acube_api_key %}Lascia vuoto per mantenere quella salvata{% else %}API key{% endif %}">
+          </div>
+          <div class="ef-field">
+            <label>Legal Entity ID</label>
+            <input name="legal_entity_id" value="{{ cfg.efatt_acube_legal_entity_id or '' }}" placeholder="UUID Legal Entity">
+          </div>
+          <div class="ef-field">
+            <label>Base URL API</label>
+            <input name="base_url" value="{{ cfg.efatt_acube_base_url or 'https://api.acubeapi.com' }}">
+          </div>
+          <div class="ef-actions">
+            <button class="btn btn-primary" type="submit"><i class="fa fa-link"></i> Salva A-Cube</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <div class="ef-layout">
     <div class="ef-card">
       <h3 style="margin:0 0 8px"><i class="fa fa-file-invoice-dollar"></i> Fatture attive</h3>
@@ -19980,6 +20473,7 @@ EFATT_DELEGA_AVVIO_TMPL = """
 def fatturazione_elettronica_setup():
     db = get_db()
     health = _efatt_get_health_status(db)
+    provider_status = _efatt_provider_status(db)
     db.close()
     return render_page(
         EFATT_SETUP_TMPL,
@@ -19988,7 +20482,10 @@ def fatturazione_elettronica_setup():
         cfg=_get_efatt_config(),
         providers=_efatt_provider_options(),
         health=health,
+        provider_status=provider_status,
         webhook_url=get_public_base_url() + '/webhooks/fattureincloud',
+        acube_webhook_url=get_public_base_url() + '/webhooks/acube/' + str(session.get('azienda_id') or 0),
+        aruba_webhook_url=get_public_base_url() + '/webhooks/aruba/' + str(session.get('azienda_id') or 0),
     )
 
 
@@ -20005,15 +20502,102 @@ def fatturazione_elettronica_genera_secret():
 @app.route('/fatturazione/elettronica/salva', methods=['POST'])
 @admin_required
 def fatturazione_elettronica_save():
-    keys = ['efatt_provider','efatt_codice_destinatario','efatt_api_key','efatt_company_id','efatt_delega_stato','efatt_delega_note','efatt_webhook_secret','efatt_oauth_client_id','efatt_oauth_scopes','efatt_delega_url_fattureincloud','efatt_delega_url_aruba','efatt_delega_url_acube','efatt_attive_url_fattureincloud','efatt_attive_url_aruba','efatt_attive_url_acube']
+    keys = ['efatt_provider','efatt_codice_destinatario','efatt_api_key','efatt_company_id','efatt_delega_stato','efatt_delega_note','efatt_webhook_secret','efatt_oauth_client_id','efatt_oauth_scopes','efatt_delega_url_fattureincloud','efatt_delega_url_aruba','efatt_delega_url_acube','efatt_attive_url_fattureincloud','efatt_attive_url_aruba','efatt_attive_url_acube','efatt_aruba_username','efatt_aruba_piva','efatt_aruba_use_demo','efatt_acube_legal_entity_id','efatt_acube_base_url']
     db = get_db()
     for k in keys:
         db.execute("INSERT OR REPLACE INTO impostazioni (chiave,valore) VALUES (?,?)", (k, request.form.get(k, '').strip()))
     secret = request.form.get('efatt_oauth_client_secret', '').strip()
     if secret:
         db.execute("INSERT OR REPLACE INTO impostazioni (chiave,valore) VALUES (?,?)", ('efatt_oauth_client_secret', secret))
+    aruba_password = request.form.get('efatt_aruba_password', '').strip()
+    if aruba_password:
+        db.execute("INSERT OR REPLACE INTO impostazioni (chiave,valore) VALUES (?,?)", ('efatt_aruba_password', aruba_password))
+    acube_api_key = request.form.get('efatt_acube_api_key', '').strip()
+    if acube_api_key:
+        db.execute("INSERT OR REPLACE INTO impostazioni (chiave,valore) VALUES (?,?)", ('efatt_acube_api_key', acube_api_key))
     safe_commit(db); db.close()
     flash('Configurazione fatturazione elettronica salvata.', 'success')
+    return redirect(url_for('fatturazione_elettronica_setup'))
+
+@app.route('/fatturazione/elettronica/aruba/collega', methods=['POST'])
+@admin_required
+def fatturazione_elettronica_aruba_collega():
+    username = (request.form.get('username') or '').strip()
+    password = (request.form.get('password') or '').strip()
+    piva = re.sub(r'\D+', '', request.form.get('piva') or '')
+    use_demo = '1' if request.form.get('use_demo') == '1' else ''
+    db = get_db()
+    try:
+        cfg = _get_efatt_config_from_db(db)
+        if not password:
+            password = (cfg.get('efatt_aruba_password') or '').strip()
+        if not username:
+            flash('Inserisci username API Aruba.', 'error')
+            return redirect(url_for('fatturazione_elettronica_setup'))
+        if not password:
+            flash('Inserisci password API Aruba almeno al primo collegamento.', 'error')
+            return redirect(url_for('fatturazione_elettronica_setup'))
+        _efatt_db_set(db, 'efatt_provider', 'aruba')
+        _efatt_db_set(db, 'efatt_attive_provider', 'aruba')
+        _efatt_db_set(db, 'efatt_delega_provider', 'aruba')
+        _efatt_db_set(db, 'efatt_aruba_username', username)
+        _efatt_db_set(db, 'efatt_aruba_password', password)
+        _efatt_db_set(db, 'efatt_aruba_piva', piva)
+        _efatt_db_set(db, 'efatt_aruba_use_demo', use_demo)
+        _efatt_db_set(db, 'efatt_codice_destinatario', 'KRRH6B9')
+        safe_commit(db)
+        _aruba_login(db, username=username, password=password)
+        anno_corrente_sync = str(date.today().year)
+        active = _efatt_sync_aruba_documents(db=db, max_pages=3, sync_year=anno_corrente_sync, direction='active') or {}
+        passive = _efatt_sync_aruba_documents(db=db, max_pages=3, sync_year=anno_corrente_sync, direction='passive') or {}
+        _efatt_db_set(db, 'efatt_delega_stato', 'attiva')
+        safe_commit(db)
+        _efatt_maybe_auto_sync_async(session.get('azienda_id'))
+        flash(
+            'Aruba collegato. Sync iniziale ' + anno_corrente_sync + ': attive '
+            + str(active.get('imported', 0)) + ' nuove/' + str(active.get('updated', 0))
+            + ' aggiornate; passive ' + str(passive.get('imported', 0)) + ' nuove/'
+            + str(passive.get('updated', 0)) + ' aggiornate.',
+            'success'
+        )
+    except EFattAPIError as e:
+        flash('Errore collegamento Aruba: ' + str(e)[:300], 'error')
+    except Exception as e:
+        flash('Errore imprevisto collegamento Aruba: ' + str(e)[:220], 'error')
+    finally:
+        db.close()
+    return redirect(url_for('fatturazione_elettronica_setup'))
+
+@app.route('/fatturazione/elettronica/acube/collega', methods=['POST'])
+@admin_required
+def fatturazione_elettronica_acube_collega():
+    api_key = (request.form.get('api_key') or '').strip()
+    legal_entity_id = (request.form.get('legal_entity_id') or '').strip()
+    base_url = (request.form.get('base_url') or 'https://api.acubeapi.com').strip().rstrip('/')
+    db = get_db()
+    try:
+        cfg = _get_efatt_config_from_db(db)
+        if not api_key:
+            api_key = (cfg.get('efatt_acube_api_key') or '').strip()
+        if not api_key or not legal_entity_id:
+            flash('Per A-Cube servono API key e Legal Entity ID.', 'error')
+            return redirect(url_for('fatturazione_elettronica_setup'))
+        _efatt_db_set(db, 'efatt_provider', 'acube')
+        _efatt_db_set(db, 'efatt_attive_provider', 'acube')
+        _efatt_db_set(db, 'efatt_delega_provider', 'acube')
+        _efatt_db_set(db, 'efatt_acube_api_key', api_key)
+        _efatt_db_set(db, 'efatt_acube_legal_entity_id', legal_entity_id)
+        _efatt_db_set(db, 'efatt_acube_base_url', base_url)
+        _efatt_db_set(db, 'efatt_acube_status', 'configured')
+        _efatt_db_set(db, 'efatt_oauth_status', 'connected')
+        _efatt_db_set(db, 'efatt_oauth_connected_at', datetime.now().isoformat(timespec='seconds'))
+        _efatt_db_set(db, 'efatt_delega_stato', 'attiva')
+        safe_commit(db)
+        flash('A-Cube configurato. Usa il webhook mostrato nella pagina provider per ricevere eventi in tempo reale.', 'success')
+    except Exception as e:
+        flash('Errore configurazione A-Cube: ' + str(e)[:220], 'error')
+    finally:
+        db.close()
     return redirect(url_for('fatturazione_elettronica_setup'))
 
 @app.route('/fatturazione/elettronica/attive')
@@ -20041,6 +20625,12 @@ def fatturazione_elettronica_attive_avvia():
     set_setting('efatt_attive_provider', provider_id)
     if provider_id == 'fattureincloud':
         return redirect(url_for('fatturazione_elettronica_connect'))
+    if provider_id == 'aruba':
+        flash('Per Aruba usa il riquadro "Collega Aruba": inserisci username/password API e il gestionale fa il resto.', 'info')
+        return redirect(url_for('fatturazione_elettronica_setup'))
+    if provider_id == 'acube':
+        flash('Per A-Cube salva API key e Legal Entity nel riquadro guidato.', 'info')
+        return redirect(url_for('fatturazione_elettronica_setup'))
 
     state = base64.urlsafe_b64encode(os.urandom(24)).decode('ascii').rstrip('=')
     session['efatt_attive_state'] = state
@@ -20514,10 +21104,111 @@ def fatturazione_elettronica_registra_webhook():
 @app.route('/fatturazione/elettronica/disconnetti')
 @admin_required
 def fatturazione_elettronica_disconnect():
-    for k in ('efatt_access_token','efatt_refresh_token','efatt_token_expires_at','efatt_oauth_status','efatt_oauth_connected_at','efatt_oauth_provider_user'):
+    for k in ('efatt_access_token','efatt_refresh_token','efatt_token_expires_at','efatt_oauth_status','efatt_oauth_connected_at','efatt_oauth_provider_user','efatt_aruba_token','efatt_aruba_refresh_token','efatt_aruba_token_expires_at','efatt_aruba_status','efatt_acube_status'):
         set_setting(k, '')
     flash('Provider disconnesso dal gestionale.', 'success')
     return redirect(url_for('fatturazione_elettronica_setup'))
+
+def _webhook_payload_to_doc(payload, provider, direction):
+    if not isinstance(payload, dict):
+        return {}
+    inner = payload.get('invoice') if isinstance(payload.get('invoice'), dict) else payload
+    provider_id = str(
+        inner.get('invoiceUuid') or inner.get('uuid') or inner.get('id') or inner.get('document_id') or
+        payload.get('invoiceUuid') or payload.get('document_id') or payload.get('sdiInvoiceFileName') or
+        payload.get('sdiIdentification') or ''
+    ).strip()
+    if not provider_id:
+        return {}
+    amount = _efatt_float(
+        inner.get('total') or inner.get('total_amount') or inner.get('amount') or inner.get('amount_gross') or 0,
+        0
+    )
+    if not amount and not (inner.get('number') or inner.get('invoice_number')):
+        return {}
+    issue_date = str(inner.get('date') or inner.get('issue_date') or inner.get('invoiceDate') or payload.get('acquisitionTimestamp') or date.today().isoformat())[:10]
+    number = str(inner.get('number') or inner.get('invoice_number') or provider_id)
+    name = (
+        inner.get('supplier_name') or inner.get('customer_name') or inner.get('entity_name') or
+        payload.get('sender') or payload.get('receiver') or ('Fornitore' if direction == 'passive' else 'Cliente')
+    )
+    paid_status = str(inner.get('payment_status') or inner.get('status') or payload.get('status') or '').lower()
+    return {
+        '_provider': provider,
+        'id': provider_id,
+        'document_id': provider_id,
+        'number': number,
+        'date': issue_date,
+        'amount_gross': amount,
+        'amount_net': _efatt_float(inner.get('amount_net') or inner.get('net_amount') or 0, 0) or (round(amount / 1.22, 2) if amount else 0),
+        'entity': {'name': str(name)},
+        'supplier': {'name': str(name)},
+        'entity_name': str(name),
+        'supplier_name': str(name),
+        'description': ('Fattura passiva importata da ' + provider.upper()) if direction == 'passive' else ('Fattura attiva importata da ' + provider.upper()),
+        'payments_list': [{
+            'amount': amount,
+            'due_date': str(inner.get('due_date') or inner.get('payment_due_date') or issue_date)[:10],
+            'status': 'paid' if paid_status in ('paid', 'pagata', 'valid-paid') else 'not_paid',
+        }],
+        'e_invoice': {'status': payload.get('status') or inner.get('status') or ''},
+        'raw_webhook': payload,
+    }
+
+@app.route('/webhooks/acube/<int:azienda_id>', methods=['GET', 'POST'])
+def acube_webhook(azienda_id):
+    if request.method == 'GET':
+        return jsonify({'ok': True, 'provider': 'acube', 'azienda_id': azienda_id})
+    payload = request.get_json(silent=True) or {}
+    event = str(payload.get('webhookType') or payload.get('event') or payload.get('type') or '').lower()
+    direction = 'passive' if any(x in event for x in ('supplier', 'receiver', 'incoming')) else 'active'
+    try:
+        with app.test_request_context('/'):
+            session['azienda_id'] = azienda_id
+            db = get_db()
+            try:
+                doc = _webhook_payload_to_doc(payload, 'acube', direction)
+                if doc:
+                    if direction == 'passive':
+                        _efatt_import_received_document(db, doc)
+                    else:
+                        _efatt_import_issued_document(db, doc)
+                    safe_commit(db)
+                _efatt_maybe_auto_sync_async(azienda_id)
+            finally:
+                db.close()
+        return jsonify({'ok': True})
+    except Exception as e:
+        print(f'[A-Cube webhook] errore tenant={azienda_id}: {str(e)[:200]}')
+        return jsonify({'ok': False, 'error': str(e)[:160]}), 500
+
+@app.route('/webhooks/aruba/<int:azienda_id>', methods=['GET', 'POST'])
+def aruba_webhook(azienda_id):
+    if request.method == 'GET':
+        return jsonify({'ok': True, 'provider': 'aruba', 'azienda_id': azienda_id})
+    payload = request.get_json(silent=True) or {}
+    direction = 'passive'
+    if str(payload.get('inOut') or '').upper() == 'OUT' or payload.get('notifyType'):
+        direction = 'active'
+    try:
+        with app.test_request_context('/'):
+            session['azienda_id'] = azienda_id
+            db = get_db()
+            try:
+                doc = _webhook_payload_to_doc(payload, 'aruba', direction)
+                if doc:
+                    if direction == 'passive':
+                        _efatt_import_received_document(db, doc)
+                    else:
+                        _efatt_import_issued_document(db, doc)
+                    safe_commit(db)
+                _efatt_maybe_auto_sync_async(azienda_id)
+            finally:
+                db.close()
+        return jsonify({'ok': True})
+    except Exception as e:
+        print(f'[Aruba webhook] errore tenant={azienda_id}: {str(e)[:200]}')
+        return jsonify({'ok': False, 'error': str(e)[:160]}), 500
 
 
 # Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
@@ -21154,7 +21845,7 @@ def _efatt_maybe_auto_sync_async(azienda_id):
                 cfg = {r['chiave']: (r['valore'] or '') for r in cfg_rows}
                 if not (cfg.get('efatt_access_token') or '').strip():
                     return
-                if (cfg.get('efatt_provider') or 'fattureincloud').strip() != 'fattureincloud':
+                if (cfg.get('efatt_provider') or 'fattureincloud').strip() not in ('fattureincloud', 'aruba'):
                     return
                 if not _efatt_auto_sync_claim(db):
                     return
@@ -21294,6 +21985,36 @@ def _efatt_get_health_status(db):
         pass
     return out
 
+
+def _efatt_provider_status(db):
+    cfg = _get_efatt_config_from_db(db)
+    current = (cfg.get('efatt_provider') or 'fattureincloud').strip()
+    fic_connected = current == 'fattureincloud' and (cfg.get('efatt_oauth_status') == 'connected') and bool((cfg.get('efatt_access_token') or '').strip())
+    aruba_connected = current == 'aruba' and (
+        cfg.get('efatt_aruba_status') == 'connected' or bool((cfg.get('efatt_aruba_token') or cfg.get('efatt_access_token') or '').strip())
+    )
+    acube_connected = current == 'acube' and bool((cfg.get('efatt_acube_api_key') or '').strip()) and bool((cfg.get('efatt_acube_legal_entity_id') or '').strip())
+    return {
+        'current': current,
+        'fattureincloud': {
+            'connected': fic_connected,
+            'label': 'Collegato' if fic_connected else 'Da collegare',
+            'user': cfg.get('efatt_oauth_provider_user') or '',
+        },
+        'aruba': {
+            'connected': aruba_connected,
+            'label': 'Collegato' if aruba_connected else 'Da collegare',
+            'username': cfg.get('efatt_aruba_username') or '',
+            'piva': cfg.get('efatt_aruba_piva') or '',
+            'demo': str(cfg.get('efatt_aruba_use_demo') or '') == '1',
+        },
+        'acube': {
+            'connected': acube_connected,
+            'label': 'Configurato' if acube_connected else 'Da configurare',
+            'legal_entity': cfg.get('efatt_acube_legal_entity_id') or '',
+            'base_url': cfg.get('efatt_acube_base_url') or 'https://api.acubeapi.com',
+        },
+    }
 
 
 def _fatt_live_version(db, anno, tipo=''):
