@@ -1496,7 +1496,7 @@ AMMINISTRAZIONE_ENDPOINTS = {
     'documenti_azienda','documenti_azienda_nuovo','documenti_azienda_modifica','documenti_azienda_scarica','documenti_azienda_elimina','documenti_azienda_zip',
     'scadenze','scadenze_pulisci_fantasma',
     'veicoli','veicolo_nuovo','veicolo_detail','veicolo_modifica','veicolo_salva_scadenze','veicolo_elimina','veicolo_documenti','veicolo_upload','veicolo_applica_ai','veicolo_scarica','veicolo_anteprima','veicolo_elimina_doc',
-    'fatturazione','fatturazione_elettronica_setup','fatturazione_elettronica_save','fatturazione_elettronica_attive','fatturazione_elettronica_attive_avvia','fatturazione_elettronica_connect','fatturazione_elettronica_callback','fatturazione_elettronica_disconnect','fatturazione_elettronica_delega','fatturazione_elettronica_delega_avvia','fatturazione_elettronica_delega_rientro','fatturazione_elettronica_delega_completa','fatturazione_nuova','fatturazione_modifica','fatturazione_dettaglio','fatturazione_allega_emessa','fatturazione_elimina','fatturazione_aggiungi_rata','fatturazione_paga_rata','fatturazione_annulla_paga_rata','fatturazione_elimina_rata','fatturazione_file','fatturazione_clienti','fatturazione_nuovo_cliente','fatturazione_elimina_cliente','fatturazione_sync_passive','fatturazione_invia_sdi','fatturazione_push_provider','fatturazione_aggiorna_stato_sdi','fatturazione_nota_credito_nuova','fatturazione_elettronica_genera_secret','fatturazione_elettronica_registra_webhook',
+    'fatturazione','fatturazione_elettronica_setup','fatturazione_elettronica_save','fatturazione_elettronica_attive','fatturazione_elettronica_attive_avvia','fatturazione_elettronica_connect','fatturazione_elettronica_callback','fatturazione_elettronica_disconnect','fatturazione_elettronica_delega','fatturazione_elettronica_delega_avvia','fatturazione_elettronica_delega_rientro','fatturazione_elettronica_delega_completa','fatturazione_nuova','fatturazione_modifica','fatturazione_dettaglio','fatturazione_allega_emessa','fatturazione_elimina','fatturazione_elimina_selezionate','fatturazione_aggiungi_rata','fatturazione_paga_rata','fatturazione_annulla_paga_rata','fatturazione_elimina_rata','fatturazione_file','fatturazione_clienti','fatturazione_nuovo_cliente','fatturazione_elimina_cliente','fatturazione_sync_passive','fatturazione_invia_sdi','fatturazione_push_provider','fatturazione_aggiorna_stato_sdi','fatturazione_nota_credito_nuova','fatturazione_elettronica_genera_secret','fatturazione_elettronica_registra_webhook',
     'clienti_lista','cliente_nuovo','cliente_modifica','cliente_elimina','cliente_ai_estrai',
     'fornitori_lista','fornitore_nuovo','fornitore_modifica','fornitore_elimina',
     'preventivi','preventivo_nuovo','preventivo_modifica','preventivo_pdf','preventivo_duplica','preventivo_stato','preventivo_elimina',
@@ -9340,6 +9340,70 @@ def _efatt_entity_name(doc):
         doc.get('supplier_name') or doc.get('name') or 'Fornitore'
     )
 
+def _efatt_year_query(sync_year):
+    year = str(sync_year or '').strip()
+    if not year:
+        return ''
+    if not (year.isdigit() and 1900 <= int(year) <= 2100):
+        raise EFattAPIError('Anno sincronizzazione non valido.')
+    return f"date >= '{year}-01-01' and date <= '{year}-12-31'"
+
+def _efatt_payment_amount(payment, fallback=0.0):
+    if not isinstance(payment, dict):
+        return fallback
+    for key in ('amount', 'amount_gross', 'gross_total', 'total', 'paid_amount'):
+        if payment.get(key) not in (None, ''):
+            return _efatt_float(payment.get(key), fallback)
+    return fallback
+
+def _efatt_payment_is_paid(payment):
+    if not isinstance(payment, dict):
+        return False
+    status = str(payment.get('status') or '').lower().strip()
+    if status in ('paid', 'pagata', 'payed'):
+        return True
+    if status in ('not_paid', 'unpaid', 'da_pagare', 'open', 'pending'):
+        return False
+    return bool(payment.get('paid_date') or payment.get('payment_date'))
+
+def _efatt_doc_is_paid(doc):
+    if not isinstance(doc, dict):
+        return False
+    status = str(doc.get('status') or doc.get('payment_status') or '').lower().strip()
+    return status in ('paid', 'pagata', 'payed')
+
+def _efatt_sync_payment_rows(db, fattura_id, doc, gross, default_due_date=''):
+    """Ricrea le rate locali leggendo lo stato pagamenti del provider."""
+    payments = doc.get('payments_list') if isinstance(doc, dict) and isinstance(doc.get('payments_list'), list) else []
+    db.execute("DELETE FROM rate_fattura WHERE fattura_id=?", (fattura_id,))
+    if not payments:
+        stato = 'pagata' if _efatt_doc_is_paid(doc) else 'da_pagare'
+        data_pag = (doc.get('paid_date') or doc.get('payment_date') or '')[:10] if isinstance(doc, dict) else ''
+        db.execute("""INSERT INTO rate_fattura
+                      (fattura_id, numero_rata, importo, data_scadenza, data_pagamento, stato, note)
+                      VALUES (?,?,?,?,?,?,?)""",
+                   (fattura_id, 1, round(_efatt_float(gross, 0), 2),
+                    default_due_date or None, data_pag or None if stato == 'pagata' else None,
+                    stato, 'Sincronizzata da Fatture in Cloud'))
+        _aggiorna_stato_fattura(fattura_id, db)
+        return
+    for idx, payment in enumerate(payments, start=1):
+        amount = _efatt_payment_amount(payment, round(_efatt_float(gross, 0), 2) if len(payments) == 1 else 0.0)
+        due_date = str(payment.get('due_date') or payment.get('date') or default_due_date or '')[:10]
+        paid = _efatt_payment_is_paid(payment)
+        paid_date = str(payment.get('paid_date') or payment.get('payment_date') or '')[:10]
+        status_raw = str(payment.get('status') or '').strip()
+        note = 'Sincronizzata da Fatture in Cloud'
+        if status_raw:
+            note += f' ({status_raw})'
+        db.execute("""INSERT INTO rate_fattura
+                      (fattura_id, numero_rata, importo, data_scadenza, data_pagamento, stato, note)
+                      VALUES (?,?,?,?,?,?,?)""",
+                   (fattura_id, idx, round(amount, 2), due_date or None,
+                    paid_date or None if paid else None,
+                    'pagata' if paid else 'da_pagare', note))
+    _aggiorna_stato_fattura(fattura_id, db)
+
 def _efatt_import_received_document(db, doc):
     if not isinstance(doc, dict):
         return False
@@ -9373,8 +9437,9 @@ def _efatt_import_received_document(db, doc):
                       provider_synced_at=? WHERE id=?""",
                    (numero, entity_name, data_em, data_scad, net, iva, gross, descr,
                     stato, raw_json, synced_at, existing['id']))
+        _efatt_sync_payment_rows(db, existing['id'], doc, gross, data_scad)
         return False
-    db.execute("""INSERT INTO fatture
+    cur = db.execute("""INSERT INTO fatture
                   (tipo, numero, fornitore_nome, data_emissione, data_scadenza,
                    imponibile, iva_perc, iva_importo, importo_totale, descrizione,
                    stato, sdi_stato, provider, provider_doc_id, provider_raw_json,
@@ -9383,6 +9448,7 @@ def _efatt_import_received_document(db, doc):
                           'fattureincloud',?,?,?)""",
                (numero, entity_name, data_em, data_scad, net, 22, iva, gross, descr,
                 provider_id, raw_json, synced_at))
+    _efatt_sync_payment_rows(db, cur.lastrowid, doc, gross, data_scad)
     return True
 
 def _efatt_import_issued_document(db, doc):
@@ -9429,8 +9495,9 @@ def _efatt_import_issued_document(db, doc):
                       provider_raw_json=?, provider_synced_at=? WHERE id=?""",
                    (doc_type, numero, cliente_nome, data_em, data_scad, net, iva, gross,
                     descr, stato, sdi_locale, raw_json, synced_at, existing['id']))
+        _efatt_sync_payment_rows(db, existing['id'], doc, gross, data_scad)
         return False
-    db.execute("""INSERT INTO fatture
+    cur = db.execute("""INSERT INTO fatture
                   (tipo, doc_type, numero, cliente_nome, data_emissione, data_scadenza,
                    imponibile, iva_perc, iva_importo, importo_totale, descrizione,
                    stato, sdi_stato, provider, provider_doc_id, provider_raw_json,
@@ -9438,20 +9505,24 @@ def _efatt_import_issued_document(db, doc):
                   VALUES ('attiva',?,?,?,?,?,?,?,?,?,?,?,?, 'fattureincloud',?,?,?)""",
                (doc_type, numero, cliente_nome, data_em, data_scad, net, 22, iva, gross, descr,
                 stato, sdi_locale, provider_id, raw_json, synced_at))
+    _efatt_sync_payment_rows(db, cur.lastrowid, doc, gross, data_scad)
     return True
 
-def _efatt_sync_passive_documents(db=None, max_pages=3):
+def _efatt_sync_passive_documents(db=None, max_pages=3, sync_year=''):
     own_db = db is None
     if own_db:
         db = get_db()
     try:
         company_id = _efatt_pick_company_id(db)
+        year_query = _efatt_year_query(sync_year)
         imported = updated = 0
         for page in range(1, max_pages + 1):
             data = _efatt_api_request('GET', f'/c/{company_id}/received_documents', query={
                 'page': page,
                 'per_page': 100,
                 'fieldset': 'detailed',
+                'sort': '-date',
+                'q': year_query,
             }, db=db)
             docs = data.get('data') if isinstance(data, dict) else []
             if docs is None:
@@ -9462,11 +9533,22 @@ def _efatt_sync_passive_documents(db=None, max_pages=3):
             if not docs:
                 break
             for doc in docs:
+                if isinstance(doc, dict) and 'payments_list' not in doc and doc.get('id'):
+                    try:
+                        detail = _efatt_api_request(
+                            'GET',
+                            f'/c/{company_id}/received_documents/{doc["id"]}',
+                            query={'fieldset': 'detailed'},
+                            db=db
+                        )
+                        doc = detail.get('data') if isinstance(detail, dict) else doc
+                    except Exception as e:
+                        print(f'[sync passive] dettaglio documento {doc.get("id")}: {str(e)[:160]}')
                 if _efatt_import_received_document(db, doc):
                     imported += 1
                 else:
                     updated += 1
-            pagination = data.get('pagination') if isinstance(data, dict) and isinstance(data.get('pagination'), dict) else {}
+            pagination = data.get('pagination') if isinstance(data, dict) and isinstance(data.get('pagination'), dict) else (data if isinstance(data, dict) else {})
             last_page = int(pagination.get('last_page') or pagination.get('total_pages') or page)
             if page >= last_page:
                 break
@@ -9477,12 +9559,13 @@ def _efatt_sync_passive_documents(db=None, max_pages=3):
         if own_db:
             db.close()
 
-def _efatt_sync_active_documents(db=None, max_pages=3):
+def _efatt_sync_active_documents(db=None, max_pages=3, sync_year=''):
     own_db = db is None
     if own_db:
         db = get_db()
     try:
         company_id = _efatt_pick_company_id(db)
+        year_query = _efatt_year_query(sync_year)
         imported = updated = 0
         for doc_type in ('invoice', 'credit_note'):
             for page in range(1, max_pages + 1):
@@ -9491,6 +9574,8 @@ def _efatt_sync_active_documents(db=None, max_pages=3):
                     'page': page,
                     'per_page': 100,
                     'fieldset': 'detailed',
+                    'sort': '-date',
+                    'q': year_query,
                 }, db=db)
                 docs = data.get('data') if isinstance(data, dict) else []
                 if docs is None:
@@ -9501,11 +9586,22 @@ def _efatt_sync_active_documents(db=None, max_pages=3):
                 if not docs:
                     break
                 for doc in docs:
+                    if isinstance(doc, dict) and 'payments_list' not in doc and doc.get('id'):
+                        try:
+                            detail = _efatt_api_request(
+                                'GET',
+                                f'/c/{company_id}/issued_documents/{doc["id"]}',
+                                query={'fieldset': 'detailed'},
+                                db=db
+                            )
+                            doc = detail.get('data') if isinstance(detail, dict) else doc
+                        except Exception as e:
+                            print(f'[sync active] dettaglio documento {doc.get("id")}: {str(e)[:160]}')
                     if _efatt_import_issued_document(db, doc):
                         imported += 1
                     else:
                         updated += 1
-                pagination = data.get('pagination') if isinstance(data, dict) and isinstance(data.get('pagination'), dict) else {}
+                pagination = data.get('pagination') if isinstance(data, dict) and isinstance(data.get('pagination'), dict) else (data if isinstance(data, dict) else {})
                 last_page = int(pagination.get('last_page') or pagination.get('total_pages') or page)
                 if page >= last_page:
                     break
@@ -20320,15 +20416,17 @@ def fatturazione_sync_passive():
     """Importa fatture attive e passive da Fatture in Cloud nel gestionale.
     Usa provider_doc_id come chiave anti-duplicato.
     """
+    sync_year = (request.form.get('sync_year') or request.args.get('sync_year') or '').strip()
     try:
-        active = _efatt_sync_active_documents(max_pages=5) or {}
-        passive = _efatt_sync_passive_documents(max_pages=5) or {}
+        active = _efatt_sync_active_documents(max_pages=50, sync_year=sync_year) or {}
+        passive = _efatt_sync_passive_documents(max_pages=50, sync_year=sync_year) or {}
         imported = active.get('imported', 0) + passive.get('imported', 0)
         updated = active.get('updated', 0) + passive.get('updated', 0)
+        suffix = f' per il {sync_year}' if sync_year else ''
         if imported or updated:
-            flash(f'Sincronizzazione completata: {imported} nuove fatture importate, {updated} aggiornate.', 'success')
+            flash(f'Sincronizzazione completata{suffix}: {imported} nuove fatture importate, {updated} aggiornate.', 'success')
         else:
-            flash('Sincronizzazione completata. Nessuna fattura nuova trovata.', 'info')
+            flash(f'Sincronizzazione completata{suffix}. Nessuna fattura nuova trovata.', 'info')
     except EFattAPIError as e:
         msg = str(e)
         if 'non collegato' in msg.lower() or 'access_token' in msg.lower():
@@ -20338,7 +20436,11 @@ def fatturazione_sync_passive():
     except Exception as e:
         print(f'[sync fatture] errore: {e}')
         flash(f'Errore imprevisto: {str(e)[:200]}', 'error')
-    return redirect(url_for('fatturazione', tipo=(request.form.get('next_tipo') or request.args.get('next_tipo') or 'passiva')))
+    next_tipo = request.form.get('next_tipo') or request.args.get('next_tipo') or 'passiva'
+    redirect_args = {'tipo': next_tipo}
+    if sync_year:
+        redirect_args['sync_year'] = sync_year
+    return redirect(url_for('fatturazione', **redirect_args))
 
 # ══════════════════════════════════════════════════════════════
 @app.route('/fatturazione/<int:fid>/invia-sdi', methods=['POST'])
@@ -21002,8 +21104,9 @@ FATT_LIST_TMPL = """
     <i class="fa fa-arrow-down-long"></i> Passiva (noi paghiamo)
   </a>
   <div style="margin-left:auto;display:flex;gap:8px;align-items:center;padding-bottom:6px">
-    <form method="POST" action="/fatturazione/sync-passive" style="display:inline">
+    <form method="POST" action="/fatturazione/sync-passive" style="display:flex;gap:6px;align-items:center;margin:0">
       <input type="hidden" name="next_tipo" value="{{ tipo }}">
+      <input type="number" name="sync_year" min="2000" max="2100" value="{{ sync_year or '' }}" placeholder="{{ current_year }}" title="Anno da sincronizzare. Lascia vuoto per tutti gli anni." style="width:92px;padding:7px 9px;border:1px solid var(--border);border-radius:8px;font-size:12px">
       <button type="submit" class="btn btn-primary btn-sm" title="Importa e aggiorna fatture attive e passive da Fatture in Cloud">
         <i class="fa fa-cloud-arrow-down"></i> Sincronizza da Fatture in Cloud
       </button>
@@ -21099,11 +21202,26 @@ FATT_LIST_TMPL = """
 
 
 <!-- ═══ MACRO RIGA FATTURA ═══ -->
+<form id="bulk-delete-form" method="POST" action="/fatturazione/elimina-selezionate" onsubmit="return confermaEliminaSelezionate()">
+  <input type="hidden" name="tipo" value="{{ tipo }}">
+</form>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:10px 12px;box-shadow:var(--shadow);flex-wrap:wrap">
+  <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#334155;margin:0">
+    <input type="checkbox" id="select-all-fatture" onchange="toggleAllFatture(this.checked)" style="width:16px;height:16px">
+    Seleziona tutte le fatture visualizzate
+  </label>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span id="bulk-count" style="font-size:12px;color:var(--text-light)">0 selezionate</span>
+    <button type="submit" form="bulk-delete-form" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i> Elimina selezionate</button>
+  </div>
+</div>
+
 {% macro riga_fattura(f) %}
 {% set has_rate = f.rate|length > 0 %}
 {% set all_paid = has_rate and f.rate|selectattr('stato','ne','pagata')|list|length == 0 %}
 <tr class="fatt-row" style="border-bottom:{% if has_rate and not all_paid %}none{% else %}1px solid var(--border){% endif %}">
-  <td style="text-align:center;color:#94a3b8;font-size:11px">
+  <td style="text-align:center;color:#94a3b8;font-size:11px;white-space:nowrap">
+    <input type="checkbox" name="fattura_ids" value="{{ f.id }}" form="bulk-delete-form" class="fatt-check" onchange="updateBulkCount()" style="width:15px;height:15px;vertical-align:middle">
     {% if has_rate and all_paid %}<span style="color:#16a34a;font-size:13px">✅</span>{% endif %}
   </td>
   <td><strong>{{ f.numero }}</strong></td>
@@ -21213,7 +21331,7 @@ FATT_LIST_TMPL = """
 <!-- ═══ THEAD COMUNE ═══ -->
 {% macro thead() %}
 <thead><tr style="background:#0f172a;color:#fff">
-  <th style="width:24px;padding:10px 8px"></th>
+  <th style="width:42px;padding:10px 8px"></th>
   <th style="padding:10px 8px;font-size:12px">N°</th>
   <th style="padding:10px 8px;font-size:12px">{% if tipo=='passiva' %}FORNITORE/CLIENTE{% else %}CLIENTE{% endif %}</th>
   <th style="padding:10px 8px;font-size:12px">DATA</th>
@@ -21313,6 +21431,29 @@ function togglePagate() {
   const open = s.style.display !== 'none';
   s.style.display = open ? 'none' : 'block';
   ico.textContent = open ? '▶ mostra' : '▼ nascondi';
+}
+function updateBulkCount() {
+  const checks = Array.from(document.querySelectorAll('.fatt-check'));
+  const selected = checks.filter(c => c.checked).length;
+  const count = document.getElementById('bulk-count');
+  if (count) count.textContent = selected + (selected === 1 ? ' selezionata' : ' selezionate');
+  const all = document.getElementById('select-all-fatture');
+  if (all) {
+    all.checked = checks.length > 0 && selected === checks.length;
+    all.indeterminate = selected > 0 && selected < checks.length;
+  }
+}
+function toggleAllFatture(checked) {
+  document.querySelectorAll('.fatt-check').forEach(c => { c.checked = checked; });
+  updateBulkCount();
+}
+function confermaEliminaSelezionate() {
+  const selected = document.querySelectorAll('.fatt-check:checked').length;
+  if (!selected) {
+    alert('Seleziona almeno una fattura da eliminare.');
+    return false;
+  }
+  return confirm('Eliminare definitivamente ' + selected + (selected === 1 ? ' fattura selezionata?' : ' fatture selezionate?'));
 }
 function allegaPdf(input, fid) {
   if (!input.files || !input.files[0]) return;
@@ -22009,6 +22150,7 @@ def fatturazione():
         tipo = 'attiva'
     filtro_stato = request.args.get('stato', '')
     q = request.args.get('q', '').strip()
+    sync_year = request.args.get('sync_year', '').strip()
 
     # Auto-sync fatture passive in background (throttle 6h, non blocca la response)
     if tipo == 'passiva':
@@ -22143,6 +22285,7 @@ def fatturazione():
         tot_da_pagare=tot_da_pagare, tot_parziale=tot_parziale, tot_pagato=tot_pagato,
         n_da_pagare=n_da_pagare, n_parziale=n_parziale, n_pagate=n_pagate, n_scadute=n_scadute_c, n_scadute_c=n_scadute_c,
         top_clienti=top_clienti, today=date.today().isoformat(),
+        current_year=date.today().year, sync_year=sync_year,
         mesi_labels=mesi_labels, mesi_fatturato=mesi_fatturato, mesi_incassato=mesi_incassato)
 
 
@@ -22422,6 +22565,31 @@ def fatturazione_elimina(fid):
     db.close()
     flash('Fattura eliminata.', 'success')
     return redirect(url_for('fatturazione'))
+
+@app.route('/fatturazione/elimina-selezionate', methods=['POST'])
+@admin_required
+def fatturazione_elimina_selezionate():
+    tipo = request.form.get('tipo', 'attiva')
+    if tipo not in ('attiva', 'passiva'):
+        tipo = 'attiva'
+    ids = []
+    for raw in request.form.getlist('fattura_ids'):
+        try:
+            ids.append(int(raw))
+        except Exception:
+            pass
+    ids = sorted(set(ids))
+    if not ids:
+        flash('Seleziona almeno una fattura da eliminare.', 'error')
+        return redirect(url_for('fatturazione', tipo=tipo))
+    placeholders = ','.join('?' for _ in ids)
+    db = get_db()
+    db.execute(f"DELETE FROM rate_fattura WHERE fattura_id IN ({placeholders})", ids)
+    db.execute(f"DELETE FROM fatture WHERE id IN ({placeholders})", ids)
+    safe_commit(db)
+    db.close()
+    flash(f'Eliminate {len(ids)} fatture selezionate.', 'success')
+    return redirect(url_for('fatturazione', tipo=tipo))
 
 
 @app.route('/fatturazione/<int:fid>/aggiungi-rata', methods=['GET', 'POST'])
