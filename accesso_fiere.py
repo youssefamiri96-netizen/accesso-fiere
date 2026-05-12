@@ -5702,46 +5702,46 @@ LOGIN_TMPL = """<!DOCTYPE html>
       min-height:100vh;
       display:grid;
       place-items:center;
-      padding:24px;
+      padding:22px;
       background:
-        radial-gradient(circle at 18% 12%,rgba(71,199,232,.12),transparent 30%),
-        radial-gradient(circle at 88% 20%,rgba(92,140,255,.11),transparent 32%),
-        #07111f;
+        radial-gradient(circle at 20% 8%,rgba(71,199,232,.10),transparent 32%),
+        radial-gradient(circle at 88% 12%,rgba(92,140,255,.08),transparent 34%),
+        linear-gradient(180deg,#0b1730,#07111f);
     }
     .login-card{
-      width:min(430px,100%);
+      width:min(410px,100%);
       border:1px solid var(--line);
-      background:rgba(15,34,61,.82);
-      backdrop-filter:blur(18px);
-      border-radius:24px;
-      padding:28px;
-      box-shadow:var(--shadow);
+      background:linear-gradient(180deg,rgba(17,38,68,.92),rgba(10,23,41,.96));
+      backdrop-filter:blur(16px);
+      border-radius:22px;
+      padding:26px;
+      box-shadow:0 24px 70px rgba(0,0,0,.28);
     }
-    .login-brand{justify-content:center;margin-bottom:22px}
+    .login-brand{justify-content:center;margin-bottom:14px}
     .public-return{
-      display:flex;
+      display:inline-flex;
       align-items:center;
       justify-content:center;
-      gap:9px;
-      width:100%;
-      min-height:40px;
-      margin:-6px 0 20px;
+      min-height:34px;
+      margin:0 auto 22px;
+      padding:0 13px;
       border:1px solid rgba(166,189,218,.18);
-      border-radius:13px;
-      background:rgba(255,255,255,.035);
-      color:#bcefff;
+      border-radius:999px;
+      background:rgba(255,255,255,.04);
+      color:#a8c7dd;
       text-decoration:none;
-      font-size:13px;
-      font-weight:850;
+      font-size:12px;
+      font-weight:800;
       transition:background .18s ease,border-color .18s ease,color .18s ease,transform .18s ease;
     }
+    .public-return:before{content:"\2190";margin-right:7px;color:#74d8ef}
     .public-return:hover{
       background:rgba(71,199,232,.10);
       border-color:rgba(71,199,232,.32);
       color:#f5fdff;
       transform:translateY(-1px);
     }
-    .login-card h2{text-align:center;font-size:25px;letter-spacing:-.03em;margin-bottom:8px}
+    .login-card h2{text-align:center;font-size:24px;letter-spacing:-.03em;margin-bottom:6px}
     .login-card p{text-align:center;color:#9fb1c8;font-size:13.5px;margin-bottom:22px}
     .lang-label,.form-label{display:block;font-size:12px;color:#9fb1c8;font-weight:850;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
     .lang-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
@@ -5771,6 +5771,15 @@ LOGIN_TMPL = """<!DOCTYPE html>
       outline:none;
       transition:border-color .18s ease,box-shadow .18s ease,background .18s ease;
     }
+    .form-control:-webkit-autofill,
+    .form-control:-webkit-autofill:hover,
+    .form-control:-webkit-autofill:focus{
+      -webkit-box-shadow:0 0 0 1000px #081524 inset!important;
+      -webkit-text-fill-color:#eff6ff!important;
+      caret-color:#eff6ff!important;
+      border-color:rgba(71,199,232,.34)!important;
+      transition:background-color 9999s ease-in-out 0s;
+    }
     .form-control:focus{border-color:rgba(71,199,232,.45);box-shadow:0 0 0 4px rgba(71,199,232,.10)}
     .alert{
       border:1px solid rgba(241,95,109,.26);
@@ -5782,7 +5791,7 @@ LOGIN_TMPL = """<!DOCTYPE html>
       font-weight:750;
       margin-bottom:16px;
     }
-    .login-submit{width:100%;border:0;margin-top:3px}
+    .login-submit{width:100%;border:0;margin-top:3px;min-height:46px;justify-content:center}
     .divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:#7388a3;font-size:12px;font-weight:750}
     .divider:before,.divider:after{content:"";height:1px;background:var(--line);flex:1}
     .google-btn,.register-btn{
@@ -6315,7 +6324,7 @@ LOGIN_TMPL = """<!DOCTYPE html>
         <span>Gestionale Allestitori</span>
       </span>
     </a>
-    <a class="public-return" href="/home"><i class="fa-solid fa-arrow-left"></i> Torna alla pagina pubblica</a>
+    <a class="public-return" href="/home">Torna alla pagina pubblica</a>
 
     <div class="form-group">
       <span class="lang-label">{{ t.login_lang }}</span>
@@ -6330,9 +6339,9 @@ LOGIN_TMPL = """<!DOCTYPE html>
       </div>
     </div>
 
-    <h2>{{ t.login_title }}</h2>
-    <p>{{ t.login_sub }}</p>
-    {% if error %}<div class="alert"><i class="fa-solid fa-circle-exclamation"></i> {{ error }}</div>{% endif %}
+    <h2>Area clienti</h2>
+    <p>Accedi al gestionale aziendale.</p>
+    {% if error %}<div class="alert">{{ error }}</div>{% endif %}
     <form method="POST" action="/login">
       <div class="form-group">
         <label class="form-label">{{ t.login_email }}</label>
@@ -6342,7 +6351,7 @@ LOGIN_TMPL = """<!DOCTYPE html>
         <label class="form-label">{{ t.login_pass }}</label>
         <input class="form-control" type="password" name="password" placeholder="********" required dir="ltr">
       </div>
-      <button class="btn btn-primary login-submit" type="submit">{{ t.login_btn }} <i class="fa-solid fa-arrow-right"></i></button>
+      <button class="btn btn-primary login-submit" type="submit">Accedi</button>
     </form>
 
     {% if not is_mobile %}
@@ -6352,10 +6361,10 @@ LOGIN_TMPL = """<!DOCTYPE html>
       Accedi con Google
     </a>
     <div class="divider">non hai un account?</div>
-    <a class="register-btn" href="/registrati"><i class="fa-solid fa-rocket"></i> Registra la tua azienda - 14 giorni gratis</a>
+    <a class="register-btn" href="/registrati">Registra la tua azienda - 14 giorni gratis</a>
     {% else %}
     <div class="divider">non hai un account?</div>
-    <a class="register-btn" href="/registrati"><i class="fa-solid fa-rocket"></i> Registra la tua azienda</a>
+    <a class="register-btn" href="/registrati">Registra la tua azienda</a>
     {% endif %}
 
     <div class="legal-copy">
