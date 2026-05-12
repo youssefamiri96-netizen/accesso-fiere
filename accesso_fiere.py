@@ -1874,7 +1874,11 @@ def render_page(tmpl, **ctx):
             if _fname.startswith(f'logo_{tid}.'):
                 logo_path = os.path.join(UPLOAD_DIR_LOGHI, _fname)
                 break
-        # NESSUN fallback legacy: ogni tenant ha il proprio logo isolato
+        if logo_path is None and tid != 'legacy':
+            for _fname in os.listdir(UPLOAD_DIR_LOGHI):
+                if _fname.startswith('logo_legacy.'):
+                    logo_path = os.path.join(UPLOAD_DIR_LOGHI, _fname)
+                    break
         ctx.setdefault('ha_logo_az', logo_path is not None)
         ctx.setdefault('logo_az_ts', int(os.path.getmtime(logo_path)) if logo_path else 0)
     except Exception:
@@ -3049,7 +3053,7 @@ body.theme-light #ai-chat-panel,body.theme-light .ai-chat-body,body.theme-light 
 <aside class="sidebar">
   <div class="sidebar-logo">
     {%- if ha_logo_az %}
-    <img src="/admin/logo/serve?t={{ logo_az_ts }}" alt="{{ azienda_nome }}" style="height:36px;width:auto;object-fit:contain;flex-shrink:0;border-radius:5px;background:#fff;padding:2px">
+    <img src="/admin/logo/serve?t={{ logo_az_ts }}" alt="{{ azienda_nome }}" style="height:36px;width:auto;object-fit:contain;flex-shrink:0;border-radius:9px;background:rgba(255,255,255,.045);padding:2px">
     {%- else %}
     <span class="sidebar-fallback-logo" aria-hidden="true">AF</span>
     {%- endif %}
@@ -4760,7 +4764,29 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
       background:linear-gradient(90deg,transparent 0 42%,rgba(71,199,232,.36) 42% 48%,transparent 48% 100%);
       opacity:.72;
     }
-    .brand-mark i{position:relative;z-index:1}
+    .brand-mark:before{
+      inset:10px 18px 10px 9px;
+      border-left:2px solid rgba(223,248,255,.74);
+      border-right:0;
+      background:linear-gradient(180deg,transparent 0 42%,rgba(71,199,232,.82) 42% 58%,transparent 58% 100%);
+    }
+    .brand-monogram{
+      position:relative;
+      z-index:1;
+      width:24px;
+      height:24px;
+      display:grid;
+      place-items:center;
+      margin-left:6px;
+      border-radius:8px;
+      font-size:10px;
+      font-weight:900;
+      line-height:1;
+      letter-spacing:-.04em;
+      color:#ffffff;
+      background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.02));
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.18);
+    }
     .brand-text strong{display:block;font-size:15px;font-weight:900;letter-spacing:.01em}
     .brand-text span{display:block;font-size:11px;color:var(--muted);font-weight:700;margin-top:1px}
     .nav-links{display:flex;align-items:center;gap:4px}
@@ -5788,7 +5814,7 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
     <header class="nav">
       <div class="container nav-inner">
         <a class="brand" href="/home" aria-label="Accesso Fiere">
-          <span class="brand-mark"><i class="fa-solid fa-helmet-safety"></i></span>
+          <span class="brand-mark"><span class="brand-monogram">AF</span></span>
           <span class="brand-text">
             <strong>Accesso Fiere</strong>
             <span>Gestionale Allestitori</span>
@@ -6139,7 +6165,7 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
       <div class="container footer-inner">
         <div>
           <a class="brand" href="/home" aria-label="Accesso Fiere">
-            <span class="brand-mark"><i class="fa-solid fa-helmet-safety"></i></span>
+            <span class="brand-mark"><span class="brand-monogram">AF</span></span>
             <span class="brand-text">
               <strong>Accesso Fiere</strong>
               <span>Access Flow Grid</span>
@@ -6227,7 +6253,7 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
 {% else %}
   <div class="login-card" id="login">
     <a class="brand login-brand" href="/home" aria-label="Accesso Fiere">
-      <span class="brand-mark"><i class="fa-solid fa-helmet-safety"></i></span>
+      <span class="brand-mark"><span class="brand-monogram">AF</span></span>
       <span class="brand-text">
         <strong>Accesso Fiere</strong>
         <span>Gestionale Allestitori</span>
@@ -36618,5 +36644,4 @@ except Exception as _e:
 if __name__ == '__main__':
     debug = os.environ.get('RAILWAY_ENVIRONMENT') is None
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=debug)
-
 
