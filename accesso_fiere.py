@@ -3964,10 +3964,10 @@ body.sidebar-collapsed .nav-group>summary:hover::before{
     font-family:'Satoshi','General Sans','Geist','Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif!important;
     letter-spacing:0!important;
   }
-  .content{padding:34px 36px!important}
-  .card-body{padding:24px!important}
-  .stats-grid,.kpi-grid,.fh-kpis{gap:18px!important}
-  .grid-2,.grid-3,.fh-grid,.fh-split{gap:18px!important}
+  .content{padding:28px 30px!important}
+  .card-body{padding:20px!important}
+  .stats-grid,.kpi-grid,.fh-kpis{gap:14px!important}
+  .grid-2,.grid-3,.fh-grid,.fh-split{gap:14px!important}
   .card,.stat-card,.kpi-card,.fh-card,.fh-kpi,.fh-flow{
     border-radius:10px!important;
   }
@@ -3989,24 +3989,30 @@ body.sidebar-collapsed .nav-group>summary:hover::before{
     line-height:1.55!important;
   }
   .kpi-value{
-    font-size:clamp(40px,3.6vw,58px)!important;
+    font-size:clamp(30px,2.4vw,42px)!important;
     font-weight:850!important;
   }
+  .kpi-value.kpi-state-ok{
+    font-size:clamp(26px,2vw,34px)!important;
+    line-height:1.02!important;
+    max-width:100%!important;
+    overflow-wrap:normal!important;
+  }
   .stat-val,.stat-value,.sf .val{
-    font-size:clamp(30px,2.6vw,44px)!important;
+    font-size:clamp(24px,2vw,34px)!important;
     font-weight:850!important;
   }
   .fh-kpi .val{
-    font-size:clamp(31px,2.6vw,43px)!important;
+    font-size:clamp(25px,2.1vw,36px)!important;
     font-weight:850!important;
   }
   .fh-flow-total{
-    font-size:clamp(42px,4vw,64px)!important;
-    font-weight:870!important;
-    margin:12px 0 8px!important;
+    font-size:clamp(32px,2.8vw,46px)!important;
+    font-weight:860!important;
+    margin:9px 0 7px!important;
   }
   .fh-metric b{
-    font-size:18px!important;
+    font-size:16px!important;
     font-weight:780!important;
   }
   .kpi-label,.kpi-foot,.stat-lbl,.stat-label,.sf .lbl,.fh-kpi .lbl,.fh-kpi .hint,.fh-metric span{
