@@ -18,6 +18,11 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from werkzeug.utils import secure_filename
 
+try:
+    from accesso_modules import efatt_helpers as _efatt_helpers
+except Exception:
+    _efatt_helpers = None
+
 # Lock cross-process per SQLite (funziona con gunicorn multi-worker)
 _db_write_lock = threading.Lock()
 
@@ -795,7 +800,7 @@ def init_db():
         "ALTER TABLE fatture ADD COLUMN imponibile_lordo REAL DEFAULT 0",
         "ALTER TABLE fatture ADD COLUMN sconto_importo REAL DEFAULT 0",
         # Doc type per distinguere fatture standard / note di credito
-        # Valori: 'invoice' (default), 'credit_note'
+        # Tipo documento provider: invoice, credit_note, self_own_invoice, self_supplier_invoice, receipt...
         "ALTER TABLE fatture ADD COLUMN doc_type TEXT DEFAULT 'invoice'",
         # Riferimento a fattura originale per le note di credito
         "ALTER TABLE fatture ADD COLUMN fattura_riferimento_id INTEGER",
@@ -4628,1864 +4633,31 @@ setInterval(updateClock,1000);updateClock();
 </body></html>"""
 
 # Homepage pubblica premium: sistema operativo verticale per allestitori fieristici.
-PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
-<html lang="{{ t.get('dir','ltr') == 'rtl' and 'ar' or 'it' }}" dir="{{ t.dir }}">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Accesso Fiere - Sistema operativo per allestitori fieristici</title>
-  <meta name="description" content="Accesso Fiere centralizza squadre, documenti, presenze, cantieri fieristici, mezzi e fatturazione in un unico sistema operativo.">
-  <meta name="keywords" content="software allestitori fieristici, gestionale allestimenti, gestione squadre fiere, documenti cantieri fieristici, presenze fiere, fatturazione elettronica allestitori">
-  <meta name="robots" content="index,follow">
-  <meta name="theme-color" content="#07111F">
-  <link rel="canonical" href="https://www.accessofiere.com/home">
-  <meta property="og:title" content="Accesso Fiere - Il sistema operativo per allestitori fieristici">
-  <meta property="og:description" content="Controlla squadre, documenti, presenze, cantieri fieristici e fatturazione in un unico sistema operativo.">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://www.accessofiere.com/home">
-  <meta property="og:site_name" content="Accesso Fiere">
-  <meta name="twitter:card" content="summary_large_image">
-  <link rel="privacy-policy" href="/privacy-policy">
-  <link rel="terms-of-service" href="/terms-and-conditions">
-  <link rel="help" href="/cookie-policy">
-  <script type="application/ld+json">
-  {
-    "@context":"https://schema.org",
-    "@type":"SoftwareApplication",
-    "name":"Accesso Fiere",
-    "applicationCategory":"BusinessApplication",
-    "operatingSystem":"Web, iOS, Android",
-    "description":"Software operativo verticale per allestitori fieristici: squadre, documenti, presenze, cantieri, mezzi e fatturazione elettronica.",
-    "url":"https://www.accessofiere.com/home",
-    "offers":{"@type":"Offer","availability":"https://schema.org/InStock","priceCurrency":"EUR"},
-    "audience":{"@type":"BusinessAudience","audienceType":"Aziende di allestimento fieristico"}
-  }
-  </script>
-  <style>
-    :root{
-      --bg:#07111f;
-      --bg-2:#0b1730;
-      --bg-3:#0f223d;
-      --panel:rgba(15,34,61,.72);
-      --panel-strong:rgba(13,29,51,.92);
-      --line:rgba(166,189,218,.18);
-      --line-strong:rgba(166,189,218,.28);
-      --text:#eef5ff;
-      --muted:#9fb1c8;
-      --muted-2:#7488a3;
-      --cyan:#47c7e8;
-      --blue:#5c8cff;
-      --green:#37d989;
-      --amber:#f5b444;
-      --red:#f15f6d;
-      --shadow:0 24px 70px rgba(0,0,0,.30);
-      --radius:22px;
-    }
-    *{box-sizing:border-box}
-    html{scroll-behavior:smooth}
-    body{
-      margin:0;
-      font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-      background:var(--bg);
-      color:var(--text);
-      line-height:1.5;
-      overflow-x:hidden;
-      text-rendering:geometricPrecision;
-    }
-    body:before{
-      content:"";
-      position:fixed;
-      inset:0;
-      pointer-events:none;
-      background:
-        radial-gradient(circle at 80% 6%,rgba(71,199,232,.16),transparent 32%),
-        radial-gradient(circle at 12% 18%,rgba(92,140,255,.12),transparent 28%),
-        linear-gradient(135deg,#07111f 0%,#0b1730 50%,#07111f 100%);
-      z-index:-2;
-    }
-    body:after{
-      content:"";
-      position:fixed;
-      inset:0;
-      pointer-events:none;
-      background:
-        linear-gradient(rgba(255,255,255,.028) 1px,transparent 1px),
-        linear-gradient(90deg,rgba(255,255,255,.026) 1px,transparent 1px);
-      background-size:72px 72px;
-      mask-image:linear-gradient(to bottom,rgba(0,0,0,.92),transparent 82%);
-      z-index:-1;
-    }
-    a{color:inherit}
-    .fa,.fa-solid,.fa-brands{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      width:1em;
-      height:1em;
-      font-style:normal;
-      vertical-align:-.1em;
-    }
-    .fa:before,.fa-solid:before,.fa-brands:before{
-      content:"";
-      width:.48em;
-      height:.48em;
-      border-radius:999px;
-      background:currentColor;
-      box-shadow:0 0 0 3px rgba(71,199,232,.08);
-    }
-    .public-shell{min-height:100vh}
-    .container{width:min(1180px,calc(100% - 44px));margin:0 auto}
-    .nav{
-      position:sticky;
-      top:0;
-      z-index:30;
-      backdrop-filter:blur(18px);
-      background:rgba(7,17,31,.78);
-      border-bottom:1px solid var(--line);
-    }
-    .nav-inner{
-      min-height:72px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:22px;
-    }
-    .brand{display:flex;align-items:center;gap:12px;text-decoration:none;min-width:190px}
-    .brand-mark{
-      position:relative;
-      width:38px;
-      height:38px;
-      border:1px solid rgba(71,199,232,.32);
-      border-radius:12px;
-      display:grid;
-      place-items:center;
-      color:#dff8ff;
-      background:linear-gradient(145deg,rgba(71,199,232,.18),rgba(92,140,255,.12));
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
-      overflow:hidden;
-    }
-    .brand-mark:before{
-      content:"";
-      position:absolute;
-      inset:8px 7px;
-      border-left:1px solid rgba(199,245,255,.34);
-      border-right:1px solid rgba(199,245,255,.18);
-      background:linear-gradient(90deg,transparent 0 42%,rgba(71,199,232,.36) 42% 48%,transparent 48% 100%);
-      opacity:.72;
-    }
-    .brand-mark:before{
-      inset:10px 18px 10px 9px;
-      border-left:2px solid rgba(223,248,255,.74);
-      border-right:0;
-      background:linear-gradient(180deg,transparent 0 42%,rgba(71,199,232,.82) 42% 58%,transparent 58% 100%);
-    }
-    .brand-monogram{
-      position:relative;
-      z-index:1;
-      width:24px;
-      height:24px;
-      display:grid;
-      place-items:center;
-      margin-left:6px;
-      border-radius:8px;
-      font-size:10px;
-      font-weight:900;
-      line-height:1;
-      letter-spacing:-.04em;
-      color:#ffffff;
-      background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.02));
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.18);
-    }
-    .brand-text strong{display:block;font-size:15px;font-weight:900;letter-spacing:.01em}
-    .brand-text span{display:block;font-size:11px;color:var(--muted);font-weight:700;margin-top:1px}
-    .nav-links{display:flex;align-items:center;gap:4px}
-    .nav-links a{
-      text-decoration:none;
-      color:#b8c7dc;
-      font-size:13px;
-      font-weight:750;
-      padding:9px 11px;
-      border-radius:10px;
-      transition:background .18s ease,color .18s ease;
-    }
-    .nav-links a:hover{background:rgba(255,255,255,.06);color:#fff}
-    .nav-actions{display:flex;align-items:center;gap:10px}
-    .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:9px;
-      min-height:42px;
-      padding:0 15px;
-      border-radius:12px;
-      border:1px solid transparent;
-      text-decoration:none;
-      font-weight:850;
-      font-size:13.5px;
-      transition:transform .18s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease;
-      cursor:pointer;
-      font-family:inherit;
-      white-space:nowrap;
-    }
-    .btn:hover{transform:translateY(-1px)}
-    .btn-primary{
-      color:#06101d;
-      background:linear-gradient(135deg,#78def2,#62a3ff);
-      box-shadow:0 12px 30px rgba(71,199,232,.18);
-    }
-    .btn-secondary{
-      color:#dbeafe;
-      background:rgba(255,255,255,.055);
-      border-color:var(--line);
-    }
-    .btn-secondary:hover{border-color:rgba(166,189,218,.38);background:rgba(255,255,255,.075)}
-    .btn-quiet{
-      color:#b9c9dc;
-      background:transparent;
-      border-color:var(--line);
-    }
-    .hero{
-      position:relative;
-      padding:78px 0 48px;
-      display:grid;
-      grid-template-columns:minmax(0,1.02fr) minmax(430px,.98fr);
-      gap:52px;
-      align-items:center;
-    }
-    .hero:before{
-      content:"";
-      position:absolute;
-      left:-8%;
-      right:-8%;
-      bottom:0;
-      height:1px;
-      background:linear-gradient(90deg,transparent,rgba(71,199,232,.34),rgba(92,140,255,.22),transparent);
-      opacity:.9;
-    }
-    .eyebrow{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      max-width:100%;
-      color:#bcefff;
-      border:1px solid rgba(71,199,232,.26);
-      background:rgba(71,199,232,.075);
-      border-radius:999px;
-      padding:8px 12px;
-      font-size:11px;
-      font-weight:900;
-      letter-spacing:.11em;
-      text-transform:uppercase;
-      margin-bottom:20px;
-    }
-    .eyebrow i{font-size:10px;color:var(--cyan)}
-    h1,h2,h3,p{margin:0}
-    .hero h1{
-      font-size:clamp(44px,5.1vw,76px);
-      line-height:.98;
-      letter-spacing:-.035em;
-      font-weight:900;
-      max-width:780px;
-    }
-    .gradient-text{
-      background:linear-gradient(135deg,#ffffff 12%,#c9eaff 48%,#8fb7ff 100%);
-      -webkit-background-clip:text;
-      background-clip:text;
-      color:transparent;
-    }
-    .hero-sub{
-      margin-top:24px;
-      max-width:680px;
-      color:#b8c7dd;
-      font-size:18px;
-      line-height:1.7;
-    }
-    .hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
-    .trust{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      color:#91a5bf;
-      font-size:13.5px;
-      margin-top:18px;
-      font-weight:650;
-    }
-    .trust:before{
-      content:"";
-      width:8px;
-      height:8px;
-      border-radius:999px;
-      background:var(--green);
-      box-shadow:0 0 0 5px rgba(55,217,137,.11);
-      flex:0 0 auto;
-    }
-    .hero-proof{
-      display:grid;
-      grid-template-columns:repeat(3,minmax(0,1fr));
-      gap:10px;
-      margin-top:34px;
-      max-width:690px;
-    }
-    .proof-pill{
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.045);
-      border-radius:16px;
-      padding:14px 15px;
-    }
-    .proof-pill strong{display:block;font-size:20px;line-height:1;color:#fff;letter-spacing:-.03em}
-    .proof-pill span{display:block;color:#8fa2ba;font-size:12px;font-weight:700;margin-top:8px}
-    .device-wrap{position:relative;perspective:1200px}
-    .device-wrap:before{
-      content:"";
-      position:absolute;
-      inset:8% 4% auto auto;
-      width:58%;
-      height:58%;
-      border-radius:50%;
-      background:rgba(71,199,232,.13);
-      filter:blur(56px);
-      pointer-events:none;
-    }
-    .desktop-device{
-      position:relative;
-      z-index:2;
-      border:1px solid rgba(166,189,218,.22);
-      background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.045));
-      border-radius:26px;
-      padding:12px;
-      box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.14);
-      transform:rotateX(5deg) rotateY(-7deg) rotateZ(1deg);
-      transform-style:preserve-3d;
-      transition:transform .22s ease,border-color .22s ease;
-    }
-    .desktop-device:hover{transform:rotateX(3deg) rotateY(-4deg) translateY(-4px)}
-    .device-top{
-      height:34px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      color:#8da0ba;
-      font-size:11px;
-      padding:0 8px 8px;
-      font-weight:800;
-      letter-spacing:.02em;
-    }
-    .dots{display:flex;gap:6px}
-    .dots span{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.26)}
-    .dash-screen{
-      overflow:hidden;
-      border-radius:18px;
-      border:1px solid rgba(166,189,218,.18);
-      background:#091525;
-    }
-    .dash-header{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding:18px;
-      border-bottom:1px solid rgba(166,189,218,.14);
-      background:rgba(255,255,255,.025);
-    }
-    .dash-header h3{font-size:14px;font-weight:900}
-    .live-pill{
-      display:inline-flex;
-      align-items:center;
-      gap:7px;
-      color:#bff8df;
-      background:rgba(55,217,137,.12);
-      border:1px solid rgba(55,217,137,.24);
-      border-radius:999px;
-      padding:6px 9px;
-      font-size:10px;
-      font-weight:900;
-      text-transform:uppercase;
-      letter-spacing:.06em;
-    }
-    .live-dot{width:7px;height:7px;border-radius:999px;background:var(--green)}
-    .dash-body{padding:16px;display:grid;gap:14px}
-    .mini-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-    .mini-kpi{
-      min-height:84px;
-      padding:12px;
-      border:1px solid rgba(166,189,218,.14);
-      border-radius:14px;
-      background:rgba(255,255,255,.04);
-    }
-    .mini-kpi span{display:block;color:#8fa2ba;font-size:10px;font-weight:850;text-transform:uppercase;letter-spacing:.05em}
-    .mini-kpi strong{display:block;color:#fff;font-size:26px;letter-spacing:-.05em;margin-top:8px}
-    .mini-kpi small{display:block;color:#91a5bf;font-size:11px;font-weight:700;margin-top:2px}
-    .operational-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:12px}
-    .line-chart,.status-list{
-      border:1px solid rgba(166,189,218,.14);
-      border-radius:16px;
-      background:rgba(255,255,255,.035);
-      padding:13px;
-      min-height:176px;
-    }
-    .chart-bars{height:112px;display:flex;align-items:end;gap:8px;margin-top:18px}
-    .chart-bars span{
-      flex:1;
-      min-width:0;
-      border-radius:8px 8px 2px 2px;
-      background:linear-gradient(180deg,rgba(71,199,232,.95),rgba(92,140,255,.46));
-      opacity:.82;
-    }
-    .status-item{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:8px;
-      padding:10px 0;
-      border-bottom:1px solid rgba(166,189,218,.10);
-      color:#d5e3f5;
-      font-size:12px;
-      font-weight:750;
-    }
-    .status-item:last-child{border-bottom:0}
-    .tag{border-radius:999px;padding:4px 7px;font-size:10px;font-weight:900}
-    .tag.ok{background:rgba(55,217,137,.13);color:#a7f3cf}
-    .tag.warn{background:rgba(245,180,68,.13);color:#fedc8f}
-    .tag.bad{background:rgba(241,95,109,.13);color:#ffc1c7}
-    .workflow-row{
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:10px;
-    }
-    .flow-card{
-      min-height:82px;
-      border:1px solid rgba(166,189,218,.12);
-      border-radius:14px;
-      padding:11px;
-      background:rgba(255,255,255,.03);
-    }
-    .flow-card i{color:var(--cyan);font-size:13px}
-    .flow-card strong{display:block;font-size:12px;margin-top:9px}
-    .flow-card span{display:block;color:#7f93ae;font-size:10.5px;font-weight:700;margin-top:3px}
-    .float-chip{
-      position:absolute;
-      z-index:4;
-      display:flex;
-      align-items:center;
-      gap:9px;
-      border:1px solid rgba(166,189,218,.22);
-      background:rgba(7,17,31,.78);
-      backdrop-filter:blur(14px);
-      border-radius:16px;
-      padding:11px 13px;
-      box-shadow:0 18px 42px rgba(0,0,0,.22);
-      color:#dceaff;
-      font-size:12px;
-      font-weight:850;
-    }
-    .float-chip i{color:var(--cyan)}
-    .float-chip.one{left:-18px;top:78px}
-    .float-chip.two{right:-12px;bottom:92px}
-    .float-chip.three{left:44px;bottom:-18px}
-    .access-grid-card{
-      position:relative;
-      border:1px solid rgba(71,199,232,.22);
-      border-radius:28px;
-      overflow:hidden;
-      background:
-        radial-gradient(circle at 16% 20%,rgba(71,199,232,.12),transparent 30%),
-        linear-gradient(180deg,rgba(15,34,61,.78),rgba(9,21,36,.95));
-      box-shadow:0 24px 72px rgba(0,0,0,.24);
-      padding:28px;
-    }
-    .access-grid-card:before{
-      content:"";
-      position:absolute;
-      inset:0;
-      background:
-        linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),
-        linear-gradient(90deg,rgba(255,255,255,.032) 1px,transparent 1px);
-      background-size:58px 58px;
-      mask-image:linear-gradient(90deg,transparent,black 14%,black 86%,transparent);
-      pointer-events:none;
-    }
-    .brand-system{
-      display:grid;
-      grid-template-columns:minmax(0,.9fr) minmax(420px,1.1fr);
-      gap:28px;
-      align-items:center;
-    }
-    .brand-system h2{font-size:clamp(30px,3.2vw,48px)}
-    .brand-system p{margin-top:14px;color:#9fb1c8;font-size:16px;line-height:1.68}
-    .flow-map{
-      position:relative;
-      min-height:320px;
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:18px;
-      align-items:center;
-    }
-    .flow-map:before{
-      content:"";
-      position:absolute;
-      left:8%;
-      right:8%;
-      top:50%;
-      height:2px;
-      background:linear-gradient(90deg,rgba(71,199,232,.18),rgba(71,199,232,.88),rgba(92,140,255,.58),rgba(71,199,232,.18));
-      box-shadow:0 0 22px rgba(71,199,232,.18);
-    }
-    .flow-node{
-      position:relative;
-      z-index:1;
-      min-height:116px;
-      border:1px solid rgba(166,189,218,.18);
-      background:rgba(8,21,36,.76);
-      border-radius:22px;
-      padding:16px;
-    }
-    .flow-node:before{
-      content:"";
-      width:12px;
-      height:12px;
-      border-radius:999px;
-      background:var(--cyan);
-      box-shadow:0 0 0 7px rgba(71,199,232,.10);
-      display:block;
-      margin-bottom:18px;
-    }
-    .flow-node strong{display:block;font-size:14px}
-    .flow-node span{display:block;margin-top:6px;color:#8fa2ba;font-size:12px;font-weight:750}
-    .kpi-strip{
-      margin:26px auto 0;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.055);
-      backdrop-filter:blur(16px);
-      border-radius:24px;
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      overflow:hidden;
-    }
-    .kpi-box{padding:24px 24px;border-right:1px solid var(--line)}
-    .kpi-box:last-child{border-right:0}
-    .kpi-box strong{display:block;font-size:32px;line-height:1;font-weight:900;letter-spacing:-.045em}
-    .kpi-box span{display:block;margin-top:10px;color:#9fb1c8;font-size:13px;font-weight:700}
-    .section{padding:92px 0}
-    .section.compact{padding-top:66px}
-    .section-head{max-width:760px;margin-bottom:32px}
-    .section-label{
-      color:#87dff3;
-      font-size:12px;
-      font-weight:900;
-      text-transform:uppercase;
-      letter-spacing:.12em;
-      margin-bottom:12px;
-    }
-    .section h2{
-      font-size:clamp(32px,3.6vw,52px);
-      line-height:1.04;
-      letter-spacing:-.035em;
-      font-weight:900;
-      color:#fff;
-    }
-    .section-copy{
-      margin-top:15px;
-      color:#9fb1c8;
-      font-size:17px;
-      line-height:1.72;
-      max-width:720px;
-    }
-    .split{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:18px;
-      align-items:stretch;
-    }
-    .glass{
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      background:var(--panel);
-      box-shadow:0 16px 48px rgba(0,0,0,.18);
-      overflow:hidden;
-    }
-    .glass-pad{padding:24px}
-    .panel-title{display:flex;align-items:center;gap:10px;font-weight:900;font-size:18px;color:#fff}
-    .panel-title i{color:var(--cyan)}
-    .chaos-stack{display:grid;gap:10px;margin-top:22px}
-    .chaos-item{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:14px;
-      border:1px solid rgba(241,95,109,.14);
-      background:rgba(241,95,109,.055);
-      border-radius:14px;
-      padding:13px 14px;
-      color:#d7e3f2;
-      font-size:13px;
-      font-weight:750;
-    }
-    .chaos-item i{color:#ff9aa3}
-    .clean-table{margin-top:22px;border:1px solid rgba(166,189,218,.12);border-radius:16px;overflow:hidden}
-    .clean-row{
-      display:grid;
-      grid-template-columns:1fr auto;
-      gap:12px;
-      align-items:center;
-      padding:13px 14px;
-      border-bottom:1px solid rgba(166,189,218,.10);
-      font-size:13px;
-      color:#d9e6f7;
-      font-weight:750;
-    }
-    .clean-row:last-child{border-bottom:0}
-    .modules-grid{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:16px;
-    }
-    .module-card{
-      min-height:316px;
-      border:1px solid var(--line);
-      border-radius:22px;
-      background:rgba(15,34,61,.64);
-      overflow:hidden;
-      transition:transform .2s ease,border-color .2s ease,background .2s ease;
-    }
-    .module-card:hover{transform:translateY(-3px);border-color:rgba(71,199,232,.34);background:rgba(18,40,70,.78)}
-    .module-preview{
-      height:150px;
-      padding:16px;
-      border-bottom:1px solid rgba(166,189,218,.12);
-      background:
-        linear-gradient(135deg,rgba(71,199,232,.10),rgba(92,140,255,.07)),
-        rgba(255,255,255,.02);
-    }
-    .module-window{
-      width:100%;
-      height:100%;
-      border:1px solid rgba(166,189,218,.16);
-      border-radius:15px;
-      background:#081524;
-      padding:12px;
-      display:grid;
-      gap:8px;
-      align-content:start;
-    }
-    .module-line{height:9px;border-radius:999px;background:rgba(166,189,218,.18)}
-    .module-line.short{width:58%}
-    .module-line.med{width:78%}
-    .module-stat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
-    .module-stat span{height:38px;border-radius:10px;background:rgba(71,199,232,.11);border:1px solid rgba(71,199,232,.14)}
-    .module-content{padding:22px}
-    .module-content i{color:var(--cyan);font-size:18px;margin-bottom:13px}
-    .module-content h3{font-size:19px;letter-spacing:-.02em;font-weight:900;margin-bottom:8px}
-    .module-content p{color:#9fb1c8;font-size:14px;line-height:1.6}
-    .mobile-layout{
-      display:grid;
-      grid-template-columns:minmax(0,.88fr) minmax(380px,1.12fr);
-      gap:46px;
-      align-items:center;
-    }
-    .phone-stage{
-      min-height:520px;
-      position:relative;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-    .phone{
-      width:230px;
-      min-height:454px;
-      border:1px solid rgba(166,189,218,.28);
-      border-radius:36px;
-      background:#050c16;
-      padding:12px;
-      box-shadow:0 28px 70px rgba(0,0,0,.28);
-    }
-    .phone.secondary{
-      position:absolute;
-      left:24px;
-      top:74px;
-      transform:rotate(-7deg) scale(.88);
-      opacity:.88;
-    }
-    .phone.primary{
-      position:relative;
-      transform:rotate(4deg);
-      z-index:2;
-    }
-    .phone-screen{
-      border-radius:26px;
-      min-height:428px;
-      background:linear-gradient(180deg,#0e223d,#091522);
-      border:1px solid rgba(166,189,218,.14);
-      overflow:hidden;
-      padding:16px;
-    }
-    .phone-notch{width:72px;height:6px;border-radius:999px;background:rgba(255,255,255,.20);margin:0 auto 18px}
-    .phone-title{font-size:13px;font-weight:900;color:#fff;margin-bottom:14px}
-    .phone-card{
-      border:1px solid rgba(166,189,218,.13);
-      background:rgba(255,255,255,.055);
-      border-radius:16px;
-      padding:13px;
-      margin-bottom:10px;
-    }
-    .phone-card strong{display:block;font-size:20px;letter-spacing:-.04em}
-    .phone-card span{display:block;color:#9fb1c8;font-size:11px;font-weight:750;margin-top:3px}
-    .feature-list{display:grid;gap:12px;margin-top:26px}
-    .feature-row{
-      display:flex;
-      align-items:flex-start;
-      gap:13px;
-      padding:14px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.04);
-      border-radius:16px;
-    }
-    .feature-row i{color:var(--green);margin-top:3px}
-    .feature-row strong{display:block;font-size:14px}
-    .feature-row span{display:block;color:#9fb1c8;font-size:13px;margin-top:2px}
-    .control-room{
-      border:1px solid var(--line);
-      border-radius:28px;
-      background:linear-gradient(180deg,rgba(15,34,61,.78),rgba(10,24,42,.92));
-      overflow:hidden;
-      box-shadow:var(--shadow);
-    }
-    .control-top{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:16px;
-      padding:20px 22px;
-      border-bottom:1px solid rgba(166,189,218,.14);
-    }
-    .control-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:16px;padding:18px}
-    .control-main,.control-side{
-      border:1px solid rgba(166,189,218,.13);
-      border-radius:20px;
-      background:#091524;
-      padding:16px;
-    }
-    .wide-chart{
-      height:270px;
-      display:flex;
-      align-items:end;
-      gap:12px;
-      padding-top:28px;
-    }
-    .wide-chart span{
-      flex:1;
-      border-radius:12px 12px 3px 3px;
-      background:linear-gradient(180deg,rgba(71,199,232,.90),rgba(71,199,232,.18));
-      border:1px solid rgba(71,199,232,.22);
-    }
-    .alert-feed{display:grid;gap:10px;margin-top:16px}
-    .feed-item{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding:12px;
-      border-radius:14px;
-      border:1px solid rgba(166,189,218,.12);
-      background:rgba(255,255,255,.035);
-      font-size:12px;
-      color:#d8e5f6;
-      font-weight:750;
-    }
-    .automation-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-    .auto-card{
-      border:1px solid var(--line);
-      border-radius:18px;
-      background:rgba(255,255,255,.045);
-      padding:18px;
-      min-height:120px;
-    }
-    .auto-card i{color:var(--cyan);font-size:16px;margin-bottom:14px}
-    .auto-card strong{display:block;font-size:15px;margin-bottom:6px}
-    .auto-card span{color:#9fb1c8;font-size:13px;line-height:1.5}
-    .automation-flow{
-      display:grid;
-      grid-template-columns:minmax(0,.82fr) minmax(420px,1.18fr);
-      gap:22px;
-      align-items:stretch;
-    }
-    .automation-copy{
-      border:1px solid var(--line);
-      border-radius:24px;
-      background:rgba(255,255,255,.045);
-      padding:26px;
-    }
-    .automation-copy p{color:#9fb1c8;font-size:15px;line-height:1.62;margin-top:12px}
-    .auto-visual{
-      position:relative;
-      min-height:390px;
-      border:1px solid rgba(71,199,232,.20);
-      border-radius:28px;
-      background:
-        radial-gradient(circle at 76% 22%,rgba(71,199,232,.12),transparent 32%),
-        rgba(9,21,36,.86);
-      overflow:hidden;
-      padding:24px;
-    }
-    .auto-visual:before{
-      content:"";
-      position:absolute;
-      inset:28px;
-      border-radius:22px;
-      background:
-        linear-gradient(rgba(255,255,255,.034) 1px,transparent 1px),
-        linear-gradient(90deg,rgba(255,255,255,.034) 1px,transparent 1px);
-      background-size:54px 54px;
-      opacity:.75;
-    }
-    .auto-lane{
-      position:relative;
-      z-index:1;
-      display:grid;
-      grid-template-columns:46px 1fr auto;
-      align-items:center;
-      gap:14px;
-      min-height:58px;
-      margin:12px 0;
-      border:1px solid rgba(166,189,218,.14);
-      border-radius:16px;
-      background:rgba(7,17,31,.72);
-      padding:9px 12px;
-    }
-    .auto-lane i{
-      width:38px;
-      height:38px;
-      display:grid;
-      place-items:center;
-      border-radius:13px;
-      color:#dff9ff;
-      background:rgba(71,199,232,.12);
-      border:1px solid rgba(71,199,232,.18);
-    }
-    .auto-lane strong{display:block;font-size:13px}
-    .auto-lane span{display:block;color:#8ea2bb;font-size:11.5px;font-weight:750;margin-top:2px}
-    .demo-shell{
-      display:grid;
-      grid-template-columns:minmax(0,1.1fr) minmax(320px,.9fr);
-      gap:22px;
-      align-items:center;
-      border:1px solid rgba(166,189,218,.18);
-      border-radius:30px;
-      background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.032));
-      padding:22px;
-      overflow:hidden;
-    }
-    .demo-player{
-      position:relative;
-      min-height:380px;
-      border-radius:26px;
-      border:1px solid rgba(166,189,218,.18);
-      background:#081524;
-      overflow:hidden;
-      box-shadow:0 24px 64px rgba(0,0,0,.24);
-    }
-    .demo-player:before{
-      content:"";
-      position:absolute;
-      inset:0;
-      background:
-        radial-gradient(circle at 50% 36%,rgba(71,199,232,.17),transparent 30%),
-        linear-gradient(135deg,rgba(71,199,232,.08),rgba(92,140,255,.08));
-    }
-    .demo-frame{
-      position:absolute;
-      inset:34px;
-      border:1px solid rgba(166,189,218,.16);
-      border-radius:22px;
-      background:rgba(7,17,31,.74);
-      padding:18px;
-      transform:perspective(900px) rotateX(5deg) rotateY(-8deg);
-    }
-    .play-core{
-      position:absolute;
-      left:50%;
-      top:50%;
-      transform:translate(-50%,-50%);
-      width:76px;
-      height:76px;
-      display:grid;
-      place-items:center;
-      border-radius:50%;
-      border:1px solid rgba(255,255,255,.26);
-      background:rgba(255,255,255,.12);
-      backdrop-filter:blur(14px);
-      color:#fff;
-      font-size:24px;
-      box-shadow:0 20px 50px rgba(0,0,0,.28);
-    }
-    .demo-timeline{
-      position:absolute;
-      left:28px;
-      right:28px;
-      bottom:24px;
-      height:6px;
-      border-radius:999px;
-      background:rgba(255,255,255,.13);
-      overflow:hidden;
-    }
-    .demo-timeline span{display:block;width:58%;height:100%;background:linear-gradient(90deg,var(--cyan),var(--blue));border-radius:inherit}
-    .demo-copy{padding:10px}
-    .demo-copy h2{font-size:clamp(30px,3vw,46px)}
-    .demo-copy p{margin-top:14px;color:#9fb1c8;font-size:16px;line-height:1.68}
-    .demo-points{display:grid;gap:10px;margin:22px 0}
-    .demo-points span{display:flex;align-items:center;gap:10px;color:#dbe8f9;font-weight:800;font-size:13px}
-    .demo-points i{color:var(--green)}
-    .quote-panel{
-      display:grid;
-      grid-template-columns:.95fr 1.05fr;
-      gap:28px;
-      align-items:center;
-      border:1px solid var(--line);
-      border-radius:28px;
-      background:rgba(255,255,255,.055);
-      padding:30px;
-    }
-    .quote-mark{
-      width:54px;
-      height:54px;
-      display:grid;
-      place-items:center;
-      border-radius:18px;
-      background:rgba(71,199,232,.12);
-      color:#c7f5ff;
-      border:1px solid rgba(71,199,232,.25);
-      margin-bottom:18px;
-    }
-    blockquote{
-      margin:0;
-      color:#f6fbff;
-      font-size:25px;
-      line-height:1.35;
-      font-weight:850;
-      letter-spacing:-.025em;
-    }
-    cite{display:block;margin-top:18px;color:#93a8c3;font-style:normal;font-size:13px;font-weight:800}
-    .quote-mini{
-      border:1px solid rgba(166,189,218,.14);
-      border-radius:22px;
-      background:#091524;
-      padding:18px;
-    }
-    .quote-mini-row{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      border-bottom:1px solid rgba(166,189,218,.11);
-      padding:13px 0;
-      color:#dbe8f9;
-      font-size:13px;
-      font-weight:750;
-    }
-    .quote-mini-row:last-child{border-bottom:0}
-    .proof-grid{
-      display:grid;
-      grid-template-columns:repeat(5,1fr);
-      gap:12px;
-      margin-top:22px;
-    }
-    .proof-stat{
-      border:1px solid var(--line);
-      border-radius:18px;
-      background:rgba(255,255,255,.04);
-      padding:16px;
-      min-height:104px;
-    }
-    .proof-stat strong{display:block;font-size:30px;line-height:1;letter-spacing:-.05em;color:#fff}
-    .proof-stat span{display:block;color:#8fa2ba;font-size:11.5px;font-weight:800;margin-top:10px}
-    .seo-grid{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:14px;
-    }
-    .seo-card{
-      border:1px solid var(--line);
-      border-radius:18px;
-      background:rgba(255,255,255,.04);
-      padding:18px;
-      min-height:132px;
-      text-decoration:none;
-      transition:transform .18s ease,border-color .18s ease,background .18s ease;
-    }
-    .seo-card:hover{transform:translateY(-2px);border-color:rgba(71,199,232,.32);background:rgba(255,255,255,.06)}
-    .seo-card span{display:block;color:#87dff3;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
-    .seo-card strong{display:block;color:#fff;font-size:16px;line-height:1.35}
-    .seo-card small{display:block;color:#8fa2ba;font-size:12px;line-height:1.5;margin-top:10px}
-    .final-cta{
-      text-align:center;
-      border:1px solid rgba(71,199,232,.24);
-      border-radius:32px;
-      padding:58px 28px;
-      background:
-        radial-gradient(circle at 50% 0%,rgba(71,199,232,.16),transparent 48%),
-        rgba(255,255,255,.055);
-      box-shadow:0 22px 70px rgba(0,0,0,.20);
-    }
-    .final-cta h2{max-width:760px;margin:0 auto;font-size:clamp(34px,4.5vw,62px)}
-    .final-cta p{max-width:700px;margin:16px auto 28px;color:#a8bad0;font-size:17px;line-height:1.7}
-    footer{
-      border-top:1px solid var(--line);
-      padding:42px 0 48px;
-      color:#7f93ae;
-      font-size:13px;
-      background:rgba(3,9,17,.34);
-    }
-    .footer-inner{display:grid;grid-template-columns:1.1fr repeat(4,minmax(140px,.6fr));gap:30px;align-items:start}
-    .footer-brand-copy{max-width:330px;color:#8fa2ba;line-height:1.65;margin-top:14px}
-    .footer-col h4{margin:0 0 12px;color:#dceaff;font-size:12px;text-transform:uppercase;letter-spacing:.10em}
-    .footer-links{display:grid;gap:9px}
-    .footer-links a{text-decoration:none;color:#9fb1c8;font-weight:750}
-    .footer-links a:hover{color:#fff}
-    .footer-bottom{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:18px;
-      flex-wrap:wrap;
-      border-top:1px solid var(--line);
-      margin-top:32px;
-      padding-top:18px;
-      color:#71859d;
-    }
-    .status-dot{display:inline-flex;align-items:center;gap:8px;color:#a9f2ce;font-weight:850}
-    .status-dot:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green)}
-    .legal-inline{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-    .legal-inline a{color:#9fb1c8;text-decoration:none;font-weight:850}
-    .legal-inline a:hover{color:#fff}
-    .cookie-banner{
-      position:fixed;
-      left:22px;
-      right:22px;
-      bottom:22px;
-      z-index:80;
-      width:min(980px,calc(100% - 44px));
-      margin:0 auto;
-      border:1px solid rgba(166,189,218,.24);
-      background:rgba(7,17,31,.94);
-      backdrop-filter:blur(18px);
-      border-radius:20px;
-      box-shadow:0 24px 70px rgba(0,0,0,.36);
-      padding:18px;
-      display:grid;
-      grid-template-columns:minmax(0,1fr) auto;
-      gap:16px;
-      align-items:center;
-    }
-    .cookie-banner[hidden]{display:none}
-    .cookie-banner strong{display:block;color:#fff;font-size:15px;margin-bottom:4px}
-    .cookie-banner p{color:#a8bad0;font-size:13px;line-height:1.55;margin:0}
-    .cookie-banner a{color:#bcefff;font-weight:850;text-decoration:none}
-    .cookie-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
-    .cookie-actions button{
-      min-height:40px;
-      border-radius:12px;
-      padding:0 14px;
-      border:1px solid var(--line);
-      font-family:inherit;
-      font-weight:850;
-      cursor:pointer;
-      color:#dbeafe;
-      background:rgba(255,255,255,.055);
-    }
-    .cookie-actions button.primary{color:#06101d;border-color:transparent;background:linear-gradient(135deg,#78def2,#62a3ff)}
-    .login-only{
-      min-height:100vh;
-      display:grid;
-      place-items:center;
-      padding:24px;
-      background:
-        radial-gradient(circle at 18% 12%,rgba(71,199,232,.12),transparent 30%),
-        radial-gradient(circle at 88% 20%,rgba(92,140,255,.11),transparent 32%),
-        #07111f;
-    }
-    .login-card{
-      width:min(430px,100%);
-      border:1px solid var(--line);
-      background:rgba(15,34,61,.82);
-      backdrop-filter:blur(18px);
-      border-radius:24px;
-      padding:28px;
-      box-shadow:var(--shadow);
-    }
-    .login-brand{justify-content:center;margin-bottom:22px}
-    .login-card h2{text-align:center;font-size:25px;letter-spacing:-.03em;margin-bottom:8px}
-    .login-card p{text-align:center;color:#9fb1c8;font-size:13.5px;margin-bottom:22px}
-    .lang-label,.form-label{display:block;font-size:12px;color:#9fb1c8;font-weight:850;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
-    .lang-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
-    .lang-btn{
-      width:100%;
-      min-height:38px;
-      border:1px solid var(--line);
-      border-radius:11px;
-      background:rgba(255,255,255,.045);
-      color:#b9c8dc;
-      font-family:inherit;
-      font-weight:850;
-      cursor:pointer;
-      transition:background .18s ease,border-color .18s ease,color .18s ease;
-    }
-    .lang-btn.active,.lang-btn:hover{background:rgba(71,199,232,.13);border-color:rgba(71,199,232,.34);color:#fff}
-    .form-group{margin-bottom:15px}
-    .form-control{
-      width:100%;
-      min-height:46px;
-      border:1px solid var(--line);
-      border-radius:13px;
-      background:#081524;
-      color:#eff6ff;
-      padding:0 13px;
-      font:inherit;
-      outline:none;
-      transition:border-color .18s ease,box-shadow .18s ease,background .18s ease;
-    }
-    .form-control:focus{border-color:rgba(71,199,232,.45);box-shadow:0 0 0 4px rgba(71,199,232,.10)}
-    .alert{
-      border:1px solid rgba(241,95,109,.26);
-      background:rgba(241,95,109,.12);
-      color:#ffd0d5;
-      border-radius:14px;
-      padding:11px 12px;
-      font-size:13px;
-      font-weight:750;
-      margin-bottom:16px;
-    }
-    .login-submit{width:100%;border:0;margin-top:3px}
-    .divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:#7388a3;font-size:12px;font-weight:750}
-    .divider:before,.divider:after{content:"";height:1px;background:var(--line);flex:1}
-    .google-btn,.register-btn{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      width:100%;
-      min-height:44px;
-      border-radius:13px;
-      text-decoration:none;
-      font-weight:850;
-      font-size:13.5px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.045);
-      color:#dbeafe;
-      transition:background .18s ease,border-color .18s ease;
-    }
-    .google-btn:hover,.register-btn:hover{background:rgba(255,255,255,.075);border-color:var(--line-strong)}
-    .legal-copy{text-align:center;color:#8296af;font-size:11.5px;line-height:1.6;margin-top:18px}
-    .legal-copy a{color:#bcefff;font-weight:800;text-decoration:none}
-    @media(max-width:1020px){
-      .nav-links{display:none}
-      .hero{grid-template-columns:1fr;gap:34px;padding-top:52px}
-      .device-wrap{max-width:720px}
-      .desktop-device{transform:none}
-      .float-chip{display:none}
-      .split,.mobile-layout,.control-grid,.quote-panel,.brand-system,.automation-flow,.demo-shell{grid-template-columns:1fr}
-      .phone.secondary{left:calc(50% - 250px)}
-      .footer-inner{grid-template-columns:1fr 1fr}
-    }
-    @media(max-width:760px){
-      .container{width:min(100% - 28px,1180px)}
-      .nav-inner{min-height:66px}
-      .brand{min-width:auto}
-      .brand-text span{display:none}
-      .nav-actions .btn-quiet{display:none}
-      .hero{padding-top:38px}
-      .hero h1{font-size:40px}
-      .hero-sub,.section-copy{font-size:15.5px}
-      .hero-proof,.kpi-strip,.modules-grid,.automation-grid,.mini-kpis,.workflow-row,.flow-map,.proof-grid,.seo-grid{grid-template-columns:1fr}
-      .kpi-box{border-right:0;border-bottom:1px solid var(--line)}
-      .kpi-box:last-child{border-bottom:0}
-      .operational-grid{grid-template-columns:1fr}
-      .access-grid-card{padding:18px}
-      .flow-map{min-height:auto}
-      .flow-map:before{display:none}
-      .section{padding:64px 0}
-      .phone-stage{min-height:480px;overflow:hidden}
-      .phone.secondary{display:none}
-      .phone.primary{transform:none}
-      .control-top{align-items:flex-start;flex-direction:column}
-      .wide-chart{height:210px}
-      .auto-visual,.demo-player{min-height:320px}
-      .demo-frame{inset:20px;transform:none}
-      blockquote{font-size:21px}
-      .footer-inner{grid-template-columns:1fr}
-      .footer-bottom{align-items:flex-start;flex-direction:column}
-      .cookie-banner{grid-template-columns:1fr;left:14px;right:14px;bottom:14px;width:calc(100% - 28px)}
-      .cookie-actions{justify-content:flex-start}
-    }
-    {% if t.dir == 'rtl' %}body,input,button{font-family:'Inter',Arial,sans-serif}{% endif %}
-  </style>
-</head>
-<body class="{{ 'public-home' if public_home else 'login-only' }}">
+# Public UI templates are stored in templates/public and static/accesso.
+# These compact fallbacks keep old single-file deploys alive if those folders are missing.
+_PUBLIC_LOGIN_FALLBACK = """<!DOCTYPE html>
+<html lang="it"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Accesso Fiere</title>
+<style>body{margin:0;font-family:Inter,Arial,sans-serif;background:#07111f;color:#fff}.wrap{min-height:100vh;display:grid;place-items:center;padding:24px}.box{width:min(460px,100%);background:#0f223d;border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:26px}h1{margin:0 0 8px;font-size:30px}.muted{color:#a8bbd3;line-height:1.5}.btn,button{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:10px;padding:11px 15px;background:#26afd0;color:#fff;font-weight:800;text-decoration:none;cursor:pointer}input{width:100%;box-sizing:border-box;margin:6px 0 14px;padding:11px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:#081525;color:#fff}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.alert{background:#451f2a;color:#ffc8d1;border:1px solid rgba(255,120,140,.35);border-radius:12px;padding:10px 12px;margin:12px 0}</style>
+</head><body><main class="wrap"><section class="box">
 {% if public_home %}
-  <div class="public-shell">
-    <header class="nav">
-      <div class="container nav-inner">
-        <a class="brand" href="/home" aria-label="Accesso Fiere">
-          <span class="brand-mark"><span class="brand-monogram">AF</span></span>
-          <span class="brand-text">
-            <strong>Accesso Fiere</strong>
-            <span>Gestionale Allestitori</span>
-          </span>
-        </a>
-        <nav class="nav-links" aria-label="Navigazione principale">
-          <a href="#problema">Problema</a>
-          <a href="#moduli">Funzionalita</a>
-          <a href="#mobile">Mobile app</a>
-          <a href="#control-room">Control room</a>
-          <a href="#fatturazione">Fatturazione</a>
-          <a href="#demo">Demo</a>
-          <a href="#risorse">Risorse</a>
-        </nav>
-        <div class="nav-actions">
-          <a class="btn btn-quiet" href="/area-clienti"><i class="fa-solid fa-lock"></i> Area clienti</a>
-          <a class="btn btn-primary" href="mailto:info@accessofiere.com?subject=Richiesta%20demo%20Accesso%20Fiere"><i class="fa-solid fa-calendar-check"></i> Prenota demo</a>
-        </div>
-      </div>
-    </header>
-
-    <main>
-      <section class="container hero">
-        <div>
-          <div class="eyebrow"><i class="fa-solid fa-circle"></i> Software operativo verticale per allestitori fieristici</div>
-          <h1><span class="gradient-text">Controlla squadre, documenti, presenze e cantieri fieristici in un unico sistema.</span></h1>
-          <p class="hero-sub">Riduci errori, velocizza le operazioni e centralizza tutto: fiere, accessi, personale, documenti, mezzi, fatturazione e workflow operativi.</p>
-          <div class="hero-actions">
-            <a class="btn btn-primary" href="mailto:info@accessofiere.com?subject=Richiesta%20demo%20Accesso%20Fiere"><i class="fa-solid fa-arrow-right"></i> Prenota demo</a>
-            <a class="btn btn-secondary" href="#control-room"><i class="fa-solid fa-display"></i> Guarda la piattaforma</a>
-          </div>
-          <div class="trust">Usato da aziende di allestimento, montaggio e gestione fieristica.</div>
-          <div class="hero-proof">
-            <div class="proof-pill"><strong>Live</strong><span>controllo operativo in tempo reale</span></div>
-            <div class="proof-pill"><strong>SDI</strong><span>fatture collegate ai flussi operativi</span></div>
-            <div class="proof-pill"><strong>Mobile</strong><span>dipendenti e capisquadra sempre sincronizzati</span></div>
-          </div>
-        </div>
-
-        <div class="device-wrap" aria-label="Mockup dashboard Accesso Fiere">
-          <div class="desktop-device">
-            <div class="device-top">
-              <div class="dots"><span></span><span></span><span></span></div>
-              <span>control-room.accessofiere</span>
-              <span><i class="fa-solid fa-wifi"></i></span>
-            </div>
-            <div class="dash-screen">
-              <div class="dash-header">
-                <h3>Control room operativa</h3>
-                <span class="live-pill"><span class="live-dot"></span> Sincronizzato ora</span>
-              </div>
-              <div class="dash-body">
-                <div class="mini-kpis">
-                  <div class="mini-kpi"><span>Operatori live</span><strong>24</strong><small>6 squadre attive</small></div>
-                  <div class="mini-kpi"><span>Documenti critici</span><strong>3</strong><small>da verificare</small></div>
-                  <div class="mini-kpi"><span>Fiere aperte</span><strong>7</strong><small>setup e smontaggi</small></div>
-                </div>
-                <div class="operational-grid">
-                  <div class="line-chart">
-                    <div class="panel-title"><i class="fa-solid fa-chart-line"></i> Andamento ore</div>
-                    <div class="chart-bars">
-                      <span style="height:32%"></span><span style="height:46%"></span><span style="height:38%"></span><span style="height:70%"></span><span style="height:58%"></span><span style="height:82%"></span><span style="height:66%"></span>
-                    </div>
-                  </div>
-                  <div class="status-list">
-                    <div class="panel-title"><i class="fa-solid fa-list-check"></i> Stato live</div>
-                    <div class="status-item"><span>Badge Milano</span><span class="tag ok">OK</span></div>
-                    <div class="status-item"><span>DPI squadra 3</span><span class="tag warn">Check</span></div>
-                    <div class="status-item"><span>Mezzo VR-412</span><span class="tag ok">Pronto</span></div>
-                    <div class="status-item"><span>Fattura passiva</span><span class="tag bad">Scaduta</span></div>
-                  </div>
-                </div>
-                <div class="workflow-row">
-                  <div class="flow-card"><i class="fa-solid fa-users-gear"></i><strong>Squadre</strong><span>presenze e ruoli</span></div>
-                  <div class="flow-card"><i class="fa-solid fa-folder-shield"></i><strong>Documenti</strong><span>scadenze e alert</span></div>
-                  <div class="flow-card"><i class="fa-solid fa-truck-ramp-box"></i><strong>Mezzi</strong><span>revisioni e flotta</span></div>
-                  <div class="flow-card"><i class="fa-solid fa-file-invoice"></i><strong>Fatture</strong><span>attive, passive, SDI</span></div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="float-chip one"><i class="fa-solid fa-route"></i> Access Flow Grid</div>
-          <div class="float-chip two"><i class="fa-solid fa-file-shield"></i> Compliance live</div>
-          <div class="float-chip three"><i class="fa-solid fa-bolt"></i> Workflow 214 ms</div>
-        </div>
-      </section>
-
-      <section class="container">
-        <div class="kpi-strip" aria-label="Risultati operativi">
-          <div class="kpi-box"><strong>-70%</strong><span>Tempo perso nella gestione documenti</span></div>
-          <div class="kpi-box"><strong>+45%</strong><span>Velocita operativa squadre</span></div>
-          <div class="kpi-box"><strong>1 piattaforma</strong><span>Per fiere, presenze, documenti e fatture</span></div>
-          <div class="kpi-box"><strong>Realtime</strong><span>Aggiornamenti live da web e mobile</span></div>
-        </div>
-      </section>
-
-      <section class="container section compact" aria-label="Access Flow Grid">
-        <div class="access-grid-card">
-          <div class="brand-system">
-            <div>
-              <div class="section-label">Identita proprietaria</div>
-              <h2>Access Flow Grid: il tuo flusso operativo sempre visibile.</h2>
-              <p>Un pattern unico per leggere ogni processo: persone, documenti, mezzi, cantieri e fatture collegati in una linea operativa viva.</p>
-            </div>
-            <div class="flow-map" aria-hidden="true">
-              <div class="flow-node"><strong>Squadre</strong><span>Presenze, ruoli, capisquadra</span></div>
-              <div class="flow-node"><strong>Documenti</strong><span>DPI, scadenze, compliance</span></div>
-              <div class="flow-node"><strong>Cantieri</strong><span>Setup, live, smontaggio</span></div>
-              <div class="flow-node"><strong>Fatture</strong><span>SDI, provider, pagamenti</span></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="container section" id="problema">
-        <div class="section-head">
-          <div class="section-label">Il problema</div>
-          <h2>Il problema non &egrave; il lavoro. &Egrave; il caos operativo.</h2>
-          <p class="section-copy">Excel sparsi, chat WhatsApp, documenti mancanti, scadenze dimenticate, timbrature non sincronizzate e fatture separate dall'operativita. Accesso Fiere unifica tutto in un ecosistema operativo unico.</p>
-        </div>
-        <div class="split">
-          <div class="glass glass-pad">
-            <div class="panel-title"><i class="fa-solid fa-triangle-exclamation"></i> Prima: caos disperso</div>
-            <div class="chaos-stack">
-              <div class="chaos-item"><span><i class="fa-solid fa-file-excel"></i> Excel personale e mezzi</span><span class="tag bad">duplicati</span></div>
-              <div class="chaos-item"><span><i class="fa-brands fa-whatsapp"></i> WhatsApp per presenze e richieste</span><span class="tag warn">non tracciato</span></div>
-              <div class="chaos-item"><span><i class="fa-solid fa-envelope"></i> Email con documenti e scadenze</span><span class="tag bad">perso</span></div>
-              <div class="chaos-item"><span><i class="fa-solid fa-phone"></i> Telefonate per recuperare dati</span><span class="tag warn">lento</span></div>
-            </div>
-          </div>
-          <div class="glass glass-pad">
-            <div class="panel-title"><i class="fa-solid fa-circle-check"></i> Dopo: Accesso Fiere</div>
-            <div class="clean-table">
-              <div class="clean-row"><span>Squadre e presenze</span><span class="tag ok">Live</span></div>
-              <div class="clean-row"><span>Documenti e compliance</span><span class="tag ok">OK</span></div>
-              <div class="clean-row"><span>Scadenze e alert</span><span class="tag warn">2 avvisi</span></div>
-              <div class="clean-row"><span>Fatturazione collegata</span><span class="tag ok">Sincronizzata</span></div>
-              <div class="clean-row"><span>Workflow approvativi</span><span class="tag ok">Tracciati</span></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="container section compact" id="moduli">
-        <div class="section-head">
-          <div class="section-label">Moduli operativi</div>
-          <h2>Tutto quello che serve per gestire un allestimento fieristico.</h2>
-          <p class="section-copy">Ogni area del gestionale nasce per l'operativita reale di aziende che montano, smontano e coordinano cantieri temporanei.</p>
-        </div>
-        <div class="modules-grid">
-          <article class="module-card">
-            <div class="module-preview"><div class="module-window"><div class="module-line short"></div><div class="module-stat"><span></span><span></span><span></span></div><div class="module-line med"></div><div class="module-line"></div></div></div>
-            <div class="module-content"><i class="fa-solid fa-users-gear"></i><h3>Controllo squadre</h3><p>Presenze, capisquadra, ore lavorate, attivita live e storico operativo sempre sotto controllo.</p></div>
-          </article>
-          <article class="module-card">
-            <div class="module-preview"><div class="module-window"><div class="module-line"></div><div class="module-line med"></div><div class="module-stat"><span></span><span></span><span></span></div><div class="module-line short"></div></div></div>
-            <div class="module-content"><i class="fa-solid fa-folder-shield"></i><h3>Documenti e compliance</h3><p>Scadenze, documenti aziendali, DPI, verifiche, alert e stato operativo in tempo reale.</p></div>
-          </article>
-          <article class="module-card">
-            <div class="module-preview"><div class="module-window"><div class="module-stat"><span></span><span></span><span></span></div><div class="module-line"></div><div class="module-line med"></div><div class="module-line short"></div></div></div>
-            <div class="module-content"><i class="fa-solid fa-building-circle-check"></i><h3>Fiere e cantieri</h3><p>Setup, live, smontaggio, turni, incarichi e gestione operativa per ogni evento fieristico.</p></div>
-          </article>
-          <article class="module-card" id="fatturazione">
-            <div class="module-preview"><div class="module-window"><div class="module-line short"></div><div class="module-stat"><span></span><span></span><span></span></div><div class="module-line"></div><div class="module-line med"></div></div></div>
-            <div class="module-content"><i class="fa-solid fa-file-invoice-dollar"></i><h3>Fatturazione elettronica</h3><p>Attive, passive, SDI, pagamenti, scadenze e sincronizzazione provider in un cruscotto unico.</p></div>
-          </article>
-          <article class="module-card">
-            <div class="module-preview"><div class="module-window"><div class="module-line"></div><div class="module-line short"></div><div class="module-stat"><span></span><span></span><span></span></div><div class="module-line med"></div></div></div>
-            <div class="module-content"><i class="fa-solid fa-truck"></i><h3>Mezzi e scadenze</h3><p>Revisioni, assicurazioni, bollo, documenti veicoli, alert e disponibilita della flotta.</p></div>
-          </article>
-          <article class="module-card">
-            <div class="module-preview"><div class="module-window"><div class="module-stat"><span></span><span></span><span></span></div><div class="module-line short"></div><div class="module-line"></div><div class="module-line med"></div></div></div>
-            <div class="module-content"><i class="fa-solid fa-mobile-screen-button"></i><h3>App mobile operativa</h3><p>Dipendenti, capisquadra, amministrazione e contabilita con notifiche e workflow live.</p></div>
-          </article>
-        </div>
-      </section>
-
-      <section class="container section" id="mobile">
-        <div class="mobile-layout">
-          <div>
-            <div class="section-label">Mobile app</div>
-            <h2>Il cantiere continua anche fuori ufficio.</h2>
-            <p class="section-copy">Accesso Fiere include app dedicate per dipendenti, capisquadra, amministrazione e contabilita. Timbrature, ferie, notifiche, workflow e documenti restano sincronizzati in tempo reale.</p>
-            <div class="feature-list">
-              <div class="feature-row"><i class="fa-solid fa-location-dot"></i><div><strong>Presenze e timbrature</strong><span>Ore lavorate, entrate, uscite, pause e storico sempre consultabili.</span></div></div>
-              <div class="feature-row"><i class="fa-solid fa-bell"></i><div><strong>Notifiche operative</strong><span>Alert su documenti, richieste, ferie e scadenze senza rincorrere chat.</span></div></div>
-              <div class="feature-row"><i class="fa-solid fa-id-card"></i><div><strong>Documenti sempre pronti</strong><span>Capisquadra e dipendenti accedono alle informazioni utili dal telefono.</span></div></div>
-            </div>
-          </div>
-          <div class="phone-stage" aria-label="Mockup app mobile Accesso Fiere">
-            <div class="phone secondary">
-              <div class="phone-screen">
-                <div class="phone-notch"></div>
-                <div class="phone-title">Dipendente</div>
-                <div class="phone-card"><strong>8.5h</strong><span>Ore oggi</span></div>
-                <div class="phone-card"><strong>Ferie</strong><span>Richiesta inviata</span></div>
-                <div class="phone-card"><strong>DPI</strong><span>Documento valido</span></div>
-              </div>
-            </div>
-            <div class="phone primary">
-              <div class="phone-screen">
-                <div class="phone-notch"></div>
-                <div class="phone-title">Caposquadra live</div>
-                <div class="phone-card"><strong>Squadra A</strong><span>12 operatori presenti</span></div>
-                <div class="phone-card"><strong>Milano Rho</strong><span>Setup stand in corso</span></div>
-                <div class="phone-card"><strong>2 alert</strong><span>Documenti da verificare</span></div>
-                <div class="phone-card"><strong>Pronto</strong><span>Report turno sincronizzato</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="container section compact" id="control-room">
-        <div class="section-head">
-          <div class="section-label">Control room</div>
-          <h2>Una control room operativa per la tua azienda.</h2>
-          <p class="section-copy">Controlla fiere live, documenti critici, workflow bloccati, presenze, scadenze, fatturato e richieste dipendenti da una sola dashboard.</p>
-        </div>
-        <div class="control-room">
-          <div class="control-top">
-            <div class="panel-title"><i class="fa-solid fa-gauge-high"></i> Dashboard operativa Accesso Fiere</div>
-            <span class="live-pill"><span class="live-dot"></span> Live da web e mobile</span>
-          </div>
-          <div class="control-grid">
-            <div class="control-main">
-              <div class="panel-title"><i class="fa-solid fa-chart-column"></i> Carico operativo e fatturato</div>
-              <div class="wide-chart">
-                <span style="height:38%"></span><span style="height:52%"></span><span style="height:46%"></span><span style="height:72%"></span><span style="height:64%"></span><span style="height:88%"></span><span style="height:79%"></span><span style="height:57%"></span>
-              </div>
-            </div>
-            <div class="control-side">
-              <div class="panel-title"><i class="fa-solid fa-signal"></i> Live feed</div>
-              <div class="alert-feed">
-                <div class="feed-item"><span>Fiera Bologna - squadra confermata</span><span class="tag ok">OK</span></div>
-                <div class="feed-item"><span>Documento patente in scadenza</span><span class="tag warn">Alert</span></div>
-                <div class="feed-item"><span>Fattura passiva ricevuta da SDI</span><span class="tag ok">Sync</span></div>
-                <div class="feed-item"><span>Richiesta permesso da approvare</span><span class="tag warn">Pending</span></div>
-                <div class="feed-item"><span>Veicolo assicurazione aggiornata</span><span class="tag ok">OK</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="container section compact">
-        <div class="automation-flow">
-          <div class="automation-copy">
-            <div class="section-label">Automazione</div>
-            <h2>Meno amministrazione. Pi&ugrave; operativita.</h2>
-            <p>Il sistema intercetta eventi, scadenze e richieste prima che diventino problemi. Meno rincorse, piu decisioni chiare.</p>
-            <div class="hero-actions">
-              <a class="btn btn-secondary" href="#demo"><i class="fa-solid fa-play"></i> Vedi flusso demo</a>
-            </div>
-          </div>
-          <div class="auto-visual" aria-label="Flussi automatici Accesso Fiere">
-            <div class="auto-lane"><i class="fa-solid fa-bell"></i><div><strong>Alert automatici</strong><span>documenti, pagamenti, scadenze</span></div><span class="tag ok">live</span></div>
-            <div class="auto-lane"><i class="fa-solid fa-calendar-check"></i><div><strong>Controllo scadenze</strong><span>veicoli, DPI, visite, contratti</span></div><span class="tag warn">priorita</span></div>
-            <div class="auto-lane"><i class="fa-solid fa-route"></i><div><strong>Workflow approvativi</strong><span>ferie, permessi, rimborsi</span></div><span class="tag ok">tracciato</span></div>
-            <div class="auto-lane"><i class="fa-solid fa-cloud-arrow-down"></i><div><strong>Sincronizzazione SDI</strong><span>attive, passive, provider</span></div><span class="tag ok">sync</span></div>
-            <div class="auto-lane"><i class="fa-solid fa-clock"></i><div><strong>Presenze live</strong><span>ore, squadre, report turno</span></div><span class="tag ok">mobile</span></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="container section compact" id="demo">
-        <div class="demo-shell">
-          <div class="demo-player" aria-label="Anteprima demo video Accesso Fiere">
-            <div class="demo-frame">
-              <div class="mini-kpis">
-                <div class="mini-kpi"><span>Demo</span><strong>60s</strong><small>workflow completo</small></div>
-                <div class="mini-kpi"><span>Mobile</span><strong>Live</strong><small>notifiche e presenze</small></div>
-                <div class="mini-kpi"><span>SDI</span><strong>Sync</strong><small>fatture e pagamenti</small></div>
-              </div>
-              <div class="chart-bars">
-                <span style="height:38%"></span><span style="height:62%"></span><span style="height:46%"></span><span style="height:82%"></span><span style="height:58%"></span><span style="height:74%"></span>
-              </div>
-            </div>
-            <div class="play-core"><i class="fa-solid fa-play"></i></div>
-            <div class="demo-timeline"><span></span></div>
-          </div>
-          <div class="demo-copy">
-            <div class="section-label">Demo video</div>
-            <h2>Una storia da 60 secondi, non una lista di funzioni.</h2>
-            <p>La sezione e pronta per collegare un video cinematico con dashboard live, notifiche, workflow, mobile, SDI, approvazioni e presenze.</p>
-            <div class="demo-points">
-              <span><i class="fa-solid fa-circle-check"></i> Dashboard live e KPI operativi</span>
-              <span><i class="fa-solid fa-circle-check"></i> App mobile per campo e ufficio</span>
-              <span><i class="fa-solid fa-circle-check"></i> Fatturazione elettronica e provider</span>
-            </div>
-            <a class="btn btn-primary" href="mailto:info@accessofiere.com?subject=Demo%20video%20Accesso%20Fiere"><i class="fa-solid fa-video"></i> Prenota demo guidata</a>
-          </div>
-        </div>
-      </section>
-
-      <section class="container section compact">
-        <div class="quote-panel">
-          <div>
-            <div class="section-label">Social proof</div>
-            <h2>Numeri operativi, non promesse generiche.</h2>
-            <p class="section-copy">Accesso Fiere rende misurabile cio che prima restava disperso tra chat, fogli, cartelle e telefonate.</p>
-            <div class="proof-grid">
-              <div class="proof-stat"><strong>12+</strong><span>aziende operative gestibili</span></div>
-              <div class="proof-stat"><strong>240+</strong><span>operatori coordinabili</span></div>
-              <div class="proof-stat"><strong>3.2k</strong><span>documenti tracciabili</span></div>
-              <div class="proof-stat"><strong>18k</strong><span>ore sincronizzabili</span></div>
-              <div class="proof-stat"><strong>1.2k</strong><span>fatture elaborabili</span></div>
-            </div>
-          </div>
-          <div class="quote-mini">
-            <div class="quote-mark"><i class="fa-solid fa-quote-left"></i></div>
-            <blockquote>Prima gestivamo tutto tra WhatsApp, Excel e telefonate. Ora abbiamo finalmente controllo operativo completo.</blockquote>
-            <cite>Azienda allestimenti Milano</cite>
-            <div class="quote-mini-row"><span>Documenti critici</span><span class="tag ok">sotto controllo</span></div>
-            <div class="quote-mini-row"><span>Squadre operative</span><span class="tag ok">coordinate</span></div>
-            <div class="quote-mini-row"><span>Fatture e scadenze</span><span class="tag ok">centralizzate</span></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="container section compact" id="risorse">
-        <div class="section-head">
-          <div class="section-label">SEO verticale</div>
-          <h2>Contenuti pensati per chi cerca soluzioni reali.</h2>
-          <p class="section-copy">Una base editoriale per far crescere autorevolezza e traffico qualificato su ricerche molto specifiche del settore fieristico.</p>
-        </div>
-        <div class="seo-grid">
-          <a class="seo-card" href="mailto:info@accessofiere.com?subject=Blog%20Accesso%20Fiere%20-%20documenti%20fieristici"><span>Guida</span><strong>Gestione documenti fieristici senza caos</strong><small>DPI, visite, scadenze e compliance in un unico flusso.</small></a>
-          <a class="seo-card" href="mailto:info@accessofiere.com?subject=Blog%20Accesso%20Fiere%20-%20software%20allestitori"><span>Software</span><strong>Software per allestitori: cosa deve fare davvero</strong><small>Dal campo all'amministrazione, senza sistemi scollegati.</small></a>
-          <a class="seo-card" href="mailto:info@accessofiere.com?subject=Blog%20Accesso%20Fiere%20-%20DPI%20cantieri"><span>Compliance</span><strong>Controllo DPI e documenti nei cantieri fieristici</strong><small>Alert, stati e storico per ridurre errori operativi.</small></a>
-          <a class="seo-card" href="mailto:info@accessofiere.com?subject=Blog%20Accesso%20Fiere%20-%20presenze%20fiere"><span>Presenze</span><strong>Presenze fiere: ore, squadre e capisquadra live</strong><small>Come sincronizzare turni, richieste e report dal telefono.</small></a>
-          <a class="seo-card" href="mailto:info@accessofiere.com?subject=Blog%20Accesso%20Fiere%20-%20squadre%20eventi"><span>Operativita</span><strong>Gestione squadre eventi e allestimenti temporanei</strong><small>Ruoli, badge, documenti e responsabilita operative.</small></a>
-          <a class="seo-card" href="mailto:info@accessofiere.com?subject=Blog%20Accesso%20Fiere%20-%20fatturazione"><span>SDI</span><strong>Fatturazione elettronica per aziende di allestimento</strong><small>Attive, passive, pagamenti e provider collegati al lavoro.</small></a>
-        </div>
-      </section>
-
-      <section class="container section compact">
-        <div class="final-cta">
-          <div class="section-label">Prenota demo</div>
-          <h2>Porta ordine operativo nella tua azienda.</h2>
-          <p>Scopri come Accesso Fiere puo centralizzare operativita, documenti, presenze e fatturazione in un unico sistema.</p>
-          <a class="btn btn-primary" href="mailto:info@accessofiere.com?subject=Richiesta%20demo%20Accesso%20Fiere"><i class="fa-solid fa-calendar-check"></i> Prenota una demo</a>
-        </div>
-      </section>
-    </main>
-
-    <footer>
-      <div class="container footer-inner">
-        <div>
-          <a class="brand" href="/home" aria-label="Accesso Fiere">
-            <span class="brand-mark"><span class="brand-monogram">AF</span></span>
-            <span class="brand-text">
-              <strong>Accesso Fiere</strong>
-              <span>Access Flow Grid</span>
-            </span>
-          </a>
-          <p class="footer-brand-copy">Il sistema operativo verticale per aziende di allestimento, montaggio e gestione fieristica.</p>
-        </div>
-        <div class="footer-col">
-          <h4>Prodotto</h4>
-          <div class="footer-links">
-            <a href="#moduli">Funzionalita</a>
-            <a href="#mobile">Mobile app</a>
-            <a href="#fatturazione">Fatturazione SDI</a>
-            <a href="#control-room">Control room</a>
-          </div>
-        </div>
-        <div class="footer-col">
-          <h4>Piattaforma</h4>
-          <div class="footer-links">
-            <a href="mailto:info@accessofiere.com?subject=API%20Accesso%20Fiere">API</a>
-            <a href="mailto:info@accessofiere.com?subject=Sicurezza%20Accesso%20Fiere">Sicurezza</a>
-            <a href="mailto:info@accessofiere.com?subject=Compliance%20Accesso%20Fiere">Compliance</a>
-            <a href="mailto:info@accessofiere.com?subject=Status%20sistema">Status sistema</a>
-          </div>
-        </div>
-        <div class="footer-col">
-          <h4>Risorse</h4>
-          <div class="footer-links">
-            <a href="#risorse">Blog SEO</a>
-            <a href="mailto:info@accessofiere.com?subject=Documentazione%20Accesso%20Fiere">Documentazione</a>
-            <a href="mailto:info@accessofiere.com?subject=Roadmap%20Accesso%20Fiere">Roadmap</a>
-            <a href="mailto:info@accessofiere.com?subject=Supporto%20Accesso%20Fiere">Supporto</a>
-          </div>
-        </div>
-        <div class="footer-col">
-          <h4>Azienda</h4>
-          <div class="footer-links">
-            <a href="mailto:info@accessofiere.com?subject=Contatto%20commerciale">Contatti commerciali</a>
-            <a href="mailto:info@accessofiere.com?subject=Demo%20Accesso%20Fiere">Demo</a>
-            <a href="/privacy-policy">Privacy Policy</a>
-            <a href="/cookie-policy">Cookie Policy</a>
-            <a href="/terms-and-conditions">Termini e Condizioni</a>
-          </div>
-        </div>
-      </div>
-      <div class="container footer-bottom">
-        <span class="status-dot">Sistema operativo</span>
-        <span class="legal-inline">
-          <a href="/privacy-policy">Privacy Policy</a>
-          <a href="/cookie-policy">Cookie Policy</a>
-          <a href="/terms-and-conditions">Termini e Condizioni</a>
-        </span>
-        <span>Accesso Fiere - software per allestitori fieristici.</span>
-      </div>
-    </footer>
-    <div class="cookie-banner" id="cookieBanner" role="dialog" aria-live="polite" aria-label="Informativa cookie" hidden>
-      <div>
-        <strong>Privacy e cookie</strong>
-        <p>Usiamo cookie tecnici e servizi necessari al funzionamento del sito. Puoi leggere <a href="/privacy-policy">Privacy Policy</a>, <a href="/cookie-policy">Cookie Policy</a> e <a href="/terms-and-conditions">Termini e Condizioni</a>.</p>
-      </div>
-      <div class="cookie-actions">
-        <button type="button" data-cookie-choice="necessary">Solo necessari</button>
-        <button class="primary" type="button" data-cookie-choice="accepted">Accetta</button>
-      </div>
-    </div>
-    <script>
-      (function(){
-        var banner = document.getElementById('cookieBanner');
-        if(!banner) return;
-        try {
-          if(!localStorage.getItem('accesso_fiere_cookie_choice')) banner.hidden = false;
-          var buttons = banner.querySelectorAll('[data-cookie-choice]');
-          for(var i=0;i<buttons.length;i++){
-            buttons[i].addEventListener('click', function(){
-              localStorage.setItem('accesso_fiere_cookie_choice', this.getAttribute('data-cookie-choice'));
-              banner.hidden = true;
-            });
-          }
-        } catch(e) {
-          banner.hidden = true;
-        }
-      })();
-    </script>
-  </div>
+<h1>Accesso Fiere</h1><p class="muted">Il sistema operativo per allestitori fieristici: squadre, documenti, presenze, mezzi e fatturazione in un unico sistema.</p><div class="actions"><a class="btn" href="/area-clienti">Area clienti</a><a class="btn" href="mailto:info@accessofiere.com?subject=Demo%20Accesso%20Fiere">Prenota demo</a></div>
 {% else %}
-  <div class="login-card" id="login">
-    <a class="brand login-brand" href="/home" aria-label="Accesso Fiere">
-      <span class="brand-mark"><span class="brand-monogram">AF</span></span>
-      <span class="brand-text">
-        <strong>Accesso Fiere</strong>
-        <span>Gestionale Allestitori</span>
-      </span>
-    </a>
-
-    <div class="form-group">
-      <span class="lang-label">{{ t.login_lang }}</span>
-      <div class="lang-bar">
-        {% for code, l in langs.items() %}
-        <form method="POST" action="/set-lang">
-          <input type="hidden" name="lang" value="{{ code }}">
-          <input type="hidden" name="next" value="/login">
-          <button type="submit" class="lang-btn {{ 'active' if current_lang == code }}">{{ code|upper }}</button>
-        </form>
-        {% endfor %}
-      </div>
-    </div>
-
-    <h2>{{ t.login_title }}</h2>
-    <p>{{ t.login_sub }}</p>
-    {% if error %}<div class="alert"><i class="fa-solid fa-circle-exclamation"></i> {{ error }}</div>{% endif %}
-    <form method="POST" action="/login">
-      <div class="form-group">
-        <label class="form-label">{{ t.login_email }}</label>
-        <input class="form-control" type="email" name="email" placeholder="nome@azienda.it" required dir="ltr">
-      </div>
-      <div class="form-group">
-        <label class="form-label">{{ t.login_pass }}</label>
-        <input class="form-control" type="password" name="password" placeholder="********" required dir="ltr">
-      </div>
-      <button class="btn btn-primary login-submit" type="submit">{{ t.login_btn }} <i class="fa-solid fa-arrow-right"></i></button>
-    </form>
-
-    {% if not is_mobile %}
-    <div class="divider">oppure</div>
-    <a class="google-btn" href="/auth/google">
-      <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/><path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24c0 3.55.85 6.91 2.34 9.88l7.35-5.7z"/><path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/></svg>
-      Accedi con Google
-    </a>
-    <div class="divider">non hai un account?</div>
-    <a class="register-btn" href="/registrati"><i class="fa-solid fa-rocket"></i> Registra la tua azienda - 14 giorni gratis</a>
-    {% else %}
-    <div class="divider">non hai un account?</div>
-    <a class="register-btn" href="/registrati"><i class="fa-solid fa-rocket"></i> Registra la tua azienda</a>
-    {% endif %}
-
-    <div class="legal-copy">
-      Usando Accesso Fiere accetti <a href="/termini">Termini</a>,
-      <a href="/privacy">Privacy</a> e <a href="/cookies">Cookie Policy</a>.
-    </div>
-  </div>
+<h1>{{ t.login_title }}</h1><p class="muted">{{ t.login_sub }}</p>{% if error %}<div class="alert">{{ error }}</div>{% endif %}<form method="POST"><label>{{ t.login_email }}</label><input type="email" name="email" required><label>{{ t.login_pass }}</label><input type="password" name="password" required><button type="submit">{{ t.login_btn }}</button></form><div class="actions"><a class="btn" href="/registrati">Registra azienda</a></div>
 {% endif %}
-</body>
-</html>"""
+</section></main></body></html>"""
 
-# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
-#  LOGIN
-# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
-# Login pubblico: usa solo PREMIUM_LOGIN_TMPL. Il vecchio template duplicato e stato rimosso.
+_LEGAL_PAGE_FALLBACK = """<!DOCTYPE html>
+<html lang="it"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ title }} | Accesso Fiere</title><style>body{margin:0;background:#f6f8fb;color:#172033;font-family:Inter,Arial,sans-serif;line-height:1.6}.top{background:#08111f;padding:18px 22px}.top a{color:#fff;text-decoration:none;font-weight:800}.wrap{max-width:980px;margin:auto;padding:34px 22px}.card{background:#fff;border:1px solid #dde6f0;border-radius:16px;padding:28px}a{color:#0f4c81}</style></head><body><header class="top"><a href="/home">Accesso Fiere</a></header><main class="wrap"><section class="card">{{ body|safe }}</section></main></body></html>"""
+_PRIVACY_BODY_FALLBACK = """<h1>Privacy Policy</h1><p>Accesso Fiere tratta i dati necessari al funzionamento del gestionale. Per informazioni scrivi a <a href="mailto:info@accessofiere.com">info@accessofiere.com</a>.</p>"""
+_TERMS_BODY_FALLBACK = """<h1>Termini e Condizioni</h1><p>Accesso Fiere e un gestionale cloud per aziende di allestimento fieristico. Per informazioni scrivi a <a href="mailto:info@accessofiere.com">info@accessofiere.com</a>.</p>"""
+_COOKIE_BODY_FALLBACK = """<h1>Cookie Policy</h1><p>Accesso Fiere usa cookie tecnici necessari per login, sicurezza e funzionamento della webapp.</p>"""
 
-LOGIN_TMPL = PREMIUM_LOGIN_TMPL
-
-LEGAL_PAGE_TMPL = """<!DOCTYPE html>
-<html lang="it">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>{{ title }} | Accesso Fiere</title>
-  <meta name="robots" content="index,follow">
-  <style>
-    *{box-sizing:border-box}
-    body{margin:0;background:#f5f7fb;color:#102033;font-family:Inter,Arial,sans-serif;line-height:1.6}
-    .top{background:#08111f;color:#fff;padding:18px 22px}
-    .top-inner{max-width:980px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px}
-    .brand{font-size:19px;font-weight:800;text-decoration:none;color:#fff}
-    .nav{display:flex;gap:12px;flex-wrap:wrap}
-    .nav a{color:#cbd5e1;text-decoration:none;font-size:14px;font-weight:700}
-    .wrap{max-width:980px;margin:0 auto;padding:34px 22px 60px}
-    .card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;box-shadow:0 16px 45px rgba(15,23,42,.08);padding:32px}
-    h1{font-size:34px;line-height:1.1;margin:0 0 8px;color:#0f172a}
-    h2{font-size:19px;margin:28px 0 8px;color:#0f172a}
-    p,li{font-size:15px;color:#475569}
-    ul{padding-left:22px}
-    .muted{color:#64748b;font-size:14px;margin-bottom:22px}
-    .box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;margin:16px 0}
-    a{color:#0f4c81}
-    @media(max-width:700px){.card{padding:22px}.top-inner{align-items:flex-start;flex-direction:column}h1{font-size:27px}}
-  </style>
-</head>
-<body>
-  <header class="top">
-    <div class="top-inner">
-      <a class="brand" href="/home">Accesso Fiere</a>
-      <nav class="nav">
-        <a href="/home">Home</a>
-        <a href="/area-clienti">Area clienti</a>
-        <a href="/privacy-policy">Privacy Policy</a>
-        <a href="/cookie-policy">Cookie Policy</a>
-        <a href="/terms-and-conditions">Termini e Condizioni</a>
-      </nav>
-    </div>
-  </header>
-  <main class="wrap">
-    <section class="card">
-      {{ body|safe }}
-      <div class="box" style="margin-top:28px">
-        <strong>Link legali</strong><br>
-        <a href="/privacy-policy">Privacy Policy</a> Â·
-        <a href="/cookie-policy">Cookie Policy</a> Â·
-        <a href="/terms-and-conditions">Termini e Condizioni</a>
-      </div>
-    </section>
-  </main>
-</body>
-</html>"""
-
-PRIVACY_BODY = """
-<h1>Privacy Policy</h1>
-<p class="muted">Ultimo aggiornamento: 9 maggio 2026</p>
-
-<div class="box">
-  <p><strong>Accesso Fiere</strong> e una piattaforma gestionale per aziende che operano nel settore fiere, eventi, allestimenti e cantieri temporanei.</p>
-  <p>Per informazioni privacy puoi scrivere a <a href="mailto:info@accessofiere.com">info@accessofiere.com</a>.</p>
-</div>
-
-<h2>1. Titolare del trattamento</h2>
-<p>Il titolare del trattamento e il soggetto che gestisce il servizio Accesso Fiere e gli account aziendali attivati sulla piattaforma. Ogni azienda cliente resta responsabile dei dati che inserisce e gestisce nel proprio ambiente.</p>
-
-<h2>2. Dati trattati</h2>
-<p>La piattaforma puo trattare, in base alle funzioni usate dall'azienda cliente:</p>
-<ul>
-  <li>dati anagrafici e di contatto di utenti, dipendenti, clienti e fornitori;</li>
-  <li>dati relativi a presenze, timbrature, ferie, permessi, rimborsi e note operative;</li>
-  <li>documenti aziendali, documenti personale, scadenze, mezzi e veicoli;</li>
-  <li>dati di fatturazione attiva e passiva collegati a clienti, fornitori, eventi e fiere;</li>
-  <li>dati tecnici necessari al funzionamento del servizio, come log applicativi, token di integrazione e informazioni dispositivo.</li>
-</ul>
-
-<h2>2.1 Dati tecnici e cookie</h2>
-<p>Accesso Fiere usa cookie tecnici e strumenti equivalenti necessari per login, sicurezza, lingua, sessione, preferenze dell'app e funzionamento PWA. Non vengono usati cookie pubblicitari nella piattaforma.</p>
-
-<h2>3. Finalita del trattamento</h2>
-<p>I dati sono trattati per fornire il servizio gestionale, consentire l'accesso degli utenti autorizzati, gestire documenti e scadenze, coordinare il personale, inviare notifiche operative, elaborare report e collegare eventuali servizi esterni autorizzati dall'azienda cliente.</p>
-
-<h2>4. Integrazione con Fatture in Cloud e provider esterni</h2>
-<p>Quando un utente autorizza il collegamento con Fatture in Cloud o con altri provider di fatturazione, Accesso Fiere usa il consenso OAuth per leggere, creare o aggiornare solo i dati necessari alle funzioni richieste, come clienti, fornitori, fatture emesse, fatture ricevute, archivio e impostazioni collegate alla fatturazione.</p>
-<p>L'accesso al provider puo essere revocato in qualunque momento dal portale del provider o dalle impostazioni del gestionale, quando disponibili.</p>
-
-<h2>5. Base giuridica</h2>
-<p>Il trattamento avviene per esecuzione del servizio richiesto dall'azienda cliente, adempimenti contrattuali, obblighi di legge applicabili e legittimo interesse alla sicurezza e al corretto funzionamento della piattaforma.</p>
-
-<h2>6. Conservazione dei dati</h2>
-<p>I dati sono conservati per il tempo necessario all'erogazione del servizio e, per documenti contabili o fiscali, secondo i termini previsti dalla normativa applicabile. L'azienda cliente puo richiedere esportazione o cancellazione dei dati compatibilmente con gli obblighi di legge.</p>
-
-<h2>7. Sicurezza</h2>
-<p>Accesso Fiere adotta misure tecniche e organizzative per proteggere account, dati e integrazioni, incluse autenticazione, separazione degli ambienti aziendali, permessi per ruolo e protezione delle credenziali di accesso ai provider.</p>
-
-<h2>8. Comunicazione a terzi</h2>
-<p>I dati possono essere comunicati a fornitori tecnici necessari al funzionamento della piattaforma, come hosting, email, notifiche, pagamento, fatturazione elettronica e servizi cloud. Tali soggetti trattano i dati nei limiti necessari all'erogazione del servizio.</p>
-
-<h2>8.1 Conservazione e servizi fiscali</h2>
-<p>Le funzioni di fatturazione elettronica possono richiedere il collegamento a provider esterni autorizzati dall'utente. Accesso Fiere conserva solo i dati necessari alle funzioni abilitate e non sostituisce gli obblighi fiscali, contabili o di conservazione a norma che restano in capo all'azienda cliente e ai provider scelti.</p>
-
-<h2>9. Diritti degli interessati</h2>
-<p>Gli interessati possono richiedere accesso, rettifica, cancellazione, limitazione, opposizione e portabilita dei dati scrivendo a <a href="mailto:info@accessofiere.com">info@accessofiere.com</a>. Le richieste relative ai dati gestiti da una specifica azienda cliente possono essere inoltrate anche direttamente a tale azienda.</p>
-
-<h2>10. Modifiche</h2>
-<p>Questa informativa puo essere aggiornata in caso di modifiche del servizio, delle integrazioni o della normativa applicabile. La versione pubblicata su questa pagina e quella attualmente valida.</p>
-"""
-
-TERMS_BODY = """
-<h1>Termini e Condizioni</h1>
-<p class="muted">Ultimo aggiornamento: 9 maggio 2026</p>
-
-<h2>1. Servizio</h2>
-<p>Accesso Fiere e un gestionale cloud per aziende che operano in fiere, eventi, allestimenti e cantieri temporanei. Il servizio include funzioni per personale, documenti, scadenze, mezzi, richieste operative, notifiche e fatturazione.</p>
-
-<h2>2. Account e responsabilita</h2>
-<p>Ogni azienda cliente e responsabile degli utenti autorizzati, dei dati inseriti, dei permessi assegnati e dell'uso corretto della piattaforma.</p>
-
-<h2>3. Integrazioni esterne</h2>
-<p>Le integrazioni con provider esterni, come servizi di fatturazione elettronica, funzionano solo dopo autorizzazione dell'utente o dell'azienda cliente. Accesso Fiere usa tali autorizzazioni per svolgere le operazioni richieste nel gestionale.</p>
-
-<h2>3.1 Uso dei dati dei provider</h2>
-<p>I dati ricevuti da provider esterni vengono usati solo per mostrare, creare, aggiornare o collegare informazioni operative nel gestionale, secondo i permessi concessi dall'utente e revocabili presso il provider.</p>
-
-<h2>4. Disponibilita e manutenzione</h2>
-<p>Il servizio viene mantenuto e aggiornato per garantirne continuita e sicurezza. Possono verificarsi sospensioni temporanee per manutenzione, aggiornamenti o cause tecniche esterne.</p>
-
-<h2>5. Contatti</h2>
-<p>Per informazioni sui termini di servizio puoi scrivere a <a href="mailto:info@accessofiere.com">info@accessofiere.com</a>.</p>
-"""
-
-COOKIE_BODY = """
-<h1>Cookie Policy</h1>
-<p class="muted">Ultimo aggiornamento: 9 maggio 2026</p>
-
-<div class="box">
-  <p>Accesso Fiere usa solo cookie tecnici e strumenti equivalenti necessari al funzionamento del servizio.</p>
-</div>
-
-<h2>1. Cookie tecnici necessari</h2>
-<p>Questi cookie servono per mantenere la sessione di accesso, proteggere l'account, ricordare la lingua, gestire preferenze essenziali e permettere il corretto funzionamento della webapp/PWA.</p>
-
-<h2>2. Cookie analitici e marketing</h2>
-<p>La piattaforma non usa cookie pubblicitari o di marketing. Eventuali strumenti analitici saranno attivati solo se configurati in modo conforme e, quando richiesto, previa informazione o consenso.</p>
-
-<h2>3. Servizi di terze parti</h2>
-<p>Alcune pagine pubbliche possono caricare risorse tecniche esterne, come font o librerie grafiche, necessarie alla presentazione del sito. Le integrazioni operative con provider esterni funzionano solo dopo autorizzazione dell'utente.</p>
-
-<h2>4. Gestione preferenze</h2>
-<p>Puoi cancellare cookie e dati locali dal browser. Se cancelli i cookie tecnici potresti dover effettuare nuovamente l'accesso.</p>
-
-<h2>5. Contatti</h2>
-<p>Per informazioni puoi scrivere a <a href="mailto:info@accessofiere.com">info@accessofiere.com</a>.</p>
-"""
-
-LOGIN_TMPL = _load_template_source('templates/public/login.html', LOGIN_TMPL)
-LEGAL_PAGE_TMPL = _load_template_source('templates/public/legal.html', LEGAL_PAGE_TMPL)
-PRIVACY_BODY = _load_template_source('templates/public/privacy_body.html', PRIVACY_BODY)
-TERMS_BODY = _load_template_source('templates/public/terms_body.html', TERMS_BODY)
-COOKIE_BODY = _load_template_source('templates/public/cookie_body.html', COOKIE_BODY)
+LOGIN_TMPL = _load_template_source('templates/public/login.html', _PUBLIC_LOGIN_FALLBACK)
+LEGAL_PAGE_TMPL = _load_template_source('templates/public/legal.html', _LEGAL_PAGE_FALLBACK)
+PRIVACY_BODY = _load_template_source('templates/public/privacy_body.html', _PRIVACY_BODY_FALLBACK)
+TERMS_BODY = _load_template_source('templates/public/terms_body.html', _TERMS_BODY_FALLBACK)
+COOKIE_BODY = _load_template_source('templates/public/cookie_body.html', _COOKIE_BODY_FALLBACK)
 
 LEGAL_CONSENT_SNIPPET = """
 <div id="af-cookie-banner" role="dialog" aria-live="polite" style="display:none;position:fixed;left:16px;right:16px;bottom:16px;z-index:99999;background:#0f172a;color:#fff;border:1px solid rgba(255,255,255,.14);box-shadow:0 18px 50px rgba(15,23,42,.35);border-radius:14px;padding:14px 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;max-width:760px;margin:0 auto">
@@ -11406,7 +9578,7 @@ def _get_efatt_config():
     return cfg
 
 def _efatt_default_scopes():
-    return 'entity.clients:a entity.suppliers:r issued_documents.invoices:a issued_documents.credit_notes:a received_documents:r archive:r settings:r'
+    return 'entity.clients:a entity.suppliers:r issued_documents.invoices:a issued_documents.credit_notes:a issued_documents.self_invoices:a received_documents:r archive:r settings:r'
 
 def _efatt_clean_scopes(value):
     raw_value = (value or '').strip()
@@ -11456,6 +9628,9 @@ def _efatt_clean_scopes(value):
             had_invalid = True
     if not cleaned or had_invalid:
         return _efatt_default_scopes()
+    for required in ('issued_documents.invoices:a', 'issued_documents.credit_notes:a', 'issued_documents.self_invoices:a', 'received_documents:r'):
+        if required not in cleaned:
+            cleaned.append(required)
     return ' '.join(cleaned)
 
 def _efatt_token_mask(value):
@@ -11949,10 +10124,130 @@ def _efatt_doc_is_paid(doc):
     status = str(doc.get('status') or doc.get('payment_status') or '').lower().strip()
     return status in ('paid', 'pagata', 'payed')
 
-def _efatt_sync_payment_rows(db, fattura_id, doc, gross, default_due_date=''):
+_EFATT_DOC_TYPE_LABELS = {
+    'invoice': 'Fattura',
+    'credit_note': 'Nota di credito',
+    'self_own_invoice': 'Autofattura',
+    'self_supplier_invoice': 'Autofattura fornitore',
+    'receipt': 'Ricevuta',
+    'passive_invoice': 'Fattura passiva',
+    'passive_credit_note': 'Nota di credito passiva',
+    'passive_self_invoice': 'Autofattura passiva',
+    'quote': 'Preventivo',
+    'proforma': 'Proforma',
+    'delivery_note': 'DDT',
+    'order': 'Ordine',
+    'work_report': 'Rapporto lavoro',
+    'supplier_order': 'Ordine fornitore',
+}
+_EFATT_FIC_ISSUED_SYNC_TYPES = ('invoice', 'credit_note', 'self_own_invoice', 'self_supplier_invoice', 'receipt')
+
+def _efatt_compact_doc_type(value):
+    return str(value or '').strip().lower().replace('-', '_').replace(' ', '_')
+
+def _efatt_document_type(doc, direction='active'):
+    if not isinstance(doc, dict):
+        return 'invoice'
+    e_invoice = doc.get('e_invoice') if isinstance(doc.get('e_invoice'), dict) else {}
+    raw_candidates = (
+        doc.get('type'),
+        doc.get('document_type'),
+        doc.get('documentType'),
+        doc.get('tipo_documento'),
+        doc.get('doc_type'),
+        e_invoice.get('type'),
+        e_invoice.get('document_type'),
+    )
+    raw = next((str(v).strip() for v in raw_candidates if v not in (None, '')), '')
+    normalized = _efatt_compact_doc_type(raw)
+    aliases = {
+        'fattura': 'invoice',
+        'invoice': 'invoice',
+        'td01': 'invoice',
+        'td02': 'invoice',
+        'td03': 'invoice',
+        'td24': 'invoice',
+        'td25': 'invoice',
+        'credit': 'credit_note',
+        'credit_note': 'credit_note',
+        'nota_credito': 'credit_note',
+        'note_credit': 'credit_note',
+        'td04': 'credit_note',
+        'td08': 'credit_note',
+        'self_invoice': 'self_supplier_invoice',
+        'self_invoices': 'self_supplier_invoice',
+        'self_own_invoice': 'self_own_invoice',
+        'self_supplier_invoice': 'self_supplier_invoice',
+        'autofattura': 'self_supplier_invoice',
+        'td16': 'self_supplier_invoice',
+        'td17': 'self_supplier_invoice',
+        'td18': 'self_supplier_invoice',
+        'td19': 'self_supplier_invoice',
+        'td20': 'self_supplier_invoice',
+        'receipt': 'receipt',
+        'ricevuta': 'receipt',
+        'quote': 'quote',
+        'preventivo': 'quote',
+        'proforma': 'proforma',
+        'delivery_note': 'delivery_note',
+        'ddt': 'delivery_note',
+        'order': 'order',
+        'work_report': 'work_report',
+        'supplier_order': 'supplier_order',
+    }
+    if normalized in aliases:
+        doc_type = aliases[normalized]
+    elif 'credit' in normalized or 'credito' in normalized or 'storno' in normalized:
+        doc_type = 'credit_note'
+    elif 'self' in normalized or 'auto' in normalized or 'reverse' in normalized:
+        doc_type = 'self_supplier_invoice'
+    else:
+        doc_type = normalized if normalized in _EFATT_DOC_TYPE_LABELS else 'invoice'
+    if str(direction or '').lower().startswith('passive'):
+        if doc_type == 'credit_note':
+            return 'passive_credit_note'
+        if doc_type in ('self_own_invoice', 'self_supplier_invoice'):
+            return 'passive_self_invoice'
+        if doc_type == 'invoice':
+            return 'passive_invoice'
+    return doc_type
+
+def _efatt_doc_type_label(doc_type):
+    key = _efatt_compact_doc_type(doc_type) or 'invoice'
+    return _EFATT_DOC_TYPE_LABELS.get(key, key.replace('_', ' ').title())
+
+def _efatt_doc_type_sign(doc_type):
+    key = _efatt_compact_doc_type(doc_type)
+    if key in ('credit_note', 'passive_credit_note') or 'credit' in key or 'credito' in key:
+        return -1
+    return 1
+
+def _efatt_document_signed_amounts(doc, direction='active'):
+    raw_gross = _efatt_doc_amount(doc)
+    doc_type = _efatt_document_type(doc, direction=direction)
+    sign = _efatt_doc_type_sign(doc_type)
+    if sign > 0 and raw_gross < 0:
+        sign = -1
+        if doc_type == 'invoice':
+            doc_type = 'credit_note'
+        elif doc_type == 'passive_invoice':
+            doc_type = 'passive_credit_note'
+    gross_abs = abs(raw_gross)
+    net_abs = abs(_efatt_doc_net(doc, gross_abs))
+    gross = round(gross_abs * sign, 2)
+    net = round(net_abs * sign, 2)
+    iva = round(gross - net, 2)
+    return doc_type, gross, net, iva
+
+def _efatt_signed_payment_amount(payment, fallback=0.0, doc_type='invoice'):
+    sign = _efatt_doc_type_sign(doc_type)
+    return round(abs(_efatt_payment_amount(payment, abs(fallback))) * sign, 2)
+
+def _efatt_sync_payment_rows(db, fattura_id, doc, gross, default_due_date='', doc_type='invoice'):
     """Ricrea le rate locali leggendo lo stato pagamenti del provider."""
     payments = doc.get('payments_list') if isinstance(doc, dict) and isinstance(doc.get('payments_list'), list) else []
     provider_label = 'Aruba' if isinstance(doc, dict) and doc.get('_provider') == 'aruba' else ('A-Cube' if isinstance(doc, dict) and doc.get('_provider') == 'acube' else 'Fatture in Cloud')
+    doc_type = doc_type or (_efatt_document_type(doc) if isinstance(doc, dict) else 'invoice')
     db.execute("DELETE FROM rate_fattura WHERE fattura_id=?", (fattura_id,))
     if not payments:
         stato = 'pagata' if _efatt_doc_is_paid(doc) else 'da_pagare'
@@ -11966,7 +10261,7 @@ def _efatt_sync_payment_rows(db, fattura_id, doc, gross, default_due_date=''):
         _aggiorna_stato_fattura(fattura_id, db)
         return
     for idx, payment in enumerate(payments, start=1):
-        amount = _efatt_payment_amount(payment, round(_efatt_float(gross, 0), 2) if len(payments) == 1 else 0.0)
+        amount = _efatt_signed_payment_amount(payment, round(_efatt_float(gross, 0), 2) if len(payments) == 1 else 0.0, doc_type)
         due_date = str(payment.get('due_date') or payment.get('date') or default_due_date or '')[:10]
         paid = _efatt_payment_is_paid(payment)
         paid_date = str(payment.get('paid_date') or payment.get('payment_date') or payment.get('date') or due_date or default_due_date or '')[:10]
@@ -11995,40 +10290,39 @@ def _efatt_import_received_document(db, doc):
     ).fetchone()
     numero = str(doc.get('number') or doc.get('numeration') or doc.get('display_number') or provider_id)
     data_em = str(doc.get('date') or doc.get('created_at') or '')[:10] or date.today().isoformat()
-    gross = _efatt_doc_amount(doc)
-    net = _efatt_doc_net(doc, gross)
-    iva = round(gross - net, 2)
+    doc_type, gross, net, iva = _efatt_document_signed_amounts(doc, direction='passive')
     entity_name = _efatt_entity_name(doc)
     payments = doc.get('payments_list') if isinstance(doc.get('payments_list'), list) else []
     data_scad = ''
     pagata = False
     if payments:
         data_scad = str(payments[0].get('due_date') or payments[0].get('date') or '')[:10]
-        pagata = all((p.get('status') or '').lower() in ('paid', 'pagata') for p in payments)
+        pagata = all(_efatt_payment_is_paid(p) for p in payments)
     provider_label = 'Aruba' if provider_name == 'aruba' else ('A-Cube' if provider_name == 'acube' else 'Fatture in Cloud')
-    descr = doc.get('description') or doc.get('subject') or doc.get('visible_subject') or ('Fattura passiva importata da ' + provider_label)
+    doc_label = _efatt_doc_type_label(doc_type)
+    descr = doc.get('description') or doc.get('subject') or doc.get('visible_subject') or (doc_label + ' importata da ' + provider_label)
     stato = 'pagata' if pagata else 'da_pagare'
     raw_json = json.dumps(doc, ensure_ascii=False, default=str)
     synced_at = datetime.now().isoformat(timespec='seconds')
     if existing:
-        db.execute("""UPDATE fatture SET numero=?, fornitore_nome=?, data_emissione=?,
+        db.execute("""UPDATE fatture SET tipo='passiva', doc_type=?, numero=?, fornitore_nome=?, data_emissione=?,
                       data_scadenza=?, imponibile=?, iva_importo=?, importo_totale=?,
                       descrizione=?, stato=?, sdi_stato='ricevuta', provider_raw_json=?,
                       provider_synced_at=? WHERE id=?""",
-                   (numero, entity_name, data_em, data_scad, net, iva, gross, descr,
+                   (doc_type, numero, entity_name, data_em, data_scad, net, iva, gross, descr,
                     stato, raw_json, synced_at, existing['id']))
-        _efatt_sync_payment_rows(db, existing['id'], doc, gross, data_scad)
+        _efatt_sync_payment_rows(db, existing['id'], doc, gross, data_scad, doc_type)
         return False
     cur = db.execute("""INSERT INTO fatture
-                  (tipo, numero, fornitore_nome, data_emissione, data_scadenza,
+                  (tipo, doc_type, numero, fornitore_nome, data_emissione, data_scadenza,
                    imponibile, iva_perc, iva_importo, importo_totale, descrizione,
                    stato, sdi_stato, provider, provider_doc_id, provider_raw_json,
                    provider_synced_at)
-                  VALUES ('passiva',?,?,?,?,?,?,?,?,?,?,'ricevuta',
+                  VALUES ('passiva',?,?,?,?,?,?,?,?,?,?,?,'ricevuta',
                           ?,?,?,?)""",
-               (numero, entity_name, data_em, data_scad, net, 22, iva, gross, descr,
+               (doc_type, numero, entity_name, data_em, data_scad, net, 22, iva, gross, descr,
                 stato, provider_name, provider_id, raw_json, synced_at))
-    _efatt_sync_payment_rows(db, cur.lastrowid, doc, gross, data_scad)
+    _efatt_sync_payment_rows(db, cur.lastrowid, doc, gross, data_scad, doc_type)
     return True
 
 def _efatt_import_issued_document(db, doc):
@@ -12042,12 +10336,9 @@ def _efatt_import_issued_document(db, doc):
         "SELECT id FROM fatture WHERE provider=? AND provider_doc_id=? LIMIT 1",
         (provider_name, provider_id)
     ).fetchone()
-    doc_type = 'credit_note' if (doc.get('type') or '').lower() == 'credit_note' else 'invoice'
+    doc_type, gross, net, iva = _efatt_document_signed_amounts(doc, direction='active')
     numero = str(doc.get('number') or doc.get('numeration') or doc.get('display_number') or provider_id)
     data_em = str(doc.get('date') or doc.get('created_at') or '')[:10] or date.today().isoformat()
-    gross = _efatt_doc_amount(doc)
-    net = _efatt_doc_net(doc, gross)
-    iva = round(gross - net, 2)
     entity = doc.get('entity') if isinstance(doc.get('entity'), dict) else {}
     cliente_nome = entity.get('name') or doc.get('entity_name') or doc.get('client_name') or 'Cliente'
     payments = doc.get('payments_list') if isinstance(doc.get('payments_list'), list) else []
@@ -12055,9 +10346,10 @@ def _efatt_import_issued_document(db, doc):
     pagata = False
     if payments:
         data_scad = str(payments[0].get('due_date') or payments[0].get('date') or '')[:10]
-        pagata = all((p.get('status') or '').lower() in ('paid', 'pagata') for p in payments)
+        pagata = all(_efatt_payment_is_paid(p) for p in payments)
     provider_label = 'Aruba' if provider_name == 'aruba' else ('A-Cube' if provider_name == 'acube' else 'Fatture in Cloud')
-    descr = doc.get('subject') or doc.get('visible_subject') or doc.get('description') or ('Fattura attiva importata da ' + provider_label)
+    doc_label = _efatt_doc_type_label(doc_type)
+    descr = doc.get('subject') or doc.get('visible_subject') or doc.get('description') or (doc_label + ' importata da ' + provider_label)
     e_invoice = doc.get('e_invoice') if isinstance(doc.get('e_invoice'), dict) else {}
     sdi_status = (e_invoice.get('status') or '').lower()
     stato_map = {
@@ -12077,7 +10369,7 @@ def _efatt_import_issued_document(db, doc):
                       provider_raw_json=?, provider_synced_at=? WHERE id=?""",
                    (doc_type, numero, cliente_nome, data_em, data_scad, net, iva, gross,
                     descr, stato, sdi_locale, raw_json, synced_at, existing['id']))
-        _efatt_sync_payment_rows(db, existing['id'], doc, gross, data_scad)
+        _efatt_sync_payment_rows(db, existing['id'], doc, gross, data_scad, doc_type)
         return False
     cur = db.execute("""INSERT INTO fatture
                   (tipo, doc_type, numero, cliente_nome, data_emissione, data_scadenza,
@@ -12087,7 +10379,7 @@ def _efatt_import_issued_document(db, doc):
                   VALUES ('attiva',?,?,?,?,?,?,?,?,?,?,?,?, ?,?,?,?)""",
                (doc_type, numero, cliente_nome, data_em, data_scad, net, 22, iva, gross, descr,
                 stato, sdi_locale, provider_name, provider_id, raw_json, synced_at))
-    _efatt_sync_payment_rows(db, cur.lastrowid, doc, gross, data_scad)
+    _efatt_sync_payment_rows(db, cur.lastrowid, doc, gross, data_scad, doc_type)
     return True
 
 def _aruba_doc_endpoint(direction):
@@ -12155,6 +10447,32 @@ def _aruba_sdi_status(status):
         return 'sent'
     return value
 
+if _efatt_helpers is not None:
+    _efatt_default_scopes = _efatt_helpers.default_scopes
+    _efatt_clean_scopes = _efatt_helpers.clean_scopes
+    _efatt_token_mask = _efatt_helpers.token_mask
+    _efatt_provider_options = _efatt_helpers.provider_options
+    _efatt_float = _efatt_helpers.to_float
+    _efatt_doc_amount = _efatt_helpers.document_amount
+    _efatt_doc_net = _efatt_helpers.document_net
+    _efatt_entity_name = _efatt_helpers.entity_name
+    _efatt_valid_year = _efatt_helpers.valid_year
+    _efatt_doc_matches_year = _efatt_helpers.document_matches_year
+    _efatt_payment_amount = _efatt_helpers.payment_amount
+    _efatt_payment_is_paid = _efatt_helpers.payment_is_paid
+    _efatt_doc_is_paid = _efatt_helpers.document_is_paid
+    _EFATT_DOC_TYPE_LABELS = _efatt_helpers.DOCUMENT_TYPE_LABELS
+    _EFATT_FIC_ISSUED_SYNC_TYPES = _efatt_helpers.FIC_ISSUED_SYNC_TYPES
+    _efatt_document_type = _efatt_helpers.document_type
+    _efatt_doc_type_label = _efatt_helpers.document_type_label
+    _efatt_doc_type_sign = _efatt_helpers.document_type_sign
+    _efatt_document_signed_amounts = _efatt_helpers.document_signed_amounts
+    _efatt_signed_payment_amount = _efatt_helpers.signed_payment_amount
+    _aruba_doc_range = _efatt_helpers.aruba_doc_range
+    _aruba_extract_content = _efatt_helpers.aruba_extract_content
+    _aruba_expand_batches = _efatt_helpers.aruba_expand_batches
+    _aruba_sdi_status = _efatt_helpers.aruba_sdi_status
+
 def _aruba_normalize_document(item, direction):
     if not isinstance(item, dict):
         return {}
@@ -12179,11 +10497,19 @@ def _aruba_normalize_document(item, direction):
     entity = sender if direction == 'passive' else receiver
     entity_name = entity.get('description') or entity.get('name') or ('Fornitore' if direction == 'passive' else 'Cliente')
     due_date = str(inv.get('dueDate') or item.get('dueDate') or doc_date)[:10]
+    aruba_doc_type = str(inv.get('documentType') or item.get('documentType') or '').upper().strip()
+    if aruba_doc_type in ('TD04', 'TD08'):
+        local_doc_type = 'credit_note'
+    elif aruba_doc_type in ('TD16', 'TD17', 'TD18', 'TD19', 'TD20'):
+        local_doc_type = 'self_supplier_invoice'
+    else:
+        local_doc_type = 'invoice'
     doc = {
         '_provider': 'aruba',
         'id': provider_id,
         'document_id': provider_id,
-        'type': 'credit_note' if str(inv.get('documentType') or item.get('documentType') or '').upper() in ('TD04', 'TD08') else 'invoice',
+        'type': local_doc_type,
+        'documentType': aruba_doc_type,
         'number': inv_no or provider_id,
         'date': doc_date,
         'created_at': str(item.get('creationDate') or doc_date),
@@ -12396,7 +10722,8 @@ def _efatt_sync_active_documents(db=None, max_pages=3, sync_year=''):
         company_id = _efatt_pick_company_id(db)
         year_query = _efatt_year_query(sync_year)
         imported = updated = 0
-        for doc_type in ('invoice', 'credit_note'):
+        optional_types = set(_EFATT_FIC_ISSUED_SYNC_TYPES) - {'invoice', 'credit_note'}
+        for doc_type in _EFATT_FIC_ISSUED_SYNC_TYPES:
             for page in range(1, max_pages + 1):
                 query = {
                     'type': doc_type,
@@ -12407,7 +10734,13 @@ def _efatt_sync_active_documents(db=None, max_pages=3, sync_year=''):
                 }
                 if year_query:
                     query['q'] = year_query
-                data = _efatt_api_request('GET', f'/c/{company_id}/issued_documents', query=query, db=db)
+                try:
+                    data = _efatt_api_request('GET', f'/c/{company_id}/issued_documents', query=query, db=db)
+                except EFattAPIError as e:
+                    if doc_type in optional_types:
+                        print(f'[sync active] tipo documento {doc_type} non disponibile sul token/provider: {str(e)[:160]}')
+                        break
+                    raise
                 docs = data.get('data') if isinstance(data, dict) else []
                 if docs is None:
                     docs = []
@@ -12470,7 +10803,9 @@ def _efatt_build_issued_payload(db, f):
         imponibile = round(totale / 1.22, 2) if totale else 0
     # Determina il tipo documento: 'invoice' o 'credit_note'
     doc_type_local = (f['doc_type'] if 'doc_type' in f.keys() else None) or 'invoice'
-    fic_type = 'credit_note' if doc_type_local == 'credit_note' else 'invoice'
+    fic_type = doc_type_local if doc_type_local in _EFATT_FIC_ISSUED_SYNC_TYPES else ('credit_note' if 'credit' in str(doc_type_local) else 'invoice')
+    if fic_type == 'credit_note':
+        imponibile = abs(imponibile)
     doc = {
         'type': fic_type,
         'entity': entity,
@@ -12481,11 +10816,11 @@ def _efatt_build_issued_payload(db, f):
         'items_list': [{
             'name': descrizione[:255],
             'qty': 1,
-            'net_price': round(imponibile, 2),
+            'net_price': round(abs(imponibile) if fic_type == 'credit_note' else imponibile, 2),
             'vat': {'id': 0},
         }],
         'payments_list': [{
-            'amount': round(_efatt_float(f['importo_totale'], 0), 2),
+            'amount': round(abs(_efatt_float(f['importo_totale'], 0)) if fic_type == 'credit_note' else _efatt_float(f['importo_totale'], 0), 2),
             'due_date': f['data_scadenza'] or f['data_emissione'] or date.today().isoformat(),
             'status': 'not_paid',
         }],
@@ -22755,13 +21090,17 @@ EFATT_SETUP_TMPL = """
       </form>
       {% endif %}
     </div>
-    <details style="margin-top:18px;padding:12px;background:#f8fafc;border-radius:10px;border:1px solid var(--border)">
+    <details style="margin-top:18px;padding:12px;background:#0f1f33;border-radius:10px;border:1px solid rgba(148,163,184,.22)">
       <summary style="cursor:pointer;font-weight:700;font-size:13px"><i class="fa fa-circle-info"></i> Quali eventi vanno abilitati</summary>
       <div class="ef-muted" style="margin-top:10px">
         Eventi consigliati sul pannello Fatture in Cloud:
         <ul style="margin:8px 0 0 18px;padding:0">
           <li><code>received_documents.create</code> - nuova fattura passiva ricevuta</li>
           <li><code>received_documents.e_invoices.receive</code> - fattura passiva arrivata dallo SDI</li>
+          <li><code>issued_documents.invoices.create/update</code> - fatture attive create o aggiornate</li>
+          <li><code>issued_documents.credit_notes.create/update</code> - note di credito</li>
+          <li><code>issued_documents.self_own_invoices.create/update</code> - autofatture</li>
+          <li><code>issued_documents.self_supplier_invoices.create/update</code> - autofatture fornitore</li>
           <li><code>issued_documents.e_invoices.status_update</code> - aggiornamenti di stato SDI (consegna, scarto, mancata consegna)</li>
           <li><code>issued_documents.invoices.email_sent</code> - conferma email inviata al cliente</li>
         </ul>
@@ -23442,9 +21781,18 @@ def _efatt_register_webhook_remote(db, company_id, webhook_url, secret):
         'it.fattureincloud.webhooks.issued_documents.invoices.update',
         'it.fattureincloud.webhooks.issued_documents.credit_notes.create',
         'it.fattureincloud.webhooks.issued_documents.credit_notes.update',
+        'it.fattureincloud.webhooks.issued_documents.self_own_invoices.create',
+        'it.fattureincloud.webhooks.issued_documents.self_own_invoices.update',
+        'it.fattureincloud.webhooks.issued_documents.self_supplier_invoices.create',
+        'it.fattureincloud.webhooks.issued_documents.self_supplier_invoices.update',
+        'it.fattureincloud.webhooks.issued_documents.receipts.create',
+        'it.fattureincloud.webhooks.issued_documents.receipts.update',
         'it.fattureincloud.webhooks.issued_documents.e_invoices.status_update',
         'it.fattureincloud.webhooks.issued_documents.invoices.email_sent',
         'it.fattureincloud.webhooks.issued_documents.credit_notes.email_sent',
+        'it.fattureincloud.webhooks.issued_documents.self_own_invoices.email_sent',
+        'it.fattureincloud.webhooks.issued_documents.self_supplier_invoices.email_sent',
+        'it.fattureincloud.webhooks.issued_documents.receipts.email_sent',
     ]
     base_path = f'/c/{company_id}/subscriptions'
 
@@ -23848,7 +22196,7 @@ def fatturazione_nota_credito_nuova(fid):
                         ?,?,?,?,?,?,?,?,?,'da_emettere',?)""",
                 (numero_nc, f_orig['cliente_id'], f_orig['cliente_nome'],
                  date.today().isoformat(), date.today().isoformat(),
-                 imponibile_nc, iva_perc, iva_imp_nc, importo,
+                 -abs(imponibile_nc), iva_perc, -abs(iva_imp_nc), -abs(importo),
                  descrizione_nc, motivo, 'immediato', fid))
             new_fid = cur.lastrowid
             safe_commit(db)
@@ -24101,8 +22449,16 @@ def _handle_fic_webhook_event(db, event_type, payload):
                 return 'error'
         return 'no_doc_id'
 
-    # Fattura attiva creata o aggiornata direttamente su Fatture in Cloud.
-    if 'issued_documents' in et and ('create' in et or 'update' in et) and ('invoices' in et or 'credit_notes' in et):
+    # Fattura attiva / nota di credito / autofattura creata o aggiornata su Fatture in Cloud.
+    issued_invoice_sections = (
+        'invoices',
+        'credit_notes',
+        'self_own_invoices',
+        'self_supplier_invoices',
+        'self_invoices',
+        'receipts',
+    )
+    if 'issued_documents' in et and ('create' in et or 'update' in et) and any(section in et for section in issued_invoice_sections):
         if resource_ids:
             imported = 0
             updated = 0
@@ -24538,10 +22894,14 @@ def _fatt_overview_data(db, anno):
             tipo = 'attiva'
         total = float(row['importo_totale'] or 0)
         paid = float(row['pagato'] or 0)
-        if row['stato'] == 'pagata' and paid <= 0:
+        total_abs = abs(total)
+        paid_abs = abs(paid)
+        if row['stato'] == 'pagata' and paid_abs <= 0 and total_abs > 0:
             paid = total
-        paid = max(0.0, min(paid, total))
-        residual = max(total - paid, 0.0)
+            paid_abs = total_abs
+        paid_sign = -1 if total < 0 else 1
+        paid = round(min(paid_abs, total_abs) * paid_sign, 2) if total_abs else 0.0
+        residual = max(total_abs - abs(paid), 0.0)
         due_row = db.execute("""
             SELECT MIN(data_scadenza) AS due
               FROM rate_fattura
@@ -24555,9 +22915,9 @@ def _fatt_overview_data(db, anno):
         s['paid'] += paid
         s['residual'] += residual
         s['count'] += 1
-        if residual <= 0.01 and total > 0:
+        if residual <= 0.01 and total_abs > 0:
             s['paid_count'] += 1
-        elif paid > 0:
+        elif abs(paid) > 0:
             s['partial_count'] += 1
         if is_overdue:
             s['overdue_count'] += 1
@@ -24567,7 +22927,7 @@ def _fatt_overview_data(db, anno):
         s['total'] = round(s['total'], 2)
         s['paid'] = round(s['paid'], 2)
         s['residual'] = round(s['residual'], 2)
-        s['payment_pct'] = round((s['paid'] / s['total']) * 100, 1) if s['total'] > 0 else 0.0
+        s['payment_pct'] = round((abs(s['paid']) / abs(s['total'])) * 100, 1) if abs(s['total']) > 0 else 0.0
     months = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic']
     monthly_active, monthly_passive, monthly_active_paid, monthly_passive_paid = [], [], [], []
     for month in range(1, 13):
@@ -24802,7 +23162,14 @@ FATT_LIST_TMPL = """
     <input type="checkbox" name="fattura_ids" value="{{ f.id }}" form="bulk-delete-form" class="fatt-check" onchange="updateBulkCount()" style="width:15px;height:15px;vertical-align:middle">
     {% if has_rate and all_paid %}<span style="color:#16a34a;font-size:13px"><i class="fa fa-check"></i></span>{% endif %}
   </td>
-  <td><strong>{{ f.numero }}</strong></td>
+  <td><strong>{{ f.numero }}</strong>
+    {% if f.doc_type and f.doc_type not in ['invoice','passive_invoice'] %}
+    {% set doc_badge_color = '#f97316' if 'self' in f.doc_type else ('#ef4444' if 'credit' in f.doc_type else '#38bdf8') %}
+    <div style="margin-top:4px"><span title="Tipo documento provider" style="display:inline-flex;align-items:center;gap:4px;background:{{ doc_badge_color }}1a;color:{{ doc_badge_color }};border:1px solid {{ doc_badge_color }}55;border-radius:999px;padding:2px 7px;font-size:10px;font-weight:900;white-space:nowrap">
+      <i class="fa {{ 'fa-rotate-left' if 'credit' in f.doc_type else ('fa-file-circle-plus' if 'self' in f.doc_type else 'fa-file-invoice') }}"></i> {{ f.doc_type_label }}
+    </span></div>
+    {% endif %}
+  </td>
   <td>
     {% if tipo=='passiva' %}{{ f.fornitore_nome or f.cliente_nome or '-' }}{% else %}{{ f.cliente_nome or '-' }}{% endif %}
     {% if tipo=='attiva' and f.sdi_stato and f.sdi_stato != 'non_inviata' %}
@@ -25131,8 +23498,9 @@ FATT_DETAIL_TMPL = """
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
   <div class="card">
     <div class="card-header"><h3><i class="fa fa-file-invoice-dollar" style="color:var(--accent2)"></i> Fattura {{ f.numero }}
-      {% if f.doc_type == 'credit_note' %}
-      <span style="background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700;margin-left:8px"><i class="fa fa-rotate-left"></i> Nota di credito</span>
+      {% if f.doc_type and f.doc_type not in ['invoice','passive_invoice'] %}
+      {% set doc_badge_color = '#f97316' if 'self' in f.doc_type else ('#ef4444' if 'credit' in f.doc_type else '#38bdf8') %}
+      <span style="background:{{ doc_badge_color }}1a;color:{{ doc_badge_color }};border:1px solid {{ doc_badge_color }}55;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:800;margin-left:8px"><i class="fa {{ 'fa-rotate-left' if 'credit' in f.doc_type else ('fa-file-circle-plus' if 'self' in f.doc_type else 'fa-file-invoice') }}"></i> {{ f.doc_type_label }}</span>
       {% endif %}
     </h3></div>
     <div class="card-body">
@@ -25203,7 +23571,7 @@ FATT_DETAIL_TMPL = """
         <button type="submit" class="btn btn-primary"><i class="fa fa-redo"></i> Reinvia allo SDI</button>
       </form>
       {% endif %}
-      {% if f.sdi_stato == 'consegnata_sdi' and f.doc_type != 'credit_note' %}
+      {% if f.sdi_stato == 'consegnata_sdi' and 'credit' not in (f.doc_type or '') %}
       <a href="/fatturazione/{{ f.id }}/nota-credito/nuova" class="btn btn-secondary" style="color:#dc2626;border-color:#fca5a5">
         <i class="fa fa-rotate-left"></i> Crea nota di credito
       </a>
@@ -25714,9 +24082,9 @@ def _aggiorna_stato_fattura(fattura_id, db):
     rate = db.execute("SELECT * FROM rate_fattura WHERE fattura_id=?", (fattura_id,)).fetchall()
     if not rate:
         return
-    tot = sum(r['importo'] or 0 for r in rate)
-    pagate = sum(r['importo'] or 0 for r in rate if r['stato'] == 'pagata')
-    if pagate >= tot:
+    tot = sum(abs(r['importo'] or 0) for r in rate)
+    pagate = sum(abs(r['importo'] or 0) for r in rate if r['stato'] == 'pagata')
+    if tot > 0 and pagate >= (tot - 0.01):
         nuovo_stato = 'pagata'
     elif pagate > 0:
         nuovo_stato = 'parziale'
@@ -25811,14 +24179,23 @@ def fatturazione():
 
     for f in fatture_raw:
         fd = dict(f)
+        fd['doc_type'] = fd.get('doc_type') or 'invoice'
+        fd['doc_type_label'] = _efatt_doc_type_label(fd['doc_type'])
         totale_fattura = float(fd.get('importo_totale') or 0)
         pagato_fattura = float(fd.get('pagato') or 0)
-        fd['residuo'] = max(totale_fattura - pagato_fattura, 0)
+        totale_abs = abs(totale_fattura)
+        pagato_abs = abs(pagato_fattura)
+        if (fd.get('stato') or '') == 'pagata' and pagato_abs <= 0 and totale_abs > 0:
+            pagato_abs = totale_abs
+            pagato_fattura = totale_fattura
+            fd['pagato'] = pagato_fattura
+        fd['residuo'] = max(totale_abs - pagato_abs, 0)
+        residuo_signed = round(fd['residuo'] * (-1 if totale_fattura < 0 else 1), 2)
         stato_pagamento = fd.get('stato') or 'da_pagare'
         if stato_pagamento not in ('da_emettere', 'annullata'):
-            if totale_fattura > 0 and pagato_fattura >= (totale_fattura - 0.01):
+            if totale_abs > 0 and pagato_abs >= (totale_abs - 0.01):
                 stato_pagamento = 'pagata'
-            elif pagato_fattura > 0:
+            elif pagato_abs > 0:
                 stato_pagamento = 'parziale'
 
         # Scaduta = solo se ci sono RATE non pagate con scadenza passata
@@ -25866,11 +24243,11 @@ def fatturazione():
             tot_pagato += pagato_fattura or totale_fattura
             n_pagate += 1
         elif s == 'parziale':
-            tot_parziale += fd['residuo']
+            tot_parziale += residuo_signed
             tot_pagato += pagato_fattura
             n_parziale += 1
         else:
-            tot_da_pagare += fd['residuo'] or totale_fattura
+            tot_da_pagare += residuo_signed if fd['residuo'] else 0
             n_da_pagare += 1
         if fd['scaduta'] and s != 'pagata':
             n_scadute_c += 1
@@ -26121,14 +24498,17 @@ def fatturazione_dettaglio(fid):
         rate.append(rd)
 
     pagato_tot = sum(r['importo'] for r in rate if r['stato'] == 'pagata')
-    residuo = (f['importo_totale'] or 0) - pagato_tot
+    residuo = max(abs(f['importo_totale'] or 0) - abs(pagato_tot or 0), 0)
 
     # Stato SDI per la card "Fatturazione elettronica"
     sdi_key = (f['sdi_stato'] or 'non_inviata').strip() or 'non_inviata'
     sdi_label, sdi_color = SDI_STATO_LABELS.get(sdi_key, (sdi_key.replace('_', ' ').title(), '#64748b'))
 
+    f_dict = dict(f)
+    f_dict['doc_type'] = f_dict.get('doc_type') or 'invoice'
+    f_dict['doc_type_label'] = _efatt_doc_type_label(f_dict['doc_type'])
     return render_page(FATT_DETAIL_TMPL, page_title=f'Fattura {f["numero"]}', active='fatturazione',
-        f=dict(f), rate=rate, pagato_tot=pagato_tot, residuo=residuo, today=date.today().isoformat(),
+        f=f_dict, rate=rate, pagato_tot=pagato_tot, residuo=residuo, today=date.today().isoformat(),
         sdi_label=sdi_label, sdi_color=sdi_color,
         ai_allegato=session.pop('fatt_allegato_msg', None))
 
