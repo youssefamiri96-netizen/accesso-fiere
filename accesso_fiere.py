@@ -65,6 +65,15 @@ else:
 
 os.makedirs(DATA_DIR, exist_ok=True)
 
+def _load_template_source(relative_path, fallback):
+    """Carica template/static estratti, mantenendo fallback inline per deploy legacy."""
+    try:
+        path = os.path.join(BASE_DIR, *relative_path.split('/'))
+        with open(path, 'r', encoding='utf-8') as f:
+            return f.read()
+    except Exception:
+        return fallback
+
 def _load_app_secret_key():
     weak_values = {'', 'accesso-fiere-secret-2025-changeme', 'startup-only-replaced-after-data-dir'}
     env_secret = (os.environ.get('SECRET_KEY') or os.environ.get('ACCESSO_FIERE_SECRET_KEY') or '').strip()
@@ -6471,6 +6480,12 @@ COOKIE_BODY = """
 <h2>5. Contatti</h2>
 <p>Per informazioni puoi scrivere a <a href="mailto:info@accessofiere.com">info@accessofiere.com</a>.</p>
 """
+
+LOGIN_TMPL = _load_template_source('templates/public/login.html', LOGIN_TMPL)
+LEGAL_PAGE_TMPL = _load_template_source('templates/public/legal.html', LEGAL_PAGE_TMPL)
+PRIVACY_BODY = _load_template_source('templates/public/privacy_body.html', PRIVACY_BODY)
+TERMS_BODY = _load_template_source('templates/public/terms_body.html', TERMS_BODY)
+COOKIE_BODY = _load_template_source('templates/public/cookie_body.html', COOKIE_BODY)
 
 LEGAL_CONSENT_SNIPPET = """
 <div id="af-cookie-banner" role="dialog" aria-live="polite" style="display:none;position:fixed;left:16px;right:16px;bottom:16px;z-index:99999;background:#0f172a;color:#fff;border:1px solid rgba(255,255,255,.14);box-shadow:0 18px 50px rgba(15,23,42,.35);border-radius:14px;padding:14px 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;max-width:760px;margin:0 auto">
