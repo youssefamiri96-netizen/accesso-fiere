@@ -1966,6 +1966,7 @@ BASE = """<!DOCTYPE html>
 <link rel="icon" type="image/png" sizes="192x192" href="/static/pwa/icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/static/pwa/icon-512.png">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&amp;f[]=satoshi@400,500,700,900&amp;display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
@@ -3950,10 +3951,195 @@ body{font-family:'Geist','Inter',system-ui,-apple-system,BlinkMacSystemFont,'Seg
   }
   body.sidebar-collapsed .sidebar-user{justify-content:center;padding:12px}
   body.sidebar-collapsed nav a:not(.nav-sub):hover::before,
-  body.sidebar-collapsed .nav-group>summary:hover::before{
+body.sidebar-collapsed .nav-group>summary:hover::before{
     content:attr(data-tooltip);position:absolute;left:54px;top:50%;transform:translateY(-50%);
     white-space:nowrap;background:#111c2b;color:#f8fafc;border:1px solid rgba(201,213,225,.18);
     border-radius:8px;padding:7px 9px;font-size:12px;font-weight:700;box-shadow:0 16px 32px -22px rgba(0,0,0,.75);z-index:200;
+  }
+}
+
+/* Enterprise v2: piu respiro, numeri grandi, sidebar piu Linear/Vercel */
+@media (min-width:901px){
+  body{
+    font-family:'Satoshi','General Sans','Geist','Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif!important;
+    letter-spacing:0!important;
+  }
+  .content{padding:34px 36px!important}
+  .card-body{padding:24px!important}
+  .stats-grid,.kpi-grid,.fh-kpis{gap:18px!important}
+  .grid-2,.grid-3,.fh-grid,.fh-split{gap:18px!important}
+  .card,.stat-card,.kpi-card,.fh-card,.fh-kpi,.fh-flow{
+    border-radius:10px!important;
+  }
+  .card-header{
+    min-height:52px!important;
+    padding:15px 22px!important;
+  }
+  .card-header h3,.panel-title,.section-title{
+    font-size:13px!important;
+    font-weight:760!important;
+    letter-spacing:-.01em!important;
+  }
+  .page-title,.topbar h1{
+    font-weight:760!important;
+    letter-spacing:-.035em!important;
+  }
+  .page-desc,.card-body,.muted,.text-muted,.empty-state{
+    font-size:12.5px!important;
+    line-height:1.55!important;
+  }
+  .kpi-value{
+    font-size:clamp(40px,3.6vw,58px)!important;
+    font-weight:850!important;
+  }
+  .stat-val,.stat-value,.sf .val{
+    font-size:clamp(30px,2.6vw,44px)!important;
+    font-weight:850!important;
+  }
+  .fh-kpi .val{
+    font-size:clamp(31px,2.6vw,43px)!important;
+    font-weight:850!important;
+  }
+  .fh-flow-total{
+    font-size:clamp(42px,4vw,64px)!important;
+    font-weight:870!important;
+    margin:12px 0 8px!important;
+  }
+  .fh-metric b{
+    font-size:18px!important;
+    font-weight:780!important;
+  }
+  .kpi-label,.kpi-foot,.stat-lbl,.stat-label,.sf .lbl,.fh-kpi .lbl,.fh-kpi .hint,.fh-metric span{
+    font-size:11px!important;
+    line-height:1.35!important;
+    font-weight:650!important;
+  }
+  .sidebar{
+    width:232px!important;
+    background:linear-gradient(180deg,rgba(14,25,39,.96),rgba(11,20,33,.98))!important;
+    box-shadow:8px 0 26px -24px rgba(0,0,0,.65)!important;
+    border-right:1px solid rgba(201,213,225,.12)!important;
+  }
+  .main{margin-left:232px!important}
+  .sidebar-logo{
+    padding:15px 16px 14px!important;
+    min-height:64px!important;
+    border-bottom-color:rgba(201,213,225,.10)!important;
+  }
+  .sidebar-logo img{
+    height:30px!important;
+    width:30px!important;
+    border-radius:8px!important;
+  }
+  .sidebar-logo .company{
+    font-size:13px!important;
+    font-weight:760!important;
+    letter-spacing:-.02em!important;
+  }
+  .sidebar-logo .sub{
+    font-size:10px!important;
+    opacity:.72!important;
+  }
+  nav{padding:8px 8px 12px!important}
+  .nav-section{
+    padding:16px 10px 6px!important;
+    font-size:9px!important;
+    letter-spacing:.08em!important;
+    color:rgba(180,195,211,.48)!important;
+  }
+  .nav-section::before{display:none!important}
+  nav a,.nav-group>summary{
+    margin:2px 0!important;
+    padding:8px 10px!important;
+    border-left:0!important;
+    border-radius:9px!important;
+    gap:10px!important;
+    font-size:12.5px!important;
+    font-weight:650!important;
+    color:rgba(223,232,242,.70)!important;
+  }
+  nav a i,.nav-group>summary i:first-child{
+    width:18px!important;
+    font-size:13px!important;
+    opacity:.86!important;
+  }
+  nav a:hover,.nav-group>summary:hover{
+    background:rgba(201,213,225,.07)!important;
+    color:#f8fafc!important;
+  }
+  nav a.active,.nav-group>summary.active{
+    background:rgba(201,213,225,.10)!important;
+    box-shadow:none!important;
+    color:#fff!important;
+  }
+  nav a.active::after{
+    right:6px!important;
+    width:3px!important;
+    height:18px!important;
+    border-radius:99px!important;
+    background:rgba(201,213,225,.82)!important;
+  }
+  nav a.nav-sub{
+    padding-left:36px!important;
+    font-size:12px!important;
+    opacity:.70!important;
+  }
+  nav a.nav-sub::before{left:23px!important;opacity:.35!important}
+  .sidebar-user{
+    padding:12px 14px!important;
+    background:rgba(255,255,255,.025)!important;
+  }
+  .sidebar-user .avatar{
+    width:30px!important;
+    height:30px!important;
+    box-shadow:none!important;
+  }
+  .sidebar-user .uname{font-size:12px!important;font-weight:680!important}
+  .sidebar-user .urole{font-size:10px!important}
+  .sidebar-collapse-btn{
+    right:8px!important;
+    width:26px!important;
+    height:26px!important;
+    border-radius:7px!important;
+    background:rgba(201,213,225,.045)!important;
+    box-shadow:none!important;
+  }
+  body.sidebar-collapsed .sidebar{width:68px!important}
+  body.sidebar-collapsed .main{margin-left:68px!important}
+  body.sidebar-collapsed .sidebar-logo{
+    padding:14px 9px!important;
+  }
+  body.sidebar-collapsed .sidebar-logo img{
+    height:32px!important;
+    width:32px!important;
+  }
+  body.sidebar-collapsed nav{
+    padding:10px 8px!important;
+  }
+  body.sidebar-collapsed nav a,
+  body.sidebar-collapsed .nav-group>summary{
+    width:44px!important;
+    height:42px!important;
+    padding:0!important;
+    margin:3px auto!important;
+    border-radius:12px!important;
+  }
+  body.sidebar-collapsed nav a i,
+  body.sidebar-collapsed .nav-group>summary i:first-child{
+    width:auto!important;
+    font-size:15px!important;
+  }
+  body.sidebar-collapsed .sidebar-collapse-btn{
+    right:-12px!important;
+    background:#18283d!important;
+    border-color:rgba(201,213,225,.16)!important;
+  }
+  body.sidebar-collapsed nav a:not(.nav-sub):hover::before,
+  body.sidebar-collapsed .nav-group>summary:hover::before{
+    left:54px!important;
+    border-radius:9px!important;
+    font-size:12px!important;
+    padding:8px 10px!important;
   }
 }
 </style>
