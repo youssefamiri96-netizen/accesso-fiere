@@ -3512,6 +3512,125 @@ body.theme-light #ai-chat-panel,body.theme-light .ai-chat-body,body.theme-light 
         border-color:#dbe5f0!important;
       }
     }
+    /* Pulizia finale tema chiaro: contrasti, componenti legacy e fatturazione */
+    body.theme-light .stat-card,
+    body.theme-light .sf,
+    body.theme-light .fh-kpi,
+    body.theme-light .fh-flow,
+    body.theme-light .fh-card,
+    body.theme-light .fh-metric{
+      background:#fff!important;
+      color:#172033!important;
+      border-color:#dbe5f0!important;
+      box-shadow:0 1px 2px rgba(15,23,42,.04),0 18px 46px -34px rgba(15,23,42,.38)!important;
+    }
+    body.theme-light .stat-card .stat-value,
+    body.theme-light .stat-card .stat-val,
+    body.theme-light .sf .val,
+    body.theme-light .fh-kpi .val,
+    body.theme-light .fh-flow-title,
+    body.theme-light .fh-metric b,
+    body.theme-light .fh-toolbar h2{
+      color:#172033!important;
+      opacity:1!important;
+      text-shadow:none!important;
+    }
+    body.theme-light .stat-card .stat-label,
+    body.theme-light .stat-card .stat-lbl,
+    body.theme-light .sf .lbl,
+    body.theme-light .fh-kpi .lbl,
+    body.theme-light .fh-kpi .hint,
+    body.theme-light .fh-metric span,
+    body.theme-light .fh-flow div[style*="color:#8fa3bd"],
+    body.theme-light .fh-toolbar div[style*="color:#8fa3bd"]{
+      color:#53667d!important;
+      opacity:1!important;
+      text-shadow:none!important;
+    }
+    body.theme-light .fh-flow.attiva .fh-flow-total{color:#16a34a!important}
+    body.theme-light .fh-flow.passiva .fh-flow-total{color:#ea580c!important}
+    body.theme-light .fh-progress{background:#e2e8f0!important}
+    body.theme-light .fh-select,
+    body.theme-light .fatt-year-select,
+    body.theme-light .fatt-year-pill{
+      background:#fff!important;
+      color:#172033!important;
+      border-color:#cbd5e1!important;
+    }
+    body.theme-light .fh-table th,
+    body.theme-light .fh-table td{
+      background:transparent!important;
+      color:#172033!important;
+      border-color:#e2e8f0!important;
+    }
+    body.theme-light .fh-table th{color:#475569!important;background:#f8fafc!important}
+    body.theme-light .bo-mese-label,
+    body.theme-light .bo-card strong,
+    body.theme-light .bo-info strong{
+      color:#172033!important;
+      opacity:1!important;
+    }
+    body.theme-light .bo-info,
+    body.theme-light .bo-mese-bar,
+    body.theme-light .bo-card{
+      background:#fff!important;
+      color:#172033!important;
+      border-color:#dbe5f0!important;
+    }
+    body.theme-light .bo-monte-input.bo-empty{
+      background:#fff7ed!important;
+      color:#9a3412!important;
+      border-color:#fdba74!important;
+    }
+    body.theme-light .live-pill{
+      background:#e8f7fb!important;
+      border-color:#b8e3ed!important;
+      color:#0f4f75!important;
+      box-shadow:none!important;
+    }
+    body.theme-light .live-pill.live-green{background:#dcfce7!important;border-color:#bbf7d0!important;color:#166534!important}
+    body.theme-light .live-pill.live-blue{background:#dbeafe!important;border-color:#bfdbfe!important;color:#1e40af!important}
+    body.theme-light .live-pill.live-amber{background:#fef3c7!important;border-color:#fde68a!important;color:#92400e!important}
+    body.theme-light .live-pill.live-red{background:#fee2e2!important;border-color:#fecaca!important;color:#991b1b!important}
+    body.theme-light .sync-status{
+      background:transparent!important;
+      border-color:transparent!important;
+      color:#475569!important;
+      box-shadow:none!important;
+    }
+    body.theme-light .sync-live{
+      background:#dcfce7!important;
+      border-color:#bbf7d0!important;
+      color:#166534!important;
+    }
+    body.theme-light .fatt-detail-payment,
+    body.theme-light .fatt-detail-payment .table-wrap,
+    body.theme-light .fatt-detail-payment table,
+    body.theme-light .fatt-detail-payment tbody tr{
+      background:#fff!important;
+      color:#172033!important;
+      border-color:#dbe5f0!important;
+      box-shadow:none!important;
+    }
+    body.theme-light .fatt-detail-payment tbody tr[style*="background:#fef2f2"]{background:#fff1f2!important}
+    body.theme-light .fatt-detail-payment tbody tr[style*="background:#f0fdf4"]{background:#f0fdf4!important}
+    body.theme-light .fatt-detail-payment th{
+      background:#f8fafc!important;
+      color:#475569!important;
+      border-color:#dbe5f0!important;
+    }
+    body.theme-light .fatt-detail-payment td{
+      background:transparent!important;
+      color:#172033!important;
+      border-color:#e2e8f0!important;
+    }
+    body.theme-light .fatt-detail-payment td[style*="color:var(--text-light)"]{color:#64748b!important}
+    body.theme-light .fatt-detail-payment input[type="date"]{
+      background:#fff!important;
+      color:#172033!important;
+      border-color:#cbd5e1!important;
+    }
+    body.theme-light .fatt-detail-payment input[type="date"]::-webkit-calendar-picker-indicator{filter:none!important;opacity:.85!important}
     </style>
   </div>
 </main>
@@ -22225,8 +22344,12 @@ FATT_OVERVIEW_TMPL = """
   <div class="fh-card"><div class="card-header"><h3><i class="fa fa-triangle-exclamation" style="color:#f97316"></i> Scadenze aperte piu urgenti</h3></div>{% if scadute %}<div class="table-wrap"><table class="fh-table"><thead><tr><th>Tipo</th><th>N.</th><th>Cliente/Fornitore</th><th>Scadenza</th><th style="text-align:right">Residuo</th><th></th></tr></thead><tbody>{% for f in scadute %}<tr><td><span class="fh-pill {{ 'green' if f.tipo=='attiva' else 'orange' }}">{{ f.tipo_label }}</span></td><td><strong>{{ f.numero }}</strong></td><td>{{ f.controparte }}</td><td style="color:#fca5a5;font-weight:800">{{ f.due }}</td><td style="text-align:right;font-weight:900">&euro; {{ "%.2f"|format(f.residual) }}</td><td style="text-align:right"><a class="btn btn-secondary btn-sm" href="{{ f.url }}"><i class="fa fa-eye"></i></a></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="fh-empty"><i class="fa fa-circle-check" style="font-size:26px;color:#22c55e"></i><div style="margin-top:8px">Nessuna scadenza aperta urgente per {{ anno }}.</div></div>{% endif %}</div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script><script>
-new Chart(document.getElementById('fattOverviewMonthly'),{type:'bar',data:{labels:{{ months_labels|tojson }},datasets:[{label:'Attive emesse',data:{{ monthly_active|tojson }},backgroundColor:'rgba(34,197,94,.22)',borderColor:'#22c55e',borderWidth:2,borderRadius:5},{label:'Passive ricevute',data:{{ monthly_passive|tojson }},backgroundColor:'rgba(249,115,22,.20)',borderColor:'#f97316',borderWidth:2,borderRadius:5},{label:'Incassato',data:{{ monthly_active_paid|tojson }},type:'line',borderColor:'#38bdf8',backgroundColor:'rgba(56,189,248,.12)',tension:.35},{label:'Pagato',data:{{ monthly_passive_paid|tojson }},type:'line',borderColor:'#facc15',backgroundColor:'rgba(250,204,21,.12)',tension:.35}]},options:{responsive:true,plugins:{legend:{position:'top'}},scales:{y:{beginAtZero:true,ticks:{callback:v=>'\\u20ac'+v}}}}});
-new Chart(document.getElementById('fattOverviewStatus'),{type:'doughnut',data:{labels:['Incassato attive','Residuo attive','Pagato passive','Residuo passive'],datasets:[{data:{{ payment_mix|tojson }},backgroundColor:['#22c55e','#ef4444','#f97316','#facc15'],borderColor:'#102238',borderWidth:2}]},options:{plugins:{legend:{position:'bottom'}},cutout:'62%'}});
+const fattLightTheme=document.body.classList.contains('theme-light');
+const fattChartText=fattLightTheme?'#334155':'#8fa3bd';
+const fattChartGrid=fattLightTheme?'rgba(100,116,139,.22)':'rgba(148,163,184,.12)';
+const fattChartBorder=fattLightTheme?'#ffffff':'#102238';
+new Chart(document.getElementById('fattOverviewMonthly'),{type:'bar',data:{labels:{{ months_labels|tojson }},datasets:[{label:'Attive emesse',data:{{ monthly_active|tojson }},backgroundColor:'rgba(34,197,94,.22)',borderColor:'#22c55e',borderWidth:2,borderRadius:5},{label:'Passive ricevute',data:{{ monthly_passive|tojson }},backgroundColor:'rgba(249,115,22,.20)',borderColor:'#f97316',borderWidth:2,borderRadius:5},{label:'Incassato',data:{{ monthly_active_paid|tojson }},type:'line',borderColor:'#38bdf8',backgroundColor:'rgba(56,189,248,.12)',tension:.35},{label:'Pagato',data:{{ monthly_passive_paid|tojson }},type:'line',borderColor:'#facc15',backgroundColor:'rgba(250,204,21,.12)',tension:.35}]},options:{responsive:true,plugins:{legend:{position:'top',labels:{color:fattChartText}}},scales:{x:{ticks:{color:fattChartText},grid:{color:fattChartGrid}},y:{beginAtZero:true,ticks:{color:fattChartText,callback:v=>'\\u20ac'+v},grid:{color:fattChartGrid}}}}});
+new Chart(document.getElementById('fattOverviewStatus'),{type:'doughnut',data:{labels:['Incassato attive','Residuo attive','Pagato passive','Residuo passive'],datasets:[{data:{{ payment_mix|tojson }},backgroundColor:['#22c55e','#ef4444','#f97316','#facc15'],borderColor:fattChartBorder,borderWidth:2}]},options:{plugins:{legend:{position:'bottom',labels:{color:fattChartText}}},cutout:'62%'}});
 (function(){
   let liveVersion={{ live_version|tojson }};
   const url=new URL('/fatturazione/live-status', window.location.origin);
@@ -22718,6 +22841,7 @@ new Chart(ctx2, {
 FATT_DETAIL_TMPL = """
 <style>
 .fatt-detail-payment{background:#0b1726!important;border-color:rgba(148,163,184,.22)!important;box-shadow:none!important}
+.fatt-detail-payment .table-wrap{background:#0b1726!important;border-color:rgba(148,163,184,.22)!important;box-shadow:none!important}
 .fatt-detail-payment table{background:#0b1726!important;color:#dbeafe!important}
 .fatt-detail-payment tbody tr{background:#0f1f33!important}
 .fatt-detail-payment tbody tr[style*="background:#fef2f2"]{background:#3a1f2a!important}
@@ -22728,6 +22852,12 @@ FATT_DETAIL_TMPL = """
 .fatt-detail-payment td[style*="color:var(--text-light)"]{color:#8fa3bd!important}
 .fatt-detail-payment input[type="date"]{background:#1f2937!important;color:#f8fafc!important;border-color:rgba(148,163,184,.35)!important}
 .fatt-detail-payment .btn-pay-dark{background:linear-gradient(135deg,#16a34a,#15803d)!important;color:#fff!important;border:1px solid rgba(134,239,172,.35)!important}
+.fatt-detail-payment .btn-danger{background:#4a1f2b!important;color:#ff9aa8!important;border:1px solid #7f2d3f!important}
+.fatt-detail-payment .btn-danger:hover{background:#64263a!important;color:#ffd5dc!important}
+.fatt-detail-payment .badge-red{background:#4a1f2b!important;color:#ffb4bf!important;border:1px solid #7f2d3f!important}
+.fatt-detail-payment .badge-amber{background:#3b2c11!important;color:#ffd36b!important;border:1px solid #9a6514!important}
+.fatt-detail-payment .badge-green{background:#113326!important;color:#75f0a0!important;border:1px solid #1f8f55!important}
+.fatt-detail-payment input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.75}
 </style>
 <div style="margin-bottom:16px;display:flex;gap:10px">
   <a href="/fatturazione" class="btn btn-secondary btn-sm"><i class="fa fa-arrow-left"></i> Fatture</a>
@@ -22824,7 +22954,7 @@ FATT_DETAIL_TMPL = """
 {% endif %}
 
 <!-- Rate / Piano pagamenti -->
-<div class="card" style="margin-bottom:20px">
+<div class="card fatt-detail-payment" style="margin-bottom:20px">
   <div class="card-header">
     <h3><i class="fa fa-list-check" style="color:var(--accent2)"></i> Piano di pagamento</h3>
     <a href="/fatturazione/{{ f.id }}/aggiungi-rata" class="btn btn-sm btn-primary"><i class="fa fa-plus"></i> Aggiungi rata</a>
