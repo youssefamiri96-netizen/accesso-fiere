@@ -10127,11 +10127,13 @@ def _efatt_doc_is_paid(doc):
 _EFATT_DOC_TYPE_LABELS = {
     'invoice': 'Fattura',
     'credit_note': 'Nota di credito',
+    'debit_note': 'Nota di debito',
     'self_own_invoice': 'Autofattura',
     'self_supplier_invoice': 'Autofattura fornitore',
     'receipt': 'Ricevuta',
     'passive_invoice': 'Fattura passiva',
     'passive_credit_note': 'Nota di credito passiva',
+    'passive_debit_note': 'Nota di debito passiva',
     'passive_self_invoice': 'Autofattura passiva',
     'quote': 'Preventivo',
     'proforma': 'Proforma',
@@ -10140,7 +10142,7 @@ _EFATT_DOC_TYPE_LABELS = {
     'work_report': 'Rapporto lavoro',
     'supplier_order': 'Ordine fornitore',
 }
-_EFATT_FIC_ISSUED_SYNC_TYPES = ('invoice', 'credit_note', 'self_own_invoice', 'self_supplier_invoice', 'receipt')
+_EFATT_FIC_ISSUED_SYNC_TYPES = ('invoice', 'credit_note', 'debit_note', 'self_own_invoice', 'self_supplier_invoice', 'receipt')
 
 def _efatt_compact_doc_type(value):
     return str(value or '').strip().lower().replace('-', '_').replace(' ', '_')
@@ -10174,6 +10176,10 @@ def _efatt_document_type(doc, direction='active'):
         'note_credit': 'credit_note',
         'td04': 'credit_note',
         'td08': 'credit_note',
+        'debit': 'debit_note',
+        'debit_note': 'debit_note',
+        'nota_debito': 'debit_note',
+        'td05': 'debit_note',
         'self_invoice': 'self_supplier_invoice',
         'self_invoices': 'self_supplier_invoice',
         'self_own_invoice': 'self_own_invoice',
@@ -10199,6 +10205,8 @@ def _efatt_document_type(doc, direction='active'):
         doc_type = aliases[normalized]
     elif 'credit' in normalized or 'credito' in normalized or 'storno' in normalized:
         doc_type = 'credit_note'
+    elif 'debit' in normalized or 'debito' in normalized:
+        doc_type = 'debit_note'
     elif 'self' in normalized or 'auto' in normalized or 'reverse' in normalized:
         doc_type = 'self_supplier_invoice'
     else:
@@ -10206,6 +10214,8 @@ def _efatt_document_type(doc, direction='active'):
     if str(direction or '').lower().startswith('passive'):
         if doc_type == 'credit_note':
             return 'passive_credit_note'
+        if doc_type == 'debit_note':
+            return 'passive_debit_note'
         if doc_type in ('self_own_invoice', 'self_supplier_invoice'):
             return 'passive_self_invoice'
         if doc_type == 'invoice':
@@ -10500,6 +10510,8 @@ def _aruba_normalize_document(item, direction):
     aruba_doc_type = str(inv.get('documentType') or item.get('documentType') or '').upper().strip()
     if aruba_doc_type in ('TD04', 'TD08'):
         local_doc_type = 'credit_note'
+    elif aruba_doc_type == 'TD05':
+        local_doc_type = 'debit_note'
     elif aruba_doc_type in ('TD16', 'TD17', 'TD18', 'TD19', 'TD20'):
         local_doc_type = 'self_supplier_invoice'
     else:
@@ -21099,6 +21111,7 @@ EFATT_SETUP_TMPL = """
           <li><code>received_documents.e_invoices.receive</code> - fattura passiva arrivata dallo SDI</li>
           <li><code>issued_documents.invoices.create/update</code> - fatture attive create o aggiornate</li>
           <li><code>issued_documents.credit_notes.create/update</code> - note di credito</li>
+          <li><code>issued_documents.debit_notes.create/update</code> - note di debito, se supportate dal piano/provider</li>
           <li><code>issued_documents.self_own_invoices.create/update</code> - autofatture</li>
           <li><code>issued_documents.self_supplier_invoices.create/update</code> - autofatture fornitore</li>
           <li><code>issued_documents.e_invoices.status_update</code> - aggiornamenti di stato SDI (consegna, scarto, mancata consegna)</li>
@@ -21781,6 +21794,8 @@ def _efatt_register_webhook_remote(db, company_id, webhook_url, secret):
         'it.fattureincloud.webhooks.issued_documents.invoices.update',
         'it.fattureincloud.webhooks.issued_documents.credit_notes.create',
         'it.fattureincloud.webhooks.issued_documents.credit_notes.update',
+        'it.fattureincloud.webhooks.issued_documents.debit_notes.create',
+        'it.fattureincloud.webhooks.issued_documents.debit_notes.update',
         'it.fattureincloud.webhooks.issued_documents.self_own_invoices.create',
         'it.fattureincloud.webhooks.issued_documents.self_own_invoices.update',
         'it.fattureincloud.webhooks.issued_documents.self_supplier_invoices.create',
@@ -21790,9 +21805,22 @@ def _efatt_register_webhook_remote(db, company_id, webhook_url, secret):
         'it.fattureincloud.webhooks.issued_documents.e_invoices.status_update',
         'it.fattureincloud.webhooks.issued_documents.invoices.email_sent',
         'it.fattureincloud.webhooks.issued_documents.credit_notes.email_sent',
+        'it.fattureincloud.webhooks.issued_documents.debit_notes.email_sent',
         'it.fattureincloud.webhooks.issued_documents.self_own_invoices.email_sent',
         'it.fattureincloud.webhooks.issued_documents.self_supplier_invoices.email_sent',
         'it.fattureincloud.webhooks.issued_documents.receipts.email_sent',
+    ]
+    core_types_wanted = [
+        'it.fattureincloud.webhooks.received_documents.create',
+        'it.fattureincloud.webhooks.received_documents.update',
+        'it.fattureincloud.webhooks.received_documents.e_invoices.receive',
+        'it.fattureincloud.webhooks.issued_documents.invoices.create',
+        'it.fattureincloud.webhooks.issued_documents.invoices.update',
+        'it.fattureincloud.webhooks.issued_documents.credit_notes.create',
+        'it.fattureincloud.webhooks.issued_documents.credit_notes.update',
+        'it.fattureincloud.webhooks.issued_documents.e_invoices.status_update',
+        'it.fattureincloud.webhooks.issued_documents.invoices.email_sent',
+        'it.fattureincloud.webhooks.issued_documents.credit_notes.email_sent',
     ]
     base_path = f'/c/{company_id}/subscriptions'
 
@@ -21813,14 +21841,18 @@ def _efatt_register_webhook_remote(db, company_id, webhook_url, secret):
             return {'note': f'Lista webhook non accessibile (HTTP {e.status}). Configura manualmente.'}
         raise
 
-    sub_payload = {
-        'data': {
-            'sink': webhook_url,
-            'types': types_wanted,
-            'verification_method': 'header',
-            'config': {'mapping': 'binary'},
+    def _subscription_payload(event_types):
+        return {
+            'data': {
+                'sink': webhook_url,
+                'types': event_types,
+                'verification_method': 'header',
+                'config': {'mapping': 'binary'},
+            }
         }
-    }
+
+    sub_payload = _subscription_payload(types_wanted)
+    core_payload = _subscription_payload(core_types_wanted)
 
     if existing and existing.get('id'):
         # Aggiorna
@@ -21835,13 +21867,23 @@ def _efatt_register_webhook_remote(db, company_id, webhook_url, secret):
                     _efatt_api_request('DELETE', f'{base_path}/{sub_id}', db=db)
                 except Exception:
                     pass
-                created = _efatt_api_request('POST', base_path, payload=sub_payload, db=db)
+                try:
+                    created = _efatt_api_request('POST', base_path, payload=sub_payload, db=db)
+                except EFattAPIError as create_error:
+                    if create_error.status not in (400, 422):
+                        raise
+                    created = _efatt_api_request('POST', base_path, payload=core_payload, db=db)
                 created_data = created.get('data') if isinstance(created, dict) else {}
                 return {'created': True, 'id': str(created_data.get('id', '?'))}
             raise
     else:
         # Crea nuova
-        created = _efatt_api_request('POST', base_path, payload=sub_payload, db=db)
+        try:
+            created = _efatt_api_request('POST', base_path, payload=sub_payload, db=db)
+        except EFattAPIError as create_error:
+            if create_error.status not in (400, 422):
+                raise
+            created = _efatt_api_request('POST', base_path, payload=core_payload, db=db)
         created_data = created.get('data') if isinstance(created, dict) else {}
         return {'created': True, 'id': str(created_data.get('id', '?'))}
 
@@ -22453,6 +22495,7 @@ def _handle_fic_webhook_event(db, event_type, payload):
     issued_invoice_sections = (
         'invoices',
         'credit_notes',
+        'debit_notes',
         'self_own_invoices',
         'self_supplier_invoices',
         'self_invoices',
@@ -22875,10 +22918,76 @@ def _fatt_live_version(db, anno, tipo=''):
         return datetime.now().isoformat(timespec='seconds')
 
 
+_FATT_DOC_CATEGORY_LABELS = {
+    'standard': 'Fatture standard',
+    'credit': 'Note di credito',
+    'debit': 'Note di debito',
+    'self': 'Autofatture',
+    'receipt': 'Ricevute',
+    'other': 'Altri documenti',
+}
+
+def _fatt_doc_category(doc_type, tipo='attiva', total=0):
+    key = _efatt_compact_doc_type(doc_type)
+    if 'credit' in key or 'credito' in key or float(total or 0) < 0:
+        return 'credit_notes'
+    if 'debit' in key or 'debito' in key:
+        return 'debit_notes'
+    if 'self' in key or 'auto' in key:
+        return 'self_invoices'
+    if key == 'receipt':
+        return 'receipts'
+    if (tipo or 'attiva') == 'passiva':
+        return 'passive_standard'
+    if key and key not in ('invoice', 'passive_invoice'):
+        return 'other_docs'
+    return 'active_standard'
+
+def _fatt_doc_category_sql(doc_cat):
+    doc_cat = (doc_cat or '').strip()
+    if doc_cat == 'standard':
+        return """ AND (COALESCE(f.doc_type,'invoice') IN ('invoice','passive_invoice','')
+                    AND COALESCE(f.importo_totale,0) >= 0)"""
+    if doc_cat == 'credit':
+        return """ AND (LOWER(COALESCE(f.doc_type,'')) LIKE '%credit%'
+                    OR LOWER(COALESCE(f.doc_type,'')) LIKE '%credito%'
+                    OR COALESCE(f.importo_totale,0) < 0)"""
+    if doc_cat == 'debit':
+        return """ AND (LOWER(COALESCE(f.doc_type,'')) LIKE '%debit%'
+                    OR LOWER(COALESCE(f.doc_type,'')) LIKE '%debito%')"""
+    if doc_cat == 'self':
+        return """ AND (LOWER(COALESCE(f.doc_type,'')) LIKE '%self%'
+                    OR LOWER(COALESCE(f.doc_type,'')) LIKE '%auto%')"""
+    if doc_cat == 'receipt':
+        return " AND LOWER(COALESCE(f.doc_type,''))='receipt'"
+    if doc_cat == 'other':
+        return """ AND COALESCE(f.doc_type,'') NOT IN ('','invoice','passive_invoice','credit_note','passive_credit_note','debit_note','passive_debit_note','self_own_invoice','self_supplier_invoice','passive_self_invoice','receipt')
+                    AND COALESCE(f.importo_totale,0) >= 0"""
+    return ''
+
+def _fatt_doc_category_label(doc_cat):
+    return _FATT_DOC_CATEGORY_LABELS.get((doc_cat or '').strip(), 'Tutti i documenti')
+
 def _fatt_overview_data(db, anno):
     today_s = date.today().isoformat()
     base = {'total': 0.0, 'paid': 0.0, 'residual': 0.0, 'count': 0, 'paid_count': 0, 'partial_count': 0, 'overdue_count': 0, 'payment_pct': 0.0}
     summaries = {'attiva': dict(base), 'passiva': dict(base)}
+    group_defs = {
+        'active_standard': {'label': 'Fatture attive', 'subtitle': 'Documenti emessi verso clienti', 'icon': 'fa-arrow-up-long', 'tone': 'green', 'doc_cat': 'standard', 'tipo': 'attiva'},
+        'passive_standard': {'label': 'Fatture passive', 'subtitle': 'Documenti ricevuti da fornitori', 'icon': 'fa-arrow-down-long', 'tone': 'orange', 'doc_cat': 'standard', 'tipo': 'passiva'},
+        'credit_notes': {'label': 'Note di credito', 'subtitle': 'Storni e rettifiche negative', 'icon': 'fa-rotate-left', 'tone': 'red', 'doc_cat': 'credit', 'tipo': ''},
+        'debit_notes': {'label': 'Note di debito', 'subtitle': 'Rettifiche positive e integrazioni', 'icon': 'fa-file-circle-plus', 'tone': 'blue', 'doc_cat': 'debit', 'tipo': ''},
+        'self_invoices': {'label': 'Autofatture', 'subtitle': 'Reverse charge, TD16-TD20 e autofatture', 'icon': 'fa-file-signature', 'tone': 'cyan', 'doc_cat': 'self', 'tipo': ''},
+        'receipts': {'label': 'Ricevute', 'subtitle': 'Documenti fiscali diversi da fattura', 'icon': 'fa-receipt', 'tone': 'violet', 'doc_cat': 'receipt', 'tipo': 'attiva'},
+        'other_docs': {'label': 'Altri documenti', 'subtitle': 'Documenti provider non standard', 'icon': 'fa-folder-tree', 'tone': 'slate', 'doc_cat': 'other', 'tipo': ''},
+    }
+    doc_groups = {
+        key: dict(meta, key=key, total=0.0, total_abs=0.0, paid=0.0, paid_abs=0.0,
+                  residual=0.0, count=0, active_count=0, passive_count=0, overdue_count=0,
+                  payment_pct=0.0, links=[])
+        for key, meta in group_defs.items()
+    }
+    monthly_by_group = {key: [0.0] * 12 for key in group_defs}
     rows = db.execute("""
         SELECT f.*,
                COALESCE((SELECT SUM(r.importo) FROM rate_fattura r
@@ -22915,19 +23024,60 @@ def _fatt_overview_data(db, anno):
         s['paid'] += paid
         s['residual'] += residual
         s['count'] += 1
+        doc_type = row['doc_type'] or ('passive_invoice' if tipo == 'passiva' else 'invoice')
+        group_key = _fatt_doc_category(doc_type, tipo=tipo, total=total)
+        g = doc_groups.get(group_key) or doc_groups['other_docs']
+        g['total'] += total
+        g['total_abs'] += abs(total)
+        g['paid'] += paid
+        g['paid_abs'] += abs(paid)
+        g['residual'] += residual
+        g['count'] += 1
+        if tipo == 'passiva':
+            g['passive_count'] += 1
+        else:
+            g['active_count'] += 1
+        month_value = str(row['data_emissione'] or row['creato_il'] or '')
+        if len(month_value) >= 7 and month_value[:4] == str(anno):
+            try:
+                month_idx = int(month_value[5:7]) - 1
+                if 0 <= month_idx < 12:
+                    monthly_by_group[group_key][month_idx] += total
+            except Exception:
+                pass
         if residual <= 0.01 and total_abs > 0:
             s['paid_count'] += 1
         elif abs(paid) > 0:
             s['partial_count'] += 1
         if is_overdue:
             s['overdue_count'] += 1
+            g['overdue_count'] += 1
             controparte = row['cliente_nome'] if tipo == 'attiva' else (row['fornitore_nome'] or row['cliente_nome'])
-            scadute.append({'id': row['id'], 'tipo': tipo, 'tipo_label': 'Attiva' if tipo == 'attiva' else 'Passiva', 'numero': row['numero'] or '-', 'controparte': controparte or '-', 'due': due, 'residual': round(residual, 2), 'url': f"/fatturazione/{row['id']}"})
+            scadute.append({'id': row['id'], 'tipo': tipo, 'tipo_label': 'Attiva' if tipo == 'attiva' else 'Passiva', 'doc_label': _efatt_doc_type_label(doc_type), 'numero': row['numero'] or '-', 'controparte': controparte or '-', 'due': due, 'residual': round(residual, 2), 'url': f"/fatturazione/{row['id']}"})
     for s in summaries.values():
         s['total'] = round(s['total'], 2)
         s['paid'] = round(s['paid'], 2)
         s['residual'] = round(s['residual'], 2)
         s['payment_pct'] = round((abs(s['paid']) / abs(s['total'])) * 100, 1) if abs(s['total']) > 0 else 0.0
+    for key, g in doc_groups.items():
+        g['total'] = round(g['total'], 2)
+        g['total_abs'] = round(g['total_abs'], 2)
+        g['paid'] = round(g['paid'], 2)
+        g['paid_abs'] = round(g['paid_abs'], 2)
+        g['residual'] = round(g['residual'], 2)
+        g['payment_pct'] = round((g['paid_abs'] / g['total_abs']) * 100, 1) if g['total_abs'] > 0 else 0.0
+        if key in ('active_standard', 'passive_standard', 'receipts') and g.get('tipo'):
+            g['links'] = [{'label': 'Apri', 'url': f"/fatturazione?tipo={g['tipo']}&anno={anno}&doc_cat={g['doc_cat']}"}]
+        elif key == 'other_docs':
+            g['links'] = [
+                {'label': 'Attive', 'url': f"/fatturazione?tipo=attiva&anno={anno}&doc_cat=other"},
+                {'label': 'Passive', 'url': f"/fatturazione?tipo=passiva&anno={anno}&doc_cat=other"},
+            ]
+        else:
+            g['links'] = [
+                {'label': 'Attive', 'url': f"/fatturazione?tipo=attiva&anno={anno}&doc_cat={g['doc_cat']}"},
+                {'label': 'Passive', 'url': f"/fatturazione?tipo=passiva&anno={anno}&doc_cat={g['doc_cat']}"},
+            ]
     months = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic']
     monthly_active, monthly_passive, monthly_active_paid, monthly_passive_paid = [], [], [], []
     for month in range(1, 13):
@@ -22945,11 +23095,43 @@ def _fatt_overview_data(db, anno):
         monthly_active_paid.append(round(pay_a[0] or 0, 2))
         monthly_passive_paid.append(round(pay_p[0] or 0, 2))
     totals = {'saldo_emesso': round(summaries['attiva']['total'] - summaries['passiva']['total'], 2), 'saldo_cassa': round(summaries['attiva']['paid'] - summaries['passiva']['paid'], 2), 'totale_scadute': summaries['attiva']['overdue_count'] + summaries['passiva']['overdue_count']}
-    return {'summary': summaries, 'totals': totals, 'months_labels': months, 'monthly_active': monthly_active, 'monthly_passive': monthly_passive, 'monthly_active_paid': monthly_active_paid, 'monthly_passive_paid': monthly_passive_paid, 'payment_mix': [summaries['attiva']['paid'], summaries['attiva']['residual'], summaries['passiva']['paid'], summaries['passiva']['residual']], 'scadute': sorted(scadute, key=lambda x: x['due'])[:8]}
+    doc_spaces = [doc_groups[k] for k in ('active_standard', 'passive_standard', 'credit_notes', 'debit_notes', 'self_invoices', 'receipts', 'other_docs')]
+    return {
+        'summary': summaries,
+        'totals': totals,
+        'doc_spaces': doc_spaces,
+        'doc_type_mix': [g['total_abs'] for g in doc_spaces],
+        'doc_type_mix_labels': [g['label'] for g in doc_spaces],
+        'months_labels': months,
+        'monthly_active': monthly_active,
+        'monthly_passive': monthly_passive,
+        'monthly_active_paid': monthly_active_paid,
+        'monthly_passive_paid': monthly_passive_paid,
+        'monthly_credit_notes': [round(v, 2) for v in monthly_by_group['credit_notes']],
+        'monthly_debit_notes': [round(v, 2) for v in monthly_by_group['debit_notes']],
+        'monthly_self_invoices': [round(v, 2) for v in monthly_by_group['self_invoices']],
+        'payment_mix': [abs(summaries['attiva']['paid']), summaries['attiva']['residual'], abs(summaries['passiva']['paid']), summaries['passiva']['residual']],
+        'scadute': sorted(scadute, key=lambda x: x['due'])[:8],
+    }
 
 FATT_OVERVIEW_TMPL = """
 <style>
 .fatt-home{display:grid;gap:18px}.fh-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:2px}.fh-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.fh-select{height:36px;padding:0 34px 0 12px;border:1px solid rgba(148,163,184,.35);border-radius:8px;background:#102238;color:#e5f0ff;font-size:13px;font-weight:800}.fh-card{background:#122238;border:1px solid rgba(148,163,184,.22);border-radius:10px;box-shadow:var(--shadow)}.fh-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}.fh-kpi{background:#102238;border-radius:10px;padding:16px;border:1px solid rgba(148,163,184,.25)}.fh-kpi .lbl{font-size:12px;color:#8fa3bd;font-weight:800;margin-bottom:7px}.fh-kpi .val{font-size:25px;font-weight:900;color:#f8fafc}.fh-kpi .hint{font-size:12px;color:#8fa3bd;margin-top:5px}.fh-split{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}.fh-flow{padding:18px;background:#0f1f33;border:1px solid rgba(148,163,184,.25);border-radius:10px}.fh-flow-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:12px}.fh-flow-title{font-size:17px;font-weight:900;color:#f8fafc}.fh-flow-total{font-size:28px;font-weight:900;margin:4px 0}.fh-flow.attiva .fh-flow-total{color:#22c55e}.fh-flow.passiva .fh-flow-total{color:#f97316}.fh-progress{height:9px;background:#26364a;border-radius:99px;overflow:hidden;margin:12px 0}.fh-progress span{display:block;height:100%;border-radius:99px}.fh-flow.attiva .fh-progress span{background:linear-gradient(90deg,#22c55e,#38bdf8)}.fh-flow.passiva .fh-progress span{background:linear-gradient(90deg,#f97316,#facc15)}.fh-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.fh-metric{background:#0b1726;border:1px solid rgba(148,163,184,.18);border-radius:8px;padding:9px}.fh-metric b{display:block;color:#e5f0ff}.fh-metric span{font-size:11px;color:#8fa3bd}.fh-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:14px}.fh-table{width:100%;border-collapse:collapse}.fh-table th,.fh-table td{padding:10px;border-bottom:1px solid rgba(148,163,184,.16);font-size:13px}.fh-table th{text-align:left;color:#8fa3bd;font-size:11px}.fh-empty{padding:24px;text-align:center;color:#8fa3bd}.fh-pill{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:4px 9px;font-size:11px;font-weight:800}.fh-pill.green{background:#dcfce7;color:#15803d}.fh-pill.orange{background:#ffedd5;color:#c2410c}@media(max-width:900px){.fh-grid{grid-template-columns:1fr}.fh-metrics{grid-template-columns:1fr}.fh-actions{width:100%}.fh-actions>*{flex:1}}
+</style>
+<style>
+.fh-doc-spaces{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.fh-space{background:#0f1f33;border:1px solid rgba(148,163,184,.22);border-radius:12px;padding:15px;position:relative;overflow:hidden}
+.fh-space:before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--space-accent,#38bdf8);opacity:.9}
+.fh-space.green{--space-accent:#22c55e}.fh-space.orange{--space-accent:#f97316}.fh-space.red{--space-accent:#ef4444}.fh-space.blue{--space-accent:#3b82f6}.fh-space.cyan{--space-accent:#38bdf8}.fh-space.violet{--space-accent:#8b5cf6}.fh-space.slate{--space-accent:#94a3b8}
+.fh-space-head{display:flex;gap:10px;align-items:flex-start}.fh-space-ico{width:34px;height:34px;border-radius:9px;background:color-mix(in srgb,var(--space-accent) 18%,transparent);color:var(--space-accent);display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--space-accent) 42%,transparent)}
+.fh-space h3{margin:0;color:#f8fafc;font-size:15px}.fh-space p{margin:3px 0 0;color:#8fa3bd;font-size:11px;line-height:1.35}
+.fh-space-amount{font-size:24px;font-weight:950;color:#f8fafc;margin-top:13px}.fh-space-impact{font-size:11px;color:#8fa3bd;margin-top:2px}
+.fh-space-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px}.fh-space-meta div{background:#0b1726;border:1px solid rgba(148,163,184,.16);border-radius:8px;padding:7px}.fh-space-meta b{display:block;color:#e5f0ff;font-size:13px}.fh-space-meta span{display:block;color:#8fa3bd;font-size:10px;margin-top:2px}
+.fh-space-actions{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}.fh-space-actions a{font-size:11px;padding:6px 9px}
+body.theme-light .fh-space,body.theme-light .fh-flow,body.theme-light .fh-kpi,body.theme-light .fh-card{background:#fff;border-color:#d8e2ef}
+body.theme-light .fh-space h3,body.theme-light .fh-flow-title,body.theme-light .fh-kpi .val,body.theme-light .fh-space-amount{color:#0f172a}
+body.theme-light .fh-space-meta div,body.theme-light .fh-metric{background:#f8fafc;border-color:#d8e2ef}
+body.theme-light .fh-space-meta b,body.theme-light .fh-metric b{color:#0f172a}
 </style>
 <div class="fatt-home">
   <div class="fh-toolbar"><div><h2 style="margin:0;color:#f8fafc;font-size:22px">Cruscotto fatturazione</h2><div style="color:#8fa3bd;font-size:13px;margin-top:3px">Attive, passive, pagamenti e scadenze in un unico punto.</div></div>
@@ -22961,6 +23143,23 @@ FATT_OVERVIEW_TMPL = """
     <div class="fh-flow attiva"><div class="fh-flow-head"><div><div class="fh-flow-title"><i class="fa fa-arrow-up-long"></i> Fatturazione attiva</div><div style="color:#8fa3bd;font-size:12px">Clienti pagano noi</div></div><a class="btn btn-primary btn-sm" href="/fatturazione?tipo=attiva&anno={{ anno }}">Apri attive</a></div><div class="fh-flow-total">&euro; {{ "%.0f"|format(summary.attiva.total) }}</div><div style="color:#8fa3bd;font-size:12px">Incassato {{ summary.attiva.payment_pct }}%</div><div class="fh-progress"><span style="width:{{ summary.attiva.payment_pct }}%"></span></div><div class="fh-metrics"><div class="fh-metric"><b>&euro; {{ "%.0f"|format(summary.attiva.paid) }}</b><span>Incassato</span></div><div class="fh-metric"><b>&euro; {{ "%.0f"|format(summary.attiva.residual) }}</b><span>Residuo</span></div><div class="fh-metric"><b>{{ summary.attiva.overdue_count }}</b><span>Scadute</span></div></div><div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><a class="btn btn-secondary btn-sm" href="/fatturazione/nuova?tipo=attiva"><i class="fa fa-plus"></i> Nuova attiva</a><a class="btn btn-secondary btn-sm" href="/fatturazione/clienti"><i class="fa fa-users"></i> Clienti</a></div></div>
     <div class="fh-flow passiva"><div class="fh-flow-head"><div><div class="fh-flow-title"><i class="fa fa-arrow-down-long"></i> Fatturazione passiva</div><div style="color:#8fa3bd;font-size:12px">Noi paghiamo fornitori</div></div><a class="btn btn-primary btn-sm" href="/fatturazione?tipo=passiva&anno={{ anno }}">Apri passive</a></div><div class="fh-flow-total">&euro; {{ "%.0f"|format(summary.passiva.total) }}</div><div style="color:#8fa3bd;font-size:12px">Pagato {{ summary.passiva.payment_pct }}%</div><div class="fh-progress"><span style="width:{{ summary.passiva.payment_pct }}%"></span></div><div class="fh-metrics"><div class="fh-metric"><b>&euro; {{ "%.0f"|format(summary.passiva.paid) }}</b><span>Pagato</span></div><div class="fh-metric"><b>&euro; {{ "%.0f"|format(summary.passiva.residual) }}</b><span>Residuo</span></div><div class="fh-metric"><b>{{ summary.passiva.overdue_count }}</b><span>Scadute</span></div></div><div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><a class="btn btn-secondary btn-sm" href="/fatturazione/nuova?tipo=passiva"><i class="fa fa-plus"></i> Nuova passiva</a><a class="btn btn-secondary btn-sm" href="/fornitori"><i class="fa fa-truck-fast"></i> Fornitori</a></div></div>
   </div>
+  <div class="fh-doc-spaces">
+    {% for g in doc_spaces %}
+    <div class="fh-space {{ g.tone }}">
+      <div class="fh-space-head"><div class="fh-space-ico"><i class="fa {{ g.icon }}"></i></div><div><h3>{{ g.label }}</h3><p>{{ g.subtitle }}</p></div></div>
+      <div class="fh-space-amount">&euro; {{ "%.0f"|format(g.total_abs) }}</div>
+      <div class="fh-space-impact">Impatto contabile: &euro; {{ "%.0f"|format(g.total) }}</div>
+      <div class="fh-space-meta">
+        <div><b>{{ g.count }}</b><span>doc.</span></div>
+        <div><b>{{ g.payment_pct }}%</b><span>chiuso</span></div>
+        <div><b>{{ g.overdue_count }}</b><span>scaduti</span></div>
+      </div>
+      <div class="fh-space-actions">
+        {% for l in g.links %}<a class="btn btn-secondary btn-sm" href="{{ l.url }}">{{ l.label }}</a>{% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
   <div class="fh-grid"><div class="fh-card"><div class="card-header"><h3><i class="fa fa-chart-column" style="color:var(--accent2)"></i> Confronto mensile {{ anno }}</h3></div><div class="card-body"><canvas id="fattOverviewMonthly" height="230"></canvas></div></div><div class="fh-card"><div class="card-header"><h3><i class="fa fa-chart-pie" style="color:var(--accent2)"></i> Avanzamento pagamenti</h3></div><div class="card-body"><canvas id="fattOverviewStatus" height="230"></canvas></div></div></div>
   <div class="fh-card"><div class="card-header"><h3><i class="fa fa-triangle-exclamation" style="color:#f97316"></i> Scadenze aperte piu urgenti</h3></div>{% if scadute %}<div class="table-wrap"><table class="fh-table"><thead><tr><th>Tipo</th><th>N.</th><th>Cliente/Fornitore</th><th>Scadenza</th><th style="text-align:right">Residuo</th><th></th></tr></thead><tbody>{% for f in scadute %}<tr><td><span class="fh-pill {{ 'green' if f.tipo=='attiva' else 'orange' }}">{{ f.tipo_label }}</span></td><td><strong>{{ f.numero }}</strong></td><td>{{ f.controparte }}</td><td style="color:#fca5a5;font-weight:800">{{ f.due }}</td><td style="text-align:right;font-weight:900">&euro; {{ "%.2f"|format(f.residual) }}</td><td style="text-align:right"><a class="btn btn-secondary btn-sm" href="{{ f.url }}"><i class="fa fa-eye"></i></a></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="fh-empty"><i class="fa fa-circle-check" style="font-size:26px;color:#22c55e"></i><div style="margin-top:8px">Nessuna scadenza aperta urgente per {{ anno }}.</div></div>{% endif %}</div>
 </div>
@@ -22969,7 +23168,7 @@ const fattLightTheme=document.body.classList.contains('theme-light');
 const fattChartText=fattLightTheme?'#334155':'#8fa3bd';
 const fattChartGrid=fattLightTheme?'rgba(100,116,139,.22)':'rgba(148,163,184,.12)';
 const fattChartBorder=fattLightTheme?'#ffffff':'#102238';
-new Chart(document.getElementById('fattOverviewMonthly'),{type:'bar',data:{labels:{{ months_labels|tojson }},datasets:[{label:'Attive emesse',data:{{ monthly_active|tojson }},backgroundColor:'rgba(34,197,94,.22)',borderColor:'#22c55e',borderWidth:2,borderRadius:5},{label:'Passive ricevute',data:{{ monthly_passive|tojson }},backgroundColor:'rgba(249,115,22,.20)',borderColor:'#f97316',borderWidth:2,borderRadius:5},{label:'Incassato',data:{{ monthly_active_paid|tojson }},type:'line',borderColor:'#38bdf8',backgroundColor:'rgba(56,189,248,.12)',tension:.35},{label:'Pagato',data:{{ monthly_passive_paid|tojson }},type:'line',borderColor:'#facc15',backgroundColor:'rgba(250,204,21,.12)',tension:.35}]},options:{responsive:true,plugins:{legend:{position:'top',labels:{color:fattChartText}}},scales:{x:{ticks:{color:fattChartText},grid:{color:fattChartGrid}},y:{beginAtZero:true,ticks:{color:fattChartText,callback:v=>'\\u20ac'+v},grid:{color:fattChartGrid}}}}});
+new Chart(document.getElementById('fattOverviewMonthly'),{type:'bar',data:{labels:{{ months_labels|tojson }},datasets:[{label:'Attive emesse',data:{{ monthly_active|tojson }},backgroundColor:'rgba(34,197,94,.22)',borderColor:'#22c55e',borderWidth:2,borderRadius:5},{label:'Passive ricevute',data:{{ monthly_passive|tojson }},backgroundColor:'rgba(249,115,22,.20)',borderColor:'#f97316',borderWidth:2,borderRadius:5},{label:'Note credito',data:{{ monthly_credit_notes|tojson }},backgroundColor:'rgba(239,68,68,.20)',borderColor:'#ef4444',borderWidth:2,borderRadius:5},{label:'Note debito',data:{{ monthly_debit_notes|tojson }},backgroundColor:'rgba(59,130,246,.18)',borderColor:'#3b82f6',borderWidth:2,borderRadius:5},{label:'Autofatture',data:{{ monthly_self_invoices|tojson }},backgroundColor:'rgba(139,92,246,.16)',borderColor:'#8b5cf6',borderWidth:2,borderRadius:5},{label:'Incassato',data:{{ monthly_active_paid|tojson }},type:'line',borderColor:'#38bdf8',backgroundColor:'rgba(56,189,248,.12)',tension:.35},{label:'Pagato',data:{{ monthly_passive_paid|tojson }},type:'line',borderColor:'#facc15',backgroundColor:'rgba(250,204,21,.12)',tension:.35}]},options:{responsive:true,plugins:{legend:{position:'top',labels:{color:fattChartText}}},scales:{x:{ticks:{color:fattChartText},grid:{color:fattChartGrid}},y:{ticks:{color:fattChartText,callback:v=>'\\u20ac'+v},grid:{color:fattChartGrid}}}}});
 new Chart(document.getElementById('fattOverviewStatus'),{type:'doughnut',data:{labels:['Incassato attive','Residuo attive','Pagato passive','Residuo passive'],datasets:[{data:{{ payment_mix|tojson }},backgroundColor:['#22c55e','#ef4444','#f97316','#facc15'],borderColor:fattChartBorder,borderWidth:2}]},options:{plugins:{legend:{position:'bottom',labels:{color:fattChartText}}},cutout:'62%'}});
 (function(){
   let liveVersion={{ live_version|tojson }};
@@ -23113,6 +23312,11 @@ FATT_LIST_TMPL = """
     {% else %}
     <a href="/fornitori" class="btn btn-secondary"><i class="fa fa-truck-fast"></i> Fornitori</a>
     {% endif %}
+    {% if doc_cat %}
+    <span style="display:inline-flex;align-items:center;gap:6px;background:#0f1f33;border:1px solid rgba(148,163,184,.25);color:#dbeafe;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:800">
+      <i class="fa fa-filter"></i> {{ doc_cat_label }}
+    </span>
+    {% endif %}
   </div>
   <form style="display:flex;gap:10px;flex-wrap:wrap" method="GET">
     <input type="hidden" name="tipo" value="{{ tipo }}">
@@ -23124,6 +23328,15 @@ FATT_LIST_TMPL = """
         {% endfor %}
       </select>
     </label>
+    <select name="doc_cat" onchange="this.form.submit()" style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px">
+      <option value="">Tutti i tipi</option>
+      <option value="standard" {{ 'selected' if doc_cat=='standard' }}>Fatture standard</option>
+      <option value="credit" {{ 'selected' if doc_cat=='credit' }}>Note di credito</option>
+      <option value="debit" {{ 'selected' if doc_cat=='debit' }}>Note di debito</option>
+      <option value="self" {{ 'selected' if doc_cat=='self' }}>Autofatture</option>
+      <option value="receipt" {{ 'selected' if doc_cat=='receipt' }}>Ricevute</option>
+      <option value="other" {{ 'selected' if doc_cat=='other' }}>Altri documenti</option>
+    </select>
     <select name="stato" onchange="this.form.submit()" style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px">
       <option value="">Tutti gli stati</option>
       <option value="da_emettere" {{ 'selected' if filtro_stato=='da_emettere' }}>Da emettere</option>
@@ -24147,6 +24360,9 @@ def fatturazione():
             available_years=available_years, live_version=live_version, **overview)
     tipo = tipo_arg
     filtro_stato = request.args.get('stato', '')
+    doc_cat = (request.args.get('doc_cat') or '').strip()
+    if doc_cat not in ('', 'standard', 'credit', 'debit', 'self', 'receipt', 'other'):
+        doc_cat = ''
     q = request.args.get('q', '').strip()
 
     # Auto-sync in background: sicurezza extra oltre ai webhook provider.
@@ -24162,6 +24378,7 @@ def fatturazione():
     params = [tipo]
     sql += " AND substr(COALESCE(f.data_emissione, f.creato_il, ''),1,4)=?"
     params.append(anno)
+    sql += _fatt_doc_category_sql(doc_cat)
     if filtro_stato:
         sql += " AND f.stato=?"
         params.append(filtro_stato)
@@ -24296,7 +24513,8 @@ def fatturazione():
     active_key = 'fatturazione_attiva' if tipo == 'attiva' else 'fatturazione_passiva'
     page_title = 'Fatturazione Attiva' if tipo == 'attiva' else 'Fatturazione Passiva'
     return render_page(FATT_LIST_TMPL, page_title=page_title, active=active_key, tipo=tipo,
-        fatture=fatture, filtro_stato=filtro_stato, q=q,
+        fatture=fatture, filtro_stato=filtro_stato, doc_cat=doc_cat,
+        doc_cat_label=_fatt_doc_category_label(doc_cat), q=q,
         tot_da_pagare=tot_da_pagare, tot_parziale=tot_parziale, tot_pagato=tot_pagato,
         n_da_pagare=n_da_pagare, n_parziale=n_parziale, n_pagate=n_pagate, n_scadute=n_scadute_c, n_scadute_c=n_scadute_c,
         top_clienti=top_clienti, today=date.today().isoformat(),
