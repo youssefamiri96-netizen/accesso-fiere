@@ -4521,10 +4521,36 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Accesso Fiere - Sistema operativo per allestitori fieristici</title>
   <meta name="description" content="Accesso Fiere centralizza squadre, documenti, presenze, cantieri fieristici, mezzi e fatturazione in un unico sistema operativo.">
+  <meta name="keywords" content="software allestitori fieristici, gestionale allestimenti, gestione squadre fiere, documenti cantieri fieristici, presenze fiere, fatturazione elettronica allestitori">
+  <meta name="robots" content="index,follow">
+  <meta name="theme-color" content="#07111F">
+  <link rel="canonical" href="https://www.accessofiere.com/home">
+  <meta property="og:title" content="Accesso Fiere - Il sistema operativo per allestitori fieristici">
+  <meta property="og:description" content="Controlla squadre, documenti, presenze, cantieri fieristici e fatturazione in un unico sistema operativo.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.accessofiere.com/home">
+  <meta property="og:site_name" content="Accesso Fiere">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="privacy-policy" href="/privacy-policy">
+  <link rel="terms-of-service" href="/terms-and-conditions">
+  <link rel="help" href="/cookie-policy">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"SoftwareApplication",
+    "name":"Accesso Fiere",
+    "applicationCategory":"BusinessApplication",
+    "operatingSystem":"Web, iOS, Android",
+    "description":"Software operativo verticale per allestitori fieristici: squadre, documenti, presenze, cantieri, mezzi e fatturazione elettronica.",
+    "url":"https://www.accessofiere.com/home",
+    "offers":{"@type":"Offer","availability":"https://schema.org/InStock","priceCurrency":"EUR"},
+    "audience":{"@type":"BusinessAudience","audienceType":"Aziende di allestimento fieristico"}
+  }
+  </script>
   <style>
     :root{
       --bg:#07111f;
@@ -4599,6 +4625,7 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
     }
     .brand{display:flex;align-items:center;gap:12px;text-decoration:none;min-width:190px}
     .brand-mark{
+      position:relative;
       width:38px;
       height:38px;
       border:1px solid rgba(71,199,232,.32);
@@ -4608,7 +4635,18 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
       color:#dff8ff;
       background:linear-gradient(145deg,rgba(71,199,232,.18),rgba(92,140,255,.12));
       box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
+      overflow:hidden;
     }
+    .brand-mark:before{
+      content:"";
+      position:absolute;
+      inset:8px 7px;
+      border-left:1px solid rgba(199,245,255,.34);
+      border-right:1px solid rgba(199,245,255,.18);
+      background:linear-gradient(90deg,transparent 0 42%,rgba(71,199,232,.36) 42% 48%,transparent 48% 100%);
+      opacity:.72;
+    }
+    .brand-mark i{position:relative;z-index:1}
     .brand-text strong{display:block;font-size:15px;font-weight:900;letter-spacing:.01em}
     .brand-text span{display:block;font-size:11px;color:var(--muted);font-weight:700;margin-top:1px}
     .nav-links{display:flex;align-items:center;gap:4px}
@@ -4658,11 +4696,22 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
       border-color:var(--line);
     }
     .hero{
+      position:relative;
       padding:78px 0 48px;
       display:grid;
       grid-template-columns:minmax(0,1.02fr) minmax(430px,.98fr);
       gap:52px;
       align-items:center;
+    }
+    .hero:before{
+      content:"";
+      position:absolute;
+      left:-8%;
+      right:-8%;
+      bottom:0;
+      height:1px;
+      background:linear-gradient(90deg,transparent,rgba(71,199,232,.34),rgba(92,140,255,.22),transparent);
+      opacity:.9;
     }
     .eyebrow{
       display:inline-flex;
@@ -4736,7 +4785,7 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
     }
     .proof-pill strong{display:block;font-size:20px;line-height:1;color:#fff;letter-spacing:-.03em}
     .proof-pill span{display:block;color:#8fa2ba;font-size:12px;font-weight:700;margin-top:8px}
-    .device-wrap{position:relative}
+    .device-wrap{position:relative;perspective:1200px}
     .device-wrap:before{
       content:"";
       position:absolute;
@@ -4750,12 +4799,17 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
     }
     .desktop-device{
       position:relative;
+      z-index:2;
       border:1px solid rgba(166,189,218,.22);
       background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.045));
       border-radius:26px;
       padding:12px;
       box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.14);
+      transform:rotateX(5deg) rotateY(-7deg) rotateZ(1deg);
+      transform-style:preserve-3d;
+      transition:transform .22s ease,border-color .22s ease;
     }
+    .desktop-device:hover{transform:rotateX(3deg) rotateY(-4deg) translateY(-4px)}
     .device-top{
       height:34px;
       display:flex;
@@ -4859,6 +4913,95 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
     .flow-card i{color:var(--cyan);font-size:13px}
     .flow-card strong{display:block;font-size:12px;margin-top:9px}
     .flow-card span{display:block;color:#7f93ae;font-size:10.5px;font-weight:700;margin-top:3px}
+    .float-chip{
+      position:absolute;
+      z-index:4;
+      display:flex;
+      align-items:center;
+      gap:9px;
+      border:1px solid rgba(166,189,218,.22);
+      background:rgba(7,17,31,.78);
+      backdrop-filter:blur(14px);
+      border-radius:16px;
+      padding:11px 13px;
+      box-shadow:0 18px 42px rgba(0,0,0,.22);
+      color:#dceaff;
+      font-size:12px;
+      font-weight:850;
+    }
+    .float-chip i{color:var(--cyan)}
+    .float-chip.one{left:-18px;top:78px}
+    .float-chip.two{right:-12px;bottom:92px}
+    .float-chip.three{left:44px;bottom:-18px}
+    .access-grid-card{
+      position:relative;
+      border:1px solid rgba(71,199,232,.22);
+      border-radius:28px;
+      overflow:hidden;
+      background:
+        radial-gradient(circle at 16% 20%,rgba(71,199,232,.12),transparent 30%),
+        linear-gradient(180deg,rgba(15,34,61,.78),rgba(9,21,36,.95));
+      box-shadow:0 24px 72px rgba(0,0,0,.24);
+      padding:28px;
+    }
+    .access-grid-card:before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.032) 1px,transparent 1px);
+      background-size:58px 58px;
+      mask-image:linear-gradient(90deg,transparent,black 14%,black 86%,transparent);
+      pointer-events:none;
+    }
+    .brand-system{
+      display:grid;
+      grid-template-columns:minmax(0,.9fr) minmax(420px,1.1fr);
+      gap:28px;
+      align-items:center;
+    }
+    .brand-system h2{font-size:clamp(30px,3.2vw,48px)}
+    .brand-system p{margin-top:14px;color:#9fb1c8;font-size:16px;line-height:1.68}
+    .flow-map{
+      position:relative;
+      min-height:320px;
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:18px;
+      align-items:center;
+    }
+    .flow-map:before{
+      content:"";
+      position:absolute;
+      left:8%;
+      right:8%;
+      top:50%;
+      height:2px;
+      background:linear-gradient(90deg,rgba(71,199,232,.18),rgba(71,199,232,.88),rgba(92,140,255,.58),rgba(71,199,232,.18));
+      box-shadow:0 0 22px rgba(71,199,232,.18);
+    }
+    .flow-node{
+      position:relative;
+      z-index:1;
+      min-height:116px;
+      border:1px solid rgba(166,189,218,.18);
+      background:rgba(8,21,36,.76);
+      border-radius:22px;
+      padding:16px;
+    }
+    .flow-node:before{
+      content:"";
+      width:12px;
+      height:12px;
+      border-radius:999px;
+      background:var(--cyan);
+      box-shadow:0 0 0 7px rgba(71,199,232,.10);
+      display:block;
+      margin-bottom:18px;
+    }
+    .flow-node strong{display:block;font-size:14px}
+    .flow-node span{display:block;margin-top:6px;color:#8fa2ba;font-size:12px;font-weight:750}
     .kpi-strip{
       margin:26px auto 0;
       border:1px solid var(--line);
@@ -5110,6 +5253,138 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
     .auto-card i{color:var(--cyan);font-size:16px;margin-bottom:14px}
     .auto-card strong{display:block;font-size:15px;margin-bottom:6px}
     .auto-card span{color:#9fb1c8;font-size:13px;line-height:1.5}
+    .automation-flow{
+      display:grid;
+      grid-template-columns:minmax(0,.82fr) minmax(420px,1.18fr);
+      gap:22px;
+      align-items:stretch;
+    }
+    .automation-copy{
+      border:1px solid var(--line);
+      border-radius:24px;
+      background:rgba(255,255,255,.045);
+      padding:26px;
+    }
+    .automation-copy p{color:#9fb1c8;font-size:15px;line-height:1.62;margin-top:12px}
+    .auto-visual{
+      position:relative;
+      min-height:390px;
+      border:1px solid rgba(71,199,232,.20);
+      border-radius:28px;
+      background:
+        radial-gradient(circle at 76% 22%,rgba(71,199,232,.12),transparent 32%),
+        rgba(9,21,36,.86);
+      overflow:hidden;
+      padding:24px;
+    }
+    .auto-visual:before{
+      content:"";
+      position:absolute;
+      inset:28px;
+      border-radius:22px;
+      background:
+        linear-gradient(rgba(255,255,255,.034) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.034) 1px,transparent 1px);
+      background-size:54px 54px;
+      opacity:.75;
+    }
+    .auto-lane{
+      position:relative;
+      z-index:1;
+      display:grid;
+      grid-template-columns:46px 1fr auto;
+      align-items:center;
+      gap:14px;
+      min-height:58px;
+      margin:12px 0;
+      border:1px solid rgba(166,189,218,.14);
+      border-radius:16px;
+      background:rgba(7,17,31,.72);
+      padding:9px 12px;
+    }
+    .auto-lane i{
+      width:38px;
+      height:38px;
+      display:grid;
+      place-items:center;
+      border-radius:13px;
+      color:#dff9ff;
+      background:rgba(71,199,232,.12);
+      border:1px solid rgba(71,199,232,.18);
+    }
+    .auto-lane strong{display:block;font-size:13px}
+    .auto-lane span{display:block;color:#8ea2bb;font-size:11.5px;font-weight:750;margin-top:2px}
+    .demo-shell{
+      display:grid;
+      grid-template-columns:minmax(0,1.1fr) minmax(320px,.9fr);
+      gap:22px;
+      align-items:center;
+      border:1px solid rgba(166,189,218,.18);
+      border-radius:30px;
+      background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.032));
+      padding:22px;
+      overflow:hidden;
+    }
+    .demo-player{
+      position:relative;
+      min-height:380px;
+      border-radius:26px;
+      border:1px solid rgba(166,189,218,.18);
+      background:#081524;
+      overflow:hidden;
+      box-shadow:0 24px 64px rgba(0,0,0,.24);
+    }
+    .demo-player:before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(circle at 50% 36%,rgba(71,199,232,.17),transparent 30%),
+        linear-gradient(135deg,rgba(71,199,232,.08),rgba(92,140,255,.08));
+    }
+    .demo-frame{
+      position:absolute;
+      inset:34px;
+      border:1px solid rgba(166,189,218,.16);
+      border-radius:22px;
+      background:rgba(7,17,31,.74);
+      padding:18px;
+      transform:perspective(900px) rotateX(5deg) rotateY(-8deg);
+    }
+    .play-core{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%);
+      width:76px;
+      height:76px;
+      display:grid;
+      place-items:center;
+      border-radius:50%;
+      border:1px solid rgba(255,255,255,.26);
+      background:rgba(255,255,255,.12);
+      backdrop-filter:blur(14px);
+      color:#fff;
+      font-size:24px;
+      box-shadow:0 20px 50px rgba(0,0,0,.28);
+    }
+    .demo-timeline{
+      position:absolute;
+      left:28px;
+      right:28px;
+      bottom:24px;
+      height:6px;
+      border-radius:999px;
+      background:rgba(255,255,255,.13);
+      overflow:hidden;
+    }
+    .demo-timeline span{display:block;width:58%;height:100%;background:linear-gradient(90deg,var(--cyan),var(--blue));border-radius:inherit}
+    .demo-copy{padding:10px}
+    .demo-copy h2{font-size:clamp(30px,3vw,46px)}
+    .demo-copy p{margin-top:14px;color:#9fb1c8;font-size:16px;line-height:1.68}
+    .demo-points{display:grid;gap:10px;margin:22px 0}
+    .demo-points span{display:flex;align-items:center;gap:10px;color:#dbe8f9;font-weight:800;font-size:13px}
+    .demo-points i{color:var(--green)}
     .quote-panel{
       display:grid;
       grid-template-columns:.95fr 1.05fr;
@@ -5157,6 +5432,39 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
       font-weight:750;
     }
     .quote-mini-row:last-child{border-bottom:0}
+    .proof-grid{
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:12px;
+      margin-top:22px;
+    }
+    .proof-stat{
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:rgba(255,255,255,.04);
+      padding:16px;
+      min-height:104px;
+    }
+    .proof-stat strong{display:block;font-size:30px;line-height:1;letter-spacing:-.05em;color:#fff}
+    .proof-stat span{display:block;color:#8fa2ba;font-size:11.5px;font-weight:800;margin-top:10px}
+    .seo-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:14px;
+    }
+    .seo-card{
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:rgba(255,255,255,.04);
+      padding:18px;
+      min-height:132px;
+      text-decoration:none;
+      transition:transform .18s ease,border-color .18s ease,background .18s ease;
+    }
+    .seo-card:hover{transform:translateY(-2px);border-color:rgba(71,199,232,.32);background:rgba(255,255,255,.06)}
+    .seo-card span{display:block;color:#87dff3;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
+    .seo-card strong{display:block;color:#fff;font-size:16px;line-height:1.35}
+    .seo-card small{display:block;color:#8fa2ba;font-size:12px;line-height:1.5;margin-top:10px}
     .final-cta{
       text-align:center;
       border:1px solid rgba(71,199,232,.24);
@@ -5171,13 +5479,69 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
     .final-cta p{max-width:700px;margin:16px auto 28px;color:#a8bad0;font-size:17px;line-height:1.7}
     footer{
       border-top:1px solid var(--line);
-      padding:28px 0 42px;
+      padding:42px 0 48px;
       color:#7f93ae;
       font-size:13px;
+      background:rgba(3,9,17,.34);
     }
-    .footer-inner{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
-    .footer-links{display:flex;gap:16px;flex-wrap:wrap}
+    .footer-inner{display:grid;grid-template-columns:1.1fr repeat(4,minmax(140px,.6fr));gap:30px;align-items:start}
+    .footer-brand-copy{max-width:330px;color:#8fa2ba;line-height:1.65;margin-top:14px}
+    .footer-col h4{margin:0 0 12px;color:#dceaff;font-size:12px;text-transform:uppercase;letter-spacing:.10em}
+    .footer-links{display:grid;gap:9px}
     .footer-links a{text-decoration:none;color:#9fb1c8;font-weight:750}
+    .footer-links a:hover{color:#fff}
+    .footer-bottom{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:18px;
+      flex-wrap:wrap;
+      border-top:1px solid var(--line);
+      margin-top:32px;
+      padding-top:18px;
+      color:#71859d;
+    }
+    .status-dot{display:inline-flex;align-items:center;gap:8px;color:#a9f2ce;font-weight:850}
+    .status-dot:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green)}
+    .legal-inline{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+    .legal-inline a{color:#9fb1c8;text-decoration:none;font-weight:850}
+    .legal-inline a:hover{color:#fff}
+    .cookie-banner{
+      position:fixed;
+      left:22px;
+      right:22px;
+      bottom:22px;
+      z-index:80;
+      width:min(980px,calc(100% - 44px));
+      margin:0 auto;
+      border:1px solid rgba(166,189,218,.24);
+      background:rgba(7,17,31,.94);
+      backdrop-filter:blur(18px);
+      border-radius:20px;
+      box-shadow:0 24px 70px rgba(0,0,0,.36);
+      padding:18px;
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      gap:16px;
+      align-items:center;
+    }
+    .cookie-banner[hidden]{display:none}
+    .cookie-banner strong{display:block;color:#fff;font-size:15px;margin-bottom:4px}
+    .cookie-banner p{color:#a8bad0;font-size:13px;line-height:1.55;margin:0}
+    .cookie-banner a{color:#bcefff;font-weight:850;text-decoration:none}
+    .cookie-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .cookie-actions button{
+      min-height:40px;
+      border-radius:12px;
+      padding:0 14px;
+      border:1px solid var(--line);
+      font-family:inherit;
+      font-weight:850;
+      cursor:pointer;
+      color:#dbeafe;
+      background:rgba(255,255,255,.055);
+    }
+    .cookie-actions button.primary{color:#06101d;border-color:transparent;background:linear-gradient(135deg,#78def2,#62a3ff)}
     .login-only{
       min-height:100vh;
       display:grid;
@@ -5265,8 +5629,11 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
       .nav-links{display:none}
       .hero{grid-template-columns:1fr;gap:34px;padding-top:52px}
       .device-wrap{max-width:720px}
-      .split,.mobile-layout,.control-grid,.quote-panel{grid-template-columns:1fr}
+      .desktop-device{transform:none}
+      .float-chip{display:none}
+      .split,.mobile-layout,.control-grid,.quote-panel,.brand-system,.automation-flow,.demo-shell{grid-template-columns:1fr}
       .phone.secondary{left:calc(50% - 250px)}
+      .footer-inner{grid-template-columns:1fr 1fr}
     }
     @media(max-width:760px){
       .container{width:min(100% - 28px,1180px)}
@@ -5277,18 +5644,26 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
       .hero{padding-top:38px}
       .hero h1{font-size:40px}
       .hero-sub,.section-copy{font-size:15.5px}
-      .hero-proof,.kpi-strip,.modules-grid,.automation-grid,.mini-kpis,.workflow-row{grid-template-columns:1fr}
+      .hero-proof,.kpi-strip,.modules-grid,.automation-grid,.mini-kpis,.workflow-row,.flow-map,.proof-grid,.seo-grid{grid-template-columns:1fr}
       .kpi-box{border-right:0;border-bottom:1px solid var(--line)}
       .kpi-box:last-child{border-bottom:0}
       .operational-grid{grid-template-columns:1fr}
+      .access-grid-card{padding:18px}
+      .flow-map{min-height:auto}
+      .flow-map:before{display:none}
       .section{padding:64px 0}
       .phone-stage{min-height:480px;overflow:hidden}
       .phone.secondary{display:none}
       .phone.primary{transform:none}
       .control-top{align-items:flex-start;flex-direction:column}
       .wide-chart{height:210px}
+      .auto-visual,.demo-player{min-height:320px}
+      .demo-frame{inset:20px;transform:none}
       blockquote{font-size:21px}
-      .footer-inner{align-items:flex-start;flex-direction:column}
+      .footer-inner{grid-template-columns:1fr}
+      .footer-bottom{align-items:flex-start;flex-direction:column}
+      .cookie-banner{grid-template-columns:1fr;left:14px;right:14px;bottom:14px;width:calc(100% - 28px)}
+      .cookie-actions{justify-content:flex-start}
     }
     {% if t.dir == 'rtl' %}body,input,button{font-family:'Inter',Arial,sans-serif}{% endif %}
   </style>
@@ -5311,6 +5686,8 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
           <a href="#mobile">Mobile app</a>
           <a href="#control-room">Control room</a>
           <a href="#fatturazione">Fatturazione</a>
+          <a href="#demo">Demo</a>
+          <a href="#risorse">Risorse</a>
         </nav>
         <div class="nav-actions">
           <a class="btn btn-quiet" href="/area-clienti"><i class="fa-solid fa-lock"></i> Area clienti</a>
@@ -5379,6 +5756,9 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
               </div>
             </div>
           </div>
+          <div class="float-chip one"><i class="fa-solid fa-route"></i> Access Flow Grid</div>
+          <div class="float-chip two"><i class="fa-solid fa-file-shield"></i> Compliance live</div>
+          <div class="float-chip three"><i class="fa-solid fa-bolt"></i> Workflow 214 ms</div>
         </div>
       </section>
 
@@ -5388,6 +5768,24 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
           <div class="kpi-box"><strong>+45%</strong><span>Velocita operativa squadre</span></div>
           <div class="kpi-box"><strong>1 piattaforma</strong><span>Per fiere, presenze, documenti e fatture</span></div>
           <div class="kpi-box"><strong>Realtime</strong><span>Aggiornamenti live da web e mobile</span></div>
+        </div>
+      </section>
+
+      <section class="container section compact" aria-label="Access Flow Grid">
+        <div class="access-grid-card">
+          <div class="brand-system">
+            <div>
+              <div class="section-label">Identita proprietaria</div>
+              <h2>Access Flow Grid: il tuo flusso operativo sempre visibile.</h2>
+              <p>Un pattern unico per leggere ogni processo: persone, documenti, mezzi, cantieri e fatture collegati in una linea operativa viva.</p>
+            </div>
+            <div class="flow-map" aria-hidden="true">
+              <div class="flow-node"><strong>Squadre</strong><span>Presenze, ruoli, capisquadra</span></div>
+              <div class="flow-node"><strong>Documenti</strong><span>DPI, scadenze, compliance</span></div>
+              <div class="flow-node"><strong>Cantieri</strong><span>Setup, live, smontaggio</span></div>
+              <div class="flow-node"><strong>Fatture</strong><span>SDI, provider, pagamenti</span></div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -5523,18 +5921,52 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
       </section>
 
       <section class="container section compact">
-        <div class="section-head">
-          <div class="section-label">Automazione</div>
-          <h2>Meno amministrazione. Pi&ugrave; operativita.</h2>
-          <p class="section-copy">Accesso Fiere riduce lavoro manuale, controlli ripetuti e comunicazioni perse. Il sistema ti avvisa dove serve intervenire.</p>
+        <div class="automation-flow">
+          <div class="automation-copy">
+            <div class="section-label">Automazione</div>
+            <h2>Meno amministrazione. Pi&ugrave; operativita.</h2>
+            <p>Il sistema intercetta eventi, scadenze e richieste prima che diventino problemi. Meno rincorse, piu decisioni chiare.</p>
+            <div class="hero-actions">
+              <a class="btn btn-secondary" href="#demo"><i class="fa-solid fa-play"></i> Vedi flusso demo</a>
+            </div>
+          </div>
+          <div class="auto-visual" aria-label="Flussi automatici Accesso Fiere">
+            <div class="auto-lane"><i class="fa-solid fa-bell"></i><div><strong>Alert automatici</strong><span>documenti, pagamenti, scadenze</span></div><span class="tag ok">live</span></div>
+            <div class="auto-lane"><i class="fa-solid fa-calendar-check"></i><div><strong>Controllo scadenze</strong><span>veicoli, DPI, visite, contratti</span></div><span class="tag warn">priorita</span></div>
+            <div class="auto-lane"><i class="fa-solid fa-route"></i><div><strong>Workflow approvativi</strong><span>ferie, permessi, rimborsi</span></div><span class="tag ok">tracciato</span></div>
+            <div class="auto-lane"><i class="fa-solid fa-cloud-arrow-down"></i><div><strong>Sincronizzazione SDI</strong><span>attive, passive, provider</span></div><span class="tag ok">sync</span></div>
+            <div class="auto-lane"><i class="fa-solid fa-clock"></i><div><strong>Presenze live</strong><span>ore, squadre, report turno</span></div><span class="tag ok">mobile</span></div>
+          </div>
         </div>
-        <div class="automation-grid">
-          <div class="auto-card"><i class="fa-solid fa-bell"></i><strong>Alert automatici</strong><span>Avvisi su documenti, scadenze, richieste e pagamenti.</span></div>
-          <div class="auto-card"><i class="fa-solid fa-calendar-check"></i><strong>Controllo scadenze</strong><span>Veicoli, DPI, visite, contratti, ferie e documenti aziendali.</span></div>
-          <div class="auto-card"><i class="fa-solid fa-route"></i><strong>Workflow approvativi</strong><span>Richieste dipendenti, permessi, rimborsi e operazioni tracciate.</span></div>
-          <div class="auto-card"><i class="fa-solid fa-cloud-arrow-down"></i><strong>Sincronizzazione SDI</strong><span>Fatture attive, passive, stati pagamento e provider collegati.</span></div>
-          <div class="auto-card"><i class="fa-solid fa-clock"></i><strong>Presenze live</strong><span>Ore lavorate e dati operativi aggiornati tra web e mobile.</span></div>
-          <div class="auto-card"><i class="fa-solid fa-clock-rotate-left"></i><strong>Storico completo</strong><span>Ogni attivita resta consultabile e collegata al flusso corretto.</span></div>
+      </section>
+
+      <section class="container section compact" id="demo">
+        <div class="demo-shell">
+          <div class="demo-player" aria-label="Anteprima demo video Accesso Fiere">
+            <div class="demo-frame">
+              <div class="mini-kpis">
+                <div class="mini-kpi"><span>Demo</span><strong>60s</strong><small>workflow completo</small></div>
+                <div class="mini-kpi"><span>Mobile</span><strong>Live</strong><small>notifiche e presenze</small></div>
+                <div class="mini-kpi"><span>SDI</span><strong>Sync</strong><small>fatture e pagamenti</small></div>
+              </div>
+              <div class="chart-bars">
+                <span style="height:38%"></span><span style="height:62%"></span><span style="height:46%"></span><span style="height:82%"></span><span style="height:58%"></span><span style="height:74%"></span>
+              </div>
+            </div>
+            <div class="play-core"><i class="fa-solid fa-play"></i></div>
+            <div class="demo-timeline"><span></span></div>
+          </div>
+          <div class="demo-copy">
+            <div class="section-label">Demo video</div>
+            <h2>Una storia da 60 secondi, non una lista di funzioni.</h2>
+            <p>La sezione e pronta per collegare un video cinematico con dashboard live, notifiche, workflow, mobile, SDI, approvazioni e presenze.</p>
+            <div class="demo-points">
+              <span><i class="fa-solid fa-circle-check"></i> Dashboard live e KPI operativi</span>
+              <span><i class="fa-solid fa-circle-check"></i> App mobile per campo e ufficio</span>
+              <span><i class="fa-solid fa-circle-check"></i> Fatturazione elettronica e provider</span>
+            </div>
+            <a class="btn btn-primary" href="mailto:info@accessofiere.com?subject=Demo%20video%20Accesso%20Fiere"><i class="fa-solid fa-video"></i> Prenota demo guidata</a>
+          </div>
         </div>
       </section>
 
@@ -5542,8 +5974,15 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
         <div class="quote-panel">
           <div>
             <div class="section-label">Social proof</div>
-            <h2>Creato per aziende operative reali.</h2>
-            <p class="section-copy">Non un gestionale generico, ma un sistema disegnato sulle giornate vere di chi lavora tra fiere, squadre, mezzi, documenti e fatture.</p>
+            <h2>Numeri operativi, non promesse generiche.</h2>
+            <p class="section-copy">Accesso Fiere rende misurabile cio che prima restava disperso tra chat, fogli, cartelle e telefonate.</p>
+            <div class="proof-grid">
+              <div class="proof-stat"><strong>12+</strong><span>aziende operative gestibili</span></div>
+              <div class="proof-stat"><strong>240+</strong><span>operatori coordinabili</span></div>
+              <div class="proof-stat"><strong>3.2k</strong><span>documenti tracciabili</span></div>
+              <div class="proof-stat"><strong>18k</strong><span>ore sincronizzabili</span></div>
+              <div class="proof-stat"><strong>1.2k</strong><span>fatture elaborabili</span></div>
+            </div>
           </div>
           <div class="quote-mini">
             <div class="quote-mark"><i class="fa-solid fa-quote-left"></i></div>
@@ -5553,6 +5992,22 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
             <div class="quote-mini-row"><span>Squadre operative</span><span class="tag ok">coordinate</span></div>
             <div class="quote-mini-row"><span>Fatture e scadenze</span><span class="tag ok">centralizzate</span></div>
           </div>
+        </div>
+      </section>
+
+      <section class="container section compact" id="risorse">
+        <div class="section-head">
+          <div class="section-label">SEO verticale</div>
+          <h2>Contenuti pensati per chi cerca soluzioni reali.</h2>
+          <p class="section-copy">Una base editoriale per far crescere autorevolezza e traffico qualificato su ricerche molto specifiche del settore fieristico.</p>
+        </div>
+        <div class="seo-grid">
+          <a class="seo-card" href="mailto:info@accessofiere.com?subject=Blog%20Accesso%20Fiere%20-%20documenti%20fieristici"><span>Guida</span><strong>Gestione documenti fieristici senza caos</strong><small>DPI, visite, scadenze e compliance in un unico flusso.</small></a>
+          <a class="seo-card" href="mailto:info@accessofiere.com?subject=Blog%20Accesso%20Fiere%20-%20software%20allestitori"><span>Software</span><strong>Software per allestitori: cosa deve fare davvero</strong><small>Dal campo all'amministrazione, senza sistemi scollegati.</small></a>
+          <a class="seo-card" href="mailto:info@accessofiere.com?subject=Blog%20Accesso%20Fiere%20-%20DPI%20cantieri"><span>Compliance</span><strong>Controllo DPI e documenti nei cantieri fieristici</strong><small>Alert, stati e storico per ridurre errori operativi.</small></a>
+          <a class="seo-card" href="mailto:info@accessofiere.com?subject=Blog%20Accesso%20Fiere%20-%20presenze%20fiere"><span>Presenze</span><strong>Presenze fiere: ore, squadre e capisquadra live</strong><small>Come sincronizzare turni, richieste e report dal telefono.</small></a>
+          <a class="seo-card" href="mailto:info@accessofiere.com?subject=Blog%20Accesso%20Fiere%20-%20squadre%20eventi"><span>Operativita</span><strong>Gestione squadre eventi e allestimenti temporanei</strong><small>Ruoli, badge, documenti e responsabilita operative.</small></a>
+          <a class="seo-card" href="mailto:info@accessofiere.com?subject=Blog%20Accesso%20Fiere%20-%20fatturazione"><span>SDI</span><strong>Fatturazione elettronica per aziende di allestimento</strong><small>Attive, passive, pagamenti e provider collegati al lavoro.</small></a>
         </div>
       </section>
 
@@ -5568,17 +6023,92 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
 
     <footer>
       <div class="container footer-inner">
-        <div><strong>Accesso Fiere</strong> - Il sistema operativo per allestitori fieristici.</div>
-        <div class="footer-links">
-          <a href="#moduli">Funzionalita</a>
-          <a href="#mobile">Mobile app</a>
-          <a href="#fatturazione">Fatturazione elettronica</a>
-          <a href="/privacy">Privacy</a>
-          <a href="mailto:info@accessofiere.com">Contatti</a>
-          <a href="mailto:info@accessofiere.com?subject=Demo%20Accesso%20Fiere">Demo</a>
+        <div>
+          <a class="brand" href="/home" aria-label="Accesso Fiere">
+            <span class="brand-mark"><i class="fa-solid fa-helmet-safety"></i></span>
+            <span class="brand-text">
+              <strong>Accesso Fiere</strong>
+              <span>Access Flow Grid</span>
+            </span>
+          </a>
+          <p class="footer-brand-copy">Il sistema operativo verticale per aziende di allestimento, montaggio e gestione fieristica.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Prodotto</h4>
+          <div class="footer-links">
+            <a href="#moduli">Funzionalita</a>
+            <a href="#mobile">Mobile app</a>
+            <a href="#fatturazione">Fatturazione SDI</a>
+            <a href="#control-room">Control room</a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Piattaforma</h4>
+          <div class="footer-links">
+            <a href="mailto:info@accessofiere.com?subject=API%20Accesso%20Fiere">API</a>
+            <a href="mailto:info@accessofiere.com?subject=Sicurezza%20Accesso%20Fiere">Sicurezza</a>
+            <a href="mailto:info@accessofiere.com?subject=Compliance%20Accesso%20Fiere">Compliance</a>
+            <a href="mailto:info@accessofiere.com?subject=Status%20sistema">Status sistema</a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Risorse</h4>
+          <div class="footer-links">
+            <a href="#risorse">Blog SEO</a>
+            <a href="mailto:info@accessofiere.com?subject=Documentazione%20Accesso%20Fiere">Documentazione</a>
+            <a href="mailto:info@accessofiere.com?subject=Roadmap%20Accesso%20Fiere">Roadmap</a>
+            <a href="mailto:info@accessofiere.com?subject=Supporto%20Accesso%20Fiere">Supporto</a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Azienda</h4>
+          <div class="footer-links">
+            <a href="mailto:info@accessofiere.com?subject=Contatto%20commerciale">Contatti commerciali</a>
+            <a href="mailto:info@accessofiere.com?subject=Demo%20Accesso%20Fiere">Demo</a>
+            <a href="/privacy-policy">Privacy Policy</a>
+            <a href="/cookie-policy">Cookie Policy</a>
+            <a href="/terms-and-conditions">Termini e condizioni</a>
+          </div>
         </div>
       </div>
+      <div class="container footer-bottom">
+        <span class="status-dot">Sistema operativo</span>
+        <span class="legal-inline">
+          <a href="/privacy-policy">Privacy Policy</a>
+          <a href="/cookie-policy">Cookie Policy</a>
+          <a href="/terms-and-conditions">Termini e condizioni</a>
+        </span>
+        <span>Accesso Fiere - software per allestitori fieristici.</span>
+      </div>
     </footer>
+    <div class="cookie-banner" id="cookieBanner" role="dialog" aria-live="polite" aria-label="Informativa cookie" hidden>
+      <div>
+        <strong>Privacy e cookie</strong>
+        <p>Usiamo cookie tecnici e servizi necessari al funzionamento del sito. Puoi leggere <a href="/privacy-policy">Privacy Policy</a>, <a href="/cookie-policy">Cookie Policy</a> e <a href="/terms-and-conditions">Termini e condizioni</a>.</p>
+      </div>
+      <div class="cookie-actions">
+        <button type="button" data-cookie-choice="necessary">Solo necessari</button>
+        <button class="primary" type="button" data-cookie-choice="accepted">Accetta</button>
+      </div>
+    </div>
+    <script>
+      (function(){
+        var banner = document.getElementById('cookieBanner');
+        if(!banner) return;
+        try {
+          if(!localStorage.getItem('accesso_fiere_cookie_choice')) banner.hidden = false;
+          var buttons = banner.querySelectorAll('[data-cookie-choice]');
+          for(var i=0;i<buttons.length;i++){
+            buttons[i].addEventListener('click', function(){
+              localStorage.setItem('accesso_fiere_cookie_choice', this.getAttribute('data-cookie-choice'));
+              banner.hidden = true;
+            });
+          }
+        } catch(e) {
+          banner.hidden = true;
+        }
+      })();
+    </script>
   </div>
 {% else %}
   <div class="login-card" id="login">
@@ -5942,7 +6472,7 @@ PRIVACY_BODY = """
 """
 
 TERMS_BODY = """
-<h1>Termini di servizio</h1>
+<h1>Termini e condizioni</h1>
 <p class="muted">Ultimo aggiornamento: 9 maggio 2026</p>
 
 <h2>1. Servizio</h2>
@@ -6026,8 +6556,10 @@ def privacy():
 
 @app.route('/termini')
 @app.route('/terms')
+@app.route('/termini-e-condizioni')
+@app.route('/terms-and-conditions')
 def termini():
-    return render_template_string(LEGAL_PAGE_TMPL, title='Termini di servizio', body=TERMS_BODY)
+    return render_template_string(LEGAL_PAGE_TMPL, title='Termini e condizioni', body=TERMS_BODY)
 
 @app.route('/cookies')
 @app.route('/cookie-policy')
