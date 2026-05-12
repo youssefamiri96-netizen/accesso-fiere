@@ -4513,6 +4513,1133 @@ setInterval(updateClock,1000);updateClock();
 </script>
 </body></html>"""
 
+# Homepage pubblica premium: sistema operativo verticale per allestitori fieristici.
+PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
+<html lang="{{ t.get('dir','ltr') == 'rtl' and 'ar' or 'it' }}" dir="{{ t.dir }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Accesso Fiere - Sistema operativo per allestitori fieristici</title>
+  <meta name="description" content="Accesso Fiere centralizza squadre, documenti, presenze, cantieri fieristici, mezzi e fatturazione in un unico sistema operativo.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root{
+      --bg:#07111f;
+      --bg-2:#0b1730;
+      --bg-3:#0f223d;
+      --panel:rgba(15,34,61,.72);
+      --panel-strong:rgba(13,29,51,.92);
+      --line:rgba(166,189,218,.18);
+      --line-strong:rgba(166,189,218,.28);
+      --text:#eef5ff;
+      --muted:#9fb1c8;
+      --muted-2:#7488a3;
+      --cyan:#47c7e8;
+      --blue:#5c8cff;
+      --green:#37d989;
+      --amber:#f5b444;
+      --red:#f15f6d;
+      --shadow:0 24px 70px rgba(0,0,0,.30);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      line-height:1.5;
+      overflow-x:hidden;
+      text-rendering:geometricPrecision;
+    }
+    body:before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background:
+        radial-gradient(circle at 80% 6%,rgba(71,199,232,.16),transparent 32%),
+        radial-gradient(circle at 12% 18%,rgba(92,140,255,.12),transparent 28%),
+        linear-gradient(135deg,#07111f 0%,#0b1730 50%,#07111f 100%);
+      z-index:-2;
+    }
+    body:after{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background:
+        linear-gradient(rgba(255,255,255,.028) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.026) 1px,transparent 1px);
+      background-size:72px 72px;
+      mask-image:linear-gradient(to bottom,rgba(0,0,0,.92),transparent 82%);
+      z-index:-1;
+    }
+    a{color:inherit}
+    .public-shell{min-height:100vh}
+    .container{width:min(1180px,calc(100% - 44px));margin:0 auto}
+    .nav{
+      position:sticky;
+      top:0;
+      z-index:30;
+      backdrop-filter:blur(18px);
+      background:rgba(7,17,31,.78);
+      border-bottom:1px solid var(--line);
+    }
+    .nav-inner{
+      min-height:72px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:22px;
+    }
+    .brand{display:flex;align-items:center;gap:12px;text-decoration:none;min-width:190px}
+    .brand-mark{
+      width:38px;
+      height:38px;
+      border:1px solid rgba(71,199,232,.32);
+      border-radius:12px;
+      display:grid;
+      place-items:center;
+      color:#dff8ff;
+      background:linear-gradient(145deg,rgba(71,199,232,.18),rgba(92,140,255,.12));
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
+    }
+    .brand-text strong{display:block;font-size:15px;font-weight:900;letter-spacing:.01em}
+    .brand-text span{display:block;font-size:11px;color:var(--muted);font-weight:700;margin-top:1px}
+    .nav-links{display:flex;align-items:center;gap:4px}
+    .nav-links a{
+      text-decoration:none;
+      color:#b8c7dc;
+      font-size:13px;
+      font-weight:750;
+      padding:9px 11px;
+      border-radius:10px;
+      transition:background .18s ease,color .18s ease;
+    }
+    .nav-links a:hover{background:rgba(255,255,255,.06);color:#fff}
+    .nav-actions{display:flex;align-items:center;gap:10px}
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:9px;
+      min-height:42px;
+      padding:0 15px;
+      border-radius:12px;
+      border:1px solid transparent;
+      text-decoration:none;
+      font-weight:850;
+      font-size:13.5px;
+      transition:transform .18s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease;
+      cursor:pointer;
+      font-family:inherit;
+      white-space:nowrap;
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn-primary{
+      color:#06101d;
+      background:linear-gradient(135deg,#78def2,#62a3ff);
+      box-shadow:0 12px 30px rgba(71,199,232,.18);
+    }
+    .btn-secondary{
+      color:#dbeafe;
+      background:rgba(255,255,255,.055);
+      border-color:var(--line);
+    }
+    .btn-secondary:hover{border-color:rgba(166,189,218,.38);background:rgba(255,255,255,.075)}
+    .btn-quiet{
+      color:#b9c9dc;
+      background:transparent;
+      border-color:var(--line);
+    }
+    .hero{
+      padding:78px 0 48px;
+      display:grid;
+      grid-template-columns:minmax(0,1.02fr) minmax(430px,.98fr);
+      gap:52px;
+      align-items:center;
+    }
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      max-width:100%;
+      color:#bcefff;
+      border:1px solid rgba(71,199,232,.26);
+      background:rgba(71,199,232,.075);
+      border-radius:999px;
+      padding:8px 12px;
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.11em;
+      text-transform:uppercase;
+      margin-bottom:20px;
+    }
+    .eyebrow i{font-size:10px;color:var(--cyan)}
+    h1,h2,h3,p{margin:0}
+    .hero h1{
+      font-size:clamp(44px,5.1vw,76px);
+      line-height:.98;
+      letter-spacing:-.035em;
+      font-weight:900;
+      max-width:780px;
+    }
+    .gradient-text{
+      background:linear-gradient(135deg,#ffffff 12%,#c9eaff 48%,#8fb7ff 100%);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+    }
+    .hero-sub{
+      margin-top:24px;
+      max-width:680px;
+      color:#b8c7dd;
+      font-size:18px;
+      line-height:1.7;
+    }
+    .hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+    .trust{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      color:#91a5bf;
+      font-size:13.5px;
+      margin-top:18px;
+      font-weight:650;
+    }
+    .trust:before{
+      content:"";
+      width:8px;
+      height:8px;
+      border-radius:999px;
+      background:var(--green);
+      box-shadow:0 0 0 5px rgba(55,217,137,.11);
+      flex:0 0 auto;
+    }
+    .hero-proof{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:10px;
+      margin-top:34px;
+      max-width:690px;
+    }
+    .proof-pill{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.045);
+      border-radius:16px;
+      padding:14px 15px;
+    }
+    .proof-pill strong{display:block;font-size:20px;line-height:1;color:#fff;letter-spacing:-.03em}
+    .proof-pill span{display:block;color:#8fa2ba;font-size:12px;font-weight:700;margin-top:8px}
+    .device-wrap{position:relative}
+    .device-wrap:before{
+      content:"";
+      position:absolute;
+      inset:8% 4% auto auto;
+      width:58%;
+      height:58%;
+      border-radius:50%;
+      background:rgba(71,199,232,.13);
+      filter:blur(56px);
+      pointer-events:none;
+    }
+    .desktop-device{
+      position:relative;
+      border:1px solid rgba(166,189,218,.22);
+      background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.045));
+      border-radius:26px;
+      padding:12px;
+      box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.14);
+    }
+    .device-top{
+      height:34px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      color:#8da0ba;
+      font-size:11px;
+      padding:0 8px 8px;
+      font-weight:800;
+      letter-spacing:.02em;
+    }
+    .dots{display:flex;gap:6px}
+    .dots span{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.26)}
+    .dash-screen{
+      overflow:hidden;
+      border-radius:18px;
+      border:1px solid rgba(166,189,218,.18);
+      background:#091525;
+    }
+    .dash-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:18px;
+      border-bottom:1px solid rgba(166,189,218,.14);
+      background:rgba(255,255,255,.025);
+    }
+    .dash-header h3{font-size:14px;font-weight:900}
+    .live-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+      color:#bff8df;
+      background:rgba(55,217,137,.12);
+      border:1px solid rgba(55,217,137,.24);
+      border-radius:999px;
+      padding:6px 9px;
+      font-size:10px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+    }
+    .live-dot{width:7px;height:7px;border-radius:999px;background:var(--green)}
+    .dash-body{padding:16px;display:grid;gap:14px}
+    .mini-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .mini-kpi{
+      min-height:84px;
+      padding:12px;
+      border:1px solid rgba(166,189,218,.14);
+      border-radius:14px;
+      background:rgba(255,255,255,.04);
+    }
+    .mini-kpi span{display:block;color:#8fa2ba;font-size:10px;font-weight:850;text-transform:uppercase;letter-spacing:.05em}
+    .mini-kpi strong{display:block;color:#fff;font-size:26px;letter-spacing:-.05em;margin-top:8px}
+    .mini-kpi small{display:block;color:#91a5bf;font-size:11px;font-weight:700;margin-top:2px}
+    .operational-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:12px}
+    .line-chart,.status-list{
+      border:1px solid rgba(166,189,218,.14);
+      border-radius:16px;
+      background:rgba(255,255,255,.035);
+      padding:13px;
+      min-height:176px;
+    }
+    .chart-bars{height:112px;display:flex;align-items:end;gap:8px;margin-top:18px}
+    .chart-bars span{
+      flex:1;
+      min-width:0;
+      border-radius:8px 8px 2px 2px;
+      background:linear-gradient(180deg,rgba(71,199,232,.95),rgba(92,140,255,.46));
+      opacity:.82;
+    }
+    .status-item{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      padding:10px 0;
+      border-bottom:1px solid rgba(166,189,218,.10);
+      color:#d5e3f5;
+      font-size:12px;
+      font-weight:750;
+    }
+    .status-item:last-child{border-bottom:0}
+    .tag{border-radius:999px;padding:4px 7px;font-size:10px;font-weight:900}
+    .tag.ok{background:rgba(55,217,137,.13);color:#a7f3cf}
+    .tag.warn{background:rgba(245,180,68,.13);color:#fedc8f}
+    .tag.bad{background:rgba(241,95,109,.13);color:#ffc1c7}
+    .workflow-row{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:10px;
+    }
+    .flow-card{
+      min-height:82px;
+      border:1px solid rgba(166,189,218,.12);
+      border-radius:14px;
+      padding:11px;
+      background:rgba(255,255,255,.03);
+    }
+    .flow-card i{color:var(--cyan);font-size:13px}
+    .flow-card strong{display:block;font-size:12px;margin-top:9px}
+    .flow-card span{display:block;color:#7f93ae;font-size:10.5px;font-weight:700;margin-top:3px}
+    .kpi-strip{
+      margin:26px auto 0;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.055);
+      backdrop-filter:blur(16px);
+      border-radius:24px;
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      overflow:hidden;
+    }
+    .kpi-box{padding:24px 24px;border-right:1px solid var(--line)}
+    .kpi-box:last-child{border-right:0}
+    .kpi-box strong{display:block;font-size:32px;line-height:1;font-weight:900;letter-spacing:-.045em}
+    .kpi-box span{display:block;margin-top:10px;color:#9fb1c8;font-size:13px;font-weight:700}
+    .section{padding:92px 0}
+    .section.compact{padding-top:66px}
+    .section-head{max-width:760px;margin-bottom:32px}
+    .section-label{
+      color:#87dff3;
+      font-size:12px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      margin-bottom:12px;
+    }
+    .section h2{
+      font-size:clamp(32px,3.6vw,52px);
+      line-height:1.04;
+      letter-spacing:-.035em;
+      font-weight:900;
+      color:#fff;
+    }
+    .section-copy{
+      margin-top:15px;
+      color:#9fb1c8;
+      font-size:17px;
+      line-height:1.72;
+      max-width:720px;
+    }
+    .split{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:18px;
+      align-items:stretch;
+    }
+    .glass{
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      background:var(--panel);
+      box-shadow:0 16px 48px rgba(0,0,0,.18);
+      overflow:hidden;
+    }
+    .glass-pad{padding:24px}
+    .panel-title{display:flex;align-items:center;gap:10px;font-weight:900;font-size:18px;color:#fff}
+    .panel-title i{color:var(--cyan)}
+    .chaos-stack{display:grid;gap:10px;margin-top:22px}
+    .chaos-item{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      border:1px solid rgba(241,95,109,.14);
+      background:rgba(241,95,109,.055);
+      border-radius:14px;
+      padding:13px 14px;
+      color:#d7e3f2;
+      font-size:13px;
+      font-weight:750;
+    }
+    .chaos-item i{color:#ff9aa3}
+    .clean-table{margin-top:22px;border:1px solid rgba(166,189,218,.12);border-radius:16px;overflow:hidden}
+    .clean-row{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:12px;
+      align-items:center;
+      padding:13px 14px;
+      border-bottom:1px solid rgba(166,189,218,.10);
+      font-size:13px;
+      color:#d9e6f7;
+      font-weight:750;
+    }
+    .clean-row:last-child{border-bottom:0}
+    .modules-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:16px;
+    }
+    .module-card{
+      min-height:316px;
+      border:1px solid var(--line);
+      border-radius:22px;
+      background:rgba(15,34,61,.64);
+      overflow:hidden;
+      transition:transform .2s ease,border-color .2s ease,background .2s ease;
+    }
+    .module-card:hover{transform:translateY(-3px);border-color:rgba(71,199,232,.34);background:rgba(18,40,70,.78)}
+    .module-preview{
+      height:150px;
+      padding:16px;
+      border-bottom:1px solid rgba(166,189,218,.12);
+      background:
+        linear-gradient(135deg,rgba(71,199,232,.10),rgba(92,140,255,.07)),
+        rgba(255,255,255,.02);
+    }
+    .module-window{
+      width:100%;
+      height:100%;
+      border:1px solid rgba(166,189,218,.16);
+      border-radius:15px;
+      background:#081524;
+      padding:12px;
+      display:grid;
+      gap:8px;
+      align-content:start;
+    }
+    .module-line{height:9px;border-radius:999px;background:rgba(166,189,218,.18)}
+    .module-line.short{width:58%}
+    .module-line.med{width:78%}
+    .module-stat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
+    .module-stat span{height:38px;border-radius:10px;background:rgba(71,199,232,.11);border:1px solid rgba(71,199,232,.14)}
+    .module-content{padding:22px}
+    .module-content i{color:var(--cyan);font-size:18px;margin-bottom:13px}
+    .module-content h3{font-size:19px;letter-spacing:-.02em;font-weight:900;margin-bottom:8px}
+    .module-content p{color:#9fb1c8;font-size:14px;line-height:1.6}
+    .mobile-layout{
+      display:grid;
+      grid-template-columns:minmax(0,.88fr) minmax(380px,1.12fr);
+      gap:46px;
+      align-items:center;
+    }
+    .phone-stage{
+      min-height:520px;
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .phone{
+      width:230px;
+      min-height:454px;
+      border:1px solid rgba(166,189,218,.28);
+      border-radius:36px;
+      background:#050c16;
+      padding:12px;
+      box-shadow:0 28px 70px rgba(0,0,0,.28);
+    }
+    .phone.secondary{
+      position:absolute;
+      left:24px;
+      top:74px;
+      transform:rotate(-7deg) scale(.88);
+      opacity:.88;
+    }
+    .phone.primary{
+      position:relative;
+      transform:rotate(4deg);
+      z-index:2;
+    }
+    .phone-screen{
+      border-radius:26px;
+      min-height:428px;
+      background:linear-gradient(180deg,#0e223d,#091522);
+      border:1px solid rgba(166,189,218,.14);
+      overflow:hidden;
+      padding:16px;
+    }
+    .phone-notch{width:72px;height:6px;border-radius:999px;background:rgba(255,255,255,.20);margin:0 auto 18px}
+    .phone-title{font-size:13px;font-weight:900;color:#fff;margin-bottom:14px}
+    .phone-card{
+      border:1px solid rgba(166,189,218,.13);
+      background:rgba(255,255,255,.055);
+      border-radius:16px;
+      padding:13px;
+      margin-bottom:10px;
+    }
+    .phone-card strong{display:block;font-size:20px;letter-spacing:-.04em}
+    .phone-card span{display:block;color:#9fb1c8;font-size:11px;font-weight:750;margin-top:3px}
+    .feature-list{display:grid;gap:12px;margin-top:26px}
+    .feature-row{
+      display:flex;
+      align-items:flex-start;
+      gap:13px;
+      padding:14px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      border-radius:16px;
+    }
+    .feature-row i{color:var(--green);margin-top:3px}
+    .feature-row strong{display:block;font-size:14px}
+    .feature-row span{display:block;color:#9fb1c8;font-size:13px;margin-top:2px}
+    .control-room{
+      border:1px solid var(--line);
+      border-radius:28px;
+      background:linear-gradient(180deg,rgba(15,34,61,.78),rgba(10,24,42,.92));
+      overflow:hidden;
+      box-shadow:var(--shadow);
+    }
+    .control-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      padding:20px 22px;
+      border-bottom:1px solid rgba(166,189,218,.14);
+    }
+    .control-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:16px;padding:18px}
+    .control-main,.control-side{
+      border:1px solid rgba(166,189,218,.13);
+      border-radius:20px;
+      background:#091524;
+      padding:16px;
+    }
+    .wide-chart{
+      height:270px;
+      display:flex;
+      align-items:end;
+      gap:12px;
+      padding-top:28px;
+    }
+    .wide-chart span{
+      flex:1;
+      border-radius:12px 12px 3px 3px;
+      background:linear-gradient(180deg,rgba(71,199,232,.90),rgba(71,199,232,.18));
+      border:1px solid rgba(71,199,232,.22);
+    }
+    .alert-feed{display:grid;gap:10px;margin-top:16px}
+    .feed-item{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid rgba(166,189,218,.12);
+      background:rgba(255,255,255,.035);
+      font-size:12px;
+      color:#d8e5f6;
+      font-weight:750;
+    }
+    .automation-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .auto-card{
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:rgba(255,255,255,.045);
+      padding:18px;
+      min-height:120px;
+    }
+    .auto-card i{color:var(--cyan);font-size:16px;margin-bottom:14px}
+    .auto-card strong{display:block;font-size:15px;margin-bottom:6px}
+    .auto-card span{color:#9fb1c8;font-size:13px;line-height:1.5}
+    .quote-panel{
+      display:grid;
+      grid-template-columns:.95fr 1.05fr;
+      gap:28px;
+      align-items:center;
+      border:1px solid var(--line);
+      border-radius:28px;
+      background:rgba(255,255,255,.055);
+      padding:30px;
+    }
+    .quote-mark{
+      width:54px;
+      height:54px;
+      display:grid;
+      place-items:center;
+      border-radius:18px;
+      background:rgba(71,199,232,.12);
+      color:#c7f5ff;
+      border:1px solid rgba(71,199,232,.25);
+      margin-bottom:18px;
+    }
+    blockquote{
+      margin:0;
+      color:#f6fbff;
+      font-size:25px;
+      line-height:1.35;
+      font-weight:850;
+      letter-spacing:-.025em;
+    }
+    cite{display:block;margin-top:18px;color:#93a8c3;font-style:normal;font-size:13px;font-weight:800}
+    .quote-mini{
+      border:1px solid rgba(166,189,218,.14);
+      border-radius:22px;
+      background:#091524;
+      padding:18px;
+    }
+    .quote-mini-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border-bottom:1px solid rgba(166,189,218,.11);
+      padding:13px 0;
+      color:#dbe8f9;
+      font-size:13px;
+      font-weight:750;
+    }
+    .quote-mini-row:last-child{border-bottom:0}
+    .final-cta{
+      text-align:center;
+      border:1px solid rgba(71,199,232,.24);
+      border-radius:32px;
+      padding:58px 28px;
+      background:
+        radial-gradient(circle at 50% 0%,rgba(71,199,232,.16),transparent 48%),
+        rgba(255,255,255,.055);
+      box-shadow:0 22px 70px rgba(0,0,0,.20);
+    }
+    .final-cta h2{max-width:760px;margin:0 auto;font-size:clamp(34px,4.5vw,62px)}
+    .final-cta p{max-width:700px;margin:16px auto 28px;color:#a8bad0;font-size:17px;line-height:1.7}
+    footer{
+      border-top:1px solid var(--line);
+      padding:28px 0 42px;
+      color:#7f93ae;
+      font-size:13px;
+    }
+    .footer-inner{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+    .footer-links{display:flex;gap:16px;flex-wrap:wrap}
+    .footer-links a{text-decoration:none;color:#9fb1c8;font-weight:750}
+    .login-only{
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      padding:24px;
+      background:
+        radial-gradient(circle at 18% 12%,rgba(71,199,232,.12),transparent 30%),
+        radial-gradient(circle at 88% 20%,rgba(92,140,255,.11),transparent 32%),
+        #07111f;
+    }
+    .login-card{
+      width:min(430px,100%);
+      border:1px solid var(--line);
+      background:rgba(15,34,61,.82);
+      backdrop-filter:blur(18px);
+      border-radius:24px;
+      padding:28px;
+      box-shadow:var(--shadow);
+    }
+    .login-brand{justify-content:center;margin-bottom:22px}
+    .login-card h2{text-align:center;font-size:25px;letter-spacing:-.03em;margin-bottom:8px}
+    .login-card p{text-align:center;color:#9fb1c8;font-size:13.5px;margin-bottom:22px}
+    .lang-label,.form-label{display:block;font-size:12px;color:#9fb1c8;font-weight:850;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+    .lang-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
+    .lang-btn{
+      width:100%;
+      min-height:38px;
+      border:1px solid var(--line);
+      border-radius:11px;
+      background:rgba(255,255,255,.045);
+      color:#b9c8dc;
+      font-family:inherit;
+      font-weight:850;
+      cursor:pointer;
+      transition:background .18s ease,border-color .18s ease,color .18s ease;
+    }
+    .lang-btn.active,.lang-btn:hover{background:rgba(71,199,232,.13);border-color:rgba(71,199,232,.34);color:#fff}
+    .form-group{margin-bottom:15px}
+    .form-control{
+      width:100%;
+      min-height:46px;
+      border:1px solid var(--line);
+      border-radius:13px;
+      background:#081524;
+      color:#eff6ff;
+      padding:0 13px;
+      font:inherit;
+      outline:none;
+      transition:border-color .18s ease,box-shadow .18s ease,background .18s ease;
+    }
+    .form-control:focus{border-color:rgba(71,199,232,.45);box-shadow:0 0 0 4px rgba(71,199,232,.10)}
+    .alert{
+      border:1px solid rgba(241,95,109,.26);
+      background:rgba(241,95,109,.12);
+      color:#ffd0d5;
+      border-radius:14px;
+      padding:11px 12px;
+      font-size:13px;
+      font-weight:750;
+      margin-bottom:16px;
+    }
+    .login-submit{width:100%;border:0;margin-top:3px}
+    .divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:#7388a3;font-size:12px;font-weight:750}
+    .divider:before,.divider:after{content:"";height:1px;background:var(--line);flex:1}
+    .google-btn,.register-btn{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      width:100%;
+      min-height:44px;
+      border-radius:13px;
+      text-decoration:none;
+      font-weight:850;
+      font-size:13.5px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.045);
+      color:#dbeafe;
+      transition:background .18s ease,border-color .18s ease;
+    }
+    .google-btn:hover,.register-btn:hover{background:rgba(255,255,255,.075);border-color:var(--line-strong)}
+    .legal-copy{text-align:center;color:#8296af;font-size:11.5px;line-height:1.6;margin-top:18px}
+    .legal-copy a{color:#bcefff;font-weight:800;text-decoration:none}
+    @media(max-width:1020px){
+      .nav-links{display:none}
+      .hero{grid-template-columns:1fr;gap:34px;padding-top:52px}
+      .device-wrap{max-width:720px}
+      .split,.mobile-layout,.control-grid,.quote-panel{grid-template-columns:1fr}
+      .phone.secondary{left:calc(50% - 250px)}
+    }
+    @media(max-width:760px){
+      .container{width:min(100% - 28px,1180px)}
+      .nav-inner{min-height:66px}
+      .brand{min-width:auto}
+      .brand-text span{display:none}
+      .nav-actions .btn-quiet{display:none}
+      .hero{padding-top:38px}
+      .hero h1{font-size:40px}
+      .hero-sub,.section-copy{font-size:15.5px}
+      .hero-proof,.kpi-strip,.modules-grid,.automation-grid,.mini-kpis,.workflow-row{grid-template-columns:1fr}
+      .kpi-box{border-right:0;border-bottom:1px solid var(--line)}
+      .kpi-box:last-child{border-bottom:0}
+      .operational-grid{grid-template-columns:1fr}
+      .section{padding:64px 0}
+      .phone-stage{min-height:480px;overflow:hidden}
+      .phone.secondary{display:none}
+      .phone.primary{transform:none}
+      .control-top{align-items:flex-start;flex-direction:column}
+      .wide-chart{height:210px}
+      blockquote{font-size:21px}
+      .footer-inner{align-items:flex-start;flex-direction:column}
+    }
+    {% if t.dir == 'rtl' %}body,input,button{font-family:'Inter',Arial,sans-serif}{% endif %}
+  </style>
+</head>
+<body class="{{ 'public-home' if public_home else 'login-only' }}">
+{% if public_home %}
+  <div class="public-shell">
+    <header class="nav">
+      <div class="container nav-inner">
+        <a class="brand" href="/home" aria-label="Accesso Fiere">
+          <span class="brand-mark"><i class="fa-solid fa-helmet-safety"></i></span>
+          <span class="brand-text">
+            <strong>Accesso Fiere</strong>
+            <span>Gestionale Allestitori</span>
+          </span>
+        </a>
+        <nav class="nav-links" aria-label="Navigazione principale">
+          <a href="#problema">Problema</a>
+          <a href="#moduli">Funzionalita</a>
+          <a href="#mobile">Mobile app</a>
+          <a href="#control-room">Control room</a>
+          <a href="#fatturazione">Fatturazione</a>
+        </nav>
+        <div class="nav-actions">
+          <a class="btn btn-quiet" href="/area-clienti"><i class="fa-solid fa-lock"></i> Area clienti</a>
+          <a class="btn btn-primary" href="mailto:info@accessofiere.com?subject=Richiesta%20demo%20Accesso%20Fiere"><i class="fa-solid fa-calendar-check"></i> Prenota demo</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="container hero">
+        <div>
+          <div class="eyebrow"><i class="fa-solid fa-circle"></i> Software operativo verticale per allestitori fieristici</div>
+          <h1><span class="gradient-text">Controlla squadre, documenti, presenze e cantieri fieristici in un unico sistema.</span></h1>
+          <p class="hero-sub">Riduci errori, velocizza le operazioni e centralizza tutto: fiere, accessi, personale, documenti, mezzi, fatturazione e workflow operativi.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="mailto:info@accessofiere.com?subject=Richiesta%20demo%20Accesso%20Fiere"><i class="fa-solid fa-arrow-right"></i> Prenota demo</a>
+            <a class="btn btn-secondary" href="#control-room"><i class="fa-solid fa-display"></i> Guarda la piattaforma</a>
+          </div>
+          <div class="trust">Usato da aziende di allestimento, montaggio e gestione fieristica.</div>
+          <div class="hero-proof">
+            <div class="proof-pill"><strong>Live</strong><span>controllo operativo in tempo reale</span></div>
+            <div class="proof-pill"><strong>SDI</strong><span>fatture collegate ai flussi operativi</span></div>
+            <div class="proof-pill"><strong>Mobile</strong><span>dipendenti e capisquadra sempre sincronizzati</span></div>
+          </div>
+        </div>
+
+        <div class="device-wrap" aria-label="Mockup dashboard Accesso Fiere">
+          <div class="desktop-device">
+            <div class="device-top">
+              <div class="dots"><span></span><span></span><span></span></div>
+              <span>control-room.accessofiere</span>
+              <span><i class="fa-solid fa-wifi"></i></span>
+            </div>
+            <div class="dash-screen">
+              <div class="dash-header">
+                <h3>Control room operativa</h3>
+                <span class="live-pill"><span class="live-dot"></span> Sincronizzato ora</span>
+              </div>
+              <div class="dash-body">
+                <div class="mini-kpis">
+                  <div class="mini-kpi"><span>Operatori live</span><strong>24</strong><small>6 squadre attive</small></div>
+                  <div class="mini-kpi"><span>Documenti critici</span><strong>3</strong><small>da verificare</small></div>
+                  <div class="mini-kpi"><span>Fiere aperte</span><strong>7</strong><small>setup e smontaggi</small></div>
+                </div>
+                <div class="operational-grid">
+                  <div class="line-chart">
+                    <div class="panel-title"><i class="fa-solid fa-chart-line"></i> Andamento ore</div>
+                    <div class="chart-bars">
+                      <span style="height:32%"></span><span style="height:46%"></span><span style="height:38%"></span><span style="height:70%"></span><span style="height:58%"></span><span style="height:82%"></span><span style="height:66%"></span>
+                    </div>
+                  </div>
+                  <div class="status-list">
+                    <div class="panel-title"><i class="fa-solid fa-list-check"></i> Stato live</div>
+                    <div class="status-item"><span>Badge Milano</span><span class="tag ok">OK</span></div>
+                    <div class="status-item"><span>DPI squadra 3</span><span class="tag warn">Check</span></div>
+                    <div class="status-item"><span>Mezzo VR-412</span><span class="tag ok">Pronto</span></div>
+                    <div class="status-item"><span>Fattura passiva</span><span class="tag bad">Scaduta</span></div>
+                  </div>
+                </div>
+                <div class="workflow-row">
+                  <div class="flow-card"><i class="fa-solid fa-users-gear"></i><strong>Squadre</strong><span>presenze e ruoli</span></div>
+                  <div class="flow-card"><i class="fa-solid fa-folder-shield"></i><strong>Documenti</strong><span>scadenze e alert</span></div>
+                  <div class="flow-card"><i class="fa-solid fa-truck-ramp-box"></i><strong>Mezzi</strong><span>revisioni e flotta</span></div>
+                  <div class="flow-card"><i class="fa-solid fa-file-invoice"></i><strong>Fatture</strong><span>attive, passive, SDI</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="container">
+        <div class="kpi-strip" aria-label="Risultati operativi">
+          <div class="kpi-box"><strong>-70%</strong><span>Tempo perso nella gestione documenti</span></div>
+          <div class="kpi-box"><strong>+45%</strong><span>Velocita operativa squadre</span></div>
+          <div class="kpi-box"><strong>1 piattaforma</strong><span>Per fiere, presenze, documenti e fatture</span></div>
+          <div class="kpi-box"><strong>Realtime</strong><span>Aggiornamenti live da web e mobile</span></div>
+        </div>
+      </section>
+
+      <section class="container section" id="problema">
+        <div class="section-head">
+          <div class="section-label">Il problema</div>
+          <h2>Il problema non &egrave; il lavoro. &Egrave; il caos operativo.</h2>
+          <p class="section-copy">Excel sparsi, chat WhatsApp, documenti mancanti, scadenze dimenticate, timbrature non sincronizzate e fatture separate dall'operativita. Accesso Fiere unifica tutto in un ecosistema operativo unico.</p>
+        </div>
+        <div class="split">
+          <div class="glass glass-pad">
+            <div class="panel-title"><i class="fa-solid fa-triangle-exclamation"></i> Prima: caos disperso</div>
+            <div class="chaos-stack">
+              <div class="chaos-item"><span><i class="fa-solid fa-file-excel"></i> Excel personale e mezzi</span><span class="tag bad">duplicati</span></div>
+              <div class="chaos-item"><span><i class="fa-brands fa-whatsapp"></i> WhatsApp per presenze e richieste</span><span class="tag warn">non tracciato</span></div>
+              <div class="chaos-item"><span><i class="fa-solid fa-envelope"></i> Email con documenti e scadenze</span><span class="tag bad">perso</span></div>
+              <div class="chaos-item"><span><i class="fa-solid fa-phone"></i> Telefonate per recuperare dati</span><span class="tag warn">lento</span></div>
+            </div>
+          </div>
+          <div class="glass glass-pad">
+            <div class="panel-title"><i class="fa-solid fa-circle-check"></i> Dopo: Accesso Fiere</div>
+            <div class="clean-table">
+              <div class="clean-row"><span>Squadre e presenze</span><span class="tag ok">Live</span></div>
+              <div class="clean-row"><span>Documenti e compliance</span><span class="tag ok">OK</span></div>
+              <div class="clean-row"><span>Scadenze e alert</span><span class="tag warn">2 avvisi</span></div>
+              <div class="clean-row"><span>Fatturazione collegata</span><span class="tag ok">Sincronizzata</span></div>
+              <div class="clean-row"><span>Workflow approvativi</span><span class="tag ok">Tracciati</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="container section compact" id="moduli">
+        <div class="section-head">
+          <div class="section-label">Moduli operativi</div>
+          <h2>Tutto quello che serve per gestire un allestimento fieristico.</h2>
+          <p class="section-copy">Ogni area del gestionale nasce per l'operativita reale di aziende che montano, smontano e coordinano cantieri temporanei.</p>
+        </div>
+        <div class="modules-grid">
+          <article class="module-card">
+            <div class="module-preview"><div class="module-window"><div class="module-line short"></div><div class="module-stat"><span></span><span></span><span></span></div><div class="module-line med"></div><div class="module-line"></div></div></div>
+            <div class="module-content"><i class="fa-solid fa-users-gear"></i><h3>Controllo squadre</h3><p>Presenze, capisquadra, ore lavorate, attivita live e storico operativo sempre sotto controllo.</p></div>
+          </article>
+          <article class="module-card">
+            <div class="module-preview"><div class="module-window"><div class="module-line"></div><div class="module-line med"></div><div class="module-stat"><span></span><span></span><span></span></div><div class="module-line short"></div></div></div>
+            <div class="module-content"><i class="fa-solid fa-folder-shield"></i><h3>Documenti e compliance</h3><p>Scadenze, documenti aziendali, DPI, verifiche, alert e stato operativo in tempo reale.</p></div>
+          </article>
+          <article class="module-card">
+            <div class="module-preview"><div class="module-window"><div class="module-stat"><span></span><span></span><span></span></div><div class="module-line"></div><div class="module-line med"></div><div class="module-line short"></div></div></div>
+            <div class="module-content"><i class="fa-solid fa-building-circle-check"></i><h3>Fiere e cantieri</h3><p>Setup, live, smontaggio, turni, incarichi e gestione operativa per ogni evento fieristico.</p></div>
+          </article>
+          <article class="module-card" id="fatturazione">
+            <div class="module-preview"><div class="module-window"><div class="module-line short"></div><div class="module-stat"><span></span><span></span><span></span></div><div class="module-line"></div><div class="module-line med"></div></div></div>
+            <div class="module-content"><i class="fa-solid fa-file-invoice-dollar"></i><h3>Fatturazione elettronica</h3><p>Attive, passive, SDI, pagamenti, scadenze e sincronizzazione provider in un cruscotto unico.</p></div>
+          </article>
+          <article class="module-card">
+            <div class="module-preview"><div class="module-window"><div class="module-line"></div><div class="module-line short"></div><div class="module-stat"><span></span><span></span><span></span></div><div class="module-line med"></div></div></div>
+            <div class="module-content"><i class="fa-solid fa-truck"></i><h3>Mezzi e scadenze</h3><p>Revisioni, assicurazioni, bollo, documenti veicoli, alert e disponibilita della flotta.</p></div>
+          </article>
+          <article class="module-card">
+            <div class="module-preview"><div class="module-window"><div class="module-stat"><span></span><span></span><span></span></div><div class="module-line short"></div><div class="module-line"></div><div class="module-line med"></div></div></div>
+            <div class="module-content"><i class="fa-solid fa-mobile-screen-button"></i><h3>App mobile operativa</h3><p>Dipendenti, capisquadra, amministrazione e contabilita con notifiche e workflow live.</p></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="container section" id="mobile">
+        <div class="mobile-layout">
+          <div>
+            <div class="section-label">Mobile app</div>
+            <h2>Il cantiere continua anche fuori ufficio.</h2>
+            <p class="section-copy">Accesso Fiere include app dedicate per dipendenti, capisquadra, amministrazione e contabilita. Timbrature, ferie, notifiche, workflow e documenti restano sincronizzati in tempo reale.</p>
+            <div class="feature-list">
+              <div class="feature-row"><i class="fa-solid fa-location-dot"></i><div><strong>Presenze e timbrature</strong><span>Ore lavorate, entrate, uscite, pause e storico sempre consultabili.</span></div></div>
+              <div class="feature-row"><i class="fa-solid fa-bell"></i><div><strong>Notifiche operative</strong><span>Alert su documenti, richieste, ferie e scadenze senza rincorrere chat.</span></div></div>
+              <div class="feature-row"><i class="fa-solid fa-id-card"></i><div><strong>Documenti sempre pronti</strong><span>Capisquadra e dipendenti accedono alle informazioni utili dal telefono.</span></div></div>
+            </div>
+          </div>
+          <div class="phone-stage" aria-label="Mockup app mobile Accesso Fiere">
+            <div class="phone secondary">
+              <div class="phone-screen">
+                <div class="phone-notch"></div>
+                <div class="phone-title">Dipendente</div>
+                <div class="phone-card"><strong>8.5h</strong><span>Ore oggi</span></div>
+                <div class="phone-card"><strong>Ferie</strong><span>Richiesta inviata</span></div>
+                <div class="phone-card"><strong>DPI</strong><span>Documento valido</span></div>
+              </div>
+            </div>
+            <div class="phone primary">
+              <div class="phone-screen">
+                <div class="phone-notch"></div>
+                <div class="phone-title">Caposquadra live</div>
+                <div class="phone-card"><strong>Squadra A</strong><span>12 operatori presenti</span></div>
+                <div class="phone-card"><strong>Milano Rho</strong><span>Setup stand in corso</span></div>
+                <div class="phone-card"><strong>2 alert</strong><span>Documenti da verificare</span></div>
+                <div class="phone-card"><strong>Pronto</strong><span>Report turno sincronizzato</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="container section compact" id="control-room">
+        <div class="section-head">
+          <div class="section-label">Control room</div>
+          <h2>Una control room operativa per la tua azienda.</h2>
+          <p class="section-copy">Controlla fiere live, documenti critici, workflow bloccati, presenze, scadenze, fatturato e richieste dipendenti da una sola dashboard.</p>
+        </div>
+        <div class="control-room">
+          <div class="control-top">
+            <div class="panel-title"><i class="fa-solid fa-gauge-high"></i> Dashboard operativa Accesso Fiere</div>
+            <span class="live-pill"><span class="live-dot"></span> Live da web e mobile</span>
+          </div>
+          <div class="control-grid">
+            <div class="control-main">
+              <div class="panel-title"><i class="fa-solid fa-chart-column"></i> Carico operativo e fatturato</div>
+              <div class="wide-chart">
+                <span style="height:38%"></span><span style="height:52%"></span><span style="height:46%"></span><span style="height:72%"></span><span style="height:64%"></span><span style="height:88%"></span><span style="height:79%"></span><span style="height:57%"></span>
+              </div>
+            </div>
+            <div class="control-side">
+              <div class="panel-title"><i class="fa-solid fa-signal"></i> Live feed</div>
+              <div class="alert-feed">
+                <div class="feed-item"><span>Fiera Bologna - squadra confermata</span><span class="tag ok">OK</span></div>
+                <div class="feed-item"><span>Documento patente in scadenza</span><span class="tag warn">Alert</span></div>
+                <div class="feed-item"><span>Fattura passiva ricevuta da SDI</span><span class="tag ok">Sync</span></div>
+                <div class="feed-item"><span>Richiesta permesso da approvare</span><span class="tag warn">Pending</span></div>
+                <div class="feed-item"><span>Veicolo assicurazione aggiornata</span><span class="tag ok">OK</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="container section compact">
+        <div class="section-head">
+          <div class="section-label">Automazione</div>
+          <h2>Meno amministrazione. Pi&ugrave; operativita.</h2>
+          <p class="section-copy">Accesso Fiere riduce lavoro manuale, controlli ripetuti e comunicazioni perse. Il sistema ti avvisa dove serve intervenire.</p>
+        </div>
+        <div class="automation-grid">
+          <div class="auto-card"><i class="fa-solid fa-bell"></i><strong>Alert automatici</strong><span>Avvisi su documenti, scadenze, richieste e pagamenti.</span></div>
+          <div class="auto-card"><i class="fa-solid fa-calendar-check"></i><strong>Controllo scadenze</strong><span>Veicoli, DPI, visite, contratti, ferie e documenti aziendali.</span></div>
+          <div class="auto-card"><i class="fa-solid fa-route"></i><strong>Workflow approvativi</strong><span>Richieste dipendenti, permessi, rimborsi e operazioni tracciate.</span></div>
+          <div class="auto-card"><i class="fa-solid fa-cloud-arrow-down"></i><strong>Sincronizzazione SDI</strong><span>Fatture attive, passive, stati pagamento e provider collegati.</span></div>
+          <div class="auto-card"><i class="fa-solid fa-clock"></i><strong>Presenze live</strong><span>Ore lavorate e dati operativi aggiornati tra web e mobile.</span></div>
+          <div class="auto-card"><i class="fa-solid fa-clock-rotate-left"></i><strong>Storico completo</strong><span>Ogni attivita resta consultabile e collegata al flusso corretto.</span></div>
+        </div>
+      </section>
+
+      <section class="container section compact">
+        <div class="quote-panel">
+          <div>
+            <div class="section-label">Social proof</div>
+            <h2>Creato per aziende operative reali.</h2>
+            <p class="section-copy">Non un gestionale generico, ma un sistema disegnato sulle giornate vere di chi lavora tra fiere, squadre, mezzi, documenti e fatture.</p>
+          </div>
+          <div class="quote-mini">
+            <div class="quote-mark"><i class="fa-solid fa-quote-left"></i></div>
+            <blockquote>Prima gestivamo tutto tra WhatsApp, Excel e telefonate. Ora abbiamo finalmente controllo operativo completo.</blockquote>
+            <cite>Azienda allestimenti Milano</cite>
+            <div class="quote-mini-row"><span>Documenti critici</span><span class="tag ok">sotto controllo</span></div>
+            <div class="quote-mini-row"><span>Squadre operative</span><span class="tag ok">coordinate</span></div>
+            <div class="quote-mini-row"><span>Fatture e scadenze</span><span class="tag ok">centralizzate</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="container section compact">
+        <div class="final-cta">
+          <div class="section-label">Prenota demo</div>
+          <h2>Porta ordine operativo nella tua azienda.</h2>
+          <p>Scopri come Accesso Fiere puo centralizzare operativita, documenti, presenze e fatturazione in un unico sistema.</p>
+          <a class="btn btn-primary" href="mailto:info@accessofiere.com?subject=Richiesta%20demo%20Accesso%20Fiere"><i class="fa-solid fa-calendar-check"></i> Prenota una demo</a>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container footer-inner">
+        <div><strong>Accesso Fiere</strong> - Il sistema operativo per allestitori fieristici.</div>
+        <div class="footer-links">
+          <a href="#moduli">Funzionalita</a>
+          <a href="#mobile">Mobile app</a>
+          <a href="#fatturazione">Fatturazione elettronica</a>
+          <a href="/privacy">Privacy</a>
+          <a href="mailto:info@accessofiere.com">Contatti</a>
+          <a href="mailto:info@accessofiere.com?subject=Demo%20Accesso%20Fiere">Demo</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+{% else %}
+  <div class="login-card" id="login">
+    <a class="brand login-brand" href="/home" aria-label="Accesso Fiere">
+      <span class="brand-mark"><i class="fa-solid fa-helmet-safety"></i></span>
+      <span class="brand-text">
+        <strong>Accesso Fiere</strong>
+        <span>Gestionale Allestitori</span>
+      </span>
+    </a>
+
+    <div class="form-group">
+      <span class="lang-label">{{ t.login_lang }}</span>
+      <div class="lang-bar">
+        {% for code, l in langs.items() %}
+        <form method="POST" action="/set-lang">
+          <input type="hidden" name="lang" value="{{ code }}">
+          <input type="hidden" name="next" value="/login">
+          <button type="submit" class="lang-btn {{ 'active' if current_lang == code }}">{{ code|upper }}</button>
+        </form>
+        {% endfor %}
+      </div>
+    </div>
+
+    <h2>{{ t.login_title }}</h2>
+    <p>{{ t.login_sub }}</p>
+    {% if error %}<div class="alert"><i class="fa-solid fa-circle-exclamation"></i> {{ error }}</div>{% endif %}
+    <form method="POST" action="/login">
+      <div class="form-group">
+        <label class="form-label">{{ t.login_email }}</label>
+        <input class="form-control" type="email" name="email" placeholder="nome@azienda.it" required dir="ltr">
+      </div>
+      <div class="form-group">
+        <label class="form-label">{{ t.login_pass }}</label>
+        <input class="form-control" type="password" name="password" placeholder="********" required dir="ltr">
+      </div>
+      <button class="btn btn-primary login-submit" type="submit">{{ t.login_btn }} <i class="fa-solid fa-arrow-right"></i></button>
+    </form>
+
+    {% if not is_mobile %}
+    <div class="divider">oppure</div>
+    <a class="google-btn" href="/auth/google">
+      <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/><path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24c0 3.55.85 6.91 2.34 9.88l7.35-5.7z"/><path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/></svg>
+      Accedi con Google
+    </a>
+    <div class="divider">non hai un account?</div>
+    <a class="register-btn" href="/registrati"><i class="fa-solid fa-rocket"></i> Registra la tua azienda - 14 giorni gratis</a>
+    {% else %}
+    <div class="divider">non hai un account?</div>
+    <a class="register-btn" href="/registrati"><i class="fa-solid fa-rocket"></i> Registra la tua azienda</a>
+    {% endif %}
+
+    <div class="legal-copy">
+      Usando Accesso Fiere accetti <a href="/termini">Termini</a>,
+      <a href="/privacy">Privacy</a> e <a href="/cookies">Cookie Policy</a>.
+    </div>
+  </div>
+{% endif %}
+</body>
+</html>"""
+
 # Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 #  LOGIN
 # Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
@@ -4708,6 +5835,8 @@ input:focus,select:focus{outline:none;border-color:#0f4c81}
 </div>
 {% endif %}
 </body></html>"""
+
+LOGIN_TMPL = PREMIUM_LOGIN_TMPL
 
 LEGAL_PAGE_TMPL = """<!DOCTYPE html>
 <html lang="it">
