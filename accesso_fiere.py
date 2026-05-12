@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 ACCESSO FIERE v1 - Gestionale Allestitori Fieristici
 Gestionale per allestitori fieristici: fiere, personale,
@@ -55,7 +55,7 @@ app.config.update(
 )
 BASE_DIR    = os.path.dirname(os.path.abspath(__file__))
 # Su Railway usa /data (volume persistente), in locale usa la cartella del file
-# IMPORTANTE: se esiste la variabile env DATA_DIR, usa quella (piÃƒÂ¹ affidabile del check fs)
+# IMPORTANTE: se esiste la variabile env DATA_DIR, usa quella (piÃƒÆ’Ã‚Â¹ affidabile del check fs)
 if os.environ.get('DATA_DIR'):
     DATA_DIR = os.environ['DATA_DIR']
 elif os.path.isdir('/data') and os.access('/data', os.W_OK):
@@ -89,7 +89,7 @@ def _load_app_secret_key():
 
 app.secret_key = _load_app_secret_key()
 
-# Migrazione automatica: se DATA_DIR ÃƒÂ¨ /data (volume Railway) ma i DB sono ancora in BASE_DIR,
+# Migrazione automatica: se DATA_DIR ÃƒÆ’Ã‚Â¨ /data (volume Railway) ma i DB sono ancora in BASE_DIR,
 # copia i file dal vecchio path. Succede la prima volta che monti il volume persistente.
 if DATA_DIR != BASE_DIR:
     import shutil as _sh
@@ -134,9 +134,9 @@ if DATA_DIR != BASE_DIR:
             except Exception:
                 pass
     if _migrated:
-        print(f"[ACCESSO FIERE] Ã¢Å“â€¦ MIGRAZIONE completata da {BASE_DIR} a {DATA_DIR}: {', '.join(_migrated)}", flush=True)
+        print(f"[ACCESSO FIERE] ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ MIGRAZIONE completata da {BASE_DIR} a {DATA_DIR}: {', '.join(_migrated)}", flush=True)
 
-# LOG di diagnostica all'avvio Ã¢â‚¬â€ visibile nei log Railway
+# LOG di diagnostica all'avvio ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â visibile nei log Railway
 print(f"[ACCESSO FIERE] DATA_DIR = {DATA_DIR}", flush=True)
 print(f"[ACCESSO FIERE] /data exists: {os.path.isdir('/data')}", flush=True)
 print(f"[ACCESSO FIERE] /data writable: {os.access('/data', os.W_OK) if os.path.isdir('/data') else 'N/A'}", flush=True)
@@ -144,14 +144,14 @@ try:
     tenants_dir = os.path.join(DATA_DIR, 'tenants')
     if os.path.isdir(tenants_dir):
         tenants_list = os.listdir(tenants_dir)
-        print(f"[ACCESSO FIERE] Tenant DBs trovati: {len(tenants_list)} Ã¢â€ â€™ {tenants_list}", flush=True)
+        print(f"[ACCESSO FIERE] Tenant DBs trovati: {len(tenants_list)} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ {tenants_list}", flush=True)
     else:
         print(f"[ACCESSO FIERE] Cartella tenants non esiste ancora", flush=True)
 except Exception as _e:
     print(f"[ACCESSO FIERE] Errore lettura tenants: {_e}", flush=True)
 
-# Ã¢â€â‚¬Ã¢â€â‚¬ MASTER DB (SaaS) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-# Contiene aziende, abbonamenti, piani Ã¢â‚¬â€ separato dai DB tenant
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ MASTER DB (SaaS) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
+# Contiene aziende, abbonamenti, piani ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â separato dai DB tenant
 MASTER_DB = os.path.join(DATA_DIR, 'accesso_fiere_master.db')
 
 def get_master_db():
@@ -202,7 +202,7 @@ def init_master_db():
                    ('Enterprise', 99.0, 999, 'Dipendenti illimitati'))
     db.commit(); db.close()
 
-# Ã¢â€â‚¬Ã¢â€â‚¬ TENANT DB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ TENANT DB ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 # Ogni azienda ha il suo DB isolato
 def get_tenant_db_path(azienda_id):
     p = os.path.join(DATA_DIR, 'tenants')
@@ -224,7 +224,7 @@ def get_current_db_path():
     return DB_LEGACY
 
 # Ridefinisco DB come property dinamica
-DB = DB_LEGACY  # mantenuto per compatibilitÃƒÂ  con codice esistente
+DB = DB_LEGACY  # mantenuto per compatibilitÃƒÆ’Ã‚Â  con codice esistente
 
 UPLOAD_DIR         = os.path.join(DATA_DIR, 'uploads_dipendenti')
 UPLOAD_DIR_VEICOLI = os.path.join(DATA_DIR, 'uploads_veicoli')
@@ -241,7 +241,7 @@ os.makedirs(UPLOAD_DIR_LOGHI,   exist_ok=True)
 os.makedirs(UPLOAD_DIR_FOTOTESSERE, exist_ok=True)
 os.makedirs(UPLOAD_DIR_FERIE_CERT, exist_ok=True)
 
-# Ã¢â€â‚¬Ã¢â€â‚¬ Migrazione one-time: se esiste un vecchio logo_legacy.* lo assegno al tenant 1
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Migrazione one-time: se esiste un vecchio logo_legacy.* lo assegno al tenant 1
 # (il primo admin storico) e poi via il fallback. I nuovi tenant partono senza logo.
 try:
     _legacy_files = [f for f in os.listdir(UPLOAD_DIR_LOGHI) if f.startswith('logo_legacy.')]
@@ -251,15 +251,15 @@ try:
         _source = os.path.join(UPLOAD_DIR_LOGHI, _legacy)
         if not os.path.exists(_target):
             os.rename(_source, _target)
-            print(f'[LOGO MIGRATION] {_legacy} Ã¢â€ â€™ logo_1.{_ext}')
+            print(f'[LOGO MIGRATION] {_legacy} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ logo_1.{_ext}')
         else:
-            # GiÃƒÂ  migrato: rimuovo il legacy per evitare fallback accidentali
+            # GiÃƒÆ’Ã‚Â  migrato: rimuovo il legacy per evitare fallback accidentali
             os.remove(_source)
             print(f'[LOGO MIGRATION] rimosso duplicato {_legacy}')
 except Exception as _e:
     print(f'[LOGO MIGRATION] skip: {_e}')
 
-# Ã¢â€â‚¬Ã¢â€â‚¬ Logo aziendale helpers Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Logo aziendale helpers ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 def _logo_tenant_key():
     """Ritorna la chiave-tenant da usare per il nome file del logo.
     Usa azienda_id (la vera chiave di sessione multi-tenant) con fallback a 'legacy'."""
@@ -269,7 +269,7 @@ def _logo_tenant_key():
 
 def get_logo_azienda_path(tenant_id=None):
     """Ritorna il path del logo aziendale se esiste (qualsiasi estensione), altrimenti None.
-    Ogni tenant ha il suo logo isolato Ã¢â‚¬â€ niente fallback incrociati tra tenant."""
+    Ogni tenant ha il suo logo isolato ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â niente fallback incrociati tra tenant."""
     if tenant_id is None:
         tid = _logo_tenant_key()
     else:
@@ -355,7 +355,7 @@ def analizza_documento_ai(file_path, nome_file, tipo_doc_hint='', uid=None):
     """
     api_key = get_setting('anthropic_api_key', '')
     if not api_key:
-        return {'_error': 'API key Anthropic non configurata. Vai in Impostazioni Ã¢â€ â€™ AI.'}
+        return {'_error': 'API key Anthropic non configurata. Vai in Impostazioni ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ AI.'}
     if not os.path.exists(file_path):
         return {'_error': f'File non trovato: {file_path}'}
 
@@ -401,16 +401,16 @@ Schema JSON da restituire:
 }
 
 REGOLE:
-- "tipo_doc" ÃƒÂ¨ una breve etichetta libera (es. "Patente B", "Certificato medico idoneitÃƒÂ ", "Attestato corso muletto")
+- "tipo_doc" ÃƒÆ’Ã‚Â¨ una breve etichetta libera (es. "Patente B", "Certificato medico idoneitÃƒÆ’Ã‚Â ", "Attestato corso muletto")
 - "categoria" DEVE essere ESATTAMENTE una di queste 14 stringhe (rispetta maiuscole/spazi):
-  Contratto, Patente, Visita medica, IdoneitÃƒÂ  sanitaria, Formazione PSC, Lavori in altezza, Abilitazione muletto, Antincendio, Primo soccorso, DPI consegnati, UNILAV, Documento identitÃƒÂ , Corso/Attestato, Altro
-- Le categorie specifiche per allestimenti vanno preferite quando applicabili (es. un attestato per uso del carrello elevatore Ã¢â€ â€™ "Abilitazione muletto", non "Corso/Attestato")
-- "nome_cognome" ÃƒÂ¨ il nome del titolare se chiaramente leggibile
+  Contratto, Patente, Visita medica, IdoneitÃƒÆ’Ã‚Â  sanitaria, Formazione PSC, Lavori in altezza, Abilitazione muletto, Antincendio, Primo soccorso, DPI consegnati, UNILAV, Documento identitÃƒÆ’Ã‚Â , Corso/Attestato, Altro
+- Le categorie specifiche per allestimenti vanno preferite quando applicabili (es. un attestato per uso del carrello elevatore ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ "Abilitazione muletto", non "Corso/Attestato")
+- "nome_cognome" ÃƒÆ’Ã‚Â¨ il nome del titolare se chiaramente leggibile
 - "data_emissione" e "data_scadenza" in formato ISO YYYY-MM-DD; usa "" (stringa vuota) se non presenti/leggibili
-- "ente_rilascio" ÃƒÂ¨ chi ha emesso il documento (es. "Motorizzazione Civile", "ASL", "Studio Medico XYZ")
-- "note" ÃƒÂ¨ una breve descrizione di una frase
+- "ente_rilascio" ÃƒÆ’Ã‚Â¨ chi ha emesso il documento (es. "Motorizzazione Civile", "ASL", "Studio Medico XYZ")
+- "note" ÃƒÆ’Ã‚Â¨ una breve descrizione di una frase
 
-Se un campo non ÃƒÂ¨ leggibile o non presente, usa stringa vuota "". NON inventare dati.
+Se un campo non ÃƒÆ’Ã‚Â¨ leggibile o non presente, usa stringa vuota "". NON inventare dati.
 """
 
         resp = client.messages.create(
@@ -436,9 +436,9 @@ Se un campo non ÃƒÂ¨ leggibile o non presente, usa stringa vuota "". NON inv
 
         # Validazione e sanitizzazione
         categorie_valide = {
-            'Contratto','Patente','Visita medica','IdoneitÃƒÂ  sanitaria','Formazione PSC',
+            'Contratto','Patente','Visita medica','IdoneitÃƒÆ’Ã‚Â  sanitaria','Formazione PSC',
             'Lavori in altezza','Abilitazione muletto','Antincendio','Primo soccorso',
-            'DPI consegnati','UNILAV','Documento identitÃƒÂ ','Corso/Attestato','Altro'
+            'DPI consegnati','UNILAV','Documento identitÃƒÆ’Ã‚Â ','Corso/Attestato','Altro'
         }
         if result.get('categoria') not in categorie_valide:
             result['categoria'] = 'Altro'
@@ -464,9 +464,9 @@ Se un campo non ÃƒÂ¨ leggibile o non presente, usa stringa vuota "". NON inv
     except Exception as e:
         return {'_error': f'Errore AI: {str(e)[:200]}'}
 
-# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 #  DATABASE
-# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 def get_db():
     db_path = get_current_db_path()
     conn = sqlite3.connect(db_path, timeout=60, check_same_thread=False)
@@ -490,7 +490,7 @@ def safe_commit(conn):
     conn.commit()  # ultimo tentativo, se fallisce lascia propagare
 
 def init_db():
-    db = get_db()  # giÃƒÂ  con WAL e timeout 30s
+    db = get_db()  # giÃƒÆ’Ã‚Â  con WAL e timeout 30s
     db.executescript("""
     CREATE TABLE IF NOT EXISTS utenti (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -572,7 +572,7 @@ def init_db():
         valore TEXT
     );
     """)
-    # Ã¢â€â‚¬Ã¢â€â‚¬ Migrazione automatica colonne mancanti Ã¢â€â‚¬Ã¢â€â‚¬
+    # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Migrazione automatica colonne mancanti ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     migrations = [
         "ALTER TABLE presenze ADD COLUMN cantiere_id INTEGER",
         "ALTER TABLE richieste_presenze ADD COLUMN cantiere_id INTEGER",
@@ -592,7 +592,7 @@ def init_db():
         "ALTER TABLE cantieri ADD COLUMN responsabile TEXT",
         "ALTER TABLE cantieri ADD COLUMN tipo_allestimento TEXT DEFAULT 'standard'",
         "ALTER TABLE cantieri ADD COLUMN note_logistica TEXT",
-        # Ã¢â€â‚¬Ã¢â€â‚¬ Sprint 1.1 Ã¢â‚¬â€ Schede fiera complete Ã¢â€â‚¬Ã¢â€â‚¬
+        # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Sprint 1.1 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Schede fiera complete ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
         "ALTER TABLE cantieri ADD COLUMN tipo_evento TEXT DEFAULT 'Fiera'",
         "ALTER TABLE cantieri ADD COLUMN committente_id INTEGER",
         "ALTER TABLE cantieri ADD COLUMN data_setup TEXT",
@@ -601,9 +601,9 @@ def init_db():
         "ALTER TABLE cantieri ADD COLUMN costo_previsto REAL DEFAULT 0",
         "ALTER TABLE cantieri ADD COLUMN ricavo_previsto REAL DEFAULT 0",
         "ALTER TABLE cantieri ADD COLUMN note_tecniche TEXT",
-        # Ã¢â€â‚¬Ã¢â€â‚¬ Sprint 1.2 Ã¢â‚¬â€ Categorizzazione documenti Ã¢â€â‚¬Ã¢â€â‚¬
+        # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Sprint 1.2 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Categorizzazione documenti ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
         "ALTER TABLE documenti_dipendente ADD COLUMN categoria TEXT DEFAULT 'Altro'",
-        # Ã¢â€â‚¬Ã¢â€â‚¬ Sprint 1.3 Ã¢â‚¬â€ Ruolo caposquadra: tabella squadre Ã¢â€â‚¬Ã¢â€â‚¬
+        # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Sprint 1.3 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Ruolo caposquadra: tabella squadre ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
         """CREATE TABLE IF NOT EXISTS squadre (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nome TEXT NOT NULL,
@@ -620,7 +620,7 @@ def init_db():
             FOREIGN KEY(squadra_id) REFERENCES squadre(id) ON DELETE CASCADE,
             FOREIGN KEY(utente_id) REFERENCES utenti(id)
         )""",
-        # Ã¢â€â‚¬Ã¢â€â‚¬ Sprint 2.1 Ã¢â‚¬â€ Incarichi montatori Ã¢â€â‚¬Ã¢â€â‚¬
+        # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Sprint 2.1 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Incarichi montatori ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
         """CREATE TABLE IF NOT EXISTS incarichi (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             cantiere_id INTEGER NOT NULL,
@@ -636,9 +636,9 @@ def init_db():
             FOREIGN KEY(cantiere_id) REFERENCES cantieri(id) ON DELETE CASCADE,
             FOREIGN KEY(utente_id) REFERENCES utenti(id)
         )""",
-        # Ã¢â€â‚¬Ã¢â€â‚¬ Sprint 2.2 Ã¢â‚¬â€ Costo orario dipendente Ã¢â€â‚¬Ã¢â€â‚¬
+        # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Sprint 2.2 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Costo orario dipendente ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
         "ALTER TABLE utenti ADD COLUMN costo_orario REAL DEFAULT 0",
-        # Ã¢â€â‚¬Ã¢â€â‚¬ Sprint 3.1 Ã¢â‚¬â€ Geofencing per timbratura mobile Ã¢â€â‚¬Ã¢â€â‚¬
+        # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Sprint 3.1 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Geofencing per timbratura mobile ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
         "ALTER TABLE cantieri ADD COLUMN lat REAL",
         "ALTER TABLE cantieri ADD COLUMN lng REAL",
         "ALTER TABLE cantieri ADD COLUMN raggio_geofence_metri INTEGER DEFAULT 200",
@@ -889,10 +889,10 @@ def init_db():
         "ALTER TABLE preventivi_voci ADD COLUMN data_fine TEXT",
         "ALTER TABLE preventivi_voci ADD COLUMN importo_modificato REAL",
         "ALTER TABLE preventivi_voci ADD COLUMN sconto_riga REAL DEFAULT 0",
-        # Ã¢â€â‚¬Ã¢â€â‚¬ Banca ore Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+        # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Banca ore ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
         "ALTER TABLE utenti ADD COLUMN ore_contratto_mensili REAL DEFAULT 0",
         "ALTER TABLE utenti ADD COLUMN ore_contratto_giornaliere REAL DEFAULT 0",
-        # Ã¢â€â‚¬Ã¢â€â‚¬ Storico dipendenti eliminati Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+        # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Storico dipendenti eliminati ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
         # Preserva i dati anagrafici minimi per le JOIN quando l'utente viene rimosso
         """CREATE TABLE IF NOT EXISTS utenti_storico (
             id INTEGER PRIMARY KEY,
@@ -903,14 +903,14 @@ def init_db():
             data_assunzione TEXT,
             data_eliminazione TEXT DEFAULT (datetime('now'))
         )""",
-        # Ã¢â€â‚¬Ã¢â€â‚¬ Layout dashboard personalizzato (1 riga per azienda) Ã¢â€â‚¬Ã¢â€â‚¬
+        # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Layout dashboard personalizzato (1 riga per azienda) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
         """CREATE TABLE IF NOT EXISTS dashboard_layout (
             id INTEGER PRIMARY KEY CHECK (id=1),
             layout_json TEXT NOT NULL DEFAULT '{}',
             aggiornato_il TEXT DEFAULT (datetime('now'))
         )""",
         # VIEW che unisce utenti attivi/disattivi e utenti_storico (eliminati).
-        # Utile per le JOIN nei report: cosÃƒÂ¬ presenze/rimborsi di persone eliminate
+        # Utile per le JOIN nei report: cosÃƒÆ’Ã‚Â¬ presenze/rimborsi di persone eliminate
         # mantengono nome e cognome.
         "DROP VIEW IF EXISTS utenti_full",
         """CREATE VIEW IF NOT EXISTS utenti_full AS
@@ -934,7 +934,7 @@ def init_db():
         )""",
         "CREATE INDEX IF NOT EXISTS idx_banca_ore_utente ON banca_ore_movimenti(utente_id)",
         "CREATE INDEX IF NOT EXISTS idx_banca_ore_mese ON banca_ore_movimenti(mese)",
-        # Banca ore Ã¢â‚¬â€ Monte ore manuale per dipendente/mese (NUOVO Sprint 4)
+        # Banca ore ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Monte ore manuale per dipendente/mese (NUOVO Sprint 4)
         """CREATE TABLE IF NOT EXISTS banca_ore_monte (
             utente_id INTEGER NOT NULL,
             mese TEXT NOT NULL,
@@ -944,7 +944,7 @@ def init_db():
             PRIMARY KEY (utente_id, mese),
             FOREIGN KEY(utente_id) REFERENCES utenti(id)
         )""",
-        # Ã¢â€â‚¬Ã¢â€â‚¬ Fatturazione attiva/passiva + fornitori Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+        # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Fatturazione attiva/passiva + fornitori ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
         "ALTER TABLE fatture ADD COLUMN tipo TEXT DEFAULT 'attiva'",
         "ALTER TABLE fatture ADD COLUMN fornitore_id INTEGER",
         "ALTER TABLE fatture ADD COLUMN fornitore_nome TEXT",
@@ -1063,17 +1063,17 @@ def init_db():
             FOREIGN KEY(cliente_id) REFERENCES clienti(id),
             FOREIGN KEY(cantiere_id) REFERENCES cantieri(id)
         )""",
-        # Ã¢â€â‚¬Ã¢â€â‚¬ Fototessera dipendente (per tesserino di riconoscimento) Ã¢â€â‚¬Ã¢â€â‚¬
+        # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Fototessera dipendente (per tesserino di riconoscimento) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
         "ALTER TABLE utenti ADD COLUMN fototessera_filename TEXT",
         "ALTER TABLE utenti ADD COLUMN tesserino_codice TEXT",
-        # Ã¢â€â‚¬Ã¢â€â‚¬ Tesserino: token URL univoco + PIN per accesso ai documenti Ã¢â€â‚¬Ã¢â€â‚¬
+        # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Tesserino: token URL univoco + PIN per accesso ai documenti ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
         "ALTER TABLE utenti ADD COLUMN tesserino_token TEXT",
         "ALTER TABLE utenti ADD COLUMN tesserino_pin_hash TEXT",
         "CREATE UNIQUE INDEX IF NOT EXISTS idx_utenti_tesserino_token ON utenti(tesserino_token) WHERE tesserino_token IS NOT NULL",
-        # Ã¢â€â‚¬Ã¢â€â‚¬ Pausa pranzo nelle timbrature (per visibilitÃƒÂ  admin + integritÃƒÂ  storico) Ã¢â€â‚¬Ã¢â€â‚¬
+        # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Pausa pranzo nelle timbrature (per visibilitÃƒÆ’Ã‚Â  admin + integritÃƒÆ’Ã‚Â  storico) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
         "ALTER TABLE presenze ADD COLUMN pausa_ore REAL DEFAULT 0",
         "ALTER TABLE richieste_presenze ADD COLUMN pausa_ore REAL DEFAULT 0",
-        # Ã¢â€â‚¬Ã¢â€â‚¬ PWA push notifications: subscriptions per device Ã¢â€â‚¬Ã¢â€â‚¬
+        # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ PWA push notifications: subscriptions per device ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
         """CREATE TABLE IF NOT EXISTS pwa_subscriptions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             utente_id INTEGER NOT NULL,
@@ -1228,7 +1228,7 @@ def ensure_columns():
                 # Banca ore
                 "ALTER TABLE utenti ADD COLUMN ore_contratto_mensili REAL DEFAULT 0",
                 "ALTER TABLE utenti ADD COLUMN ore_contratto_giornaliere REAL DEFAULT 0",
-                # Ã¢â€â‚¬Ã¢â€â‚¬ Sprint 1.1 Ã¢â‚¬â€ Schede fiera complete Ã¢â€â‚¬Ã¢â€â‚¬
+                # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Sprint 1.1 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Schede fiera complete ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
                 "ALTER TABLE cantieri ADD COLUMN tipo_evento TEXT DEFAULT 'Fiera'",
                 "ALTER TABLE cantieri ADD COLUMN committente_id INTEGER",
                 "ALTER TABLE cantieri ADD COLUMN data_setup TEXT",
@@ -1237,9 +1237,9 @@ def ensure_columns():
                 "ALTER TABLE cantieri ADD COLUMN costo_previsto REAL DEFAULT 0",
                 "ALTER TABLE cantieri ADD COLUMN ricavo_previsto REAL DEFAULT 0",
                 "ALTER TABLE cantieri ADD COLUMN note_tecniche TEXT",
-                # Ã¢â€â‚¬Ã¢â€â‚¬ Sprint 1.2 Ã¢â‚¬â€ Categorizzazione documenti Ã¢â€â‚¬Ã¢â€â‚¬
+                # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Sprint 1.2 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Categorizzazione documenti ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
                 "ALTER TABLE documenti_dipendente ADD COLUMN categoria TEXT DEFAULT 'Altro'",
-                # Ã¢â€â‚¬Ã¢â€â‚¬ Sprint 1.3 Ã¢â‚¬â€ Squadre / Caposquadra Ã¢â€â‚¬Ã¢â€â‚¬
+                # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Sprint 1.3 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Squadre / Caposquadra ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
                 """CREATE TABLE IF NOT EXISTS squadre (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     nome TEXT NOT NULL,
@@ -1256,7 +1256,7 @@ def ensure_columns():
                     FOREIGN KEY(squadra_id) REFERENCES squadre(id) ON DELETE CASCADE,
                     FOREIGN KEY(utente_id) REFERENCES utenti(id)
                 )""",
-                # Ã¢â€â‚¬Ã¢â€â‚¬ Sprint 2.1 Ã¢â‚¬â€ Incarichi montatori Ã¢â€â‚¬Ã¢â€â‚¬
+                # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Sprint 2.1 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Incarichi montatori ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
                 """CREATE TABLE IF NOT EXISTS incarichi (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     cantiere_id INTEGER NOT NULL,
@@ -1272,9 +1272,9 @@ def ensure_columns():
                     FOREIGN KEY(cantiere_id) REFERENCES cantieri(id) ON DELETE CASCADE,
                     FOREIGN KEY(utente_id) REFERENCES utenti(id)
                 )""",
-                # Ã¢â€â‚¬Ã¢â€â‚¬ Sprint 2.2 Ã¢â‚¬â€ Costo orario dipendente Ã¢â€â‚¬Ã¢â€â‚¬
+                # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Sprint 2.2 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Costo orario dipendente ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
                 "ALTER TABLE utenti ADD COLUMN costo_orario REAL DEFAULT 0",
-                # Ã¢â€â‚¬Ã¢â€â‚¬ Sprint 3.1 Ã¢â‚¬â€ Geofencing Ã¢â€â‚¬Ã¢â€â‚¬
+                # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Sprint 3.1 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Geofencing ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
                 "ALTER TABLE cantieri ADD COLUMN lat REAL",
                 "ALTER TABLE cantieri ADD COLUMN lng REAL",
                 "ALTER TABLE cantieri ADD COLUMN raggio_geofence_metri INTEGER DEFAULT 200",
@@ -1324,7 +1324,7 @@ def ensure_columns():
                 )""",
                 "CREATE INDEX IF NOT EXISTS idx_banca_ore_utente ON banca_ore_movimenti(utente_id)",
                 "CREATE INDEX IF NOT EXISTS idx_banca_ore_mese ON banca_ore_movimenti(mese)",
-                # Banca ore Ã¢â‚¬â€ Monte ore manuale per dipendente/mese (NUOVO)
+                # Banca ore ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Monte ore manuale per dipendente/mese (NUOVO)
                 """CREATE TABLE IF NOT EXISTS banca_ore_monte (
                     utente_id INTEGER NOT NULL,
                     mese TEXT NOT NULL,
@@ -1361,16 +1361,16 @@ def ensure_columns():
                     sito_web TEXT, note TEXT, attivo INTEGER DEFAULT 1,
                     creato_il TEXT DEFAULT (datetime('now'))
                 )""",
-                # Ã¢â€â‚¬Ã¢â€â‚¬ Fototessera + tesserino + PIN (idempotenti) Ã¢â€â‚¬Ã¢â€â‚¬
+                # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Fototessera + tesserino + PIN (idempotenti) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
                 "ALTER TABLE utenti ADD COLUMN fototessera_filename TEXT",
                 "ALTER TABLE utenti ADD COLUMN tesserino_codice TEXT",
                 "ALTER TABLE utenti ADD COLUMN tesserino_token TEXT",
                 "ALTER TABLE utenti ADD COLUMN tesserino_pin_hash TEXT",
                 "CREATE UNIQUE INDEX IF NOT EXISTS idx_utenti_tesserino_token ON utenti(tesserino_token) WHERE tesserino_token IS NOT NULL",
-                # Ã¢â€â‚¬Ã¢â€â‚¬ Pausa pranzo nelle timbrature Ã¢â€â‚¬Ã¢â€â‚¬
+                # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Pausa pranzo nelle timbrature ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
                 "ALTER TABLE presenze ADD COLUMN pausa_ore REAL DEFAULT 0",
                 "ALTER TABLE richieste_presenze ADD COLUMN pausa_ore REAL DEFAULT 0",
-                # Ã¢â€â‚¬Ã¢â€â‚¬ PWA push notifications Ã¢â€â‚¬Ã¢â€â‚¬
+                # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ PWA push notifications ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
                 """CREATE TABLE IF NOT EXISTS pwa_subscriptions (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     utente_id INTEGER NOT NULL,
@@ -1400,7 +1400,7 @@ def ensure_columns():
                 try: db.execute(sql)
                 except: pass
             # Migration speciale: rimuovere NOT NULL da richieste_presenze.ora_entrata/ora_uscita
-            # (per consentire richieste in modalitÃƒÂ  "ore totali" senza orari precisi)
+            # (per consentire richieste in modalitÃƒÆ’Ã‚Â  "ore totali" senza orari precisi)
             try:
                 cols = db.execute("PRAGMA table_info(richieste_presenze)").fetchall()
                 # cols[i] = (cid, name, type, notnull, dflt_value, pk)
@@ -1439,14 +1439,14 @@ def ensure_columns():
                 print(f'[ensure_columns] {e}')
                 return
 
-# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 #  AUTO-INIT DB PER RICHIESTE AUTHENTICATED
-# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 _tenant_initialized = set()  # cache per non reinizializzare ad ogni request
 
 @app.before_request
 def auto_init_tenant_db():
-    """Se l'utente ÃƒÂ¨ loggato su un tenant, assicura che il DB esista e sia aggiornato."""
+    """Se l'utente ÃƒÆ’Ã‚Â¨ loggato su un tenant, assicura che il DB esista e sia aggiornato."""
     azienda_id = session.get('azienda_id')
     if not azienda_id:
         return
@@ -1466,9 +1466,9 @@ def auto_init_tenant_db():
             if missing:
                 init_db()
             # Chiama sempre ensure_columns per applicare eventuali nuove colonne
-            # ai DB giÃƒÂ  esistenti (migrazione idempotente).
+            # ai DB giÃƒÆ’Ã‚Â  esistenti (migrazione idempotente).
             ensure_columns()
-        # Ã¢â€â‚¬Ã¢â€â‚¬ Pulizia automatica record fantasma (scadenze senza file allegato) Ã¢â€â‚¬Ã¢â€â‚¬
+        # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Pulizia automatica record fantasma (scadenze senza file allegato) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
         # Vengono creati quando un utente cancella un file ma il record di scadenza
         # rimane in DB. Inquinano i contatori. Si fa una volta al primo accesso.
         try:
@@ -1485,9 +1485,9 @@ def auto_init_tenant_db():
     except Exception as e:
         print(f'[auto_init_tenant_db] {e}')
 
-# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 #  AUTH
-# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 AMMINISTRAZIONE_ENDPOINTS = {
     'amministrazione_home','amministrazione_mobile',
     'global_search',
@@ -1530,16 +1530,16 @@ def login_required(f):
                 db = get_db()
                 u = db.execute("SELECT attivo, ruolo FROM utenti WHERE id=?", (session['user_id'],)).fetchone()
                 db.close()
-                # Tratta NULL come attivo (compatibilitÃƒÂ  record vecchi). Solo attivo=0 esplicito blocca.
+                # Tratta NULL come attivo (compatibilitÃƒÆ’Ã‚Â  record vecchi). Solo attivo=0 esplicito blocca.
                 if not u or u['attivo'] == 0:
                     session.clear()
-                    flash('Il tuo account ÃƒÂ¨ stato disattivato. Contatta l\'amministratore.', 'error')
+                    flash('Il tuo account ÃƒÆ’Ã‚Â¨ stato disattivato. Contatta l\'amministratore.', 'error')
                     return redirect(url_for('login'))
                 if u['ruolo'] and session.get('ruolo') != u['ruolo']:
                     session['ruolo'] = u['ruolo']
             except Exception:
                 pass
-        # Solo admin vedono le pagine admin. Caposquadra Ã¢â€ â€™ mobile-cs, dipendenti Ã¢â€ â€™ mobile
+        # Solo admin vedono le pagine admin. Caposquadra ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ mobile-cs, dipendenti ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ mobile
         admin_pages = {'dashboard','dipendenti','presenze','ferie','cantieri','global_search',
                        'documenti','scadenze','calendario','richieste','impostazioni','fatturazione','preventivi','clienti','contratti_clienti',
                        'banca_ore','banca_ore_dettaglio','squadre_lista','calendario_fiere',
@@ -1577,7 +1577,7 @@ def admin_required(f):
                 db.close()
                 if not u or u['attivo'] == 0:
                     session.clear()
-                    flash('Il tuo account ÃƒÂ¨ stato disattivato.', 'error')
+                    flash('Il tuo account ÃƒÆ’Ã‚Â¨ stato disattivato.', 'error')
                     return redirect(url_for('login'))
                 if u['ruolo'] and session.get('ruolo') != u['ruolo']:
                     session['ruolo'] = u['ruolo']
@@ -1606,7 +1606,7 @@ def caposquadra_required(f):
                 db.close()
                 if not u or u['attivo'] == 0:
                     session.clear()
-                    flash('Il tuo account ÃƒÂ¨ stato disattivato.', 'error')
+                    flash('Il tuo account ÃƒÆ’Ã‚Â¨ stato disattivato.', 'error')
                     return redirect(url_for('login'))
                 if u['ruolo'] and session.get('ruolo') != u['ruolo']:
                     session['ruolo'] = u['ruolo']
@@ -1628,9 +1628,9 @@ def get_squadra_membri_ids(db, caposquadra_id):
 
 def hash_pw(pw): return hashlib.sha256(pw.encode()).hexdigest()
 
-# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 #  EMAIL
-# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 def send_email(to, subject, body):
     """
     Invia email tramite Brevo HTTP API (funziona su Railway).
@@ -1648,7 +1648,7 @@ def send_email(to, subject, body):
 
     print(f"[EMAIL] Invio a={to} via={metodo} mittente={mittente}")
 
-    # Ã¢â€â‚¬Ã¢â€â‚¬ Brevo / Sendinblue HTTP API (funziona su Railway) Ã¢â€â‚¬Ã¢â€â‚¬
+    # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Brevo / Sendinblue HTTP API (funziona su Railway) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     if 'brevo' in metodo or 'sendinblue' in metodo or metodo.strip() == 'brevo':
         try:
             import json as _json
@@ -1680,7 +1680,7 @@ def send_email(to, subject, body):
             traceback.print_exc()
             return False
 
-    # Ã¢â€â‚¬Ã¢â€â‚¬ Fallback SMTP (per ambienti non Railway) Ã¢â€â‚¬Ã¢â€â‚¬
+    # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Fallback SMTP (per ambienti non Railway) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     try:
         host = metodo
         port = int(get_setting('smtp_port', '587'))
@@ -1705,9 +1705,9 @@ def send_email(to, subject, body):
         traceback.print_exc()
         return False
 
-# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-#  NOTIFICHE SCADENZE Ã¢â‚¬â€ eseguita 1 volta/giorno
-# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
+#  NOTIFICHE SCADENZE ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â eseguita 1 volta/giorno
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 def check_scadenze_email():
     """Controlla tutti i documenti in scadenza e manda 1 sola email riassuntiva all'admin."""
     email_admin = get_setting('email_notifiche', '')
@@ -1717,7 +1717,7 @@ def check_scadenze_email():
     db = get_db()
     righe = []
 
-    # Ã¢â€â‚¬Ã¢â€â‚¬ Documenti dipendenti (tabella documenti con assegnato_a) Ã¢â€â‚¬Ã¢â€â‚¬
+    # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Documenti dipendenti (tabella documenti con assegnato_a) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     try:
         docs_dip = db.execute("""
             SELECT d.titolo, d.data_scadenza, u.nome, u.cognome,
@@ -1728,14 +1728,14 @@ def check_scadenze_email():
             ORDER BY d.data_scadenza""").fetchall()
         for d in docs_dip:
             gg = d['days_left']
-            label = f"<span style='color:#dc2626'>Ã¢Å¡Â Ã¯Â¸Â Scade oggi</span>" if gg == 0 else f"tra <b>{gg} giorni</b>"
-            righe.append(f"<tr><td style='padding:6px 12px'>Ã°Å¸â€œâ€¹ Doc. dipendente</td>"
-                         f"<td style='padding:6px 12px'><b>{d['titolo']}</b> Ã¢â‚¬â€ {d['nome']} {d['cognome']}</td>"
+            label = f"<span style='color:#dc2626'>ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Scade oggi</span>" if gg == 0 else f"tra <b>{gg} giorni</b>"
+            righe.append(f"<tr><td style='padding:6px 12px'>ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¹ Doc. dipendente</td>"
+                         f"<td style='padding:6px 12px'><b>{d['titolo']}</b> ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {d['nome']} {d['cognome']}</td>"
                          f"<td style='padding:6px 12px;font-family:monospace'>{d['data_scadenza']}</td>"
                          f"<td style='padding:6px 12px'>{label}</td></tr>")
     except: pass
 
-    # Ã¢â€â‚¬Ã¢â€â‚¬ Documenti caricati dalla sezione Dipendenti Ã¢â€â‚¬Ã¢â€â‚¬
+    # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Documenti caricati dalla sezione Dipendenti ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     try:
         docs_dip2 = db.execute("""
             SELECT dd.nome_originale as titolo, dd.tipo_doc, dd.data_scadenza, u.nome, u.cognome,
@@ -1746,14 +1746,14 @@ def check_scadenze_email():
             ORDER BY dd.data_scadenza""").fetchall()
         for d in docs_dip2:
             gg = d['days_left']
-            label = f"<span style='color:#dc2626'>Ã¢Å¡Â Ã¯Â¸Â Scade oggi</span>" if gg == 0 else f"tra <b>{gg} giorni</b>"
-            righe.append(f"<tr><td style='padding:6px 12px'>Ã°Å¸â€œâ€ž {d['tipo_doc']}</td>"
-                         f"<td style='padding:6px 12px'><b>{d['titolo']}</b> Ã¢â‚¬â€ {d['nome']} {d['cognome']}</td>"
+            label = f"<span style='color:#dc2626'>ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Scade oggi</span>" if gg == 0 else f"tra <b>{gg} giorni</b>"
+            righe.append(f"<tr><td style='padding:6px 12px'>ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Å¾ {d['tipo_doc']}</td>"
+                         f"<td style='padding:6px 12px'><b>{d['titolo']}</b> ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {d['nome']} {d['cognome']}</td>"
                          f"<td style='padding:6px 12px;font-family:monospace'>{d['data_scadenza']}</td>"
                          f"<td style='padding:6px 12px'>{label}</td></tr>")
     except: pass
 
-    # Ã¢â€â‚¬Ã¢â€â‚¬ Documenti azienda Ã¢â€â‚¬Ã¢â€â‚¬
+    # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Documenti azienda ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     try:
         docs_az = db.execute("""
             SELECT titolo, data_scadenza, avviso_giorni,
@@ -1764,14 +1764,14 @@ def check_scadenze_email():
             ORDER BY data_scadenza""").fetchall()
         for d in docs_az:
             gg = d['days_left']
-            label = f"<span style='color:#dc2626'>Ã¢Å¡Â Ã¯Â¸Â Scade oggi</span>" if gg == 0 else f"tra <b>{gg} giorni</b>"
-            righe.append(f"<tr><td style='padding:6px 12px'>Ã°Å¸ÂÂ¢ Doc. azienda</td>"
+            label = f"<span style='color:#dc2626'>ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Scade oggi</span>" if gg == 0 else f"tra <b>{gg} giorni</b>"
+            righe.append(f"<tr><td style='padding:6px 12px'>ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â¢ Doc. azienda</td>"
                          f"<td style='padding:6px 12px'><b>{d['titolo']}</b></td>"
                          f"<td style='padding:6px 12px;font-family:monospace'>{d['data_scadenza']}</td>"
                          f"<td style='padding:6px 12px'>{label}</td></tr>")
     except: pass
 
-    # Ã¢â€â‚¬Ã¢â€â‚¬ Scadenze veicoli Ã¢â€â‚¬Ã¢â€â‚¬
+    # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Scadenze veicoli ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     try:
         veicoli_sc = db.execute("""
             SELECT targa, marca, modello, revisione, assicurazione, bollo,
@@ -1787,9 +1787,9 @@ def check_scadenze_email():
                     gg = (date.fromisoformat(sc) - date.today()).days
                 except: continue
                 if 0 <= gg <= 30:
-                    label = f"<span style='color:#dc2626'>Ã¢Å¡Â Ã¯Â¸Â Scade oggi</span>" if gg == 0 else f"tra <b>{gg} giorni</b>"
-                    righe.append(f"<tr><td style='padding:6px 12px'>Ã°Å¸Å¡â€” Veicolo</td>"
-                                 f"<td style='padding:6px 12px'><b>{etichetta}</b> Ã¢â‚¬â€ {v['targa']} {v['marca']} {v['modello']}</td>"
+                    label = f"<span style='color:#dc2626'>ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Scade oggi</span>" if gg == 0 else f"tra <b>{gg} giorni</b>"
+                    righe.append(f"<tr><td style='padding:6px 12px'>ÃƒÂ°Ã…Â¸Ã…Â¡Ã¢â‚¬â€ Veicolo</td>"
+                                 f"<td style='padding:6px 12px'><b>{etichetta}</b> ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {v['targa']} {v['marca']} {v['modello']}</td>"
                                  f"<td style='padding:6px 12px;font-family:monospace'>{sc}</td>"
                                  f"<td style='padding:6px 12px'>{label}</td></tr>")
     except: pass
@@ -1799,7 +1799,7 @@ def check_scadenze_email():
         return
 
     base = get_base_url()
-    corpo = (f"<h2 style='color:#0f172a'>Ã¢Å¡Â Ã¯Â¸Â Riepilogo scadenze Ã¢â‚¬â€ {oggi}</h2>"
+    corpo = (f"<h2 style='color:#0f172a'>ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Riepilogo scadenze ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {oggi}</h2>"
              f"<p>Hai <b>{len(righe)} scadenza/e</b> nei prossimi 30 giorni:</p>"
              f"<table style='border-collapse:collapse;font-family:sans-serif;width:100%'>"
              f"<thead><tr style='background:#0f172a;color:#fff'>"
@@ -1809,18 +1809,18 @@ def check_scadenze_email():
              f"<th style='padding:8px 12px;text-align:left'>Quando</th>"
              f"</tr></thead><tbody>{''.join(righe)}</tbody></table>"
              f"<p style='margin-top:20px'>"
-             f"<a href='{base}/documenti-azienda' style='background:#0f172a;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:700;margin-right:10px'>Documenti azienda Ã¢â€ â€™</a>"
-             f"<a href='{base}/documenti' style='background:#2563eb;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:700'>Documenti dipendenti Ã¢â€ â€™</a>"
+             f"<a href='{base}/documenti-azienda' style='background:#0f172a;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:700;margin-right:10px'>Documenti azienda ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</a>"
+             f"<a href='{base}/documenti' style='background:#2563eb;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:700'>Documenti dipendenti ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</a>"
              f"</p>")
 
     import threading
     threading.Thread(target=lambda: send_email(email_admin,
-        f'[ACCESSO FIERE] {len(righe)} scadenze nei prossimi 30 giorni Ã¢â‚¬â€ {oggi}', corpo), daemon=True).start()
+        f'[ACCESSO FIERE] {len(righe)} scadenze nei prossimi 30 giorni ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {oggi}', corpo), daemon=True).start()
 
 
-# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 #  RENDER HELPER
-# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 _MOJIBAKE_RUN_RE = re.compile(r'[^\x00-\x7F]+')
 
 def _fix_mojibake_run(run):
@@ -1866,7 +1866,7 @@ def render_page(tmpl, **ctx):
     ctx.setdefault('current_lang', session.get('lang', 'it'))
     ctx.setdefault('langs', LANGS)
     ctx.setdefault('t', get_lang())
-    # Ã¢â€â‚¬Ã¢â€â‚¬ Logo aziendale Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Logo aziendale ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     try:
         tid = str(session.get('azienda_id') or 'legacy')
         logo_path = None
@@ -1915,7 +1915,7 @@ def render_page(tmpl, **ctx):
                                    'totale_scaduti':0,'totale_in_scadenza':0,
                                    'veicoli_in_scadenza':0,'docs_dip_in_scadenza':0,'docs_az_in_scadenza':0}
         db.close()
-        # Ã¢â€â‚¬Ã¢â€â‚¬ Controllo scadenze 1 volta al giorno Ã¢â€â‚¬Ã¢â€â‚¬
+        # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Controllo scadenze 1 volta al giorno ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
         oggi = date.today().isoformat()
         if session.get('_scadenze_check') != oggi:
             session['_scadenze_check'] = oggi
@@ -1939,7 +1939,7 @@ def render_page(tmpl, **ctx):
     if theme_mode not in ('dark', 'light'):
         theme_mode = 'dark'
     ctx.setdefault('theme_mode', theme_mode)
-    # AI chat disponibile solo se la API key Anthropic ÃƒÂ¨ configurata
+    # AI chat disponibile solo se la API key Anthropic ÃƒÆ’Ã‚Â¨ configurata
     try:
         ctx['ai_chat_abilitato'] = AI_OK and bool(get_setting('anthropic_api_key', '').strip())
     except Exception:
@@ -1947,14 +1947,14 @@ def render_page(tmpl, **ctx):
     full = BASE.replace('    {% block content %}{% endblock %}', tmpl)
     return render_template_string(full, **ctx)
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 #  BASE TEMPLATE
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 BASE = """<!DOCTYPE html>
 <html lang="{{ lang }}" dir="{{ t.dir }}">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{{ page_title }} | Accesso Fiere Ã¢â‚¬â€ Gestionale Allestitori</title>
+<title>{{ page_title }} | Accesso Fiere ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Gestionale Allestitori</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#0f4c81">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1978,6 +1978,7 @@ body{font-family:'Inter',sans-serif;background:linear-gradient(180deg,#f8fafc 0%
 .sidebar::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}
 .sidebar-logo{padding:18px 18px 16px;border-bottom:1px solid rgba(148,163,184,.1);display:flex;align-items:center;gap:11px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.008))}
 .sidebar-logo img{height:36px;width:auto;object-fit:contain;flex-shrink:0;border-radius:7px}
+.sidebar-fallback-logo{width:32px;height:32px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;background:linear-gradient(135deg,#1f6f9e,#38a9bd);color:#fff;font-size:12px;font-weight:900;letter-spacing:-.03em;border:1px solid rgba(255,255,255,.16)}
 .sidebar-logo .company{font-size:14px;font-weight:800;color:#fff;letter-spacing:-.2px}
 .sidebar-logo .sub{font-size:10.5px;color:rgba(203,213,225,.58);margin-top:2px;font-weight:700;letter-spacing:.1px}
 nav{flex:1;padding:8px 0 12px}
@@ -2121,7 +2122,7 @@ textarea{resize:vertical;min-height:80px}
 .empty-state p{font-size:13px;color:var(--text-light);max-width:400px;margin:0 auto 16px}
 .tag{display:inline-block;background:#f1f5f9;color:var(--text-light);font-size:11px;padding:3px 9px;border-radius:7px;margin-right:4px;font-weight:500;border:1px solid #e2e8f0}
 
-/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â PAGE HEADER MODERNO Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
+/* ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â PAGE HEADER MODERNO ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â */
 .page-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px;flex-wrap:wrap;gap:14px;padding-bottom:16px;border-bottom:1px solid var(--border)}
 .page-header-info{flex:1;min-width:240px}
 .page-breadcrumb{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-light);margin-bottom:8px;font-weight:500}
@@ -2132,7 +2133,7 @@ textarea{resize:vertical;min-height:80px}
 .page-desc{font-size:13px;color:var(--text-light);max-width:600px}
 .page-actions{display:flex;gap:8px;flex-wrap:wrap}
 
-/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â FILTER BAR Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
+/* ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â FILTER BAR ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â */
 .filter-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#fff;padding:12px 16px;border-radius:11px;border:1px solid var(--border);margin-bottom:16px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
 .filter-bar input,.filter-bar select{width:auto;min-width:160px;padding:7px 11px;font-size:13px;border-radius:8px}
 .filter-bar .filter-search{position:relative;flex:1;min-width:220px;max-width:340px}
@@ -2142,20 +2143,20 @@ textarea{resize:vertical;min-height:80px}
 .filter-bar .filter-clear{margin-left:auto;font-size:12px;color:var(--text-light);text-decoration:none;padding:6px 10px;border-radius:7px;transition:all .15s}
 .filter-bar .filter-clear:hover{background:#f1f5f9;color:var(--accent)}
 
-/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â ACTION ICONS NELLE TABELLE Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
+/* ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â ACTION ICONS NELLE TABELLE ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â */
 .action-icons{display:flex;gap:4px}
 .action-icon{width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;background:#f8fafc;border:1px solid var(--border);color:var(--text-light);text-decoration:none;cursor:pointer;font-size:12px;transition:all .15s}
 .action-icon:hover{background:#fff;color:var(--accent);border-color:var(--accent);box-shadow:0 2px 8px rgba(15,76,129,.15);transform:translateY(-1px)}
 .action-icon.danger:hover{color:var(--danger);border-color:var(--danger);box-shadow:0 2px 8px rgba(239,68,68,.15)}
 .action-icon.success:hover{color:var(--success);border-color:var(--success);box-shadow:0 2px 8px rgba(34,197,94,.15)}
 
-/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â SECTION TITLE (per pagine con sezioni multiple) Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
+/* ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â SECTION TITLE (per pagine con sezioni multiple) ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â */
 .section-title{font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.7px;margin:24px 0 12px;display:flex;align-items:center;gap:8px}
 .section-title::before{content:"";width:3px;height:14px;background:linear-gradient(180deg,var(--accent),var(--accent2));border-radius:2px}
 .section-title:first-child{margin-top:0}
 .mobile-admin-shortcuts{display:none}
 
-/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â STATUS PILL (per stati: attivo, sospeso, in lavorazione...) Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
+/* ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â STATUS PILL (per stati: attivo, sospeso, in lavorazione...) ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â */
 .status-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:99px;font-size:11.5px;font-weight:600}
 .status-pill::before{content:"";width:6px;height:6px;border-radius:50%}
 .status-pill.live{background:#dcfce7;color:#15803d}
@@ -2168,7 +2169,7 @@ textarea{resize:vertical;min-height:80px}
 .status-pill.danger::before{background:#ef4444}
 @keyframes liveDot{0%{box-shadow:0 0 0 0 rgba(34,197,94,.7)}70%{box-shadow:0 0 0 6px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
 
-/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â CONTROL ROOM THEME - DESKTOP ADMIN Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
+/* ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â CONTROL ROOM THEME - DESKTOP ADMIN ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â */
 @media (min-width:901px){
   :root{
     --bg:#06111f;
@@ -2906,7 +2907,7 @@ textarea{resize:vertical;min-height:80px}
   }
 }
 
-/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â MOBILE RESPONSIVE Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
+/* ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â MOBILE RESPONSIVE ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â */
 @media (max-width:760px){
   .page-header{flex-direction:column;align-items:stretch}
   .page-title{font-size:18px}
@@ -3050,7 +3051,7 @@ body.theme-light #ai-chat-panel,body.theme-light .ai-chat-body,body.theme-light 
     {%- if ha_logo_az %}
     <img src="/admin/logo/serve?t={{ logo_az_ts }}" alt="{{ azienda_nome }}" style="height:36px;width:auto;object-fit:contain;flex-shrink:0;border-radius:5px;background:#fff;padding:2px">
     {%- else %}
-    <img src="data:image/png;base64,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" alt="Accesso Fiere" style="height:36px;width:36px;object-fit:contain;flex-shrink:0;border-radius:8px">
+    <span class="sidebar-fallback-logo" aria-hidden="true">AF</span>
     {%- endif %}
     <div>
       <div class="company">{{ azienda_nome }}</div>
@@ -3198,7 +3199,7 @@ body.theme-light #ai-chat-panel,body.theme-light .ai-chat-body,body.theme-light 
   <div id="tb-menu" class="tb-menu">
     <div class="tb-menu-head">
       <div class="name">{{ session.nome }} {{ session.cognome }}</div>
-      <div class="role">{{ 'Amministratore' if session.ruolo=='admin' else 'Amministrazione' if session.ruolo=='amministrazione' else 'Dipendente' }} Ã‚Â· {{ azienda_nome }}</div>
+      <div class="role">{{ 'Amministratore' if session.ruolo=='admin' else 'Amministrazione' if session.ruolo=='amministrazione' else 'Dipendente' }} Ãƒâ€šÃ‚Â· {{ azienda_nome }}</div>
     </div>
     {% if session.ruolo=='admin' %}
     <a href="/admin/impostazioni"><i class="fa fa-gear"></i> Impostazioni</a>
@@ -3223,7 +3224,7 @@ body.theme-light #ai-chat-panel,body.theme-light .ai-chat-body,body.theme-light 
       if(q) window.location.href = '/cerca?q=' + encodeURIComponent(q);
     }
   }
-  // Cmd+K / Ctrl+K Ã¢â€ â€™ focus ricerca
+  // Cmd+K / Ctrl+K ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ focus ricerca
   document.addEventListener('keydown', function(e){
     if((e.metaKey || e.ctrlKey) && e.key === 'k'){
       e.preventDefault();
@@ -4166,7 +4167,7 @@ body.sidebar-collapsed .nav-group>summary:hover::before{
       var label=navLabel(el);
       if(label){ el.setAttribute('data-tooltip', label); el.setAttribute('title', label); }
     });
-    if(localStorage.getItem('af_sidebar_collapsed') === '1') document.body.classList.add('sidebar-collapsed');
+    if(window.innerWidth >= 1200 && localStorage.getItem('af_sidebar_collapsed') === '1') document.body.classList.add('sidebar-collapsed');
     var btn=document.createElement('button');
     btn.type='button';
     btn.className='sidebar-collapse-btn';
@@ -4233,7 +4234,7 @@ body.sidebar-collapsed .nav-group>summary:hover::before{
 </script>
 
 {% if session.ruolo == 'admin' and ai_chat_abilitato %}
-<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â AI ASSISTANT CHAT WIDGET Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+<!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â AI ASSISTANT CHAT WIDGET ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
 <div id="ai-chat-fab" onclick="toggleAiChat()" title="Assistente AI">
   <i class="fa fa-robot"></i>
   <span class="ai-fab-pulse"></span>
@@ -4359,7 +4360,7 @@ function sendAiMessage() {
   .then(function(data){
     typingDiv.remove();
     if (data.error) {
-      appendAiMsg('bot', 'Ã¢Å¡Â Ã¯Â¸Â ' + data.error);
+      appendAiMsg('bot', 'ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â ' + data.error);
     } else {
       var reply = data.reply || '(nessuna risposta)';
       appendAiMsg('bot', reply);
@@ -4369,7 +4370,7 @@ function sendAiMessage() {
   })
   .catch(function(err){
     typingDiv.remove();
-    appendAiMsg('bot', 'Ã¢Å¡Â Ã¯Â¸Â Errore di rete: ' + err);
+    appendAiMsg('bot', 'ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Errore di rete: ' + err);
     inp.disabled = false; btn.disabled = false;
   });
 }
@@ -4414,7 +4415,7 @@ setInterval(updateClock,1000);updateClock();
     if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true) return;
     if (document.getElementById('pwa-install-banner')) return;
     var b = document.createElement('div'); b.id='pwa-install-banner';
-    b.innerHTML = '<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(15,23,42,.35);max-width:480px;margin:0 auto"><div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">Ã°Å¸â€œÂ²</div><div style="flex:1;min-width:0"><div style="font-weight:800;font-size:14px;letter-spacing:-.1px;line-height:1.2">Installa l app</div><div style="font-size:11.5px;color:rgba(255,255,255,.75);margin-top:2px">Apri piu velocemente, usa offline</div></div><button id="pwa-yes" style="background:#fff;color:#0f4c81;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:12.5px;cursor:pointer;flex-shrink:0">Installa</button><button id="pwa-no" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">Ãƒâ€”</button></div>';
+    b.innerHTML = '<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(15,23,42,.35);max-width:480px;margin:0 auto"><div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â²</div><div style="flex:1;min-width:0"><div style="font-weight:800;font-size:14px;letter-spacing:-.1px;line-height:1.2">Installa l app</div><div style="font-size:11.5px;color:rgba(255,255,255,.75);margin-top:2px">Apri piu velocemente, usa offline</div></div><button id="pwa-yes" style="background:#fff;color:#0f4c81;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:12.5px;cursor:pointer;flex-shrink:0">Installa</button><button id="pwa-no" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">ÃƒÆ’Ã¢â‚¬â€</button></div>';
     document.body.appendChild(b);
     document.getElementById('pwa-yes').onclick=function(){window.installApp();};
     document.getElementById('pwa-no').onclick=function(){b.remove();};
@@ -4426,13 +4427,13 @@ setInterval(updateClock,1000);updateClock();
         if(document.getElementById('pwa-install-banner'))return;
         if(window.matchMedia('(display-mode: standalone)').matches)return;
         var b=document.createElement('div');b.id='pwa-install-banner';
-        b.innerHTML='<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border-radius:14px;padding:13px 14px;box-shadow:0 8px 24px rgba(15,23,42,.35);max-width:480px;margin:0 auto"><div style="display:flex;align-items:center;gap:12px;margin-bottom:7px"><div style="width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">Ã°Å¸â€œÂ²</div><div style="flex:1;font-weight:800;font-size:14px">Installa Accesso Fiere</div><button id="pwa-ios-no" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">Ãƒâ€”</button></div><div style="font-size:12px;color:rgba(255,255,255,.85);line-height:1.45">Tocca <strong>Condividi</strong> <span style="display:inline-block;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:11px">Ã¢Â¬â€ </span> in basso, poi <strong>"Aggiungi a Home"</strong></div></div>';
+        b.innerHTML='<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border-radius:14px;padding:13px 14px;box-shadow:0 8px 24px rgba(15,23,42,.35);max-width:480px;margin:0 auto"><div style="display:flex;align-items:center;gap:12px;margin-bottom:7px"><div style="width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â²</div><div style="flex:1;font-weight:800;font-size:14px">Installa Accesso Fiere</div><button id="pwa-ios-no" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">ÃƒÆ’Ã¢â‚¬â€</button></div><div style="font-size:12px;color:rgba(255,255,255,.85);line-height:1.45">Tocca <strong>Condividi</strong> <span style="display:inline-block;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:11px">ÃƒÂ¢Ã‚Â¬Ã¢â‚¬Â </span> in basso, poi <strong>"Aggiungi a Home"</strong></div></div>';
         document.body.appendChild(b);
         document.getElementById('pwa-ios-no').onclick=function(){b.remove();};
     },2500);
   }
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Push Notifications onboarding Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Push Notifications onboarding ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
   // Mostra il banner solo se: app installata (standalone), notifiche supportate, permission default
   function isStandalone(){
     return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
@@ -4445,7 +4446,7 @@ setInterval(updateClock,1000);updateClock();
     if (document.getElementById('pwa-push-banner')) return;
     setTimeout(function(){
       var b=document.createElement('div'); b.id='pwa-push-banner';
-      b.innerHTML=`<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(22,163,74,.35);max-width:480px;margin:0 auto"><div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">Ã°Å¸â€â€</div><div style="flex:1;min-width:0"><div style="font-weight:800;font-size:14px;letter-spacing:-.1px">Attiva notifiche</div><div style="font-size:11.5px;color:rgba(255,255,255,.85);margin-top:2px">Ricevi aggiornamenti su ferie e scadenze</div></div><button id="pn-yes" style="background:#fff;color:#16a34a;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:12.5px;cursor:pointer;flex-shrink:0">Attiva</button><button id="pn-no" style="background:transparent;color:rgba(255,255,255,.7);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">Ãƒâ€”</button></div>`;
+      b.innerHTML=`<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(22,163,74,.35);max-width:480px;margin:0 auto"><div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Â</div><div style="flex:1;min-width:0"><div style="font-weight:800;font-size:14px;letter-spacing:-.1px">Attiva notifiche</div><div style="font-size:11.5px;color:rgba(255,255,255,.85);margin-top:2px">Ricevi aggiornamenti su ferie e scadenze</div></div><button id="pn-yes" style="background:#fff;color:#16a34a;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:12.5px;cursor:pointer;flex-shrink:0">Attiva</button><button id="pn-no" style="background:transparent;color:rgba(255,255,255,.7);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">ÃƒÆ’Ã¢â‚¬â€</button></div>`;
       document.body.appendChild(b);
       document.getElementById('pn-yes').onclick=function(){
         b.remove();
@@ -4511,6 +4512,106 @@ setInterval(updateClock,1000);updateClock();
   else window.addEventListener('load', showPushBanner);
 })();
 </script>
+<style>
+/* Stabilita e performance: override finale dopo tutti gli stili pagina */
+@media (min-width:901px){
+  body:not(.theme-light) .topbar,
+  body:not(.theme-light) .card,
+  body:not(.theme-light) .stat-card,
+  body:not(.theme-light) .table-wrap,
+  body:not(.theme-light) .filter-bar,
+  body:not(.theme-light) .hero-bar,
+  body:not(.theme-light) .page-header,
+  body:not(.theme-light) .insight-card,
+  body:not(.theme-light) .timeline-card{
+    backdrop-filter:none!important;
+  }
+  body:not(.theme-light) .card,
+  body:not(.theme-light) .stat-card,
+  body:not(.theme-light) .kpi-card,
+  body:not(.theme-light) .hero-bar,
+  body:not(.theme-light) .insight-card,
+  body:not(.theme-light) .timeline-card{
+    box-shadow:0 12px 28px -24px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.04)!important;
+  }
+  body:not(.theme-light) .card:hover,
+  body:not(.theme-light) .stat-card:hover,
+  body:not(.theme-light) .kpi-card:hover{
+    transform:none!important;
+    box-shadow:0 12px 28px -24px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.04)!important;
+  }
+  body:not(.theme-light) *,
+  body:not(.theme-light) *::before,
+  body:not(.theme-light) *::after{
+    transition-duration:.08s!important;
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+  }
+  body.sidebar-collapsed .sidebar{
+    width:68px!important;
+    overflow-x:visible!important;
+  }
+  body.sidebar-collapsed .main{margin-left:68px!important}
+  body.sidebar-collapsed .sidebar-logo{
+    justify-content:center!important;
+    padding:14px 8px!important;
+  }
+  body.sidebar-collapsed .sidebar-logo>div,
+  body.sidebar-collapsed .sidebar-user .uinfo,
+  body.sidebar-collapsed .sidebar-user .udot,
+  body.sidebar-collapsed .nav-section,
+  body.sidebar-collapsed .notif-badge,
+  body.sidebar-collapsed .nav-chev{
+    display:none!important;
+  }
+  body.sidebar-collapsed nav{
+    padding:10px 8px!important;
+  }
+  body.sidebar-collapsed nav a,
+  body.sidebar-collapsed .nav-group>summary{
+    width:44px!important;
+    height:42px!important;
+    min-width:44px!important;
+    padding:0!important;
+    margin:3px auto!important;
+    border-left:0!important;
+    border-radius:12px!important;
+    justify-content:center!important;
+    align-items:center!important;
+    gap:0!important;
+    font-size:0!important;
+    line-height:0!important;
+    color:transparent!important;
+    overflow:visible!important;
+    white-space:nowrap!important;
+  }
+  body.sidebar-collapsed nav a i,
+  body.sidebar-collapsed .nav-group>summary i:first-child{
+    width:auto!important;
+    min-width:0!important;
+    margin:0!important;
+    font-size:15px!important;
+    line-height:1!important;
+    color:#aebccc!important;
+  }
+  body.sidebar-collapsed nav a.active i,
+  body.sidebar-collapsed .nav-group>summary.active i:first-child{
+    color:#eef7ff!important;
+  }
+  body.sidebar-collapsed nav a.active::after{
+    right:-5px!important;
+    width:3px!important;
+    height:20px!important;
+    border-radius:99px!important;
+  }
+}
+@media (max-width:1200px) and (min-width:901px){
+  body.sidebar-collapsed .content{padding:18px!important}
+  body.sidebar-collapsed .hero-bar{align-items:flex-start!important}
+  body.sidebar-collapsed .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  body.sidebar-collapsed .dash-live-grid{grid-template-columns:1fr!important}
+}
+</style>
 </body></html>"""
 
 # Homepage pubblica premium: sistema operativo verticale per allestitori fieristici.
@@ -6183,9 +6284,9 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
 </body>
 </html>"""
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 #  LOGIN
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 LOGIN_TMPL = """<!DOCTYPE html>
 <html lang="{{ t.get('dir','ltr') == 'rtl' and 'ar' or 'it' }}" dir="{{ t.dir }}">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -6337,7 +6438,7 @@ input:focus,select:focus{outline:none;border-color:#0f4c81}
       </div>
       <div class="form-group">
         <label>{{ t.login_pass }}</label>
-        <input type="password" name="password" placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢" required dir="ltr">
+        <input type="password" name="password" placeholder="ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢" required dir="ltr">
       </div>
       <button class="btn" type="submit">{{ t.login_btn }} <i class="fa fa-arrow-right" style="margin-{{ 'right' if t.dir=='rtl' else 'left' }}:6px"></i></button>
     </form>
@@ -6357,7 +6458,7 @@ input:focus,select:focus{outline:none;border-color:#0f4c81}
       <div style="flex:1;height:1px;background:#e2e8f0"></div>
     </div>
     <a class="desktop-only" href="/registrati" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:#f0f6ff;border:1.5px solid #bfdbfe;border-radius:9px;font-size:14px;font-weight:700;color:#0f4c81;text-decoration:none;margin-top:10px;transition:.15s" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#f0f6ff'">
-      <i class="fa fa-rocket"></i> Registra la tua azienda Ã¢â‚¬â€ 14 giorni gratis
+      <i class="fa fa-rocket"></i> Registra la tua azienda ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â 14 giorni gratis
     </a>
     {% endif %}
     {% if is_mobile %}
@@ -6426,8 +6527,8 @@ LEGAL_PAGE_TMPL = """<!DOCTYPE html>
       {{ body|safe }}
       <div class="box" style="margin-top:28px">
         <strong>Link legali</strong><br>
-        <a href="/privacy-policy">Privacy Policy</a> ·
-        <a href="/cookie-policy">Cookie Policy</a> ·
+        <a href="/privacy-policy">Privacy Policy</a> Â·
+        <a href="/cookie-policy">Cookie Policy</a> Â·
         <a href="/terms-and-conditions">Termini e Condizioni</a>
       </div>
     </section>
@@ -6544,9 +6645,9 @@ LEGAL_CONSENT_SNIPPET = """
       <div style="font-size:12.5px;line-height:1.45;color:rgba(255,255,255,.76)">Usiamo cookie tecnici necessari per login, sicurezza e funzionamento della webapp. Non usiamo cookie pubblicitari.</div>
       <div style="margin-top:7px;font-size:12px">
         <a href="/privacy" style="color:#93c5fd;font-weight:700;text-decoration:none">Privacy</a>
-        <span style="color:rgba(255,255,255,.35)"> Ã‚Â· </span>
+        <span style="color:rgba(255,255,255,.35)"> Ãƒâ€šÃ‚Â· </span>
         <a href="/cookies" style="color:#93c5fd;font-weight:700;text-decoration:none">Cookie Policy</a>
-        <span style="color:rgba(255,255,255,.35)"> Ã‚Â· </span>
+        <span style="color:rgba(255,255,255,.35)"> Ãƒâ€šÃ‚Â· </span>
         <a href="/termini" style="color:#93c5fd;font-weight:700;text-decoration:none">Termini</a>
       </div>
     </div>
@@ -6655,15 +6756,15 @@ def is_mobile_request():
     return any(x in ua for x in ('iphone', 'android', 'mobile', 'windows phone', 'ipad'))
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-#  PWA Ã¢â‚¬â€ Progressive Web App (installabile, offline, push)
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
+#  PWA ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Progressive Web App (installabile, offline, push)
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
-# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ VAPID + Web Push (RFC 8030, RFC 8291, RFC 8292) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ VAPID + Web Push (RFC 8030, RFC 8291, RFC 8292) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 # Implementazione zero-dependency: usa solo `cryptography` (stdlib di fatto via requirements)
 # Genera chiavi VAPID una volta sola, salvate nel master DB. Le chiavi sono pubbliche/private:
-# - public key Ã¢â€ â€™ mandata al browser per registrare il push
-# - private key Ã¢â€ â€™ firma i JWT VAPID per autenticarsi col push service del browser
+# - public key ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ mandata al browser per registrare il push
+# - private key ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ firma i JWT VAPID per autenticarsi col push service del browser
 
 def _b64url(data):
     """Base64 URL-safe senza padding (RFC 7515)."""
@@ -6675,7 +6776,7 @@ def _b64url_decode(s):
     return base64.urlsafe_b64decode(s + b'=' * pad)
 
 
-# P-256 in Python puro: evita di rompere Railway se `cryptography` non ÃƒÂ¨ installato.
+# P-256 in Python puro: evita di rompere Railway se `cryptography` non ÃƒÆ’Ã‚Â¨ installato.
 _P256_P = 0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff
 _P256_A = -3
 _P256_N = 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551
@@ -7179,7 +7280,7 @@ def pwa_manifest():
         start_url = '/login'
 
     manifest = {
-        "name": f"{nome_app} Ã¢â‚¬â€ Gestionale",
+        "name": f"{nome_app} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Gestionale",
         "short_name": nome_breve,
         "description": "Timbrature, ferie, documenti e gestione fiere",
         "start_url": start_url,
@@ -7213,7 +7314,7 @@ def pwa_manifest():
 @app.route('/sw.js')
 def pwa_service_worker():
     """Service worker per PWA. Permette installazione + cache base + offline minimo."""
-    sw_code = """// Accesso Fiere Ã¢â‚¬â€ Service Worker
+    sw_code = """// Accesso Fiere ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Service Worker
 const CACHE_VERSION = 'v6-in-app-notifications';
 const CACHE_NAME = `accesso-fiere-${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline';
@@ -7284,7 +7385,7 @@ self.addEventListener('fetch', (event) => {
   }
 });
 
-// Push notifications (Sprint 2 Ã¢â‚¬â€ placeholder)
+// Push notifications (Sprint 2 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â placeholder)
 self.addEventListener('push', (event) => {
   let data = { title: 'Accesso Fiere', body: 'Hai un nuovo aggiornamento.', url: '/' };
   if (event.data) {
@@ -7317,13 +7418,13 @@ self.addEventListener('notificationclick', (event) => {
 
 @app.route('/offline')
 def pwa_offline():
-    """Pagina mostrata quando l'app ÃƒÂ¨ offline."""
+    """Pagina mostrata quando l'app ÃƒÆ’Ã‚Â¨ offline."""
     return render_template_string(PWA_OFFLINE_TMPL)
 
 
 @app.route('/static/pwa/<path:filename>')
 def pwa_static(filename):
-    """Serve le icone PWA. Le genera al volo se non esistono giÃƒÂ ."""
+    """Serve le icone PWA. Le genera al volo se non esistono giÃƒÆ’Ã‚Â ."""
     pwa_dir = os.path.join(DATA_DIR, 'pwa_static')
     os.makedirs(pwa_dir, exist_ok=True)
     fpath = os.path.join(pwa_dir, filename)
@@ -7339,7 +7440,7 @@ def pwa_static(filename):
     return send_file(fpath)
 
 
-# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Push subscription endpoints Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Push subscription endpoints ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 @app.route('/api/push/public-key')
 def pwa_push_public_key():
     """Restituisce la chiave pubblica VAPID al browser per registrare il push."""
@@ -7362,11 +7463,11 @@ def pwa_push_subscribe():
     user_agent = request.headers.get('User-Agent', '')[:200]
     db = get_db()
     try:
-        # Upsert sull'endpoint (un utente puÃƒÂ² avere piÃƒÂ¹ device, ma stesso endpoint = stesso device)
+        # Upsert sull'endpoint (un utente puÃƒÆ’Ã‚Â² avere piÃƒÆ’Ã‚Â¹ device, ma stesso endpoint = stesso device)
         existing = db.execute("SELECT id, utente_id FROM pwa_subscriptions WHERE endpoint=?",
                               (endpoint,)).fetchone()
         if existing:
-            # Endpoint giÃƒÂ  registrato Ã¢â‚¬â€ aggiorna utente_id (caso: device condiviso che cambia user)
+            # Endpoint giÃƒÆ’Ã‚Â  registrato ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â aggiorna utente_id (caso: device condiviso che cambia user)
             db.execute("UPDATE pwa_subscriptions SET utente_id=?, p256dh=?, auth=?, user_agent=? WHERE id=?",
                        (session['user_id'], p256dh, auth, user_agent, existing['id']))
         else:
@@ -7399,7 +7500,7 @@ def pwa_push_test():
     """Invia una notifica di test all'utente loggato (debug + onboarding)."""
     sent = send_push_to_user(
         session['user_id'],
-        title='Ã¢Å“â€¦ Notifiche attivate!',
+        title='ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Notifiche attivate!',
         body='Riceverai aggiornamenti su ferie, presenze e scadenze.',
         url='/',
     )
@@ -7503,7 +7604,7 @@ def api_admin_richieste_live():
                 'key': f'spesa-{r["id"]}',
                 'created': r['creato_il'] or '',
                 'title': 'Nuova richiesta rimborso spesa',
-                'body': f'{r["nome"]} {r["cognome"]} ha richiesto un rimborso da Ã¢â€šÂ¬ {float(r["importo"] or 0):.2f} ({r["categoria"]}) del {r["data"]}.',
+                'body': f'{r["nome"]} {r["cognome"]} ha richiesto un rimborso da ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {float(r["importo"] or 0):.2f} ({r["categoria"]}) del {r["data"]}.',
                 'url': '/admin/spese?stato=in_attesa'
             })
     except Exception as e:
@@ -7632,7 +7733,7 @@ def admin_notifiche():
                                ORDER BY datetime(s.creato_il) DESC, s.id DESC LIMIT 30""").fetchall():
             richieste_live.append({
                 'title': 'Nuova richiesta rimborso spesa',
-                'body': f'{r["nome"]} {r["cognome"]} ha richiesto un rimborso da Ã¢â€šÂ¬ {float(r["importo"] or 0):.2f} ({r["categoria"]}) del {r["data"]}.',
+                'body': f'{r["nome"]} {r["cognome"]} ha richiesto un rimborso da ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {float(r["importo"] or 0):.2f} ({r["categoria"]}) del {r["data"]}.',
                 'created': r['creato_il'] or '',
                 'url': '/admin/spese?stato=in_attesa'
             })
@@ -7669,9 +7770,9 @@ def admin_notifiche_push():
             flash('Titolo e messaggio obbligatori.', 'error')
             return redirect(url_for('admin_notifiche_push'))
         if title and len(title) > 80:
-            title = title[:77] + 'Ã¢â‚¬Â¦'
+            title = title[:77] + 'ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦'
         if body and len(body) > 200:
-            body = body[:197] + 'Ã¢â‚¬Â¦'
+            body = body[:197] + 'ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦'
         sent = 0
         saved = 0
         if target == 'all':
@@ -7686,7 +7787,7 @@ def admin_notifiche_push():
             saved = 1
         else:
             db.close()
-        flash(f'Ã°Å¸â€œÂ¤ Messaggi salvati: {saved}. Push inviate: {sent}.', 'success' if saved else 'info')
+        flash(f'ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¤ Messaggi salvati: {saved}. Push inviate: {sent}.', 'success' if saved else 'info')
         return redirect(url_for('admin_notifiche_push'))
     # GET: mostra form + statistiche
     stats_per_user = db.execute("""SELECT u.id, u.nome, u.cognome, u.ruolo,
@@ -7730,15 +7831,15 @@ NOTIFICHE_PUSH_TMPL = """
 
 <div class="grid-2">
   <div class="card">
-    <div class="card-header"><h3>Ã°Å¸â€œÂ¤ Invia notifica</h3></div>
+    <div class="card-header"><h3>ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¤ Invia notifica</h3></div>
     <form method="POST" style="padding:18px">
       <div class="form-group">
         <label>Destinatari</label>
         <select name="target" id="target-select">
-          <option value="all">Ã°Å¸â€œÂ¢ Tutti i dipendenti attivi (salva anche in app)</option>
+          <option value="all">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¢ Tutti i dipendenti attivi (salva anche in app)</option>
           {% for u in stats_per_user %}
             {% if u.ruolo != 'admin' %}
-            <option value="{{ u.id }}">Ã°Å¸â€˜Â¤ {{ u.nome }} {{ u.cognome }} ({{ u.devices }} device)</option>
+            <option value="{{ u.id }}">ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â¤ {{ u.nome }} {{ u.cognome }} ({{ u.devices }} device)</option>
             {% endif %}
           {% endfor %}
         </select>
@@ -7760,7 +7861,7 @@ NOTIFICHE_PUSH_TMPL = """
   </div>
 
   <div class="card">
-    <div class="card-header"><h3>Ã°Å¸â€˜Â¥ Stato dipendenti</h3></div>
+    <div class="card-header"><h3>ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â¥ Stato dipendenti</h3></div>
     <div class="table-wrap">
       <table>
         <thead><tr><th>Utente</th><th>Ruolo</th><th>Device</th><th>Ultima notifica</th></tr></thead>
@@ -7771,9 +7872,9 @@ NOTIFICHE_PUSH_TMPL = """
           <td><span class="tag" style="font-size:10px">{{ u.ruolo }}</span></td>
           <td>
             {% if u.devices > 0 %}
-              <span class="badge badge-green">Ã°Å¸â€œÂ± {{ u.devices }}</span>
+              <span class="badge badge-green">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â± {{ u.devices }}</span>
             {% else %}
-              <span style="color:var(--text-light);font-size:12px">Ã¢â‚¬â€</span>
+              <span style="color:var(--text-light);font-size:12px">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</span>
             {% endif %}
           </td>
           <td style="font-size:11px;color:var(--text-light)">{{ u.ultima or 'Mai' }}</td>
@@ -7786,7 +7887,7 @@ NOTIFICHE_PUSH_TMPL = """
 </div>
 
 <div class="card" style="margin-top:18px">
-  <div class="card-header"><h3>Ã¢â€žÂ¹Ã¯Â¸Â Come funzionano le notifiche</h3></div>
+  <div class="card-header"><h3>ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¹ÃƒÂ¯Ã‚Â¸Ã‚Â Come funzionano le notifiche</h3></div>
   <div style="padding:18px;font-size:13.5px;line-height:1.65;color:var(--text-light)">
     <ul style="padding-left:20px;display:flex;flex-direction:column;gap:8px">
       <li>I dipendenti devono <strong>installare l'app</strong> sul cellulare (PWA) e <strong>accettare il permesso notifiche</strong>.</li>
@@ -7817,9 +7918,9 @@ def _genera_icona_pwa(out_path, filename):
     # Gradient blu
     for y in range(size):
         ratio = y / size
-        r = int(15 + (30-15)*ratio)   # 0fÃ¢â€ â€™1e
-        g = int(76 + (58-76)*ratio)   # 4cÃ¢â€ â€™3a
-        b = int(129 + (138-129)*ratio) # 81Ã¢â€ â€™8a
+        r = int(15 + (30-15)*ratio)   # 0fÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢1e
+        g = int(76 + (58-76)*ratio)   # 4cÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢3a
+        b = int(129 + (138-129)*ratio) # 81ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢8a
         draw.line([(0,y),(size,y)], fill=(r,g,b))
     # Cerchio centrale luminoso
     inner = size - 2*pad
@@ -7847,7 +7948,7 @@ def _genera_icona_pwa(out_path, filename):
 PWA_OFFLINE_TMPL = """<!DOCTYPE html>
 <html lang="it"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Offline Ã‚Â· Accesso Fiere</title>
+<title>Offline Ãƒâ€šÃ‚Â· Accesso Fiere</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#0f4c81">
 <style>
@@ -7861,10 +7962,10 @@ p{color:rgba(255,255,255,.7);font-size:14.5px;line-height:1.55;margin-bottom:24p
 </style></head>
 <body>
 <div class="box">
-  <div class="icon">Ã°Å¸â€œÂµ</div>
+  <div class="icon">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Âµ</div>
   <h1>Sei offline</h1>
-  <p>Non c'ÃƒÂ¨ connessione internet al momento. Le timbrature offline saranno sincronizzate appena tornerai online.</p>
-  <button onclick="location.reload()" class="btn">Ã¢â€ Â» Riprova</button>
+  <p>Non c'ÃƒÆ’Ã‚Â¨ connessione internet al momento. Le timbrature offline saranno sincronizzate appena tornerai online.</p>
+  <button onclick="location.reload()" class="btn">ÃƒÂ¢Ã¢â‚¬Â Ã‚Â» Riprova</button>
 </div>
 </body></html>"""
 
@@ -7899,7 +8000,7 @@ PWA_INSTALL_SCRIPT = """
     });
   }
 
-  // Banner "Installa l'app" Ã¢â‚¬â€ cattura il prompt nativo
+  // Banner "Installa l'app" ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â cattura il prompt nativo
   let deferredPrompt = null;
   window.addEventListener('beforeinstallprompt', function(e){
     e.preventDefault();
@@ -7916,18 +8017,18 @@ PWA_INSTALL_SCRIPT = """
     banner.id = 'pwa-install-banner';
     banner.innerHTML = `
       <div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(15,23,42,.35);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:480px;margin:0 auto">
-        <div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">Ã°Å¸â€œÂ²</div>
+        <div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â²</div>
         <div style="flex:1;min-width:0">
           <div style="font-weight:800;font-size:14px;letter-spacing:-.1px;line-height:1.2">Installa l'app</div>
-          <div style="font-size:11.5px;color:rgba(255,255,255,.75);margin-top:2px">Apri piÃƒÂ¹ velocemente, usa offline</div>
+          <div style="font-size:11.5px;color:rgba(255,255,255,.75);margin-top:2px">Apri piÃƒÆ’Ã‚Â¹ velocemente, usa offline</div>
         </div>
         <button id="pwa-install-yes" style="background:#fff;color:#0f4c81;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:12.5px;cursor:pointer;font-family:inherit;flex-shrink:0">Installa</button>
-        <button id="pwa-install-no" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">Ãƒâ€”</button>
+        <button id="pwa-install-no" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">ÃƒÆ’Ã¢â‚¬â€</button>
       </div>`;
     document.body.appendChild(banner);
     document.getElementById('pwa-install-yes').onclick = function(){
       if (!deferredPrompt) {
-        alert('Per installare su Chrome mobile: apri il menu Ã¢â€¹Â® e scegli "Installa app" o "Aggiungi a schermata Home".\\n\\nSu Chrome desktop usa l icona Installa nella barra degli indirizzi.');
+        alert('Per installare su Chrome mobile: apri il menu ÃƒÂ¢Ã¢â‚¬Â¹Ã‚Â® e scegli "Installa app" o "Aggiungi a schermata Home".\\n\\nSu Chrome desktop usa l icona Installa nella barra degli indirizzi.');
         return;
       }
       deferredPrompt.prompt();
@@ -7944,7 +8045,7 @@ PWA_INSTALL_SCRIPT = """
   }
   setTimeout(showInstallBanner, 1800);
 
-  // Su iOS Safari il prompt nativo non esiste Ã¢â‚¬â€ mostriamo un suggerimento manuale
+  // Su iOS Safari il prompt nativo non esiste ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â mostriamo un suggerimento manuale
   // dopo che l'utente ha visitato 2 volte (per non essere fastidiosi)
   function isIOSSafari(){
     var ua = navigator.userAgent.toLowerCase();
@@ -7962,11 +8063,11 @@ PWA_INSTALL_SCRIPT = """
         banner.innerHTML = `
           <div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border-radius:14px;padding:13px 14px;box-shadow:0 8px 24px rgba(15,23,42,.35);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:480px;margin:0 auto">
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:7px">
-              <div style="width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">Ã°Å¸â€œÂ²</div>
+              <div style="width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â²</div>
               <div style="flex:1;font-weight:800;font-size:14px">Installa Accesso Fiere</div>
-              <button id="pwa-ios-no" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">Ãƒâ€”</button>
+              <button id="pwa-ios-no" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">ÃƒÆ’Ã¢â‚¬â€</button>
             </div>
-            <div style="font-size:12px;color:rgba(255,255,255,.85);line-height:1.45">Tocca <strong>Condividi</strong> <span style="display:inline-block;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:11px">Ã¢Â¬â€ </span> in basso, poi <strong>"Aggiungi a Home"</strong></div>
+            <div style="font-size:12px;color:rgba(255,255,255,.85);line-height:1.45">Tocca <strong>Condividi</strong> <span style="display:inline-block;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:11px">ÃƒÂ¢Ã‚Â¬Ã¢â‚¬Â </span> in basso, poi <strong>"Aggiungi a Home"</strong></div>
           </div>`;
         document.body.appendChild(banner);
         document.getElementById('pwa-ios-no').onclick = function(){
@@ -8094,7 +8195,7 @@ def login():
                 # Tabella utenti potrebbe non esistere ancora su DB appena creato
                 continue
 
-        # Fallback: prova anche il DB legacy (per compatibilitÃƒÂ  con installazioni vecchie)
+        # Fallback: prova anche il DB legacy (per compatibilitÃƒÆ’Ã‚Â  con installazioni vecchie)
         if not utente_trovato:
             try:
                 conn = sqlite3.connect(DB_LEGACY)
@@ -8118,7 +8219,7 @@ def login():
                 'ruolo': utente_trovato['ruolo'],
                 'email': utente_trovato['email'],
             })
-            # Imposta l'azienda di appartenenza (se il login ÃƒÂ¨ stato trovato in un tenant)
+            # Imposta l'azienda di appartenenza (se il login ÃƒÆ’Ã‚Â¨ stato trovato in un tenant)
             if azienda_trovata:
                 session['azienda_id'] = azienda_trovata['id']
                 session['azienda_nome'] = azienda_trovata['nome']
@@ -8146,7 +8247,7 @@ def logout(): session.clear(); return redirect(url_for('login'))
 @app.route('/api/session-check')
 def api_session_check():
     """Endpoint leggero per il polling lato client.
-    Risponde {active: true} se l'utente ÃƒÂ¨ ancora loggato e attivo,
+    Risponde {active: true} se l'utente ÃƒÆ’Ã‚Â¨ ancora loggato e attivo,
     altrimenti {active: false, reason: ...}. Usato dal JS per fare
     logout automatico in tempo quasi-reale quando l'admin disattiva l'account."""
     from flask import jsonify
@@ -8163,7 +8264,7 @@ def api_session_check():
         if not u:
             session.clear()
             return jsonify({'active': False, 'reason': 'deleted'})
-        # Tratta NULL come attivo (compatibilitÃƒÂ  con record vecchi pre-migration)
+        # Tratta NULL come attivo (compatibilitÃƒÆ’Ã‚Â  con record vecchi pre-migration)
         if u['attivo'] == 0:
             session.clear()
             return jsonify({'active': False, 'reason': 'deactivated'})
@@ -8213,10 +8314,10 @@ _SESSION_POLL_JS = """
 
 @app.after_request
 def _inject_session_poll(response):
-    """Inietta il polling JS in tutte le risposte HTML, ma SOLO se l'utente ÃƒÂ¨ loggato.
+    """Inietta il polling JS in tutte le risposte HTML, ma SOLO se l'utente ÃƒÆ’Ã‚Â¨ loggato.
     Aggiunge anche header anti-cache per le pagine HTML loggate, in modo che il browser/PWA
     non serva versioni vecchie del template (senza polling) e l'utente disattivato venga
-    sempre forzato al re-fetch della pagina (che lo rederigerÃƒÂ  al login)."""
+    sempre forzato al re-fetch della pagina (che lo rederigerÃƒÆ’Ã‚Â  al login)."""
     try:
         ctype = response.headers.get('Content-Type', '')
         # Solo HTML
@@ -8268,7 +8369,7 @@ def diag():
     out.append(f"<p><b>DATA_DIR:</b> <code>{_html.escape(DATA_DIR)}</code></p>")
     out.append(f"<p><b>/data esiste:</b> {os.path.isdir('/data')}</p>")
     out.append(f"<p><b>/data scrivibile:</b> {os.access('/data', os.W_OK) if os.path.isdir('/data') else 'N/A'}</p>")
-    out.append(f"<p><b>MASTER_DB:</b> <code>{_html.escape(MASTER_DB)}</code> Ã¢â‚¬â€ esiste: {os.path.isfile(MASTER_DB)}</p>")
+    out.append(f"<p><b>MASTER_DB:</b> <code>{_html.escape(MASTER_DB)}</code> ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â esiste: {os.path.isfile(MASTER_DB)}</p>")
 
     # Lista aziende nel master
     out.append("<h3>Aziende registrate nel master DB</h3>")
@@ -8311,7 +8412,7 @@ def diag():
             for f in sorted(files):
                 fp = os.path.join(tenants_dir, f)
                 sz = os.path.getsize(fp) if os.path.isfile(fp) else 0
-                out.append(f"<li><code>{_html.escape(f)}</code> Ã¢â‚¬â€ {sz} byte</li>")
+                out.append(f"<li><code>{_html.escape(f)}</code> ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {sz} byte</li>")
             out.append("</ul>")
         else:
             out.append("<p>Cartella tenants vuota</p>")
@@ -8326,7 +8427,7 @@ def diag():
             fp = os.path.join(DATA_DIR, f)
             if os.path.isfile(fp):
                 sz = os.path.getsize(fp)
-                out.append(f"<li><code>{_html.escape(f)}</code> Ã¢â‚¬â€ {sz} byte (file)</li>")
+                out.append(f"<li><code>{_html.escape(f)}</code> ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {sz} byte (file)</li>")
             else:
                 out.append(f"<li><code>{_html.escape(f)}</code>/ (cartella)</li>")
     except Exception as e:
@@ -8336,9 +8437,9 @@ def diag():
     return '<html><body style="font-family:system-ui;max-width:900px;margin:20px auto;padding:20px">' + '\n'.join(out) + '</body></html>'
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 #  GOOGLE OAUTH 2.0
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
 GOOGLE_AUTH_URL      = 'https://accounts.google.com/o/oauth2/v2/auth'
 GOOGLE_TOKEN_URL     = 'https://oauth2.googleapis.com/token'
@@ -8346,7 +8447,7 @@ GOOGLE_USERINFO_URL  = 'https://www.googleapis.com/oauth2/v3/userinfo'
 GOOGLE_SCOPES        = 'openid email profile'
 
 def _google_redirect_uri():
-    # PrioritÃƒÂ : variabile ambiente > impostazione DB > fallback automatico
+    # PrioritÃƒÆ’Ã‚Â : variabile ambiente > impostazione DB > fallback automatico
     env_uri = os.environ.get('GOOGLE_REDIRECT_URI', '')
     if env_uri:
         return env_uri
@@ -8467,9 +8568,9 @@ def auth_google_callback():
         # Blocca utenti disattivati
         if u['attivo'] != 1:
             db.close()
-            flash('Il tuo account ÃƒÂ¨ stato disattivato. Contatta l\'amministratore.', 'error')
+            flash('Il tuo account ÃƒÆ’Ã‚Â¨ stato disattivato. Contatta l\'amministratore.', 'error')
             return redirect(url_for('login'))
-        # Utente esistente Ã¢â‚¬â€ aggiorna google_id e avatar se mancanti
+        # Utente esistente ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â aggiorna google_id e avatar se mancanti
         db.execute("UPDATE utenti SET google_id=?, avatar_url=? WHERE id=?",
                    (google_id, avatar_url, u['id']))
         safe_commit(db); db.close()
@@ -8477,7 +8578,7 @@ def auth_google_callback():
                         'ruolo': u['ruolo'], 'email': u['email']})
         return redirect(url_for('dashboard') if u['ruolo'] == 'admin' else url_for('mobile'))
     else:
-        # Nuovo utente Ã¢â‚¬â€ salva dati temporanei e mostra form completamento
+        # Nuovo utente ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â salva dati temporanei e mostra form completamento
         db.close()
         session['google_reg'] = {
             'google_id':  google_id,
@@ -8506,7 +8607,7 @@ def auth_google_completa():
             return render_template_string(_COMPLETA_TMPL, reg=reg, error='Nome e cognome sono obbligatori.')
 
         db = get_db()
-        # Password casuale (non usata Ã¢â‚¬â€ login solo via Google)
+        # Password casuale (non usata ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â login solo via Google)
         import secrets as _sec
         pw_random = hash_pw(_sec.token_hex(32))
         try:
@@ -8560,8 +8661,8 @@ input:focus{outline:none;border-color:#2563eb}
     <div class="avatar-ph">{{ (reg.nome[0] if reg.nome else '?') }}</div>
     {% endif %}
     <div>
-      <h2>Benvenuto! Ã°Å¸â€˜â€¹</h2>
-      <span class="badge">Ã¢Å“â€œ Google {{ reg.email }}</span>
+      <h2>Benvenuto! ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ¢â‚¬Â¹</h2>
+      <span class="badge">ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Google {{ reg.email }}</span>
     </div>
   </div>
   <p>Completa il tuo profilo per accedere al gestionale.</p>
@@ -8574,21 +8675,21 @@ input:focus{outline:none;border-color:#2563eb}
     <label>Telefono</label>
     <input name="telefono" type="tel" placeholder="+39 333...">
     <label>Mansione</label>
-    <input name="mansione" placeholder="Es. AllestitorÃÂµ, Montaggio stand...">
+    <input name="mansione" placeholder="Es. AllestitorÃƒÂÃ‚Âµ, Montaggio stand...">
     <label>Data assunzione</label>
     <input name="data_assunzione" type="date">
-    <button class="btn" type="submit">Crea profilo e accedi Ã¢â€ â€™</button>
+    <button class="btn" type="submit">Crea profilo e accedi ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</button>
   </form>
 </div>
 </body></html>"""
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 #  TRADUZIONI MULTILINGUA (dipendenti mobile)
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 LANGS = {
     'it': {
-        'dir': 'ltr', 'flag': 'Ã°Å¸â€¡Â®Ã°Å¸â€¡Â¹', 'name': 'Italiano',
-        'login_title': 'Bentornato Ã°Å¸â€˜â€¹',
+        'dir': 'ltr', 'flag': 'ÃƒÂ°Ã…Â¸Ã¢â‚¬Â¡Ã‚Â®ÃƒÂ°Ã…Â¸Ã¢â‚¬Â¡Ã‚Â¹', 'name': 'Italiano',
+        'login_title': 'Bentornato ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ¢â‚¬Â¹',
         'login_sub': 'Accedi al gestionale aziendale',
         'login_email': 'Email',
         'login_pass': 'Password',
@@ -8598,7 +8699,7 @@ LANGS = {
         'logout': 'Esci',
         'day_worked': 'Giorno lavorato',
         'site': 'Cantiere',
-        'select_site': 'Ã¢â‚¬â€ Seleziona fiera Ã¢â‚¬â€',
+        'select_site': 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Seleziona fiera ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â',
         'hours_worked': 'Ore lavorate',
         'total_hours': 'Ore totali',
         'break': 'Pausa',
@@ -8618,7 +8719,7 @@ LANGS = {
         'net_hours': 'Ore nette',
         'back': 'Indietro',
         'filter_month': 'Filtra per mese',
-        'all_months': 'Ã¢â‚¬â€ Tutti i mesi Ã¢â‚¬â€',
+        'all_months': 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Tutti i mesi ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â',
         'total_approved': 'ore totali approvate',
         'days_worked': 'giorni lavorati',
         'pending': 'in attesa',
@@ -8626,7 +8727,7 @@ LANGS = {
         'timbrature': 'Timbrature',
         'no_timbrature': 'Nessuna timbratura',
         'months': ['','Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'],
-        'days': ['Domenica','LunedÃƒÂ¬','MartedÃƒÂ¬','MercoledÃƒÂ¬','GiovedÃƒÂ¬','VenerdÃƒÂ¬','Sabato'],
+        'days': ['Domenica','LunedÃƒÆ’Ã‚Â¬','MartedÃƒÆ’Ã‚Â¬','MercoledÃƒÆ’Ã‚Â¬','GiovedÃƒÆ’Ã‚Â¬','VenerdÃƒÆ’Ã‚Â¬','Sabato'],
         # Calendario lavori
         'work_calendar': 'Calendario Lavori',
         'work_calendar_sub': 'I tuoi servizi confermati',
@@ -8642,11 +8743,11 @@ LANGS = {
         'download': 'Scarica',
         'back_btn': 'Torna',
         'assigned_work': 'LAVORI ASSEGNATI',
-        'ciao':'Ciao','day_label':'Giorno lavorato','break_label':'Pausa (ore)','break_hint':'Es. 1h','note_ph':'Es. lavoro straordinario, materiali usati...','submit_hours':'Invia ore','sending':'Invio in corso...','last_entries':'Ultime registrazioni','desktop_ver':'Versione desktop','no_site':'Cantiere non specificato','net_hours_lbl':'nette','break_lbl':'Pausa','work_hours':'Ore lavorate','hours_suffix':'h','my_hours_title':'Le mie ore','filter_by_month':'Filtra per mese','all_months_opt':'Ã¢â‚¬â€ Tutti i mesi Ã¢â‚¬â€','approved_total':'ore totali approvate','days_worked_lbl':'giorni lavorati','pending_lbl':'in attesa','download_pdf_btn':'Scarica report PDF','status_waiting':'In attesa','status_approved':'Approvata','status_rejected':'Rifiutata','net_h':'Ore nette','no_entries':'Nessuna timbratura','work_calendar_btn':'Calendario Lavori','spese_btn':'Spese Rimborsabili','spese_title':'Spese Rimborsabili','spese_new':'Nuova spesa','spese_date':'Data','spese_cat':'Categoria','spese_amount':'Importo (Ã¢â€šÂ¬)','spese_desc':'Descrizione','spese_vehicle':'Veicolo aziendale (opzionale)','spese_no_vehicle':'Ã¢â‚¬â€œ nessun veicolo Ã¢â‚¬â€œ','spese_photo_label':'Foto scontrino / fattura','spese_photo_req':'obbligatoria','spese_photo_hint':'Tocca per scattare una foto o caricare dalla galleria','spese_submit':'Invia spesa','spese_sending':'Invio in corso...','spese_history':'Ultime spese','spese_waiting':'Ã¢ÂÂ³ In attesa','spese_approved':'Ã¢Å“â€œ Approvata','spese_rejected':'Ã¢Å“â€” Rifiutata','spese_note_admin':'Nota:','spese_error_photo':'La foto dello scontrino ÃƒÂ¨ obbligatoria.','spese_success':'Spesa inviata!','report_title':'Report Ore Lavorate','report_period':'Periodo','report_days':'Giorni lavorati','report_total_hours':'Ore totali','report_date':'Data','report_site':'Cantiere','report_hours':'Ore','report_notes':'Note','report_total_row':'TOTALE','report_spese_title':'Spese Rimborsabili Approvate','report_spese_cat':'Categoria','report_spese_desc':'Descrizione','report_spese_vehicle':'Veicolo','report_spese_amount':'Importo','report_spese_total':'TOTALE RIMBORSI','report_footer':'Report generato automaticamente da','all_months_label':'Tutti i mesi',
+        'ciao':'Ciao','day_label':'Giorno lavorato','break_label':'Pausa (ore)','break_hint':'Es. 1h','note_ph':'Es. lavoro straordinario, materiali usati...','submit_hours':'Invia ore','sending':'Invio in corso...','last_entries':'Ultime registrazioni','desktop_ver':'Versione desktop','no_site':'Cantiere non specificato','net_hours_lbl':'nette','break_lbl':'Pausa','work_hours':'Ore lavorate','hours_suffix':'h','my_hours_title':'Le mie ore','filter_by_month':'Filtra per mese','all_months_opt':'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Tutti i mesi ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â','approved_total':'ore totali approvate','days_worked_lbl':'giorni lavorati','pending_lbl':'in attesa','download_pdf_btn':'Scarica report PDF','status_waiting':'In attesa','status_approved':'Approvata','status_rejected':'Rifiutata','net_h':'Ore nette','no_entries':'Nessuna timbratura','work_calendar_btn':'Calendario Lavori','spese_btn':'Spese Rimborsabili','spese_title':'Spese Rimborsabili','spese_new':'Nuova spesa','spese_date':'Data','spese_cat':'Categoria','spese_amount':'Importo (ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬)','spese_desc':'Descrizione','spese_vehicle':'Veicolo aziendale (opzionale)','spese_no_vehicle':'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“ nessun veicolo ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“','spese_photo_label':'Foto scontrino / fattura','spese_photo_req':'obbligatoria','spese_photo_hint':'Tocca per scattare una foto o caricare dalla galleria','spese_submit':'Invia spesa','spese_sending':'Invio in corso...','spese_history':'Ultime spese','spese_waiting':'ÃƒÂ¢Ã‚ÂÃ‚Â³ In attesa','spese_approved':'ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Approvata','spese_rejected':'ÃƒÂ¢Ã…â€œÃ¢â‚¬â€ Rifiutata','spese_note_admin':'Nota:','spese_error_photo':'La foto dello scontrino ÃƒÆ’Ã‚Â¨ obbligatoria.','spese_success':'Spesa inviata!','report_title':'Report Ore Lavorate','report_period':'Periodo','report_days':'Giorni lavorati','report_total_hours':'Ore totali','report_date':'Data','report_site':'Cantiere','report_hours':'Ore','report_notes':'Note','report_total_row':'TOTALE','report_spese_title':'Spese Rimborsabili Approvate','report_spese_cat':'Categoria','report_spese_desc':'Descrizione','report_spese_vehicle':'Veicolo','report_spese_amount':'Importo','report_spese_total':'TOTALE RIMBORSI','report_footer':'Report generato automaticamente da','all_months_label':'Tutti i mesi',
     },
     'en': {
-        'dir': 'ltr', 'flag': 'Ã°Å¸â€¡Â¬Ã°Å¸â€¡Â§', 'name': 'English',
-        'login_title': 'Welcome back Ã°Å¸â€˜â€¹',
+        'dir': 'ltr', 'flag': 'ÃƒÂ°Ã…Â¸Ã¢â‚¬Â¡Ã‚Â¬ÃƒÂ°Ã…Â¸Ã¢â‚¬Â¡Ã‚Â§', 'name': 'English',
+        'login_title': 'Welcome back ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ¢â‚¬Â¹',
         'login_sub': 'Sign in to the company portal',
         'login_email': 'Email',
         'login_pass': 'Password',
@@ -8656,7 +8757,7 @@ LANGS = {
         'logout': 'Logout',
         'day_worked': 'Work day',
         'site': 'Site',
-        'select_site': 'Ã¢â‚¬â€ Select site Ã¢â‚¬â€',
+        'select_site': 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Select site ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â',
         'hours_worked': 'Hours worked',
         'total_hours': 'Total hours',
         'break': 'Break',
@@ -8676,7 +8777,7 @@ LANGS = {
         'net_hours': 'Net hours',
         'back': 'Back',
         'filter_month': 'Filter by month',
-        'all_months': 'Ã¢â‚¬â€ All months Ã¢â‚¬â€',
+        'all_months': 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â All months ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â',
         'total_approved': 'total approved hours',
         'days_worked': 'days worked',
         'pending': 'pending',
@@ -8700,123 +8801,123 @@ LANGS = {
         'download': 'Download',
         'back_btn': 'Back',
         'assigned_work': 'ASSIGNED WORK',
-        'ciao':'Hello','day_label':'Work day','break_label':'Break (hours)','break_hint':'E.g. 1h','note_ph':'E.g. overtime, materials used...','submit_hours':'Submit hours','sending':'Sending...','last_entries':'Recent entries','desktop_ver':'Desktop version','no_site':'Site not specified','net_hours_lbl':'net','break_lbl':'Break','work_hours':'Hours worked','hours_suffix':'h','my_hours_title':'My hours','filter_by_month':'Filter by month','all_months_opt':'Ã¢â‚¬â€ All months Ã¢â‚¬â€','approved_total':'total approved hours','days_worked_lbl':'days worked','pending_lbl':'pending','download_pdf_btn':'Download PDF report','status_waiting':'Pending','status_approved':'Approved','status_rejected':'Rejected','net_h':'Net hours','no_entries':'No entries','work_calendar_btn':'Work Calendar','spese_btn':'Reimbursable Expenses','spese_title':'Reimbursable Expenses','spese_new':'New expense','spese_date':'Date','spese_cat':'Category','spese_amount':'Amount (Ã¢â€šÂ¬)','spese_desc':'Description','spese_vehicle':'Company vehicle (optional)','spese_no_vehicle':'Ã¢â‚¬â€œ no vehicle Ã¢â‚¬â€œ','spese_photo_label':'Receipt / invoice photo','spese_photo_req':'required','spese_photo_hint':'Tap to take a photo or upload from gallery','spese_submit':'Submit expense','spese_sending':'Submitting...','spese_history':'Recent expenses','spese_waiting':'Ã¢ÂÂ³ Pending','spese_approved':'Ã¢Å“â€œ Approved','spese_rejected':'Ã¢Å“â€” Rejected','spese_note_admin':'Note:','spese_error_photo':'Receipt photo is required.','spese_success':'Expense submitted!','report_title':'Hours Worked Report','report_period':'Period','report_days':'Days worked','report_total_hours':'Total hours','report_date':'Date','report_site':'Site','report_hours':'Hours','report_notes':'Notes','report_total_row':'TOTAL','report_spese_title':'Approved Reimbursable Expenses','report_spese_cat':'Category','report_spese_desc':'Description','report_spese_vehicle':'Vehicle','report_spese_amount':'Amount','report_spese_total':'TOTAL REIMBURSEMENTS','report_footer':'Report automatically generated by','all_months_label':'All months',
+        'ciao':'Hello','day_label':'Work day','break_label':'Break (hours)','break_hint':'E.g. 1h','note_ph':'E.g. overtime, materials used...','submit_hours':'Submit hours','sending':'Sending...','last_entries':'Recent entries','desktop_ver':'Desktop version','no_site':'Site not specified','net_hours_lbl':'net','break_lbl':'Break','work_hours':'Hours worked','hours_suffix':'h','my_hours_title':'My hours','filter_by_month':'Filter by month','all_months_opt':'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â All months ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â','approved_total':'total approved hours','days_worked_lbl':'days worked','pending_lbl':'pending','download_pdf_btn':'Download PDF report','status_waiting':'Pending','status_approved':'Approved','status_rejected':'Rejected','net_h':'Net hours','no_entries':'No entries','work_calendar_btn':'Work Calendar','spese_btn':'Reimbursable Expenses','spese_title':'Reimbursable Expenses','spese_new':'New expense','spese_date':'Date','spese_cat':'Category','spese_amount':'Amount (ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬)','spese_desc':'Description','spese_vehicle':'Company vehicle (optional)','spese_no_vehicle':'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“ no vehicle ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“','spese_photo_label':'Receipt / invoice photo','spese_photo_req':'required','spese_photo_hint':'Tap to take a photo or upload from gallery','spese_submit':'Submit expense','spese_sending':'Submitting...','spese_history':'Recent expenses','spese_waiting':'ÃƒÂ¢Ã‚ÂÃ‚Â³ Pending','spese_approved':'ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Approved','spese_rejected':'ÃƒÂ¢Ã…â€œÃ¢â‚¬â€ Rejected','spese_note_admin':'Note:','spese_error_photo':'Receipt photo is required.','spese_success':'Expense submitted!','report_title':'Hours Worked Report','report_period':'Period','report_days':'Days worked','report_total_hours':'Total hours','report_date':'Date','report_site':'Site','report_hours':'Hours','report_notes':'Notes','report_total_row':'TOTAL','report_spese_title':'Approved Reimbursable Expenses','report_spese_cat':'Category','report_spese_desc':'Description','report_spese_vehicle':'Vehicle','report_spese_amount':'Amount','report_spese_total':'TOTAL REIMBURSEMENTS','report_footer':'Report automatically generated by','all_months_label':'All months',
     },
     'fr': {
-        'dir': 'ltr', 'flag': 'Ã°Å¸â€¡Â«Ã°Å¸â€¡Â·', 'name': 'FranÃƒÂ§ais',
-        'login_title': 'Bon retour Ã°Å¸â€˜â€¹',
+        'dir': 'ltr', 'flag': 'ÃƒÂ°Ã…Â¸Ã¢â‚¬Â¡Ã‚Â«ÃƒÂ°Ã…Â¸Ã¢â‚¬Â¡Ã‚Â·', 'name': 'FranÃƒÆ’Ã‚Â§ais',
+        'login_title': 'Bon retour ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ¢â‚¬Â¹',
         'login_sub': "Connectez-vous au portail de l'entreprise",
         'login_email': 'E-mail',
         'login_pass': 'Mot de passe',
         'login_btn': 'Se connecter',
         'login_error': 'E-mail ou mot de passe incorrect.',
         'login_lang': 'Langue',
-        'logout': 'DÃƒÂ©connexion',
-        'day_worked': 'Jour travaillÃƒÂ©',
+        'logout': 'DÃƒÆ’Ã‚Â©connexion',
+        'day_worked': 'Jour travaillÃƒÆ’Ã‚Â©',
         'site': 'Chantier',
-        'select_site': 'Ã¢â‚¬â€ SÃƒÂ©lectionner chantier Ã¢â‚¬â€',
-        'hours_worked': 'Heures travaillÃƒÂ©es',
+        'select_site': 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â SÃƒÆ’Ã‚Â©lectionner chantier ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â',
+        'hours_worked': 'Heures travaillÃƒÆ’Ã‚Â©es',
         'total_hours': 'Total heures',
         'break': 'Pause',
         'no_break': 'Aucune',
         'notes': 'Notes (facultatif)',
-        'notes_ph': 'Ex. heures supplÃƒÂ©mentaires, matÃƒÂ©riaux...',
+        'notes_ph': 'Ex. heures supplÃƒÆ’Ã‚Â©mentaires, matÃƒÆ’Ã‚Â©riaux...',
         'submit': 'Envoyer les heures',
         'sending': 'Envoi en cours...',
-        'recent': 'DerniÃƒÂ¨res saisies',
+        'recent': 'DerniÃƒÆ’Ã‚Â¨res saisies',
         'my_hours': 'Mes heures',
         'my_hours_sub': 'Historique, filtres par mois et rapport PDF',
         'desktop': 'Version bureau',
-        'unknown_site': 'Chantier non spÃƒÂ©cifiÃƒÂ©',
+        'unknown_site': 'Chantier non spÃƒÆ’Ã‚Â©cifiÃƒÆ’Ã‚Â©',
         'waiting': 'En attente',
-        'approved': 'ApprouvÃƒÂ©e',
-        'rejected': 'RefusÃƒÂ©e',
+        'approved': 'ApprouvÃƒÆ’Ã‚Â©e',
+        'rejected': 'RefusÃƒÆ’Ã‚Â©e',
         'net_hours': 'Heures nettes',
         'back': 'Retour',
         'filter_month': 'Filtrer par mois',
-        'all_months': 'Ã¢â‚¬â€ Tous les mois Ã¢â‚¬â€',
-        'total_approved': 'heures totales approuvÃƒÂ©es',
-        'days_worked': 'jours travaillÃƒÂ©s',
+        'all_months': 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Tous les mois ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â',
+        'total_approved': 'heures totales approuvÃƒÆ’Ã‚Â©es',
+        'days_worked': 'jours travaillÃƒÆ’Ã‚Â©s',
         'pending': 'en attente',
-        'download_pdf': 'TÃƒÂ©lÃƒÂ©charger rapport PDF',
+        'download_pdf': 'TÃƒÆ’Ã‚Â©lÃƒÆ’Ã‚Â©charger rapport PDF',
         'timbrature': 'Saisies de temps',
         'no_timbrature': 'Aucune saisie',
-        'months': ['','Janvier','FÃƒÂ©vrier','Mars','Avril','Mai','Juin','Juillet','AoÃƒÂ»t','Septembre','Octobre','Novembre','DÃƒÂ©cembre'],
+        'months': ['','Janvier','FÃƒÆ’Ã‚Â©vrier','Mars','Avril','Mai','Juin','Juillet','AoÃƒÆ’Ã‚Â»t','Septembre','Octobre','Novembre','DÃƒÆ’Ã‚Â©cembre'],
         'days': ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'],
         # Calendrier des travaux
         'work_calendar': 'Calendrier des Travaux',
-        'work_calendar_sub': 'Vos missions confirmÃƒÂ©es',
-        'your_role': 'VOTRE RÃƒâ€LE',
-        'full_team': 'Ãƒâ€°quipe complÃƒÂ¨te',
+        'work_calendar_sub': 'Vos missions confirmÃƒÆ’Ã‚Â©es',
+        'your_role': 'VOTRE RÃƒÆ’Ã¢â‚¬ÂLE',
+        'full_team': 'ÃƒÆ’Ã¢â‚¬Â°quipe complÃƒÆ’Ã‚Â¨te',
         'drawings': 'Plans / Projets',
         'passes': 'Vos Badges',
-        'no_events': 'Aucun travail assignÃƒÂ© pour',
-        'duration': 'durÃƒÂ©e',
-        'start': 'dÃƒÂ©but',
+        'no_events': 'Aucun travail assignÃƒÆ’Ã‚Â© pour',
+        'duration': 'durÃƒÆ’Ã‚Â©e',
+        'start': 'dÃƒÆ’Ã‚Â©but',
         'end': 'fin',
         'days_unit': 'j',
-        'download': 'TÃƒÂ©lÃƒÂ©charger',
+        'download': 'TÃƒÆ’Ã‚Â©lÃƒÆ’Ã‚Â©charger',
         'back_btn': 'Retour',
-        'assigned_work': 'MISSIONS ASSIGNÃƒâ€°ES',
-        'ciao':'Bonjour','day_label':'Jour travaillÃƒÂ©','break_label':'Pause (heures)','break_hint':'Ex. 1h','note_ph':'Ex. heures supplÃƒÂ©mentaires, matÃƒÂ©riaux...','submit_hours':'Envoyer les heures','sending':'Envoi...','last_entries':'DerniÃƒÂ¨res saisies','desktop_ver':'Version bureau','no_site':'Chantier non spÃƒÂ©cifiÃƒÂ©','net_hours_lbl':'nettes','break_lbl':'Pause','work_hours':'Heures travaillÃƒÂ©es','hours_suffix':'h','my_hours_title':'Mes heures','filter_by_month':'Filtrer par mois','all_months_opt':'Ã¢â‚¬â€ Tous les mois Ã¢â‚¬â€','approved_total':'heures approuvÃƒÂ©es','days_worked_lbl':'jours travaillÃƒÂ©s','pending_lbl':'en attente','download_pdf_btn':'TÃƒÂ©lÃƒÂ©charger rapport PDF','status_waiting':'En attente','status_approved':'ApprouvÃƒÂ©e','status_rejected':'RefusÃƒÂ©e','net_h':'Heures nettes','no_entries':'Aucune saisie','work_calendar_btn':'Calendrier Travaux','spese_btn':'Frais Remboursables','spese_title':'Frais Remboursables','spese_new':'Nouveau frais','spese_date':'Date','spese_cat':'CatÃƒÂ©gorie','spese_amount':'Montant (Ã¢â€šÂ¬)','spese_desc':'Description','spese_vehicle':'VÃƒÂ©hicule de sociÃƒÂ©tÃƒÂ© (optionnel)','spese_no_vehicle':'Ã¢â‚¬â€œ aucun vÃƒÂ©hicule Ã¢â‚¬â€œ','spese_photo_label':'Photo reÃƒÂ§u / facture','spese_photo_req':'obligatoire','spese_photo_hint':'Toucher pour prendre une photo ou importer de la galerie','spese_submit':'Envoyer la dÃƒÂ©pense','spese_sending':'Envoi...','spese_history':'DerniÃƒÂ¨res dÃƒÂ©penses','spese_waiting':'Ã¢ÂÂ³ En attente','spese_approved':'Ã¢Å“â€œ ApprouvÃƒÂ©','spese_rejected':'Ã¢Å“â€” RefusÃƒÂ©','spese_note_admin':'Note:','spese_error_photo':'La photo du reÃƒÂ§u est obligatoire.','spese_success':'DÃƒÂ©pense envoyÃƒÂ©e!','report_title':'Rapport Heures TravaillÃƒÂ©es','report_period':'PÃƒÂ©riode','report_days':'Jours travaillÃƒÂ©s','report_total_hours':'Total heures','report_date':'Date','report_site':'Chantier','report_hours':'Heures','report_notes':'Notes','report_total_row':'TOTAL','report_spese_title':'Frais RemboursÃƒÂ©s ApprouvÃƒÂ©s','report_spese_cat':'CatÃƒÂ©gorie','report_spese_desc':'Description','report_spese_vehicle':'VÃƒÂ©hicule','report_spese_amount':'Montant','report_spese_total':'TOTAL REMBOURSEMENTS','report_footer':'Rapport gÃƒÂ©nÃƒÂ©rÃƒÂ© automatiquement par','all_months_label':'Tous les mois',
+        'assigned_work': 'MISSIONS ASSIGNÃƒÆ’Ã¢â‚¬Â°ES',
+        'ciao':'Bonjour','day_label':'Jour travaillÃƒÆ’Ã‚Â©','break_label':'Pause (heures)','break_hint':'Ex. 1h','note_ph':'Ex. heures supplÃƒÆ’Ã‚Â©mentaires, matÃƒÆ’Ã‚Â©riaux...','submit_hours':'Envoyer les heures','sending':'Envoi...','last_entries':'DerniÃƒÆ’Ã‚Â¨res saisies','desktop_ver':'Version bureau','no_site':'Chantier non spÃƒÆ’Ã‚Â©cifiÃƒÆ’Ã‚Â©','net_hours_lbl':'nettes','break_lbl':'Pause','work_hours':'Heures travaillÃƒÆ’Ã‚Â©es','hours_suffix':'h','my_hours_title':'Mes heures','filter_by_month':'Filtrer par mois','all_months_opt':'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Tous les mois ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â','approved_total':'heures approuvÃƒÆ’Ã‚Â©es','days_worked_lbl':'jours travaillÃƒÆ’Ã‚Â©s','pending_lbl':'en attente','download_pdf_btn':'TÃƒÆ’Ã‚Â©lÃƒÆ’Ã‚Â©charger rapport PDF','status_waiting':'En attente','status_approved':'ApprouvÃƒÆ’Ã‚Â©e','status_rejected':'RefusÃƒÆ’Ã‚Â©e','net_h':'Heures nettes','no_entries':'Aucune saisie','work_calendar_btn':'Calendrier Travaux','spese_btn':'Frais Remboursables','spese_title':'Frais Remboursables','spese_new':'Nouveau frais','spese_date':'Date','spese_cat':'CatÃƒÆ’Ã‚Â©gorie','spese_amount':'Montant (ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬)','spese_desc':'Description','spese_vehicle':'VÃƒÆ’Ã‚Â©hicule de sociÃƒÆ’Ã‚Â©tÃƒÆ’Ã‚Â© (optionnel)','spese_no_vehicle':'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“ aucun vÃƒÆ’Ã‚Â©hicule ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“','spese_photo_label':'Photo reÃƒÆ’Ã‚Â§u / facture','spese_photo_req':'obligatoire','spese_photo_hint':'Toucher pour prendre une photo ou importer de la galerie','spese_submit':'Envoyer la dÃƒÆ’Ã‚Â©pense','spese_sending':'Envoi...','spese_history':'DerniÃƒÆ’Ã‚Â¨res dÃƒÆ’Ã‚Â©penses','spese_waiting':'ÃƒÂ¢Ã‚ÂÃ‚Â³ En attente','spese_approved':'ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ ApprouvÃƒÆ’Ã‚Â©','spese_rejected':'ÃƒÂ¢Ã…â€œÃ¢â‚¬â€ RefusÃƒÆ’Ã‚Â©','spese_note_admin':'Note:','spese_error_photo':'La photo du reÃƒÆ’Ã‚Â§u est obligatoire.','spese_success':'DÃƒÆ’Ã‚Â©pense envoyÃƒÆ’Ã‚Â©e!','report_title':'Rapport Heures TravaillÃƒÆ’Ã‚Â©es','report_period':'PÃƒÆ’Ã‚Â©riode','report_days':'Jours travaillÃƒÆ’Ã‚Â©s','report_total_hours':'Total heures','report_date':'Date','report_site':'Chantier','report_hours':'Heures','report_notes':'Notes','report_total_row':'TOTAL','report_spese_title':'Frais RemboursÃƒÆ’Ã‚Â©s ApprouvÃƒÆ’Ã‚Â©s','report_spese_cat':'CatÃƒÆ’Ã‚Â©gorie','report_spese_desc':'Description','report_spese_vehicle':'VÃƒÆ’Ã‚Â©hicule','report_spese_amount':'Montant','report_spese_total':'TOTAL REMBOURSEMENTS','report_footer':'Rapport gÃƒÆ’Ã‚Â©nÃƒÆ’Ã‚Â©rÃƒÆ’Ã‚Â© automatiquement par','all_months_label':'Tous les mois',
     },
     'ar': {
-        'dir': 'rtl', 'flag': 'Ã°Å¸â€¡Â²Ã°Å¸â€¡Â¦', 'name': 'Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â±Ã˜Â¨Ã™Å Ã˜Â©',
-        'login_title': 'Ã™â€¦Ã˜Â±Ã˜Â­Ã˜Â¨Ã˜Â§Ã™â€¹ Ã˜Â¨Ã˜Â¹Ã™Ë†Ã˜Â¯Ã˜ÂªÃ™Æ’ Ã°Å¸â€˜â€¹',
-        'login_sub': 'Ã˜Â³Ã˜Â¬Ã™â€˜Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â¯Ã˜Â®Ã™Ë†Ã™â€ž Ã˜Â¥Ã™â€žÃ™â€° Ã˜Â¨Ã™Ë†Ã˜Â§Ã˜Â¨Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â´Ã˜Â±Ã™Æ’Ã˜Â©',
-        'login_email': 'Ã˜Â§Ã™â€žÃ˜Â¨Ã˜Â±Ã™Å Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â¥Ã™â€žÃ™Æ’Ã˜ÂªÃ˜Â±Ã™Ë†Ã™â€ Ã™Å ',
-        'login_pass': 'Ã™Æ’Ã™â€žÃ™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â±Ã™Ë†Ã˜Â±',
-        'login_btn': 'Ã˜Â¯Ã˜Â®Ã™Ë†Ã™â€ž',
-        'login_error': 'Ã˜Â§Ã™â€žÃ˜Â¨Ã˜Â±Ã™Å Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â¥Ã™â€žÃ™Æ’Ã˜ÂªÃ˜Â±Ã™Ë†Ã™â€ Ã™Å  Ã˜Â£Ã™Ë† Ã™Æ’Ã™â€žÃ™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â±Ã™Ë†Ã˜Â± Ã˜ÂºÃ™Å Ã˜Â± Ã˜ÂµÃ˜Â­Ã™Å Ã˜Â­Ã˜Â©.',
-        'login_lang': 'Ã˜Â§Ã™â€žÃ™â€žÃ˜ÂºÃ˜Â©',
-        'logout': 'Ã˜Â®Ã˜Â±Ã™Ë†Ã˜Â¬',
-        'day_worked': 'Ã™Å Ã™Ë†Ã™â€¦ Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€ž',
-        'site': 'Ã˜Â§Ã™â€žÃ™Ë†Ã˜Â±Ã˜Â´Ã˜Â©',
-        'select_site': 'Ã¢â‚¬â€ Ã˜Â§Ã˜Â®Ã˜ÂªÃ˜Â± Ã˜Â§Ã™â€žÃ™Ë†Ã˜Â±Ã˜Â´Ã˜Â© Ã¢â‚¬â€',
-        'hours_worked': 'Ã˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€ž',
-        'total_hours': 'Ã˜Â¥Ã˜Â¬Ã™â€¦Ã˜Â§Ã™â€žÃ™Å  Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª',
-        'break': 'Ã˜Â§Ã˜Â³Ã˜ÂªÃ˜Â±Ã˜Â§Ã˜Â­Ã˜Â©',
-        'no_break': 'Ã˜Â¨Ã˜Â¯Ã™Ë†Ã™â€  Ã˜Â§Ã˜Â³Ã˜ÂªÃ˜Â±Ã˜Â§Ã˜Â­Ã˜Â©',
-        'notes': 'Ã™â€¦Ã™â€žÃ˜Â§Ã˜Â­Ã˜Â¸Ã˜Â§Ã˜Âª (Ã˜Â§Ã˜Â®Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â±Ã™Å )',
-        'notes_ph': 'Ã™â€¦Ã˜Â«Ã˜Â§Ã™â€ž: Ã˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª Ã˜Â¥Ã˜Â¶Ã˜Â§Ã™ÂÃ™Å Ã˜Â©Ã˜Å’ Ã™â€¦Ã™Ë†Ã˜Â§Ã˜Â¯ Ã™â€¦Ã˜Â³Ã˜ÂªÃ˜Â®Ã˜Â¯Ã™â€¦Ã˜Â©...',
-        'submit': 'Ã˜Â¥Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª',
-        'sending': 'Ã˜Â¬Ã˜Â§Ã˜Â±Ã™Å  Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€ž...',
-        'recent': 'Ã˜Â¢Ã˜Â®Ã˜Â± Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â³Ã˜Â¬Ã™Å Ã™â€žÃ˜Â§Ã˜Âª',
-        'my_hours': 'Ã˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜ÂªÃ™Å ',
-        'my_hours_sub': 'Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¬Ã™â€ž Ã™Ë†Ã˜Â§Ã™â€žÃ™ÂÃ™â€žÃ˜ÂªÃ˜Â±Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â´Ã™â€¡Ã˜Â±Ã™Å Ã˜Â© Ã™Ë†Ã˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â± PDF',
-        'desktop': 'Ã˜Â§Ã™â€žÃ™â€ Ã˜Â³Ã˜Â®Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã™Æ’Ã˜ÂªÃ˜Â¨Ã™Å Ã˜Â©',
-        'unknown_site': 'Ã™Ë†Ã˜Â±Ã˜Â´Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã˜Â­Ã˜Â¯Ã˜Â¯Ã˜Â©',
-        'waiting': 'Ã™â€šÃ™Å Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â§Ã™â€ Ã˜ÂªÃ˜Â¸Ã˜Â§Ã˜Â±',
-        'approved': 'Ã™â€¦Ã™Ë†Ã˜Â§Ã™ÂÃ™â€š Ã˜Â¹Ã™â€žÃ™Å Ã™â€¡Ã˜Â§',
-        'rejected': 'Ã™â€¦Ã˜Â±Ã™ÂÃ™Ë†Ã˜Â¶Ã˜Â©',
-        'net_hours': 'Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜ÂµÃ˜Â§Ã™ÂÃ™Å Ã˜Â©',
-        'back': 'Ã˜Â±Ã˜Â¬Ã™Ë†Ã˜Â¹',
-        'filter_month': 'Ã˜ÂªÃ˜ÂµÃ™ÂÃ™Å Ã˜Â© Ã˜Â­Ã˜Â³Ã˜Â¨ Ã˜Â§Ã™â€žÃ˜Â´Ã™â€¡Ã˜Â±',
-        'all_months': 'Ã¢â‚¬â€ Ã™Æ’Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â´Ã™â€¡Ã˜Â± Ã¢â‚¬â€',
-        'total_approved': 'Ã˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª Ã™â€¦Ã˜Â¹Ã˜ÂªÃ™â€¦Ã˜Â¯Ã˜Â©',
-        'days_worked': 'Ã˜Â£Ã™Å Ã˜Â§Ã™â€¦ Ã˜Â¹Ã™â€¦Ã™â€ž',
-        'pending': 'Ã™â€šÃ™Å Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â§Ã™â€ Ã˜ÂªÃ˜Â¸Ã˜Â§Ã˜Â±',
-        'download_pdf': 'Ã˜ÂªÃ˜Â­Ã™â€¦Ã™Å Ã™â€ž Ã˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â± PDF',
-        'timbrature': 'Ã˜Â³Ã˜Â¬Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â­Ã˜Â¶Ã™Ë†Ã˜Â±',
-        'no_timbrature': 'Ã™â€žÃ˜Â§ Ã˜ÂªÃ™Ë†Ã˜Â¬Ã˜Â¯ Ã˜ÂªÃ˜Â³Ã˜Â¬Ã™Å Ã™â€žÃ˜Â§Ã˜Âª',
-        'months': ['','Ã™Å Ã™â€ Ã˜Â§Ã™Å Ã˜Â±','Ã™ÂÃ˜Â¨Ã˜Â±Ã˜Â§Ã™Å Ã˜Â±','Ã™â€¦Ã˜Â§Ã˜Â±Ã˜Â³','Ã˜Â£Ã˜Â¨Ã˜Â±Ã™Å Ã™â€ž','Ã™â€¦Ã˜Â§Ã™Å Ã™Ë†','Ã™Å Ã™Ë†Ã™â€ Ã™Å Ã™Ë†','Ã™Å Ã™Ë†Ã™â€žÃ™Å Ã™Ë†','Ã˜Â£Ã˜ÂºÃ˜Â³Ã˜Â·Ã˜Â³','Ã˜Â³Ã˜Â¨Ã˜ÂªÃ™â€¦Ã˜Â¨Ã˜Â±','Ã˜Â£Ã™Æ’Ã˜ÂªÃ™Ë†Ã˜Â¨Ã˜Â±','Ã™â€ Ã™Ë†Ã™ÂÃ™â€¦Ã˜Â¨Ã˜Â±','Ã˜Â¯Ã™Å Ã˜Â³Ã™â€¦Ã˜Â¨Ã˜Â±'],
-        'days': ['Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â­Ã˜Â¯','Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â«Ã™â€ Ã™Å Ã™â€ ','Ã˜Â§Ã™â€žÃ˜Â«Ã™â€žÃ˜Â§Ã˜Â«Ã˜Â§Ã˜Â¡','Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â±Ã˜Â¨Ã˜Â¹Ã˜Â§Ã˜Â¡','Ã˜Â§Ã™â€žÃ˜Â®Ã™â€¦Ã™Å Ã˜Â³','Ã˜Â§Ã™â€žÃ˜Â¬Ã™â€¦Ã˜Â¹Ã˜Â©','Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¨Ã˜Âª'],
-        # Ã˜ÂªÃ™â€šÃ™Ë†Ã™Å Ã™â€¦ Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â¹Ã™â€¦Ã˜Â§Ã™â€ž
-        'work_calendar': 'Ã˜Â¬Ã˜Â¯Ã™Ë†Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â¹Ã™â€¦Ã˜Â§Ã™â€ž',
-        'work_calendar_sub': 'Ã™â€¦Ã™â€¡Ã˜Â§Ã™â€¦Ã™Æ’ Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¤Ã™Æ’Ã˜Â¯Ã˜Â©',
-        'your_role': 'Ã˜Â¯Ã™Ë†Ã˜Â±Ã™Æ’ Ã™ÂÃ™Å  Ã™â€¡Ã˜Â°Ã˜Â§ Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€ž',
-        'full_team': 'Ã˜Â§Ã™â€žÃ™ÂÃ˜Â±Ã™Å Ã™â€š Ã˜Â§Ã™â€žÃ™Æ’Ã˜Â§Ã™â€¦Ã™â€ž',
-        'drawings': 'Ã˜Â§Ã™â€žÃ˜Â±Ã˜Â³Ã™Ë†Ã™â€¦Ã˜Â§Ã˜Âª / Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â´Ã˜Â§Ã˜Â±Ã™Å Ã˜Â¹',
-        'passes': 'Ã˜ÂªÃ˜ÂµÃ˜Â§Ã˜Â±Ã™Å Ã˜Â­ Ã˜Â§Ã™â€žÃ˜Â¯Ã˜Â®Ã™Ë†Ã™â€ž',
-        'no_events': 'Ã™â€žÃ˜Â§ Ã˜ÂªÃ™Ë†Ã˜Â¬Ã˜Â¯ Ã˜Â£Ã˜Â¹Ã™â€¦Ã˜Â§Ã™â€ž Ã™â€¦Ã˜Â®Ã˜ÂµÃ˜ÂµÃ˜Â© Ã™â€žÃ˜Â´Ã™â€¡Ã˜Â±',
-        'duration': 'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¯Ã˜Â©',
-        'start': 'Ã˜Â§Ã™â€žÃ˜Â¨Ã˜Â¯Ã˜Â§Ã™Å Ã˜Â©',
-        'end': 'Ã˜Â§Ã™â€žÃ™â€ Ã™â€¡Ã˜Â§Ã™Å Ã˜Â©',
-        'days_unit': 'Ã™Å Ã™Ë†Ã™â€¦',
-        'download': 'Ã˜ÂªÃ˜Â­Ã™â€¦Ã™Å Ã™â€ž',
-        'back_btn': 'Ã˜Â±Ã˜Â¬Ã™Ë†Ã˜Â¹',
-        'assigned_work': 'Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â¹Ã™â€¦Ã˜Â§Ã™â€ž Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â®Ã˜ÂµÃ˜ÂµÃ˜Â©',
-        'ciao':'Ã™â€¦Ã˜Â±Ã˜Â­Ã˜Â¨Ã˜Â§Ã™â€¹','day_label':'Ã™Å Ã™Ë†Ã™â€¦ Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€ž','break_label':'Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â³Ã˜ÂªÃ˜Â±Ã˜Â§Ã˜Â­Ã˜Â© (Ã˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª)','break_hint':'Ã™â€¦Ã˜Â«Ã˜Â§Ã™â€ž: 1h','note_ph':'Ã™â€¦Ã˜Â«Ã˜Â§Ã™â€ž: Ã˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª Ã˜Â¥Ã˜Â¶Ã˜Â§Ã™ÂÃ™Å Ã˜Â©Ã˜Å’ Ã™â€¦Ã™Ë†Ã˜Â§Ã˜Â¯ Ã™â€¦Ã˜Â³Ã˜ÂªÃ˜Â®Ã˜Â¯Ã™â€¦Ã˜Â©...','submit_hours':'Ã˜Â¥Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª','sending':'Ã˜Â¬Ã˜Â§Ã˜Â±Ã™Å  Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€ž...','last_entries':'Ã˜Â¢Ã˜Â®Ã˜Â± Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â³Ã˜Â¬Ã™Å Ã™â€žÃ˜Â§Ã˜Âª','desktop_ver':'Ã˜Â§Ã™â€žÃ™â€ Ã˜Â³Ã˜Â®Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã™Æ’Ã˜ÂªÃ˜Â¨Ã™Å Ã˜Â©','no_site':'Ã™Ë†Ã˜Â±Ã˜Â´Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã˜Â­Ã˜Â¯Ã˜Â¯Ã˜Â©','net_hours_lbl':'Ã˜ÂµÃ˜Â§Ã™ÂÃ™Å ','break_lbl':'Ã˜Â§Ã˜Â³Ã˜ÂªÃ˜Â±Ã˜Â§Ã˜Â­Ã˜Â©','work_hours':'Ã˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€ž','hours_suffix':'Ã˜Â³','my_hours_title':'Ã˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜ÂªÃ™Å ','filter_by_month':'Ã˜ÂªÃ˜ÂµÃ™ÂÃ™Å Ã˜Â© Ã˜Â­Ã˜Â³Ã˜Â¨ Ã˜Â§Ã™â€žÃ˜Â´Ã™â€¡Ã˜Â±','all_months_opt':'Ã¢â‚¬â€ Ã™Æ’Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â´Ã™â€¡Ã˜Â± Ã¢â‚¬â€','approved_total':'Ã˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª Ã™â€¦Ã˜Â¹Ã˜ÂªÃ™â€¦Ã˜Â¯Ã˜Â©','days_worked_lbl':'Ã˜Â£Ã™Å Ã˜Â§Ã™â€¦ Ã˜Â¹Ã™â€¦Ã™â€ž','pending_lbl':'Ã™â€šÃ™Å Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â§Ã™â€ Ã˜ÂªÃ˜Â¸Ã˜Â§Ã˜Â±','download_pdf_btn':'Ã˜ÂªÃ˜Â­Ã™â€¦Ã™Å Ã™â€ž Ã˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â± PDF','status_waiting':'Ã™â€šÃ™Å Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â§Ã™â€ Ã˜ÂªÃ˜Â¸Ã˜Â§Ã˜Â±','status_approved':'Ã™â€¦Ã™Ë†Ã˜Â§Ã™ÂÃ™â€š Ã˜Â¹Ã™â€žÃ™Å Ã™â€¡Ã˜Â§','status_rejected':'Ã™â€¦Ã˜Â±Ã™ÂÃ™Ë†Ã˜Â¶Ã˜Â©','net_h':'Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜ÂµÃ˜Â§Ã™ÂÃ™Å Ã˜Â©','no_entries':'Ã™â€žÃ˜Â§ Ã˜ÂªÃ™Ë†Ã˜Â¬Ã˜Â¯ Ã˜ÂªÃ˜Â³Ã˜Â¬Ã™Å Ã™â€žÃ˜Â§Ã˜Âª','work_calendar_btn':'Ã˜Â¬Ã˜Â¯Ã™Ë†Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â¹Ã™â€¦Ã˜Â§Ã™â€ž','spese_btn':'Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂµÃ˜Â§Ã˜Â±Ã™Å Ã™Â Ã˜Â§Ã™â€žÃ™â€šÃ˜Â§Ã˜Â¨Ã™â€žÃ˜Â© Ã™â€žÃ™â€žÃ˜Â§Ã˜Â³Ã˜ÂªÃ˜Â±Ã˜Â¯Ã˜Â§Ã˜Â¯','spese_title':'Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂµÃ˜Â§Ã˜Â±Ã™Å Ã™Â Ã˜Â§Ã™â€žÃ™â€šÃ˜Â§Ã˜Â¨Ã™â€žÃ˜Â© Ã™â€žÃ™â€žÃ˜Â§Ã˜Â³Ã˜ÂªÃ˜Â±Ã˜Â¯Ã˜Â§Ã˜Â¯','spese_new':'Ã™â€¦Ã˜ÂµÃ˜Â±Ã™Ë†Ã™Â Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯','spese_date':'Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â§Ã˜Â±Ã™Å Ã˜Â®','spese_cat':'Ã˜Â§Ã™â€žÃ™ÂÃ˜Â¦Ã˜Â©','spese_amount':'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¨Ã™â€žÃ˜Âº (Ã¢â€šÂ¬)','spese_desc':'Ã˜Â§Ã™â€žÃ™Ë†Ã˜ÂµÃ™Â','spese_vehicle':'Ã™â€¦Ã˜Â±Ã™Æ’Ã˜Â¨Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â´Ã˜Â±Ã™Æ’Ã˜Â© (Ã˜Â§Ã˜Â®Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â±Ã™Å )','spese_no_vehicle':'Ã¢â‚¬â€œ Ã˜Â¨Ã˜Â¯Ã™Ë†Ã™â€  Ã™â€¦Ã˜Â±Ã™Æ’Ã˜Â¨Ã˜Â© Ã¢â‚¬â€œ','spese_photo_label':'Ã˜ÂµÃ™Ë†Ã˜Â±Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¥Ã™Å Ã˜ÂµÃ˜Â§Ã™â€ž / Ã˜Â§Ã™â€žÃ™ÂÃ˜Â§Ã˜ÂªÃ™Ë†Ã˜Â±Ã˜Â©','spese_photo_req':'Ã˜Â¥Ã™â€žÃ˜Â²Ã˜Â§Ã™â€¦Ã™Å ','spese_photo_hint':'Ã˜Â§Ã˜Â¶Ã˜ÂºÃ˜Â· Ã™â€žÃ˜Â§Ã™â€žÃ˜ÂªÃ™â€šÃ˜Â§Ã˜Â· Ã˜ÂµÃ™Ë†Ã˜Â±Ã˜Â© Ã˜Â£Ã™Ë† Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â­Ã™â€¦Ã™Å Ã™â€ž Ã™â€¦Ã™â€  Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¹Ã˜Â±Ã˜Â¶','spese_submit':'Ã˜Â¥Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€ž Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂµÃ˜Â±Ã™Ë†Ã™Â','spese_sending':'Ã˜Â¬Ã˜Â§Ã˜Â±Ã™Å  Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€ž...','spese_history':'Ã˜Â¢Ã˜Â®Ã˜Â± Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂµÃ˜Â§Ã˜Â±Ã™Å Ã™Â','spese_waiting':'Ã¢ÂÂ³ Ã™â€šÃ™Å Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â§Ã™â€ Ã˜ÂªÃ˜Â¸Ã˜Â§Ã˜Â±','spese_approved':'Ã¢Å“â€œ Ã™â€¦Ã™Ë†Ã˜Â§Ã™ÂÃ™â€š Ã˜Â¹Ã™â€žÃ™Å Ã™â€¡','spese_rejected':'Ã¢Å“â€” Ã™â€¦Ã˜Â±Ã™ÂÃ™Ë†Ã˜Â¶','spese_note_admin':'Ã™â€¦Ã™â€žÃ˜Â§Ã˜Â­Ã˜Â¸Ã˜Â©:','spese_error_photo':'Ã˜ÂµÃ™Ë†Ã˜Â±Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¥Ã™Å Ã˜ÂµÃ˜Â§Ã™â€ž Ã˜Â¥Ã™â€žÃ˜Â²Ã˜Â§Ã™â€¦Ã™Å Ã˜Â©.','spese_success':'Ã˜ÂªÃ™â€¦ Ã˜Â¥Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€ž Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂµÃ˜Â±Ã™Ë†Ã™Â!','report_title':'Ã˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â± Ã˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€ž','report_period':'Ã˜Â§Ã™â€žÃ™ÂÃ˜ÂªÃ˜Â±Ã˜Â©','report_days':'Ã˜Â£Ã™Å Ã˜Â§Ã™â€¦ Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€ž','report_total_hours':'Ã˜Â¥Ã˜Â¬Ã™â€¦Ã˜Â§Ã™â€žÃ™Å  Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª','report_date':'Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â§Ã˜Â±Ã™Å Ã˜Â®','report_site':'Ã˜Â§Ã™â€žÃ™Ë†Ã˜Â±Ã˜Â´Ã˜Â©','report_hours':'Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª','report_notes':'Ã™â€¦Ã™â€žÃ˜Â§Ã˜Â­Ã˜Â¸Ã˜Â§Ã˜Âª','report_total_row':'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¬Ã™â€¦Ã™Ë†Ã˜Â¹','report_spese_title':'Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂµÃ˜Â§Ã˜Â±Ã™Å Ã™Â Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¹Ã˜ÂªÃ™â€¦Ã˜Â¯Ã˜Â© Ã˜Â§Ã™â€žÃ™â€šÃ˜Â§Ã˜Â¨Ã™â€žÃ˜Â© Ã™â€žÃ™â€žÃ˜Â§Ã˜Â³Ã˜ÂªÃ˜Â±Ã˜Â¯Ã˜Â§Ã˜Â¯','report_spese_cat':'Ã˜Â§Ã™â€žÃ™ÂÃ˜Â¦Ã˜Â©','report_spese_desc':'Ã˜Â§Ã™â€žÃ™Ë†Ã˜ÂµÃ™Â','report_spese_vehicle':'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â±Ã™Æ’Ã˜Â¨Ã˜Â©','report_spese_amount':'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¨Ã™â€žÃ˜Âº','report_spese_total':'Ã˜Â¥Ã˜Â¬Ã™â€¦Ã˜Â§Ã™â€žÃ™Å  Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â¹Ã™Ë†Ã™Å Ã˜Â¶Ã˜Â§Ã˜Âª','report_footer':'Ã˜ÂªÃ™â€¦ Ã˜Â¥Ã™â€ Ã˜Â´Ã˜Â§Ã˜Â¡ Ã˜Â§Ã™â€žÃ˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â± Ã˜ÂªÃ™â€žÃ™â€šÃ˜Â§Ã˜Â¦Ã™Å Ã˜Â§Ã™â€¹ Ã˜Â¨Ã™Ë†Ã˜Â§Ã˜Â³Ã˜Â·Ã˜Â©','all_months_label':'Ã™Æ’Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â´Ã™â€¡Ã˜Â±',
+        'dir': 'rtl', 'flag': 'ÃƒÂ°Ã…Â¸Ã¢â‚¬Â¡Ã‚Â²ÃƒÂ°Ã…Â¸Ã¢â‚¬Â¡Ã‚Â¦', 'name': 'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â±ÃƒËœÃ‚Â¨Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â©',
+        'login_title': 'Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â±ÃƒËœÃ‚Â­ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â¹ ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â¹Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¯ÃƒËœÃ‚ÂªÃƒâ„¢Ã†â€™ ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ¢â‚¬Â¹',
+        'login_sub': 'ÃƒËœÃ‚Â³ÃƒËœÃ‚Â¬Ãƒâ„¢Ã¢â‚¬ËœÃƒâ„¢Ã¢â‚¬Å¾ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â®Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Å¾ ÃƒËœÃ‚Â¥Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â° ÃƒËœÃ‚Â¨Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â© ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â´ÃƒËœÃ‚Â±Ãƒâ„¢Ã†â€™ÃƒËœÃ‚Â©',
+        'login_email': 'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â¯ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¥Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã†â€™ÃƒËœÃ‚ÂªÃƒËœÃ‚Â±Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã…Â ',
+        'login_pass': 'Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â© ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â±Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â±',
+        'login_btn': 'ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â®Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Å¾',
+        'login_error': 'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â¯ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¥Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã†â€™ÃƒËœÃ‚ÂªÃƒËœÃ‚Â±Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã…Â  ÃƒËœÃ‚Â£Ãƒâ„¢Ã‹â€  Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â© ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â±Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â± ÃƒËœÃ‚ÂºÃƒâ„¢Ã…Â ÃƒËœÃ‚Â± ÃƒËœÃ‚ÂµÃƒËœÃ‚Â­Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â­ÃƒËœÃ‚Â©.',
+        'login_lang': 'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂºÃƒËœÃ‚Â©',
+        'logout': 'ÃƒËœÃ‚Â®ÃƒËœÃ‚Â±Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¬',
+        'day_worked': 'Ãƒâ„¢Ã…Â Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Â¦ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¹Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Å¾',
+        'site': 'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â±ÃƒËœÃ‚Â´ÃƒËœÃ‚Â©',
+        'select_site': 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â ÃƒËœÃ‚Â§ÃƒËœÃ‚Â®ÃƒËœÃ‚ÂªÃƒËœÃ‚Â± ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â±ÃƒËœÃ‚Â´ÃƒËœÃ‚Â© ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â',
+        'hours_worked': 'ÃƒËœÃ‚Â³ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¹Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Å¾',
+        'total_hours': 'ÃƒËœÃ‚Â¥ÃƒËœÃ‚Â¬Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã…Â  ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â³ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª',
+        'break': 'ÃƒËœÃ‚Â§ÃƒËœÃ‚Â³ÃƒËœÃ‚ÂªÃƒËœÃ‚Â±ÃƒËœÃ‚Â§ÃƒËœÃ‚Â­ÃƒËœÃ‚Â©',
+        'no_break': 'ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â¯Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Â  ÃƒËœÃ‚Â§ÃƒËœÃ‚Â³ÃƒËœÃ‚ÂªÃƒËœÃ‚Â±ÃƒËœÃ‚Â§ÃƒËœÃ‚Â­ÃƒËœÃ‚Â©',
+        'notes': 'Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§ÃƒËœÃ‚Â­ÃƒËœÃ‚Â¸ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª (ÃƒËœÃ‚Â§ÃƒËœÃ‚Â®ÃƒËœÃ‚ÂªÃƒâ„¢Ã…Â ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â )',
+        'notes_ph': 'Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â«ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾: ÃƒËœÃ‚Â³ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª ÃƒËœÃ‚Â¥ÃƒËœÃ‚Â¶ÃƒËœÃ‚Â§Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â ÃƒËœÃ‚Â©ÃƒËœÃ…â€™ Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¯ Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â³ÃƒËœÃ‚ÂªÃƒËœÃ‚Â®ÃƒËœÃ‚Â¯Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â©...',
+        'submit': 'ÃƒËœÃ‚Â¥ÃƒËœÃ‚Â±ÃƒËœÃ‚Â³ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â³ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª',
+        'sending': 'ÃƒËœÃ‚Â¬ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â  ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¥ÃƒËœÃ‚Â±ÃƒËœÃ‚Â³ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾...',
+        'recent': 'ÃƒËœÃ‚Â¢ÃƒËœÃ‚Â®ÃƒËœÃ‚Â± ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒËœÃ‚Â³ÃƒËœÃ‚Â¬Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª',
+        'my_hours': 'ÃƒËœÃ‚Â³ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â§ÃƒËœÃ‚ÂªÃƒâ„¢Ã…Â ',
+        'my_hours_sub': 'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â³ÃƒËœÃ‚Â¬Ãƒâ„¢Ã¢â‚¬Å¾ Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒËœÃ‚Â±ÃƒËœÃ‚Â© ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â´Ãƒâ„¢Ã¢â‚¬Â¡ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â© Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚ÂªÃƒâ„¢Ã¢â‚¬Å¡ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â± PDF',
+        'desktop': 'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â ÃƒËœÃ‚Â³ÃƒËœÃ‚Â®ÃƒËœÃ‚Â© ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã†â€™ÃƒËœÃ‚ÂªÃƒËœÃ‚Â¨Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â©',
+        'unknown_site': 'Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â±ÃƒËœÃ‚Â´ÃƒËœÃ‚Â© ÃƒËœÃ‚ÂºÃƒâ„¢Ã…Â ÃƒËœÃ‚Â± Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â­ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â©',
+        'waiting': 'Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â¯ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â ÃƒËœÃ‚ÂªÃƒËœÃ‚Â¸ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±',
+        'approved': 'Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â§Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Å¡ ÃƒËœÃ‚Â¹Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Â¡ÃƒËœÃ‚Â§',
+        'rejected': 'Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â±Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¶ÃƒËœÃ‚Â©',
+        'net_hours': 'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â³ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂµÃƒËœÃ‚Â§Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â ÃƒËœÃ‚Â©',
+        'back': 'ÃƒËœÃ‚Â±ÃƒËœÃ‚Â¬Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¹',
+        'filter_month': 'ÃƒËœÃ‚ÂªÃƒËœÃ‚ÂµÃƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â ÃƒËœÃ‚Â© ÃƒËœÃ‚Â­ÃƒËœÃ‚Â³ÃƒËœÃ‚Â¨ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â´Ãƒâ„¢Ã¢â‚¬Â¡ÃƒËœÃ‚Â±',
+        'all_months': 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã¢â‚¬Å¾ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â£ÃƒËœÃ‚Â´Ãƒâ„¢Ã¢â‚¬Â¡ÃƒËœÃ‚Â± ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â',
+        'total_approved': 'ÃƒËœÃ‚Â³ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â¹ÃƒËœÃ‚ÂªÃƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â©',
+        'days_worked': 'ÃƒËœÃ‚Â£Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â¦ ÃƒËœÃ‚Â¹Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Å¾',
+        'pending': 'Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â¯ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â ÃƒËœÃ‚ÂªÃƒËœÃ‚Â¸ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±',
+        'download_pdf': 'ÃƒËœÃ‚ÂªÃƒËœÃ‚Â­Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Å¾ ÃƒËœÃ‚ÂªÃƒâ„¢Ã¢â‚¬Å¡ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â± PDF',
+        'timbrature': 'ÃƒËœÃ‚Â³ÃƒËœÃ‚Â¬Ãƒâ„¢Ã¢â‚¬Å¾ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â­ÃƒËœÃ‚Â¶Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â±',
+        'no_timbrature': 'Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§ ÃƒËœÃ‚ÂªÃƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¬ÃƒËœÃ‚Â¯ ÃƒËœÃ‚ÂªÃƒËœÃ‚Â³ÃƒËœÃ‚Â¬Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª',
+        'months': ['','Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Â ÃƒËœÃ‚Â§Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â±','Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â¨ÃƒËœÃ‚Â±ÃƒËœÃ‚Â§Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â±','Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±ÃƒËœÃ‚Â³','ÃƒËœÃ‚Â£ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Å¾','Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â§Ãƒâ„¢Ã…Â Ãƒâ„¢Ã‹â€ ','Ãƒâ„¢Ã…Â Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã…Â Ãƒâ„¢Ã‹â€ ','Ãƒâ„¢Ã…Â Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã…Â Ãƒâ„¢Ã‹â€ ','ÃƒËœÃ‚Â£ÃƒËœÃ‚ÂºÃƒËœÃ‚Â³ÃƒËœÃ‚Â·ÃƒËœÃ‚Â³','ÃƒËœÃ‚Â³ÃƒËœÃ‚Â¨ÃƒËœÃ‚ÂªÃƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â±','ÃƒËœÃ‚Â£Ãƒâ„¢Ã†â€™ÃƒËœÃ‚ÂªÃƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â±','Ãƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â±','ÃƒËœÃ‚Â¯Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â³Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â±'],
+        'days': ['ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â£ÃƒËœÃ‚Â­ÃƒËœÃ‚Â¯','ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§ÃƒËœÃ‚Â«Ãƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Â ','ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â«Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§ÃƒËœÃ‚Â«ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¡','ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â£ÃƒËœÃ‚Â±ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¡','ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â®Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â³','ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¬Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â©','ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â³ÃƒËœÃ‚Â¨ÃƒËœÃ‚Âª'],
+        # ÃƒËœÃ‚ÂªÃƒâ„¢Ã¢â‚¬Å¡Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Â¦ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â£ÃƒËœÃ‚Â¹Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾
+        'work_calendar': 'ÃƒËœÃ‚Â¬ÃƒËœÃ‚Â¯Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Å¾ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â£ÃƒËœÃ‚Â¹Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾',
+        'work_calendar_sub': 'Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Â¡ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã†â€™ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â¤Ãƒâ„¢Ã†â€™ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â©',
+        'your_role': 'ÃƒËœÃ‚Â¯Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â±Ãƒâ„¢Ã†â€™ Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â  Ãƒâ„¢Ã¢â‚¬Â¡ÃƒËœÃ‚Â°ÃƒËœÃ‚Â§ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¹Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Å¾',
+        'full_team': 'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Å¡ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã†â€™ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Å¾',
+        'drawings': 'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â±ÃƒËœÃ‚Â³Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª / ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â´ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â¹',
+        'passes': 'ÃƒËœÃ‚ÂªÃƒËœÃ‚ÂµÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â­ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â®Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Å¾',
+        'no_events': 'Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§ ÃƒËœÃ‚ÂªÃƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¬ÃƒËœÃ‚Â¯ ÃƒËœÃ‚Â£ÃƒËœÃ‚Â¹Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â®ÃƒËœÃ‚ÂµÃƒËœÃ‚ÂµÃƒËœÃ‚Â© Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â´Ãƒâ„¢Ã¢â‚¬Â¡ÃƒËœÃ‚Â±',
+        'duration': 'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â©',
+        'start': 'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â§Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â©',
+        'end': 'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã¢â‚¬Â¡ÃƒËœÃ‚Â§Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â©',
+        'days_unit': 'Ãƒâ„¢Ã…Â Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Â¦',
+        'download': 'ÃƒËœÃ‚ÂªÃƒËœÃ‚Â­Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Å¾',
+        'back_btn': 'ÃƒËœÃ‚Â±ÃƒËœÃ‚Â¬Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¹',
+        'assigned_work': 'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â£ÃƒËœÃ‚Â¹Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â®ÃƒËœÃ‚ÂµÃƒËœÃ‚ÂµÃƒËœÃ‚Â©',
+        'ciao':'Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â±ÃƒËœÃ‚Â­ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â¹','day_label':'Ãƒâ„¢Ã…Â Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Â¦ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¹Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Å¾','break_label':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§ÃƒËœÃ‚Â³ÃƒËœÃ‚ÂªÃƒËœÃ‚Â±ÃƒËœÃ‚Â§ÃƒËœÃ‚Â­ÃƒËœÃ‚Â© (ÃƒËœÃ‚Â³ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª)','break_hint':'Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â«ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾: 1h','note_ph':'Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â«ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾: ÃƒËœÃ‚Â³ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª ÃƒËœÃ‚Â¥ÃƒËœÃ‚Â¶ÃƒËœÃ‚Â§Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â ÃƒËœÃ‚Â©ÃƒËœÃ…â€™ Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¯ Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â³ÃƒËœÃ‚ÂªÃƒËœÃ‚Â®ÃƒËœÃ‚Â¯Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â©...','submit_hours':'ÃƒËœÃ‚Â¥ÃƒËœÃ‚Â±ÃƒËœÃ‚Â³ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â³ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª','sending':'ÃƒËœÃ‚Â¬ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â  ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¥ÃƒËœÃ‚Â±ÃƒËœÃ‚Â³ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾...','last_entries':'ÃƒËœÃ‚Â¢ÃƒËœÃ‚Â®ÃƒËœÃ‚Â± ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒËœÃ‚Â³ÃƒËœÃ‚Â¬Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª','desktop_ver':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â ÃƒËœÃ‚Â³ÃƒËœÃ‚Â®ÃƒËœÃ‚Â© ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã†â€™ÃƒËœÃ‚ÂªÃƒËœÃ‚Â¨Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â©','no_site':'Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â±ÃƒËœÃ‚Â´ÃƒËœÃ‚Â© ÃƒËœÃ‚ÂºÃƒâ„¢Ã…Â ÃƒËœÃ‚Â± Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â­ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â©','net_hours_lbl':'ÃƒËœÃ‚ÂµÃƒËœÃ‚Â§Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â ','break_lbl':'ÃƒËœÃ‚Â§ÃƒËœÃ‚Â³ÃƒËœÃ‚ÂªÃƒËœÃ‚Â±ÃƒËœÃ‚Â§ÃƒËœÃ‚Â­ÃƒËœÃ‚Â©','work_hours':'ÃƒËœÃ‚Â³ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¹Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Å¾','hours_suffix':'ÃƒËœÃ‚Â³','my_hours_title':'ÃƒËœÃ‚Â³ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â§ÃƒËœÃ‚ÂªÃƒâ„¢Ã…Â ','filter_by_month':'ÃƒËœÃ‚ÂªÃƒËœÃ‚ÂµÃƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â ÃƒËœÃ‚Â© ÃƒËœÃ‚Â­ÃƒËœÃ‚Â³ÃƒËœÃ‚Â¨ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â´Ãƒâ„¢Ã¢â‚¬Â¡ÃƒËœÃ‚Â±','all_months_opt':'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã¢â‚¬Å¾ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â£ÃƒËœÃ‚Â´Ãƒâ„¢Ã¢â‚¬Â¡ÃƒËœÃ‚Â± ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â','approved_total':'ÃƒËœÃ‚Â³ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â¹ÃƒËœÃ‚ÂªÃƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â©','days_worked_lbl':'ÃƒËœÃ‚Â£Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â¦ ÃƒËœÃ‚Â¹Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Å¾','pending_lbl':'Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â¯ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â ÃƒËœÃ‚ÂªÃƒËœÃ‚Â¸ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±','download_pdf_btn':'ÃƒËœÃ‚ÂªÃƒËœÃ‚Â­Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Å¾ ÃƒËœÃ‚ÂªÃƒâ„¢Ã¢â‚¬Å¡ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â± PDF','status_waiting':'Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â¯ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â ÃƒËœÃ‚ÂªÃƒËœÃ‚Â¸ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±','status_approved':'Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â§Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Å¡ ÃƒËœÃ‚Â¹Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Â¡ÃƒËœÃ‚Â§','status_rejected':'Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â±Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¶ÃƒËœÃ‚Â©','net_h':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â³ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂµÃƒËœÃ‚Â§Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â ÃƒËœÃ‚Â©','no_entries':'Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§ ÃƒËœÃ‚ÂªÃƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¬ÃƒËœÃ‚Â¯ ÃƒËœÃ‚ÂªÃƒËœÃ‚Â³ÃƒËœÃ‚Â¬Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª','work_calendar_btn':'ÃƒËœÃ‚Â¬ÃƒËœÃ‚Â¯Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Å¾ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â£ÃƒËœÃ‚Â¹Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾','spese_btn':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚ÂµÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â Ãƒâ„¢Ã‚Â ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Å¡ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¨Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â© Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§ÃƒËœÃ‚Â³ÃƒËœÃ‚ÂªÃƒËœÃ‚Â±ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¯','spese_title':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚ÂµÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â Ãƒâ„¢Ã‚Â ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Å¡ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¨Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â© Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§ÃƒËœÃ‚Â³ÃƒËœÃ‚ÂªÃƒËœÃ‚Â±ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¯','spese_new':'Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚ÂµÃƒËœÃ‚Â±Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã‚Â ÃƒËœÃ‚Â¬ÃƒËœÃ‚Â¯Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â¯','spese_date':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â®','spese_cat':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â¦ÃƒËœÃ‚Â©','spese_amount':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â¨Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Âº (ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬)','spese_desc':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚ÂµÃƒâ„¢Ã‚Â','spese_vehicle':'Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â±Ãƒâ„¢Ã†â€™ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â© ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â´ÃƒËœÃ‚Â±Ãƒâ„¢Ã†â€™ÃƒËœÃ‚Â© (ÃƒËœÃ‚Â§ÃƒËœÃ‚Â®ÃƒËœÃ‚ÂªÃƒâ„¢Ã…Â ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â )','spese_no_vehicle':'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“ ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â¯Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Â  Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â±Ãƒâ„¢Ã†â€™ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â© ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“','spese_photo_label':'ÃƒËœÃ‚ÂµÃƒâ„¢Ã‹â€ ÃƒËœÃ‚Â±ÃƒËœÃ‚Â© ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¥Ãƒâ„¢Ã…Â ÃƒËœÃ‚ÂµÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ / ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â§ÃƒËœÃ‚ÂªÃƒâ„¢Ã‹â€ ÃƒËœÃ‚Â±ÃƒËœÃ‚Â©','spese_photo_req':'ÃƒËœÃ‚Â¥Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â²ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã…Â ','spese_photo_hint':'ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¶ÃƒËœÃ‚ÂºÃƒËœÃ‚Â· Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒâ„¢Ã¢â‚¬Å¡ÃƒËœÃ‚Â§ÃƒËœÃ‚Â· ÃƒËœÃ‚ÂµÃƒâ„¢Ã‹â€ ÃƒËœÃ‚Â±ÃƒËœÃ‚Â© ÃƒËœÃ‚Â£Ãƒâ„¢Ã‹â€  ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒËœÃ‚Â­Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Å¾ Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Â  ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â±ÃƒËœÃ‚Â¶','spese_submit':'ÃƒËœÃ‚Â¥ÃƒËœÃ‚Â±ÃƒËœÃ‚Â³ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚ÂµÃƒËœÃ‚Â±Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã‚Â','spese_sending':'ÃƒËœÃ‚Â¬ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â  ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¥ÃƒËœÃ‚Â±ÃƒËœÃ‚Â³ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾...','spese_history':'ÃƒËœÃ‚Â¢ÃƒËœÃ‚Â®ÃƒËœÃ‚Â± ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚ÂµÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â Ãƒâ„¢Ã‚Â','spese_waiting':'ÃƒÂ¢Ã‚ÂÃ‚Â³ Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â¯ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â ÃƒËœÃ‚ÂªÃƒËœÃ‚Â¸ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±','spese_approved':'ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â§Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Å¡ ÃƒËœÃ‚Â¹Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Â¡','spese_rejected':'ÃƒÂ¢Ã…â€œÃ¢â‚¬â€ Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â±Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¶','spese_note_admin':'Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§ÃƒËœÃ‚Â­ÃƒËœÃ‚Â¸ÃƒËœÃ‚Â©:','spese_error_photo':'ÃƒËœÃ‚ÂµÃƒâ„¢Ã‹â€ ÃƒËœÃ‚Â±ÃƒËœÃ‚Â© ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¥Ãƒâ„¢Ã…Â ÃƒËœÃ‚ÂµÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ ÃƒËœÃ‚Â¥Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â²ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â©.','spese_success':'ÃƒËœÃ‚ÂªÃƒâ„¢Ã¢â‚¬Â¦ ÃƒËœÃ‚Â¥ÃƒËœÃ‚Â±ÃƒËœÃ‚Â³ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚ÂµÃƒËœÃ‚Â±Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã‚Â!','report_title':'ÃƒËœÃ‚ÂªÃƒâ„¢Ã¢â‚¬Å¡ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â± ÃƒËœÃ‚Â³ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¹Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Å¾','report_period':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‚ÂÃƒËœÃ‚ÂªÃƒËœÃ‚Â±ÃƒËœÃ‚Â©','report_days':'ÃƒËœÃ‚Â£Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â¦ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¹Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Å¾','report_total_hours':'ÃƒËœÃ‚Â¥ÃƒËœÃ‚Â¬Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã…Â  ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â³ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª','report_date':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â®','report_site':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â±ÃƒËœÃ‚Â´ÃƒËœÃ‚Â©','report_hours':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â³ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª','report_notes':'Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§ÃƒËœÃ‚Â­ÃƒËœÃ‚Â¸ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª','report_total_row':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â¬Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¹','report_spese_title':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚ÂµÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â Ãƒâ„¢Ã‚Â ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â¹ÃƒËœÃ‚ÂªÃƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â© ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Å¡ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¨Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â© Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§ÃƒËœÃ‚Â³ÃƒËœÃ‚ÂªÃƒËœÃ‚Â±ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¯','report_spese_cat':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â¦ÃƒËœÃ‚Â©','report_spese_desc':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚ÂµÃƒâ„¢Ã‚Â','report_spese_vehicle':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â±Ãƒâ„¢Ã†â€™ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â©','report_spese_amount':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â¨Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Âº','report_spese_total':'ÃƒËœÃ‚Â¥ÃƒËœÃ‚Â¬Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã…Â  ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒËœÃ‚Â¹Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â¶ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª','report_footer':'ÃƒËœÃ‚ÂªÃƒâ„¢Ã¢â‚¬Â¦ ÃƒËœÃ‚Â¥Ãƒâ„¢Ã¢â‚¬Â ÃƒËœÃ‚Â´ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¡ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒâ„¢Ã¢â‚¬Å¡ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â± ÃƒËœÃ‚ÂªÃƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Å¡ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¦Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â¹ ÃƒËœÃ‚Â¨Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â§ÃƒËœÃ‚Â³ÃƒËœÃ‚Â·ÃƒËœÃ‚Â©','all_months_label':'Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã¢â‚¬Å¾ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â£ÃƒËœÃ‚Â´Ãƒâ„¢Ã¢â‚¬Â¡ÃƒËœÃ‚Â±',
     },
 }
 
@@ -8886,24 +8987,24 @@ LANGS['fr'].update({
     'spese_cat_labels': {'Carburante':'Carburant','Parcheggio':'Parking','Pedaggio':'Peage','Vitto':'Repas','Alloggio':'Logement','Materiale':'Materiel','Trasporto':'Transport','Altro':'Autre'},
 })
 LANGS['ar'].update({
-    'profile_title':'Ã˜Â§Ã˜Â¹Ã˜Â¯Ã˜Â§Ã˜Â¯Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ™â€¦Ã™â€žÃ™Â','profile_role_default':'Ã™â€¦Ã™Ë†Ã˜Â¸Ã™Â','notifications':'Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â´Ã˜Â¹Ã˜Â§Ã˜Â±Ã˜Â§Ã˜Âª',
-    'loading':'Ã˜Â¬Ã˜Â§Ã˜Â± Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â­Ã™â€¦Ã™Å Ã™â€ž...','activate_notifications':'Ã˜ÂªÃ™ÂÃ˜Â¹Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â´Ã˜Â¹Ã˜Â§Ã˜Â±Ã˜Â§Ã˜Âª','show_diagnostics':'Ã˜Â¹Ã˜Â±Ã˜Â¶ Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â´Ã˜Â®Ã™Å Ã˜Âµ',
-    'install_app':'Ã˜ÂªÃ˜Â«Ã˜Â¨Ã™Å Ã˜Âª Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â·Ã˜Â¨Ã™Å Ã™â€š','app_not_installed':'Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â·Ã˜Â¨Ã™Å Ã™â€š Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã˜Â«Ã˜Â¨Ã˜Âª','install_on_device':'Ã˜ÂªÃ˜Â«Ã˜Â¨Ã™Å Ã˜Âª Ã˜Â¹Ã™â€žÃ™â€° Ã˜Â§Ã™â€žÃ˜Â¬Ã™â€¡Ã˜Â§Ã˜Â²',
-    'change_email':'Ã˜ÂªÃ˜ÂºÃ™Å Ã™Å Ã˜Â± Ã˜Â¨Ã˜Â±Ã™Å Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â¯Ã˜Â®Ã™Ë†Ã™â€ž','new_email':'Ã˜Â§Ã™â€žÃ˜Â¨Ã˜Â±Ã™Å Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯','confirm_current_password':'Ã˜ÂªÃ˜Â§Ã™Æ’Ã™Å Ã˜Â¯ Ã™Æ’Ã™â€žÃ™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â±Ã™Ë†Ã˜Â± Ã˜Â§Ã™â€žÃ˜Â­Ã˜Â§Ã™â€žÃ™Å Ã˜Â©',
-    'update_email':'Ã˜ÂªÃ˜Â­Ã˜Â¯Ã™Å Ã˜Â« Ã˜Â§Ã™â€žÃ˜Â¨Ã˜Â±Ã™Å Ã˜Â¯','change_password':'Ã˜ÂªÃ˜ÂºÃ™Å Ã™Å Ã˜Â± Ã™Æ’Ã™â€žÃ™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â±Ã™Ë†Ã˜Â±','current_password':'Ã™Æ’Ã™â€žÃ™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â±Ã™Ë†Ã˜Â± Ã˜Â§Ã™â€žÃ˜Â­Ã˜Â§Ã™â€žÃ™Å Ã˜Â©',
-    'new_password':'Ã™Æ’Ã™â€žÃ™â€¦Ã˜Â© Ã™â€¦Ã˜Â±Ã™Ë†Ã˜Â± Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯Ã˜Â©','min_6_chars':'6 Ã˜Â§Ã˜Â­Ã˜Â±Ã™Â Ã˜Â¹Ã™â€žÃ™â€° Ã˜Â§Ã™â€žÃ˜Â§Ã™â€šÃ™â€ž','at_least_6_chars':'6 Ã˜Â§Ã˜Â­Ã˜Â±Ã™Â Ã˜Â¹Ã™â€žÃ™â€° Ã˜Â§Ã™â€žÃ˜Â§Ã™â€šÃ™â€ž',
-    'repeat_new_password':'Ã˜Â§Ã˜Â¹Ã˜Â¯ Ã™Æ’Ã˜ÂªÃ˜Â§Ã˜Â¨Ã˜Â© Ã™Æ’Ã™â€žÃ™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â±Ã™Ë†Ã˜Â± Ã˜Â§Ã™â€žÃ˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯Ã˜Â©','repeat_password':'Ã˜Â§Ã˜Â¹Ã˜Â¯ Ã™Æ’Ã˜ÂªÃ˜Â§Ã˜Â¨Ã˜Â© Ã™Æ’Ã™â€žÃ™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â±Ã™Ë†Ã˜Â±','logout_account':'Ã˜ÂªÃ˜Â³Ã˜Â¬Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â®Ã˜Â±Ã™Ë†Ã˜Â¬',
-    'leave_title':'Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â·Ã™â€ž Ã™Ë†Ã˜Â§Ã™â€žÃ˜ÂªÃ˜ÂµÃ˜Â§Ã˜Â±Ã™Å Ã˜Â­','leave_new':'Ã˜Â·Ã™â€žÃ˜Â¨ Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯','leave_type':'Ã˜Â§Ã™â€žÃ™â€ Ã™Ë†Ã˜Â¹','leave_from':'Ã™â€¦Ã™â€ ','leave_to':'Ã˜Â§Ã™â€žÃ™â€°',
-    'leave_vacation':'Ã˜Â¹Ã˜Â·Ã™â€žÃ˜Â©','leave_permission':'Ã˜ÂªÃ˜ÂµÃ˜Â±Ã™Å Ã˜Â­','leave_sickness':'Ã™â€¦Ã˜Â±Ã˜Â¶','leave_study':'Ã˜ÂªÃ˜ÂµÃ˜Â±Ã™Å Ã˜Â­ Ã˜Â¯Ã˜Â±Ã˜Â§Ã˜Â³Ã˜Â©',
-    'leave_permission_from':'Ã˜Â§Ã™â€žÃ˜ÂªÃ˜ÂµÃ˜Â±Ã™Å Ã˜Â­ Ã™â€¦Ã™â€ ','leave_permission_to':'Ã˜Â§Ã™â€žÃ˜ÂªÃ˜ÂµÃ˜Â±Ã™Å Ã˜Â­ Ã˜Â§Ã™â€žÃ™â€°','leave_certificate':'Ã˜Â´Ã™â€¡Ã˜Â§Ã˜Â¯Ã˜Â© Ã™â€¦Ã˜Â±Ã˜Â¶Ã™Å Ã˜Â©',
-    'leave_certificate_hint':'Ã™Å Ã™â€¦Ã™Æ’Ã™â€ Ã™Æ’ Ã˜Â§Ã˜Â±Ã™ÂÃ˜Â§Ã™â€š Ã˜ÂµÃ™Ë†Ã˜Â±Ã˜Â© Ã˜Â§Ã™Ë† PDF Ã™â€žÃ™â€žÃ˜Â´Ã™â€¡Ã˜Â§Ã˜Â¯Ã˜Â©.','leave_reason':'Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¨Ã˜Â¨','optional':'Ã˜Â§Ã˜Â®Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â±Ã™Å ',
-    'send_request':'Ã˜Â§Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â·Ã™â€žÃ˜Â¨','your_requests':'Ã˜Â·Ã™â€žÃ˜Â¨Ã˜Â§Ã˜ÂªÃ™Æ’','from_date':'Ã™â€¦Ã™â€ ','to_date':'Ã˜Â§Ã™â€žÃ™â€°','days_short':'Ã™Å Ã™Ë†Ã™â€¦',
-    'from_time':'Ã™â€¦Ã™â€ ','to_time':'Ã˜Â§Ã™â€žÃ™â€°','accepted':'Ã™â€¦Ã™â€šÃ˜Â¨Ã™Ë†Ã™â€ž','admin_reply':'Ã˜Â±Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â¯Ã˜Â§Ã˜Â±Ã˜Â©:','certificate_attached':'Ã˜Â§Ã™â€žÃ˜Â´Ã™â€¡Ã˜Â§Ã˜Â¯Ã˜Â© Ã™â€¦Ã˜Â±Ã™ÂÃ™â€šÃ˜Â©',
-    'no_requests':'Ã™â€žÃ™Å Ã˜Â³ Ã™â€žÃ˜Â¯Ã™Å Ã™Æ’ Ã˜Â·Ã™â€žÃ˜Â¨Ã˜Â§Ã˜Âª Ã˜Â¨Ã˜Â¹Ã˜Â¯.','leave_dates_required':'Ã˜Â§Ã™â€žÃ˜ÂªÃ™Ë†Ã˜Â§Ã˜Â±Ã™Å Ã˜Â® Ã™â€¦Ã˜Â·Ã™â€žÃ™Ë†Ã˜Â¨Ã˜Â©.',
-    'leave_hours_required':'Ã™â€žÃ™â€žÃ˜ÂªÃ˜ÂµÃ˜Â§Ã˜Â±Ã™Å Ã˜Â­ Ã˜Â§Ã˜Â¯Ã˜Â®Ã™â€ž Ã™Ë†Ã™â€šÃ˜Âª Ã˜Â§Ã™â€žÃ˜Â¨Ã˜Â¯Ã˜Â§Ã™Å Ã˜Â© Ã™Ë†Ã˜Â§Ã™â€žÃ™â€ Ã™â€¡Ã˜Â§Ã™Å Ã˜Â©.',
-    'leave_certificate_required':'Ã™â€žÃ™â€žÃ™â€¦Ã˜Â±Ã˜Â¶ Ã™Å Ã˜Â¬Ã˜Â¨ Ã˜Â§Ã˜Â±Ã™ÂÃ˜Â§Ã™â€š Ã˜Â§Ã™â€žÃ˜Â´Ã™â€¡Ã˜Â§Ã˜Â¯Ã˜Â©.',
-    'leave_date_order':'Ã˜ÂªÃ˜Â§Ã˜Â±Ã™Å Ã˜Â® Ã˜Â§Ã™â€žÃ™â€ Ã™â€¡Ã˜Â§Ã™Å Ã˜Â© Ã™Å Ã˜Â¬Ã˜Â¨ Ã˜Â§Ã™â€  Ã™Å Ã™Æ’Ã™Ë†Ã™â€  Ã˜Â¨Ã˜Â¹Ã˜Â¯ Ã˜ÂªÃ˜Â§Ã˜Â±Ã™Å Ã˜Â® Ã˜Â§Ã™â€žÃ˜Â¨Ã˜Â¯Ã˜Â§Ã™Å Ã˜Â©.','leave_sent':'Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â·Ã™â€žÃ˜Â¨.',
-    'spese_cat_labels': {'Carburante':'Ã™Ë†Ã™â€šÃ™Ë†Ã˜Â¯','Parcheggio':'Ã™â€¦Ã™Ë†Ã™â€šÃ™Â','Pedaggio':'Ã˜Â±Ã˜Â³Ã™Ë†Ã™â€¦ Ã˜Â·Ã˜Â±Ã™Å Ã™â€š','Vitto':'Ã™Ë†Ã˜Â¬Ã˜Â¨Ã˜Â§Ã˜Âª','Alloggio':'Ã˜Â§Ã™â€šÃ˜Â§Ã™â€¦Ã˜Â©','Materiale':'Ã™â€¦Ã™Ë†Ã˜Â§Ã˜Â¯','Trasporto':'Ã™â€ Ã™â€šÃ™â€ž','Altro':'Ã˜Â§Ã˜Â®Ã˜Â±Ã™â€°'},
+    'profile_title':'ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‚Â','profile_role_default':'Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¸Ãƒâ„¢Ã‚Â','notifications':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§ÃƒËœÃ‚Â´ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª',
+    'loading':'ÃƒËœÃ‚Â¬ÃƒËœÃ‚Â§ÃƒËœÃ‚Â± ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒËœÃ‚Â­Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Å¾...','activate_notifications':'ÃƒËœÃ‚ÂªÃƒâ„¢Ã‚ÂÃƒËœÃ‚Â¹Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Å¾ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§ÃƒËœÃ‚Â´ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª','show_diagnostics':'ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â±ÃƒËœÃ‚Â¶ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒËœÃ‚Â´ÃƒËœÃ‚Â®Ãƒâ„¢Ã…Â ÃƒËœÃ‚Âµ',
+    'install_app':'ÃƒËœÃ‚ÂªÃƒËœÃ‚Â«ÃƒËœÃ‚Â¨Ãƒâ„¢Ã…Â ÃƒËœÃ‚Âª ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒËœÃ‚Â·ÃƒËœÃ‚Â¨Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Å¡','app_not_installed':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒËœÃ‚Â·ÃƒËœÃ‚Â¨Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Å¡ ÃƒËœÃ‚ÂºÃƒâ„¢Ã…Â ÃƒËœÃ‚Â± Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â«ÃƒËœÃ‚Â¨ÃƒËœÃ‚Âª','install_on_device':'ÃƒËœÃ‚ÂªÃƒËœÃ‚Â«ÃƒËœÃ‚Â¨Ãƒâ„¢Ã…Â ÃƒËœÃ‚Âª ÃƒËœÃ‚Â¹Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â° ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¬Ãƒâ„¢Ã¢â‚¬Â¡ÃƒËœÃ‚Â§ÃƒËœÃ‚Â²',
+    'change_email':'ÃƒËœÃ‚ÂªÃƒËœÃ‚ÂºÃƒâ„¢Ã…Â Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â± ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â¯ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â®Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Å¾','new_email':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â¯ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¬ÃƒËœÃ‚Â¯Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â¯','confirm_current_password':'ÃƒËœÃ‚ÂªÃƒËœÃ‚Â§Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â¯ Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â© ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â±Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â± ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â­ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â©',
+    'update_email':'ÃƒËœÃ‚ÂªÃƒËœÃ‚Â­ÃƒËœÃ‚Â¯Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â« ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â¯','change_password':'ÃƒËœÃ‚ÂªÃƒËœÃ‚ÂºÃƒâ„¢Ã…Â Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â± Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â© ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â±Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â±','current_password':'Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â© ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â±Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â± ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â­ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â©',
+    'new_password':'Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â© Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â±Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â± ÃƒËœÃ‚Â¬ÃƒËœÃ‚Â¯Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â©','min_6_chars':'6 ÃƒËœÃ‚Â§ÃƒËœÃ‚Â­ÃƒËœÃ‚Â±Ãƒâ„¢Ã‚Â ÃƒËœÃ‚Â¹Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â° ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ„¢Ã¢â‚¬Å¾','at_least_6_chars':'6 ÃƒËœÃ‚Â§ÃƒËœÃ‚Â­ÃƒËœÃ‚Â±Ãƒâ„¢Ã‚Â ÃƒËœÃ‚Â¹Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â° ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ„¢Ã¢â‚¬Å¾',
+    'repeat_new_password':'ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â¯ Ãƒâ„¢Ã†â€™ÃƒËœÃ‚ÂªÃƒËœÃ‚Â§ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â© Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â© ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â±Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â± ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¬ÃƒËœÃ‚Â¯Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â©','repeat_password':'ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â¯ Ãƒâ„¢Ã†â€™ÃƒËœÃ‚ÂªÃƒËœÃ‚Â§ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â© Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â© ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â±Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â±','logout_account':'ÃƒËœÃ‚ÂªÃƒËœÃ‚Â³ÃƒËœÃ‚Â¬Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Å¾ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â®ÃƒËœÃ‚Â±Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¬',
+    'leave_title':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â·Ãƒâ„¢Ã¢â‚¬Å¾ Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒËœÃ‚ÂµÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â­','leave_new':'ÃƒËœÃ‚Â·Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¨ ÃƒËœÃ‚Â¬ÃƒËœÃ‚Â¯Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â¯','leave_type':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¹','leave_from':'Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Â ','leave_to':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â°',
+    'leave_vacation':'ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â·Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â©','leave_permission':'ÃƒËœÃ‚ÂªÃƒËœÃ‚ÂµÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â­','leave_sickness':'Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â±ÃƒËœÃ‚Â¶','leave_study':'ÃƒËœÃ‚ÂªÃƒËœÃ‚ÂµÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â­ ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â±ÃƒËœÃ‚Â§ÃƒËœÃ‚Â³ÃƒËœÃ‚Â©',
+    'leave_permission_from':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒËœÃ‚ÂµÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â­ Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Â ','leave_permission_to':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒËœÃ‚ÂµÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â­ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â°','leave_certificate':'ÃƒËœÃ‚Â´Ãƒâ„¢Ã¢â‚¬Â¡ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â© Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â±ÃƒËœÃ‚Â¶Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â©',
+    'leave_certificate_hint':'Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã†â€™ ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¡ ÃƒËœÃ‚ÂµÃƒâ„¢Ã‹â€ ÃƒËœÃ‚Â±ÃƒËœÃ‚Â© ÃƒËœÃ‚Â§Ãƒâ„¢Ã‹â€  PDF Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â´Ãƒâ„¢Ã¢â‚¬Â¡ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â©.','leave_reason':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â³ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â¨','optional':'ÃƒËœÃ‚Â§ÃƒËœÃ‚Â®ÃƒËœÃ‚ÂªÃƒâ„¢Ã…Â ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â ',
+    'send_request':'ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±ÃƒËœÃ‚Â³ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â·Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¨','your_requests':'ÃƒËœÃ‚Â·Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â§ÃƒËœÃ‚ÂªÃƒâ„¢Ã†â€™','from_date':'Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Â ','to_date':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â°','days_short':'Ãƒâ„¢Ã…Â Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Â¦',
+    'from_time':'Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Â ','to_time':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â°','accepted':'Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Å¡ÃƒËœÃ‚Â¨Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Å¾','admin_reply':'ÃƒËœÃ‚Â±ÃƒËœÃ‚Â¯ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±ÃƒËœÃ‚Â©:','certificate_attached':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â´Ãƒâ„¢Ã¢â‚¬Â¡ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â© Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â±Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Å¡ÃƒËœÃ‚Â©',
+    'no_requests':'Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â³ Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¯Ãƒâ„¢Ã…Â Ãƒâ„¢Ã†â€™ ÃƒËœÃ‚Â·Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â¯.','leave_dates_required':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒâ„¢Ã‹â€ ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â® Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â·Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â©.',
+    'leave_hours_required':'Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒËœÃ‚ÂµÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â­ ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â®Ãƒâ„¢Ã¢â‚¬Å¾ Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Å¡ÃƒËœÃ‚Âª ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â§Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â© Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã¢â‚¬Â¡ÃƒËœÃ‚Â§Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â©.',
+    'leave_certificate_required':'Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â±ÃƒËœÃ‚Â¶ Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â¬ÃƒËœÃ‚Â¨ ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¡ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â´Ãƒâ„¢Ã¢â‚¬Â¡ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â©.',
+    'leave_date_order':'ÃƒËœÃ‚ÂªÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â® ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã¢â‚¬Â¡ÃƒËœÃ‚Â§Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â© Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â¬ÃƒËœÃ‚Â¨ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â  Ãƒâ„¢Ã…Â Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Â  ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â¯ ÃƒËœÃ‚ÂªÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â® ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â§Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â©.','leave_sent':'ÃƒËœÃ‚ÂªÃƒâ„¢Ã¢â‚¬Â¦ ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±ÃƒËœÃ‚Â³ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â·Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¨.',
+    'spese_cat_labels': {'Carburante':'Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¯','Parcheggio':'Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ„¢Ã‚Â','Pedaggio':'ÃƒËœÃ‚Â±ÃƒËœÃ‚Â³Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Â¦ ÃƒËœÃ‚Â·ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Å¡','Vitto':'Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¬ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â§ÃƒËœÃ‚Âª','Alloggio':'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¡ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â©','Materiale':'Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¯','Trasporto':'Ãƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ„¢Ã¢â‚¬Å¾','Altro':'ÃƒËœÃ‚Â§ÃƒËœÃ‚Â®ÃƒËœÃ‚Â±Ãƒâ„¢Ã¢â‚¬Â°'},
 })
 
 @app.route('/set-lang', methods=['POST'])
@@ -8917,9 +9018,9 @@ def set_lang():
 
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 #  DASHBOARD con GRAFICI
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 DASH_TMPL = """
 <style>
 .dash-header{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:14px}
@@ -8956,7 +9057,7 @@ body.customize-mode .widget:hover{background:#f0f9ff}
 .cust-legend{font-size:11px;color:var(--text-light);margin:14px 0 6px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
 </style>
 
-<!-- Floating tray per modalitÃƒÂ  personalizza (visibile solo in customize-mode) -->
+<!-- Floating tray per modalitÃƒÆ’Ã‚Â  personalizza (visibile solo in customize-mode) -->
 <div class="dash-customize-tray">
   <button type="button" class="btn btn-link-soft" onclick="openCustomizer()" title="Personalizza widget"><i class="fa fa-sliders"></i></button>
   <button type="button" id="btn-save-layout" class="btn btn-primary" style="display:none" onclick="saveLayout()"><i class="fa fa-check"></i> Salva layout</button>
@@ -8976,7 +9077,7 @@ body.customize-mode .widget:hover{background:#f0f9ff}
 body.customize-mode .btn-link-soft{display:none}
 </style>
 
-{# Widget: Hero + KPI Cards moderni Ã¢â‚¬â€ sempre full-width, in cima #}
+{# Widget: Hero + KPI Cards moderni ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â sempre full-width, in cima #}
 {% macro w_stats() %}
 <div class="dash-hero widget" data-widget-id="stats" style="margin-bottom:26px">
   <span class="widget-drag-handle"><i class="fa fa-grip-vertical"></i> Hero & KPI</span>
@@ -9136,7 +9237,7 @@ body.customize-mode .btn-link-soft{display:none}
       <div class="kpi-icon"><i class="fa fa-euro-sign"></i></div>
       <div class="kpi-body">
         <div class="kpi-label">Rimborsi mese</div>
-        <div class="kpi-value"><span class="count-up" data-count="{{ "%.0f"|format(s.rimborsi_mese) }}">{{ "%.0f"|format(s.rimborsi_mese) }}</span><span class="kpi-unit">Ã¢â€šÂ¬</span></div>
+        <div class="kpi-value"><span class="count-up" data-count="{{ "%.0f"|format(s.rimborsi_mese) }}">{{ "%.0f"|format(s.rimborsi_mese) }}</span><span class="kpi-unit">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬</span></div>
         <div class="kpi-foot"><i class="fa fa-check-double"></i> spese approvate</div>
       </div>
       <div class="kpi-glow"></div>
@@ -9244,7 +9345,7 @@ body.customize-mode .btn-link-soft{display:none}
 {% endmacro %}
 
 <style>
-/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â HERO MODERNO Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
+/* ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â HERO MODERNO ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â */
 .dash-hero{position:relative}
 .hero-bar{
   background:
@@ -9293,7 +9394,7 @@ body.customize-mode .btn-link-soft{display:none}
 .sync-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 0 rgba(34,197,94,.7);animation:kpiDotPulse 2s infinite}
 .sync-live{background:rgba(20,145,100,.16);border:1px solid rgba(139,216,182,.32);color:#8bd8b6;border-radius:999px;padding:2px 7px;font-size:10px;font-weight:900}
 
-/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â KPI CARDS MODERNE Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
+/* ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â KPI CARDS MODERNE ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â */
 .kpi-grid{
   display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:2px;
 }
@@ -9415,6 +9516,8 @@ body.customize-mode .btn-link-soft{display:none}
   function animateCount(el){
     var target=parseFloat(el.getAttribute('data-count') || '0');
     if(!isFinite(target)){ target=0; }
+    el.textContent=Math.round(target).toLocaleString('it-IT');
+    return;
     var current=parseFloat((el.textContent || '').replace(/[.]/g,'').replace(',','.'));
     if(isFinite(current) && Math.round(current) === Math.round(target)){
       el.textContent=Math.round(target).toLocaleString('it-IT');
@@ -9437,7 +9540,7 @@ body.customize-mode .btn-link-soft{display:none}
 </script>
 
 <style>
-/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â DARK CONTROL ROOM DASHBOARD Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
+/* ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â DARK CONTROL ROOM DASHBOARD ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â */
 body{
   background:
     radial-gradient(circle at 82% 2%,rgba(22,96,130,.24),transparent 30%),
@@ -10128,7 +10231,7 @@ table tr:hover{
 {% macro w_ore_settimana() %}
 <div class="card widget" data-widget-id="ore_settimana">
   <span class="widget-drag-handle"><i class="fa fa-grip-vertical"></i> Sposta</span>
-  <div class="card-header"><h3><i class="fa fa-chart-bar" style="color:var(--accent2);margin-right:8px"></i>Ore lavorate Ã¢â‚¬â€œ ultimi 7 giorni</h3></div>
+  <div class="card-header"><h3><i class="fa fa-chart-bar" style="color:var(--accent2);margin-right:8px"></i>Ore lavorate ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“ ultimi 7 giorni</h3></div>
   <div class="card-body"><canvas id="chartOre" height="200"></canvas></div>
 </div>
 {% endmacro %}
@@ -10151,9 +10254,9 @@ table tr:hover{
   {% for p in presenze_oggi %}
   <tr>
     <td><span class="avatar-sm">{{ (p.nome or '?')[0] }}{{ (p.cognome or '?')[0] }}</span>{{ p.nome }} {{ p.cognome }}</td>
-    <td><span class="tag">{{ p.cantiere_nome or 'Ã¢â‚¬â€œ' }}</span></td>
+    <td><span class="tag">{{ p.cantiere_nome or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</span></td>
     <td style="font-family:monospace;color:var(--success)">{{ p.ora_entrata }}</td>
-    <td>{% if p.ora_uscita %}<span class="badge badge-gray">Uscito</span>{% else %}<span class="badge badge-green">Ã¢â€”Â In sede</span>{% endif %}</td>
+    <td>{% if p.ora_uscita %}<span class="badge badge-gray">Uscito</span>{% else %}<span class="badge badge-green">ÃƒÂ¢Ã¢â‚¬â€Ã‚Â In sede</span>{% endif %}</td>
   </tr>{% endfor %}</tbody></table>
   {% else %}<div class="empty-state"><i class="fa fa-calendar-day"></i><p>Nessuna presenza registrata oggi. Il sistema resta in ascolto.</p></div>{% endif %}
   </div>
@@ -10175,7 +10278,7 @@ table tr:hover{
           <div style="font-size:13.5px;font-weight:600">{{ d.titolo }}</div>
           <div style="font-size:12px;color:var(--text-light)">
             {% if d.categoria %}<span style="background:{% if d.categoria=='Veicolo' %}#e0e7ff;color:#3730a3{% elif d.categoria=='Documento dipendente' %}#fef3c7;color:#92400e{% elif d.categoria=='Documento azienda' %}#dbeafe;color:#1e40af{% elif d.categoria=='Documento veicolo' %}#e0e7ff;color:#4338ca{% elif d.categoria=='Contratto cliente' %}#dcfce7;color:#15803d{% else %}#f1f5f9;color:#475569{% endif %};padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;margin-right:6px">{{ d.categoria }}</span>{% endif %}
-            {{ d.data_scadenza }}{% if d.nome %} Ã‚Â· {{ d.nome }} {{ d.cognome }}{% endif %}
+            {{ d.data_scadenza }}{% if d.nome %} Ãƒâ€šÃ‚Â· {{ d.nome }} {{ d.cognome }}{% endif %}
           </div>
         </div>
         <span class="badge badge-{{ d.priority_tone }}">{{ d.days_label }}</span>
@@ -10225,9 +10328,9 @@ table tr:hover{
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:600">{{ r.nome }} {{ r.cognome }}</div>
         <div style="font-size:11.5px;color:var(--text-light);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-          {{ r.data }} Ã‚Â·
-          {% if r.tipo=='presenza' %}{% if r.ora_entrata and r.ora_uscita %}{{ r.ora_entrata }}Ã¢â‚¬â€œ{{ r.ora_uscita }} {% endif %}({{ "%.1f"|format(r.ore_totali or 0) }}h){% if r.cantiere_nome %} Ã‚Â· {{ r.cantiere_nome }}{% endif %}
-          {% else %}{{ r.categoria }} Ã‚Â· Ã¢â€šÂ¬ {{ "%.2f"|format(r.importo or 0) }}{% if r.descrizione %} Ã‚Â· {{ r.descrizione[:40] }}{% endif %}{% endif %}
+          {{ r.data }} Ãƒâ€šÃ‚Â·
+          {% if r.tipo=='presenza' %}{% if r.ora_entrata and r.ora_uscita %}{{ r.ora_entrata }}ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“{{ r.ora_uscita }} {% endif %}({{ "%.1f"|format(r.ore_totali or 0) }}h){% if r.cantiere_nome %} Ãƒâ€šÃ‚Â· {{ r.cantiere_nome }}{% endif %}
+          {% else %}{{ r.categoria }} Ãƒâ€šÃ‚Â· ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(r.importo or 0) }}{% if r.descrizione %} Ãƒâ€šÃ‚Â· {{ r.descrizione[:40] }}{% endif %}{% endif %}
         </div>
       </div>
       <a href="{% if r.tipo=='presenza' %}/admin/richieste{% else %}/admin/spese?stato=in_attesa{% endif %}"
@@ -10245,7 +10348,7 @@ table tr:hover{
 </div>
 {% endmacro %}
 
-{# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â RENDERING DINAMICO Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â #}
+{# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â RENDERING DINAMICO ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â #}
 {# Widget KPI sempre in testa (fissi) #}
 {% if 'stats' not in layout.hidden %}{{ w_stats() }}{% endif %}
 
@@ -10275,7 +10378,7 @@ table tr:hover{
   </div>
 </div>
 
-{# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â MODAL PERSONALIZZAZIONE Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â #}
+{# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â MODAL PERSONALIZZAZIONE ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â #}
 <div id="cust-modal" class="cust-modal" onclick="if(event.target===this)closeCustomizer()">
   <div class="cust-box" onclick="event.stopPropagation()">
     <h3><i class="fa fa-sliders" style="color:var(--accent);margin-right:6px"></i>Personalizza dashboard</h3>
@@ -10301,7 +10404,7 @@ table tr:hover{
 </div>
 
 <script>
-// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â Configurazione widget Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+// ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â Configurazione widget ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 const WIDGET_LABELS = {
   'ore_settimana':  {lbl: 'Grafico ore ultimi 7 giorni', icon:'chart-bar'},
   'cantieri':       {lbl: 'Grafico presenze per cantiere', icon:'hard-hat'},
@@ -10313,7 +10416,7 @@ const WIDGET_LABELS = {
 const DEFAULT_LAYOUT = {left: ['ore_settimana','presenze_oggi'], right: ['cantieri','scadenze','ferie'], hidden: []};
 let currentLayout = {{ layout | tojson }};
 
-// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â Grafici Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+// ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â Grafici ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 function renderCharts() {
   const premiumTooltip = {
     backgroundColor:'#071321',
@@ -10508,10 +10611,10 @@ function renderCharts() {
 }
 renderCharts();
 
-// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â Modal personalizzazione Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+// ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â Modal personalizzazione ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 function buildCustomizerList() {
   const cols = {left: currentLayout.left || [], right: currentLayout.right || [], hidden: currentLayout.hidden || []};
-  // Widget non menzionati Ã¢â€ â€™ vanno in hidden
+  // Widget non menzionati ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ vanno in hidden
   const all = Object.keys(WIDGET_LABELS);
   const menzionati = new Set([...cols.left, ...cols.right, ...cols.hidden]);
   all.forEach(w => { if (!menzionati.has(w)) cols.hidden.push(w); });
@@ -10620,14 +10723,14 @@ function saveLayoutToServer(newLayout, reload) {
   }).catch(e => alert('Errore di rete: ' + e));
 }
 
-// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â Drag & drop inline sui widget della dashboard Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+// ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â Drag & drop inline sui widget della dashboard ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 // (attivo solo in customize-mode)
 function exitCustomize() {
   document.body.classList.remove('customize-mode');
   document.getElementById('btn-save-layout').style.display = 'none';
   document.getElementById('btn-exit-customize').style.display = 'none';
 }
-// Drag & drop live sui widget (opzionale Ã¢â‚¬â€ riordina solo nella stessa colonna)
+// Drag & drop live sui widget (opzionale ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â riordina solo nella stessa colonna)
 document.querySelectorAll('.widget').forEach(w => {
   w.addEventListener('dragover', e => {
     if (!document.body.classList.contains('customize-mode')) return;
@@ -10655,7 +10758,7 @@ def dashboard():
     }
     s['richieste_totali'] = s['richieste'] + s['ferie'] + s['rimborsi_attesa']
 
-    # KPI moderni Ã¢â‚¬â€ deltas e info accessorie
+    # KPI moderni ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â deltas e info accessorie
     # Ore lavorate mese in corso vs mese precedente (% delta)
     mese_prev_y = date.today().year if date.today().month > 1 else date.today().year - 1
     mese_prev_m = date.today().month - 1 if date.today().month > 1 else 12
@@ -10665,7 +10768,7 @@ def dashboard():
     delta_ore_pct = round(((ore_mese - ore_mese_prev) / ore_mese_prev * 100), 1) if ore_mese_prev > 0 else 0
     # Spese rimborsate mese in corso
     rimborsi_mese = db.execute("SELECT COALESCE(SUM(importo),0) FROM spese_rimborso WHERE substr(data,1,7)=? AND stato='approvata'", (mese,)).fetchone()[0]
-    # Scadenze 30 giorni Ã¢â‚¬â€ separate documenti vs veicoli
+    # Scadenze 30 giorni ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â separate documenti vs veicoli
     sc_app = _conta_scadenze_app(db)
     scad_doc_30g    = sc_app['docs_dip_in_scadenza'] + sc_app['docs_az_in_scadenza']
     scad_doc_scaduti= sc_app['docs_dip_scaduti']    + sc_app['docs_az_scaduti']
@@ -10728,7 +10831,7 @@ def dashboard():
         FROM presenze p LEFT JOIN cantieri c ON c.id=p.cantiere_id
         WHERE p.data LIKE ? GROUP BY p.cantiere_id""",(f'{mese}%',)).fetchall()
 
-    # Scadenze imminenti Ã¢â‚¬â€ da TUTTE le fonti (documenti azienda, documenti dipendenti,
+    # Scadenze imminenti ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â da TUTTE le fonti (documenti azienda, documenti dipendenti,
     # documenti veicoli, campi scadenza veicoli, contratti clienti)
     scadenze_raw = db.execute("""
         -- Documenti azienda
@@ -10901,7 +11004,7 @@ def dashboard():
     for p in presenze_oggi[:4]:
         attivita_recenti.append({
             'title': f"{_dash_nome(p)} ha timbrato",
-            'meta': f"{p['ora_entrata'] or '--'} Ã‚Â· {p['cantiere_nome'] or 'Fiera non specificata'}",
+            'meta': f"{p['ora_entrata'] or '--'} Ãƒâ€šÃ‚Â· {p['cantiere_nome'] or 'Fiera non specificata'}",
             'url': '/presenze',
             'icon': 'fa-clock',
             'tone': 'blue',
@@ -10911,7 +11014,7 @@ def dashboard():
         if r['tipo'] == 'presenza':
             attivita_recenti.append({
                 'title': f"Richiesta timbratura: {_dash_nome(r)}",
-                'meta': f"{r['data']} Ã‚Â· {_safe_float(r['ore_totali']):.1f}h",
+                'meta': f"{r['data']} Ãƒâ€šÃ‚Â· {_safe_float(r['ore_totali']):.1f}h",
                 'url': '/admin/richieste',
                 'icon': 'fa-inbox',
                 'tone': 'amber',
@@ -10920,7 +11023,7 @@ def dashboard():
         else:
             attivita_recenti.append({
                 'title': f"Rimborso da approvare: {_dash_nome(r)}",
-                'meta': f"{r['categoria'] or 'Spesa'} Ã‚Â· Ã¢â€šÂ¬ {_safe_float(r['importo']):.2f}",
+                'meta': f"{r['categoria'] or 'Spesa'} Ãƒâ€šÃ‚Â· ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {_safe_float(r['importo']):.2f}",
                 'url': '/admin/spese?stato=in_attesa',
                 'icon': 'fa-receipt',
                 'tone': 'amber',
@@ -10940,7 +11043,7 @@ def dashboard():
         if giorni <= 30:
             attivita_recenti.append({
                 'title': f"Scadenza: {d['titolo']}",
-                'meta': f"{d['categoria']} Ã‚Â· tra {giorni} giorni",
+                'meta': f"{d['categoria']} Ãƒâ€šÃ‚Â· tra {giorni} giorni",
                 'url': '/scadenze',
                 'icon': 'fa-triangle-exclamation',
                 'tone': 'red' if giorni <= 7 else 'amber',
@@ -11087,7 +11190,7 @@ def dashboard():
     s['hero_incassato_mese_corrente'] = round(totale_incassato_periodo, 2)
     s['hero_fatturato_pct_corrente'] = round((totale_incassato_periodo / totale_fatturato_periodo) * 100, 1) if totale_fatturato_periodo > 0 else 0
 
-    # Carico layout personalizzato (1 riga per azienda Ã¢â‚¬â€ condiviso fra admin)
+    # Carico layout personalizzato (1 riga per azienda ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â condiviso fra admin)
     layout = _default_dashboard_layout()
     try:
         row = db.execute("SELECT layout_json FROM dashboard_layout WHERE id=1").fetchone()
@@ -11295,7 +11398,7 @@ def admin_mobile():
                                   richieste=richieste)
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â Dashboard layout personalizzato Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â Dashboard layout personalizzato ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 AMMINISTRAZIONE_HOME_TMPL = """
 <div class="page-header">
   <div>
@@ -12549,10 +12652,10 @@ def _efatt_build_issued_payload(db, f):
                     if orig['provider_doc_id']:
                         doc['related_document'] = {'id': int(orig['provider_doc_id'])} \
                             if str(orig['provider_doc_id']).isdigit() else {'id_string': str(orig['provider_doc_id'])}
-                    # Aggiungo come riferimento testuale nel subject se non c'ÃƒÂ¨ giÃƒÂ 
+                    # Aggiungo come riferimento testuale nel subject se non c'ÃƒÆ’Ã‚Â¨ giÃƒÆ’Ã‚Â 
                     rif_txt = f"Riferimento fattura {orig['numero']} del {orig['data_emissione']}"
                     if rif_txt not in (doc.get('subject') or ''):
-                        doc['subject'] = (doc.get('subject', '') + ' Ã¢â‚¬â€ ' + rif_txt)[:255]
+                        doc['subject'] = (doc.get('subject', '') + ' ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â ' + rif_txt)[:255]
             except Exception as e:
                 print(f'[credit_note] errore lettura fattura riferimento: {e}')
     # Gestione numerazione: FiC supporta `number` (progressivo intero) e
@@ -12876,7 +12979,7 @@ def global_search():
 ALLOWED_WIDGETS = {'ore_settimana','cantieri','presenze_oggi','scadenze','ferie','richieste'}
 
 def _default_dashboard_layout():
-    """Layout default: richieste in alto a destra per massima visibilitÃƒÂ ."""
+    """Layout default: richieste in alto a destra per massima visibilitÃƒÆ’Ã‚Â ."""
     return {
         'left':  ['ore_settimana', 'presenze_oggi'],
         'right': ['richieste', 'cantieri', 'scadenze', 'ferie'],
@@ -12895,7 +12998,7 @@ def dashboard_layout_save():
         left   = [w for w in (data.get('left')   or []) if w in ALLOWED_WIDGETS]
         right  = [w for w in (data.get('right')  or []) if w in ALLOWED_WIDGETS]
         hidden = [w for w in (data.get('hidden') or []) if w in ALLOWED_WIDGETS]
-        # Dedup: un widget puÃƒÂ² stare in una sola colonna
+        # Dedup: un widget puÃƒÆ’Ã‚Â² stare in una sola colonna
         seen = set()
         def _dedupe(lst):
             out = []
@@ -12916,9 +13019,9 @@ def dashboard_layout_save():
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 #  CANTIERI
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 CANTIERI_TMPL = """
 <style>
 .tipo-badge{padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
@@ -12940,7 +13043,7 @@ CANTIERI_TMPL = """
       <span>Fiere &amp; Stand</span>
     </div>
     <div class="page-title">Fiere, eventi e allestimenti</div>
-    <div class="page-desc">Tutti i cantieri attivi: fiere, eventi corporate, congressi e allestimenti permanenti, con dettagli su committente, date e marginalitÃƒÂ .</div>
+    <div class="page-desc">Tutti i cantieri attivi: fiere, eventi corporate, congressi e allestimenti permanenti, con dettagli su committente, date e marginalitÃƒÆ’Ã‚Â .</div>
   </div>
   <div class="page-actions">
     <a href="/calendario-fiere" class="btn btn-secondary"><i class="fa fa-calendar-days"></i> Calendario</a>
@@ -12955,8 +13058,8 @@ CANTIERI_TMPL = """
       <th>Fiera / Evento</th>
       <th>Committente</th>
       <th>Padiglione / Stand</th>
-      <th>mÃ‚Â²</th>
-      <th>Setup Ã¢â€ â€™ Live Ã¢â€ â€™ Smont.</th>
+      <th>mÃƒâ€šÃ‚Â²</th>
+      <th>Setup ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Live ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Smont.</th>
       <th>Margine</th>
       <th>Stato</th>
       <th>Azioni</th>
@@ -12970,40 +13073,40 @@ CANTIERI_TMPL = """
       <td>
         <i class="fa fa-store" style="color:var(--accent);margin-right:6px"></i>
         <a href="/cantieri/{{ c.id }}" style="font-weight:700;color:var(--text);text-decoration:none">{{ c.nome }}</a>
-        {% if c.ente_organizzatore %}<div style="font-size:11px;color:var(--text-light);margin-top:2px">{{ c.ente_organizzatore }}{% if c.citta %} Ã‚Â· {{ c.citta }}{% endif %}</div>{% endif %}
+        {% if c.ente_organizzatore %}<div style="font-size:11px;color:var(--text-light);margin-top:2px">{{ c.ente_organizzatore }}{% if c.citta %} Ãƒâ€šÃ‚Â· {{ c.citta }}{% endif %}</div>{% endif %}
       </td>
-      <td style="font-size:13px">{{ c.committente_nome or 'Ã¢â‚¬â€œ' }}</td>
+      <td style="font-size:13px">{{ c.committente_nome or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
       <td>
         {% if c.padiglione %}<span class="tag">{{ c.padiglione }}</span>{% endif %}
         {% if c.numero_stand %}<span class="tag">Stand {{ c.numero_stand }}</span>{% endif %}
-        {% if not c.padiglione and not c.numero_stand %}Ã¢â‚¬â€œ{% endif %}
+        {% if not c.padiglione and not c.numero_stand %}ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“{% endif %}
       </td>
-      <td style="font-size:13px">{% if c.superficie_mq %}{{ c.superficie_mq|int }}{% else %}Ã¢â‚¬â€œ{% endif %}</td>
+      <td style="font-size:13px">{% if c.superficie_mq %}{{ c.superficie_mq|int }}{% else %}ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“{% endif %}</td>
       <td style="font-size:11px;font-family:monospace;line-height:1.5">
-        {% if c.data_setup %}<span style="color:#3b82f6">Ã°Å¸â€œÂ¦ {{ c.data_setup }}</span><br>{% endif %}
-        {% if c.data_live %}<span style="color:#16a34a">Ã°Å¸â€Â´ {{ c.data_live }}</span><br>{% endif %}
-        {% if c.data_dismantling %}<span style="color:#dc2626">Ã°Å¸â€œÂ¤ {{ c.data_dismantling }}</span>{% endif %}
+        {% if c.data_setup %}<span style="color:#3b82f6">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¦ {{ c.data_setup }}</span><br>{% endif %}
+        {% if c.data_live %}<span style="color:#16a34a">ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â´ {{ c.data_live }}</span><br>{% endif %}
+        {% if c.data_dismantling %}<span style="color:#dc2626">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¤ {{ c.data_dismantling }}</span>{% endif %}
         {% if not c.data_setup and not c.data_live and not c.data_dismantling %}
           {% if c.data_inizio %}{{ c.data_inizio }}{% endif %}
-          {% if c.data_inizio and c.data_fine %} Ã¢â€ â€™<br>{% endif %}
+          {% if c.data_inizio and c.data_fine %} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢<br>{% endif %}
           {% if c.data_fine %}{{ c.data_fine }}{% endif %}
-          {% if not c.data_inizio and not c.data_fine %}Ã¢â‚¬â€œ{% endif %}
+          {% if not c.data_inizio and not c.data_fine %}ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“{% endif %}
         {% endif %}
       </td>
       <td style="font-family:monospace;font-size:13px">
         {% set margine = (c.ricavo_previsto or 0) - (c.costo_previsto or 0) %}
         {% if c.ricavo_previsto or c.costo_previsto %}
-          <span class="{% if margine > 0 %}margine-pos{% elif margine < 0 %}margine-neg{% else %}margine-zero{% endif %}">Ã¢â€šÂ¬ {{ '%.0f'|format(margine) }}</span>
-        {% else %}<span class="margine-zero">Ã¢â‚¬â€œ</span>{% endif %}
+          <span class="{% if margine > 0 %}margine-pos{% elif margine < 0 %}margine-neg{% else %}margine-zero{% endif %}">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ '%.0f'|format(margine) }}</span>
+        {% else %}<span class="margine-zero">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“</span>{% endif %}
       </td>
-      <td>{% if c.attivo %}<span class="badge badge-green">Ã¢â€”Â Attiva</span>{% else %}<span class="badge badge-gray">Archiviata</span>{% endif %}</td>
+      <td>{% if c.attivo %}<span class="badge badge-green">ÃƒÂ¢Ã¢â‚¬â€Ã‚Â Attiva</span>{% else %}<span class="badge badge-gray">Archiviata</span>{% endif %}</td>
       <td>
         <a href="/cantieri/{{ c.id }}" class="btn btn-primary btn-sm" title="Dettaglio + incarichi + margine"><i class="fa fa-eye"></i></a>
         <a href="/cantieri/{{ c.id }}/modifica" class="btn btn-secondary btn-sm"><i class="fa fa-pen"></i></a>
         <a href="/cantieri/{{ c.id }}/toggle" class="btn btn-sm {{ 'btn-danger' if c.attivo else 'btn-green' }}" title="{{ 'Archivia' if c.attivo else 'Riattiva' }}">
           {{ 'Archivia' if c.attivo else 'Riattiva' }}</a>
         <form method="POST" action="/cantieri/{{ c.id }}/elimina-definitivo" style="display:inline"
-              onsubmit="return confirm('Eliminare definitivamente questa fiera? I dati storici collegati verranno conservati ma non saranno piÃƒÂ¹ associati alla fiera.')">
+              onsubmit="return confirm('Eliminare definitivamente questa fiera? I dati storici collegati verranno conservati ma non saranno piÃƒÆ’Ã‚Â¹ associati alla fiera.')">
           <button class="btn btn-danger btn-sm" title="Elimina definitivamente"><i class="fa fa-trash"></i></button>
         </form>
       </td>
@@ -13040,7 +13143,7 @@ CANTIERE_FORM_TMPL = """
       <div class="form-group">
         <label>Committente</label>
         <select name="committente_id">
-          <option value="">Ã¢â‚¬â€ Seleziona cliente Ã¢â‚¬â€</option>
+          <option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Seleziona cliente ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
           {% for cli in clienti %}
           <option value="{{ cli.id }}" {{ 'selected' if c and c.committente_id == cli.id }}>{{ cli.nome }}</option>
           {% endfor %}
@@ -13057,7 +13160,7 @@ CANTIERE_FORM_TMPL = """
         <input name="ente_organizzatore" value="{{ c.ente_organizzatore if c else '' }}" placeholder="es. Fiera Milano S.p.A., Bologna Fiere, Veronafiere">
       </div>
       <div class="form-group">
-        <label>CittÃƒÂ </label>
+        <label>CittÃƒÆ’Ã‚Â </label>
         <input name="citta" value="{{ c.citta if c else '' }}" placeholder="es. Milano, Bologna, Verona">
       </div>
     </div>
@@ -13079,7 +13182,7 @@ CANTIERE_FORM_TMPL = """
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>Superficie stand (mÃ‚Â²)</label>
+        <label>Superficie stand (mÃƒâ€šÃ‚Â²)</label>
         <input name="superficie_mq" type="number" min="0" step="0.5" value="{{ c.superficie_mq if c else '' }}" placeholder="es. 120">
       </div>
       <div class="form-group">
@@ -13094,7 +13197,7 @@ CANTIERE_FORM_TMPL = """
       </div>
     </div>
 
-    <h4 style="margin:24px 0 10px;font-size:13px;color:var(--accent2);text-transform:uppercase;letter-spacing:.5px"><i class="fa fa-calendar"></i> Date Ã¢â‚¬â€ fasi del progetto</h4>
+    <h4 style="margin:24px 0 10px;font-size:13px;color:var(--accent2);text-transform:uppercase;letter-spacing:.5px"><i class="fa fa-calendar"></i> Date ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â fasi del progetto</h4>
     <div class="form-row" style="grid-template-columns:1fr 1fr 1fr">
       <div class="form-group">
         <label><i class="fa fa-truck-ramp-box" style="color:#3b82f6"></i> Setup / montaggio</label>
@@ -13128,32 +13231,32 @@ CANTIERE_FORM_TMPL = """
     <h4 style="margin:24px 0 10px;font-size:13px;color:var(--accent2);text-transform:uppercase;letter-spacing:.5px"><i class="fa fa-euro-sign"></i> Costi e margine</h4>
     <div class="form-row" style="grid-template-columns:1fr 1fr 1fr">
       <div class="form-group">
-        <label>Costo previsto (Ã¢â€šÂ¬)</label>
+        <label>Costo previsto (ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬)</label>
         <input name="costo_previsto" type="number" min="0" step="0.01" value="{{ '%.2f'|format(c.costo_previsto or 0) if c else '' }}" placeholder="0.00">
       </div>
       <div class="form-group">
-        <label>Ricavo previsto (Ã¢â€šÂ¬)</label>
+        <label>Ricavo previsto (ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬)</label>
         <input name="ricavo_previsto" type="number" min="0" step="0.01" value="{{ '%.2f'|format(c.ricavo_previsto or 0) if c else '' }}" placeholder="0.00">
       </div>
       <div class="form-group">
         <label>Margine atteso</label>
         <div style="padding:10px 12px;background:#f0f9ff;border:1px solid var(--border);border-radius:8px;font-family:monospace;font-weight:700;font-size:14px;color:var(--accent)">
           {% if c and (c.ricavo_previsto or c.costo_previsto) %}
-            Ã¢â€šÂ¬ {{ '%.2f'|format((c.ricavo_previsto or 0) - (c.costo_previsto or 0)) }}
-          {% else %}Ã¢â‚¬â€ calcolato auto Ã¢â‚¬â€{% endif %}
+            ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ '%.2f'|format((c.ricavo_previsto or 0) - (c.costo_previsto or 0)) }}
+          {% else %}ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â calcolato auto ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â{% endif %}
         </div>
       </div>
     </div>
 
-    <h4 style="margin:24px 0 10px;font-size:13px;color:var(--accent2);text-transform:uppercase;letter-spacing:.5px"><i class="fa fa-location-dot"></i> Geofencing Ã¢â‚¬â€ controllo presenze GPS</h4>
+    <h4 style="margin:24px 0 10px;font-size:13px;color:var(--accent2);text-transform:uppercase;letter-spacing:.5px"><i class="fa fa-location-dot"></i> Geofencing ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â controllo presenze GPS</h4>
     <div class="form-row" style="grid-template-columns:1fr 1fr 1fr">
       <div class="form-group">
-        <label>ModalitÃƒÂ  geofencing</label>
+        <label>ModalitÃƒÆ’Ã‚Â  geofencing</label>
         <select name="geofence_modalita">
           {% set gm = c.geofence_modalita if c else 'disattivato' %}
-          <option value="disattivato" {{ 'selected' if gm=='disattivato' }}>Ã°Å¸â€â€œ Disattivato (no controllo)</option>
-          <option value="avviso" {{ 'selected' if gm=='avviso' }}>Ã¢Å¡Â Ã¯Â¸Â Solo avviso (non blocca)</option>
-          <option value="obbligatorio" {{ 'selected' if gm=='obbligatorio' }}>Ã°Å¸â€â€™ Obbligatorio (blocca timbratura fuori raggio)</option>
+          <option value="disattivato" {{ 'selected' if gm=='disattivato' }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Å“ Disattivato (no controllo)</option>
+          <option value="avviso" {{ 'selected' if gm=='avviso' }}>ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Solo avviso (non blocca)</option>
+          <option value="obbligatorio" {{ 'selected' if gm=='obbligatorio' }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬â„¢ Obbligatorio (blocca timbratura fuori raggio)</option>
         </select>
       </div>
       <div class="form-group">
@@ -13181,7 +13284,7 @@ CANTIERE_FORM_TMPL = """
     <div style="background:#eff6ff;padding:10px 14px;border-radius:8px;margin-top:6px;font-size:12px;color:#1e40af">
       <i class="fa fa-map-pin"></i> Posizione corrente:
       <a href="https://www.google.com/maps?q={{ c.lat }},{{ c.lng }}" target="_blank" style="font-family:monospace;color:#1e40af;text-decoration:underline">{{ c.lat }},{{ c.lng }}</a>
-      Ã¢â€ â€™ vedi su Google Maps
+      ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ vedi su Google Maps
     </div>
     {% endif %}
     <script>
@@ -13210,14 +13313,14 @@ CANTIERE_FORM_TMPL = """
     }
     </script>
 
-    <h4 style="margin:24px 0 10px;font-size:13px;color:var(--accent2);text-transform:uppercase;letter-spacing:.5px"><i class="fa fa-clipboard-list"></i> OperativitÃƒÂ </h4>
+    <h4 style="margin:24px 0 10px;font-size:13px;color:var(--accent2);text-transform:uppercase;letter-spacing:.5px"><i class="fa fa-clipboard-list"></i> OperativitÃƒÆ’Ã‚Â </h4>
     <div class="form-group">
       <label>Responsabile cantiere / capo squadra</label>
       <input name="responsabile" value="{{ c.responsabile if c else '' }}" placeholder="Nome del capo montaggio / responsabile in fiera">
     </div>
     <div class="form-group">
       <label>Note tecniche stand</label>
-      <textarea name="note_tecniche" rows="2" placeholder="es. Allaccio elettrico 6 kW trifase, carico solaio 250 kg/mÃ‚Â², altezza max 4m, presa rete...">{{ c.note_tecniche if c else '' }}</textarea>
+      <textarea name="note_tecniche" rows="2" placeholder="es. Allaccio elettrico 6 kW trifase, carico solaio 250 kg/mÃƒâ€šÃ‚Â², altezza max 4m, presa rete...">{{ c.note_tecniche if c else '' }}</textarea>
     </div>
     <div class="form-group">
       <label>Note logistica / trasporti</label>
@@ -13343,9 +13446,9 @@ def cantiere_modifica(cid):
     return render_page(CANTIERE_FORM_TMPL, page_title='Modifica Fiera', active='cantieri',
                        c=c, clienti=[dict(x) for x in clienti])
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-#  FIERA Ã¢â‚¬â€ Dettaglio con incarichi montatori e margine LIVE
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
+#  FIERA ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Dettaglio con incarichi montatori e margine LIVE
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
 FIERA_DETTAGLIO_TMPL = """
 <style>
@@ -13382,13 +13485,13 @@ FIERA_DETTAGLIO_TMPL = """
     <h2 style="margin:4px 0 0;font-size:22px"><i class="fa fa-store" style="color:var(--accent)"></i> {{ c.nome }}</h2>
     <div style="font-size:12px;color:var(--text-light);margin-top:2px">
       <span class="tipo-badge tipo-{{ 'fiera' if c.tipo_evento=='Fiera' else 'evento' if c.tipo_evento=='Evento aziendale' else 'congresso' if c.tipo_evento=='Congresso' else 'permanente' if c.tipo_evento=='Allestimento permanente' else 'retail' if c.tipo_evento=='Vetrina retail' else 'altro' }}" style="padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700">{{ c.tipo_evento or 'Fiera' }}</span>
-      {% if committente %}Ã‚Â· Committente: <strong>{{ committente.nome }}</strong>{% endif %}
+      {% if committente %}Ãƒâ€šÃ‚Â· Committente: <strong>{{ committente.nome }}</strong>{% endif %}
     </div>
   </div>
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
     <a href="/cantieri/{{ c.id }}/modifica" class="btn btn-secondary btn-sm"><i class="fa fa-pen"></i> Modifica scheda</a>
     <form method="POST" action="/cantieri/{{ c.id }}/elimina-definitivo" style="display:inline"
-          onsubmit="return confirm('Eliminare definitivamente questa fiera? I dati storici collegati verranno conservati ma non saranno piÃƒÂ¹ associati alla fiera.')">
+          onsubmit="return confirm('Eliminare definitivamente questa fiera? I dati storici collegati verranno conservati ma non saranno piÃƒÆ’Ã‚Â¹ associati alla fiera.')">
       <button class="btn btn-danger btn-sm"><i class="fa fa-trash"></i> Elimina</button>
     </form>
   </div>
@@ -13400,11 +13503,11 @@ FIERA_DETTAGLIO_TMPL = """
     <div class="fdt-card">
       <h3><i class="fa fa-circle-info"></i> Informazioni</h3>
       {% if c.ente_organizzatore %}<div class="fdt-info-row"><span class="lbl">Ente</span><span class="val">{{ c.ente_organizzatore }}</span></div>{% endif %}
-      {% if c.citta %}<div class="fdt-info-row"><span class="lbl">CittÃƒÂ </span><span class="val">{{ c.citta }}</span></div>{% endif %}
+      {% if c.citta %}<div class="fdt-info-row"><span class="lbl">CittÃƒÆ’Ã‚Â </span><span class="val">{{ c.citta }}</span></div>{% endif %}
       {% if c.indirizzo %}<div class="fdt-info-row"><span class="lbl">Sede</span><span class="val" style="font-size:12px">{{ c.indirizzo }}</span></div>{% endif %}
       {% if c.padiglione %}<div class="fdt-info-row"><span class="lbl">Padiglione</span><span class="val">{{ c.padiglione }}</span></div>{% endif %}
-      {% if c.numero_stand %}<div class="fdt-info-row"><span class="lbl">Stand nÃ‚Â°</span><span class="val">{{ c.numero_stand }}</span></div>{% endif %}
-      {% if c.superficie_mq %}<div class="fdt-info-row"><span class="lbl">Superficie</span><span class="val">{{ c.superficie_mq|int }} mÃ‚Â²</span></div>{% endif %}
+      {% if c.numero_stand %}<div class="fdt-info-row"><span class="lbl">Stand nÃƒâ€šÃ‚Â°</span><span class="val">{{ c.numero_stand }}</span></div>{% endif %}
+      {% if c.superficie_mq %}<div class="fdt-info-row"><span class="lbl">Superficie</span><span class="val">{{ c.superficie_mq|int }} mÃƒâ€šÃ‚Â²</span></div>{% endif %}
       {% if c.responsabile %}<div class="fdt-info-row"><span class="lbl">Responsabile</span><span class="val">{{ c.responsabile }}</span></div>{% endif %}
     </div>
 
@@ -13412,9 +13515,9 @@ FIERA_DETTAGLIO_TMPL = """
     {% if c.data_setup or c.data_live or c.data_dismantling %}
     <div class="fdt-card">
       <h3><i class="fa fa-calendar"></i> Calendario</h3>
-      {% if c.data_setup %}<div class="fdt-info-row"><span class="lbl">Ã°Å¸â€œÂ¦ Setup</span><span class="val">{{ c.data_setup }}</span></div>{% endif %}
-      {% if c.data_live %}<div class="fdt-info-row"><span class="lbl">Ã°Å¸â€Â´ Live</span><span class="val">{{ c.data_live }}</span></div>{% endif %}
-      {% if c.data_dismantling %}<div class="fdt-info-row"><span class="lbl">Ã°Å¸â€œÂ¤ Smontaggio</span><span class="val">{{ c.data_dismantling }}</span></div>{% endif %}
+      {% if c.data_setup %}<div class="fdt-info-row"><span class="lbl">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¦ Setup</span><span class="val">{{ c.data_setup }}</span></div>{% endif %}
+      {% if c.data_live %}<div class="fdt-info-row"><span class="lbl">ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â´ Live</span><span class="val">{{ c.data_live }}</span></div>{% endif %}
+      {% if c.data_dismantling %}<div class="fdt-info-row"><span class="lbl">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¤ Smontaggio</span><span class="val">{{ c.data_dismantling }}</span></div>{% endif %}
     </div>
     {% endif %}
 
@@ -13438,29 +13541,29 @@ FIERA_DETTAGLIO_TMPL = """
       <h3><i class="fa fa-chart-line"></i> Margine LIVE</h3>
       <div class="fdt-margine {{ margine_cls }}">
         <div class="lbl">Margine attuale</div>
-        <div class="big">Ã¢â€šÂ¬ {{ '%.0f'|format(margine_real) }}</div>
+        <div class="big">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ '%.0f'|format(margine_real) }}</div>
         <div class="sub">
-          Previsto: Ã¢â€šÂ¬ {{ '%.0f'|format(margine_prev) }}
+          Previsto: ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ '%.0f'|format(margine_prev) }}
           {% if margine_prev != 0 %}({% if margine_real >= margine_prev %}+{% endif %}{{ '%.0f'|format(margine_real - margine_prev) }}){% endif %}
         </div>
       </div>
 
       <div style="margin-top:12px">
         <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Ricavi</div>
-        <div class="fdt-cost-line"><span class="lbl">Previsti</span><span class="val">Ã¢â€šÂ¬ {{ '%.2f'|format(c.ricavo_previsto or 0) }}</span></div>
-        <div class="fdt-cost-line"><span class="lbl">Fatture attive collegate ({{ costi.n_fatture_attive }})</span><span class="val">Ã¢â€šÂ¬ {{ '%.2f'|format(costi.fatture_attive) }}</span></div>
+        <div class="fdt-cost-line"><span class="lbl">Previsti</span><span class="val">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ '%.2f'|format(c.ricavo_previsto or 0) }}</span></div>
+        <div class="fdt-cost-line"><span class="lbl">Fatture attive collegate ({{ costi.n_fatture_attive }})</span><span class="val">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ '%.2f'|format(costi.fatture_attive) }}</span></div>
       </div>
 
       <div style="margin-top:12px">
         <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Costi reali</div>
-        <div class="fdt-cost-line"><span class="lbl">Ore lavorate Ãƒâ€” costo orario</span><span class="val">Ã¢â€šÂ¬ {{ '%.2f'|format(costi.manodopera) }}</span></div>
-        <div class="fdt-cost-line" style="font-size:11px;color:var(--text-light);padding-top:0"><span class="lbl">&nbsp;&nbsp;{{ '%.1f'|format(costi.ore_totali) }}h Ãƒâ€” media Ã¢â€šÂ¬{{ '%.2f'|format(costi.media_oraria) }}/h</span><span class="val"></span></div>
-        <div class="fdt-cost-line"><span class="lbl">Rimborsi spese approvati</span><span class="val">Ã¢â€šÂ¬ {{ '%.2f'|format(costi.rimborsi) }}</span></div>
-        <div class="fdt-cost-line"><span class="lbl">Tariffe incarichi montatori</span><span class="val">Ã¢â€šÂ¬ {{ '%.2f'|format(costi.incarichi) }}</span></div>
-        <div class="fdt-cost-line"><span class="lbl">Fatture passive collegate ({{ costi.n_fatture_passive }})</span><span class="val">Ã¢â€šÂ¬ {{ '%.2f'|format(costi.fatture_passive) }}</span></div>
-        <div class="fdt-cost-line" style="border-top:1px solid var(--border);margin-top:6px;padding-top:8px"><span class="lbl"><strong>Totale costi</strong></span><span class="val"><strong>Ã¢â€šÂ¬ {{ '%.2f'|format(costi.totale) }}</strong></span></div>
-        <div class="fdt-cost-line" style="font-size:11px;color:var(--text-light)"><span class="lbl">Previsti: Ã¢â€šÂ¬ {{ '%.2f'|format(c.costo_previsto or 0) }}</span><span class="val">{% if c.costo_previsto and c.costo_previsto > 0 %}{{ '%.0f'|format(costi.totale / c.costo_previsto * 100) }}%{% endif %}</span></div>
-        <div class="fdt-cost-line" style="font-size:11px;color:var(--text-light)"><span class="lbl">Mezzi assegnati: {{ costi.n_veicoli }} Ã‚Â· Fornitori collegati: {{ costi.n_fornitori }}</span><span class="val"></span></div>
+        <div class="fdt-cost-line"><span class="lbl">Ore lavorate ÃƒÆ’Ã¢â‚¬â€ costo orario</span><span class="val">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ '%.2f'|format(costi.manodopera) }}</span></div>
+        <div class="fdt-cost-line" style="font-size:11px;color:var(--text-light);padding-top:0"><span class="lbl">&nbsp;&nbsp;{{ '%.1f'|format(costi.ore_totali) }}h ÃƒÆ’Ã¢â‚¬â€ media ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬{{ '%.2f'|format(costi.media_oraria) }}/h</span><span class="val"></span></div>
+        <div class="fdt-cost-line"><span class="lbl">Rimborsi spese approvati</span><span class="val">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ '%.2f'|format(costi.rimborsi) }}</span></div>
+        <div class="fdt-cost-line"><span class="lbl">Tariffe incarichi montatori</span><span class="val">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ '%.2f'|format(costi.incarichi) }}</span></div>
+        <div class="fdt-cost-line"><span class="lbl">Fatture passive collegate ({{ costi.n_fatture_passive }})</span><span class="val">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ '%.2f'|format(costi.fatture_passive) }}</span></div>
+        <div class="fdt-cost-line" style="border-top:1px solid var(--border);margin-top:6px;padding-top:8px"><span class="lbl"><strong>Totale costi</strong></span><span class="val"><strong>ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ '%.2f'|format(costi.totale) }}</strong></span></div>
+        <div class="fdt-cost-line" style="font-size:11px;color:var(--text-light)"><span class="lbl">Previsti: ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ '%.2f'|format(c.costo_previsto or 0) }}</span><span class="val">{% if c.costo_previsto and c.costo_previsto > 0 %}{{ '%.0f'|format(costi.totale / c.costo_previsto * 100) }}%{% endif %}</span></div>
+        <div class="fdt-cost-line" style="font-size:11px;color:var(--text-light)"><span class="lbl">Mezzi assegnati: {{ costi.n_veicoli }} Ãƒâ€šÃ‚Â· Fornitori collegati: {{ costi.n_fornitori }}</span><span class="val"></span></div>
       </div>
     </div>
   </div>
@@ -13476,9 +13579,9 @@ FIERA_DETTAGLIO_TMPL = """
       <div class="form-group" style="margin:0">
         <label style="font-size:11px">Dipendente *</label>
         <select name="utente_id" required>
-          <option value="">Ã¢â‚¬â€ Seleziona Ã¢â‚¬â€</option>
+          <option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Seleziona ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
           {% for d in dipendenti %}
-          <option value="{{ d.id }}">{{ d.cognome }} {{ d.nome }}{% if d.mansione %} Ã‚Â· {{ d.mansione }}{% endif %}</option>
+          <option value="{{ d.id }}">{{ d.cognome }} {{ d.nome }}{% if d.mansione %} Ãƒâ€šÃ‚Â· {{ d.mansione }}{% endif %}</option>
           {% endfor %}
         </select>
       </div>
@@ -13497,13 +13600,13 @@ FIERA_DETTAGLIO_TMPL = """
       <div class="form-group" style="margin:0">
         <label style="font-size:11px">Tipo tariffa</label>
         <select name="tariffa_tipo">
-          <option value="giornaliera">Ã¢â€šÂ¬/giorno</option>
-          <option value="oraria">Ã¢â€šÂ¬/ora</option>
+          <option value="giornaliera">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬/giorno</option>
+          <option value="oraria">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬/ora</option>
           <option value="forfait">Forfait</option>
         </select>
       </div>
       <div class="form-group" style="margin:0">
-        <label style="font-size:11px">Importo (Ã¢â€šÂ¬)</label>
+        <label style="font-size:11px">Importo (ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬)</label>
         <input type="number" name="tariffa_importo" step="0.01" min="0" placeholder="0.00">
       </div>
       <button type="submit" class="btn btn-primary btn-sm" style="white-space:nowrap"><i class="fa fa-plus"></i> Aggiungi</button>
@@ -13529,12 +13632,12 @@ FIERA_DETTAGLIO_TMPL = """
       <td style="padding:10px;font-size:12px">{{ i.mansione }}</td>
       <td style="padding:10px;font-size:11px;font-family:monospace">
         {% if i.data_da %}{{ i.data_da }}{% endif %}
-        {% if i.data_da and i.data_a %} Ã¢â€ â€™ {% endif %}
+        {% if i.data_da and i.data_a %} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ {% endif %}
         {% if i.data_a %}{{ i.data_a }}{% endif %}
         {% if i.giorni %}<div style="color:var(--text-light)">({{ i.giorni }} {{ 'gg' if i.giorni > 1 else 'g' }})</div>{% endif %}
       </td>
-      <td style="padding:10px;text-align:right;font-family:monospace;font-size:12px">Ã¢â€šÂ¬ {{ '%.2f'|format(i.tariffa_importo or 0) }}/{% if i.tariffa_tipo=='giornaliera' %}gg{% elif i.tariffa_tipo=='oraria' %}h{% else %}forf.{% endif %}</td>
-      <td style="padding:10px;text-align:right;font-family:monospace;font-weight:700">Ã¢â€šÂ¬ {{ '%.2f'|format(i.costo_totale) }}</td>
+      <td style="padding:10px;text-align:right;font-family:monospace;font-size:12px">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ '%.2f'|format(i.tariffa_importo or 0) }}/{% if i.tariffa_tipo=='giornaliera' %}gg{% elif i.tariffa_tipo=='oraria' %}h{% else %}forf.{% endif %}</td>
+      <td style="padding:10px;text-align:right;font-family:monospace;font-weight:700">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ '%.2f'|format(i.costo_totale) }}</td>
       <td style="padding:10px;text-align:center"><span class="fdt-stato-badge fdt-stato-{{ i.stato }}">{{ i.stato }}</span></td>
       <td style="padding:10px;text-align:center;white-space:nowrap">
         <form method="POST" action="/cantieri/{{ c.id }}/incarichi/{{ i.id }}/stato" style="display:inline">
@@ -13551,7 +13654,7 @@ FIERA_DETTAGLIO_TMPL = """
     {% endfor %}
     <tr style="background:#f8fafc;font-weight:700">
       <td colspan="4" style="padding:10px;text-align:right">TOTALE incarichi accettati/completati</td>
-      <td style="padding:10px;text-align:right;font-family:monospace;color:var(--accent)">Ã¢â€šÂ¬ {{ '%.2f'|format(costi.incarichi) }}</td>
+      <td style="padding:10px;text-align:right;font-family:monospace;color:var(--accent)">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ '%.2f'|format(costi.incarichi) }}</td>
       <td colspan="2"></td>
     </tr>
     </tbody>
@@ -13568,7 +13671,7 @@ def _calcola_costi_fiera(db, cantiere_id, data_da=None, data_a=None):
     """Calcola i costi reali di una fiera/cantiere.
     Funziona anche se db non ha row_factory impostato (accede ai campi per indice).
     """
-    # Manodopera: presenze del cantiere Ãƒâ€” costo orario
+    # Manodopera: presenze del cantiere ÃƒÆ’Ã¢â‚¬â€ costo orario
     res = db.execute("""SELECT COALESCE(SUM(p.ore_totali),0) as ore,
                                COALESCE(SUM(p.ore_totali * COALESCE(u.costo_orario, 0)),0) as costo
                         FROM presenze p
@@ -13878,9 +13981,9 @@ def cantiere_elimina_definitivo(cid):
     flash(f'Fiera "{c["nome"]}" eliminata definitivamente.', 'success')
     return redirect(url_for('cantieri'))
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 #  PRESENZE  (con cantiere)
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 PRES_TMPL = """
 <style>
 .presenze-mobile-list{display:none}
@@ -13930,24 +14033,24 @@ PRES_TMPL = """
   <div id="form-manuale" style="display:none">
   <div class="card-body">
     <form method="POST" action="/presenze/admin-inserisci" id="form-ins-pres">
-      <!-- ModalitÃƒÂ  -->
+      <!-- ModalitÃƒÆ’Ã‚Â  -->
       <div style="display:flex;gap:8px;margin-bottom:16px">
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:8px 16px;border-radius:8px;border:2px solid var(--accent);background:var(--accent);color:#fff;font-size:13px">
-          <input type="radio" name="modalita" value="ore" checked onchange="toggleModalita()" style="display:none"> Ã¢ÂÂ± Ore totali
+          <input type="radio" name="modalita" value="ore" checked onchange="toggleModalita()" style="display:none"> ÃƒÂ¢Ã‚ÂÃ‚Â± Ore totali
         </label>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:8px 16px;border-radius:8px;border:2px solid var(--accent);color:var(--accent);font-size:13px" id="lbl-orari">
-          <input type="radio" name="modalita" value="orari" onchange="toggleModalita()" style="display:none"> Ã°Å¸â€¢Â Entrata / Uscita
+          <input type="radio" name="modalita" value="orari" onchange="toggleModalita()" style="display:none"> ÃƒÂ°Ã…Â¸Ã¢â‚¬Â¢Ã‚Â Entrata / Uscita
         </label>
       </div>
       <div class="form-row-4">
         <div class="form-group"><label>Dipendente *</label>
           <select name="utente_id" required id="sel-utente-ins" onchange="toggleJolly(this.value)">
-            <option value="">Ã¢â‚¬â€ scegli Ã¢â‚¬â€</option>
+            <option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â scegli ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
             {% for u in tutti_utenti %}<option value="{{ u.id }}">{{ u.nome }} {{ u.cognome }}</option>{% endfor %}
-            <option value="jolly" style="color:#f59e0b;font-weight:700">Ã°Å¸â€˜Â· Jolly (esterno / nome manuale)</option>
+            <option value="jolly" style="color:#f59e0b;font-weight:700">ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â· Jolly (esterno / nome manuale)</option>
           </select></div>
         <div class="form-group"><label>Fiera</label>
-          <select name="cantiere_id"><option value="">Ã¢â‚¬â€ nessuno Ã¢â‚¬â€</option>
+          <select name="cantiere_id"><option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â nessuno ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
           {% for c in cantieri %}<option value="{{ c.id }}">{{ c.nome }}</option>{% endfor %}
           </select></div>
         <div class="form-group"><label>Data *</label><input type="date" name="data" required max="{{ oggi_iso }}"></div>
@@ -13958,7 +14061,7 @@ PRES_TMPL = """
       </div>
       <!-- Campi jolly (nascosti di default) -->
       <div id="grp-jolly" style="display:none;background:#fefce8;border:1px solid #fde047;border-radius:10px;padding:14px;margin-bottom:12px">
-        <div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:10px">Ã°Å¸â€˜Â· Dati lavoratore esterno</div>
+        <div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:10px">ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â· Dati lavoratore esterno</div>
         <div class="form-row">
           <div class="form-group" style="margin-bottom:0"><label>Nome *</label><input name="nome_jolly" id="inp-nome-jolly" placeholder="Mario"></div>
           <div class="form-group" style="margin-bottom:0"><label>Cognome *</label><input name="cognome_jolly" id="inp-cognome-jolly" placeholder="Rossi"></div>
@@ -14021,7 +14124,7 @@ function toggleJolly(val) {
       </select></div>
     <div class="form-group" style="margin:0;min-width:130px"><label>Mese rapido</label>
       <select id="sel-mese" onchange="applicaMese(this.value)" style="height:40px">
-        <option value="">Ã¢â‚¬â€œ seleziona Ã¢â‚¬â€œ</option>
+        <option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“ seleziona ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“</option>
         {% for m in mesi_disponibili %}
         <option value="{{ m.valore }}" {{ 'selected' if filtro_mese==m.valore }}>{{ m.etichetta }}</option>
         {% endfor %}
@@ -14056,8 +14159,8 @@ function applicaMese(val) {
     <form method="POST" action="/presenze/entrata" id="entrata-form" onsubmit="return submitConGPS(this, event)">
       <div class="form-group" style="margin-bottom:12px">
         <select name="cantiere_id" id="entrata-cantiere" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:8px 12px;width:100%;font-size:13px">
-          <option value="">Ã°Å¸â€œÂ Seleziona fiera (opzionale)</option>
-          {% for c in cantieri %}<option value="{{ c.id }}" data-gf="{{ c.geofence_modalita or 'disattivato' }}">{{ c.nome }}{% if c.geofence_modalita == 'obbligatorio' %} Ã°Å¸â€â€™{% elif c.geofence_modalita == 'avviso' %} Ã¢Å¡Â Ã¯Â¸Â{% endif %}</option>{% endfor %}
+          <option value="">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â Seleziona fiera (opzionale)</option>
+          {% for c in cantieri %}<option value="{{ c.id }}" data-gf="{{ c.geofence_modalita or 'disattivato' }}">{{ c.nome }}{% if c.geofence_modalita == 'obbligatorio' %} ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬â„¢{% elif c.geofence_modalita == 'avviso' %} ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â{% endif %}</option>{% endfor %}
         </select>
         <div id="gps-status" style="font-size:11px;color:rgba(255,255,255,.7);margin-top:6px;min-height:14px"></div>
       </div>
@@ -14067,8 +14170,8 @@ function applicaMese(val) {
     </form>
     {% elif not presenza_oggi.ora_uscita %}
     <div style="background:rgba(34,197,94,.15);border-radius:8px;padding:10px;margin-bottom:12px">
-      <div style="color:#22c55e;font-size:13px">Ã¢â€”Â In sede dalle <strong>{{ presenza_oggi.ora_entrata }}</strong></div>
-      {% if presenza_oggi.cantiere_nome %}<div style="color:rgba(255,255,255,.6);font-size:12px;margin-top:4px">Ã°Å¸â€œÂ {{ presenza_oggi.cantiere_nome }}</div>{% endif %}
+      <div style="color:#22c55e;font-size:13px">ÃƒÂ¢Ã¢â‚¬â€Ã‚Â In sede dalle <strong>{{ presenza_oggi.ora_entrata }}</strong></div>
+      {% if presenza_oggi.cantiere_nome %}<div style="color:rgba(255,255,255,.6);font-size:12px;margin-top:4px">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â {{ presenza_oggi.cantiere_nome }}</div>{% endif %}
     </div>
     <form method="POST" action="/presenze/uscita" onsubmit="return submitConGPS(this, event)">
       <input type="hidden" name="lat">
@@ -14087,8 +14190,8 @@ function applicaMese(val) {
     </form>
     {% else %}
     <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:10px;text-align:center">
-      <div style="font-size:13px;opacity:.7">Turno completato Ã¢Å“â€¦</div>
-      <div style="font-size:18px;font-weight:700;margin-top:4px">{{ presenza_oggi.ora_entrata }} Ã¢â€ â€™ {{ presenza_oggi.ora_uscita }}</div>
+      <div style="font-size:13px;opacity:.7">Turno completato ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦</div>
+      <div style="font-size:18px;font-weight:700;margin-top:4px">{{ presenza_oggi.ora_entrata }} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ {{ presenza_oggi.ora_uscita }}</div>
       {% if presenza_oggi.ore_totali %}<div style="font-size:12px;opacity:.6">{{ "%.1f"|format(presenza_oggi.ore_totali) }} ore</div>{% endif %}
     </div>
     {% endif %}
@@ -14116,7 +14219,7 @@ window.submitConGPS = function(form, ev) {
   // Se gia' popolati, lascia partire
   if (latIn.value && lngIn.value) return true;
   if (!navigator.geolocation) {
-    // No GPS support - submit comunque (server gestirÃƒÂ  obbligatori bloccando)
+    // No GPS support - submit comunque (server gestirÃƒÆ’Ã‚Â  obbligatori bloccando)
     return true;
   }
   ev.preventDefault();
@@ -14124,22 +14227,22 @@ window.submitConGPS = function(form, ev) {
   var origText = btn ? btn.innerHTML : '';
   if (btn) { btn.innerHTML = '<i class="fa fa-location-crosshairs"></i> Rilevamento posizione...'; btn.disabled = true; }
   var statusEl = document.getElementById('gps-status');
-  if (statusEl) statusEl.textContent = 'Ã°Å¸â€œÂ Acquisizione GPS in corso...';
+  if (statusEl) statusEl.textContent = 'ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â Acquisizione GPS in corso...';
   navigator.geolocation.getCurrentPosition(
     function(pos) {
       latIn.value = pos.coords.latitude.toFixed(6);
       lngIn.value = pos.coords.longitude.toFixed(6);
-      if (statusEl) statusEl.textContent = 'Ã¢Å“â€œ Posizione rilevata (precisione ~' + Math.round(pos.coords.accuracy) + 'm)';
+      if (statusEl) statusEl.textContent = 'ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Posizione rilevata (precisione ~' + Math.round(pos.coords.accuracy) + 'm)';
       form.submit();
     },
     function(err) {
-      if (statusEl) statusEl.textContent = 'Ã¢Å¡Â Ã¯Â¸Â GPS non disponibile (' + err.message + ')';
+      if (statusEl) statusEl.textContent = 'ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â GPS non disponibile (' + err.message + ')';
       if (btn) { btn.innerHTML = origText; btn.disabled = false; }
-      // Se la fiera ÃƒÂ¨ obbligatoria, blocco; altrimenti submit senza coordinate
+      // Se la fiera ÃƒÆ’Ã‚Â¨ obbligatoria, blocco; altrimenti submit senza coordinate
       var sel = form.querySelector('select[name="cantiere_id"]');
       var gf = sel && sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].dataset.gf : 'disattivato';
       if (gf === 'obbligatorio') {
-        alert('Per questa fiera la posizione GPS ÃƒÂ¨ obbligatoria. Abilita la geolocalizzazione e riprova.');
+        alert('Per questa fiera la posizione GPS ÃƒÆ’Ã‚Â¨ obbligatoria. Abilita la geolocalizzazione e riprova.');
         return;
       }
       // Submit senza coordinate
@@ -14189,19 +14292,19 @@ window.submitConGPS = function(form, ev) {
           {{ p.nome[0] }}{{ p.cognome[0] }}
         </span>
         {{ p.nome }} {{ p.cognome }}
-        {% if p.nome_jolly %}<span style="font-size:10px;background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 6px;margin-left:4px;font-weight:700">Ã°Å¸â€˜Â· JOLLY</span>{% endif %}
+        {% if p.nome_jolly %}<span style="font-size:10px;background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 6px;margin-left:4px;font-weight:700">ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â· JOLLY</span>{% endif %}
       </td>
       {% endif %}
       <td>{{ p.data }}</td>
-      <td>{% if p.cantiere_nome %}<span class="tag"><i class="fa fa-store"></i> {{ p.cantiere_nome }}</span>{% else %}Ã¢â‚¬â€œ{% endif %}</td>
-      <td style="color:var(--success);font-family:monospace">{{ p.ora_entrata or 'Ã¢â‚¬â€œ' }}</td>
-      <td style="font-family:monospace">{{ p.ora_uscita or 'Ã¢â‚¬â€œ' }}</td>
+      <td>{% if p.cantiere_nome %}<span class="tag"><i class="fa fa-store"></i> {{ p.cantiere_nome }}</span>{% else %}ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“{% endif %}</td>
+      <td style="color:var(--success);font-family:monospace">{{ p.ora_entrata or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
+      <td style="font-family:monospace">{{ p.ora_uscita or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
       <td style="font-size:12px;color:var(--text-light)">
         {% if p.pausa_ore and p.pausa_ore > 0 %}
           <span style="background:#fef3c7;color:#92400e;border-radius:6px;padding:2px 8px;font-weight:600;white-space:nowrap"><i class="fa fa-mug-saucer" style="font-size:10px"></i> {{ "%.1f"|format(p.pausa_ore) }}h</span>
-        {% else %}Ã¢â‚¬â€œ{% endif %}
+        {% else %}ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“{% endif %}
       </td>
-      <td><strong>{{ "%.1f"|format(p.ore_totali) if p.ore_totali else 'Ã¢â‚¬â€œ' }}</strong></td>
+      <td><strong>{{ "%.1f"|format(p.ore_totali) if p.ore_totali else 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</strong></td>
       <td style="color:var(--text-light);font-size:12px">{{ p.note or '' }}</td>
       {% if session.ruolo=='admin' %}<td style="display:flex;gap:4px">
         <button onclick="apriModifica({{ p.id }},'{{ p.data }}','{{ p.ora_entrata or '' }}','{{ p.ora_uscita or '' }}','{{ p.ore_totali or '' }}','{{ p.cantiere_id or '' }}','{{ p.note or '' }}','{{ p.nome }} {{ p.cognome }}','{{ p.pausa_ore or 0 }}')" class="btn btn-secondary btn-sm" title="Modifica"{% if p.nome_jolly %} style="opacity:.4;cursor:not-allowed" onclick="return false"{% endif %}><i class="fa fa-pen"></i></button>
@@ -14262,7 +14365,7 @@ window.submitConGPS = function(form, ev) {
   <div class="card" style="width:460px;max-width:95vw;max-height:90vh;overflow-y:auto">
     <div class="card-header">
       <h3 id="mod-pres-dip" style="font-size:15px"></h3>
-      <button onclick="document.getElementById('modal-mod-pres').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-light)">Ãƒâ€”</button>
+      <button onclick="document.getElementById('modal-mod-pres').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-light)">ÃƒÆ’Ã¢â‚¬â€</button>
     </div>
     <form method="POST" action="/presenze/modifica" id="form-mod-pres">
       <div class="card-body">
@@ -14270,10 +14373,10 @@ window.submitConGPS = function(form, ev) {
         <div class="form-group"><label>Data</label><input type="date" name="data" id="mod-data"></div>
         <div style="display:flex;gap:8px;margin-bottom:12px">
           <label style="flex:1;display:flex;align-items:center;gap:6px;cursor:pointer;padding:8px 14px;border-radius:8px;border:2px solid var(--accent);background:var(--accent);color:#fff;font-size:13px;justify-content:center" id="mlbl-ore">
-            <input type="radio" name="mod_modalita" value="ore" checked onchange="toggleModModalita()" style="display:none"> Ã¢ÂÂ± Ore totali
+            <input type="radio" name="mod_modalita" value="ore" checked onchange="toggleModModalita()" style="display:none"> ÃƒÂ¢Ã‚ÂÃ‚Â± Ore totali
           </label>
           <label style="flex:1;display:flex;align-items:center;gap:6px;cursor:pointer;padding:8px 14px;border-radius:8px;border:2px solid var(--accent);color:var(--accent);font-size:13px;justify-content:center" id="mlbl-orari">
-            <input type="radio" name="mod_modalita" value="orari" onchange="toggleModModalita()" style="display:none"> Ã°Å¸â€¢Â Entrata/Uscita
+            <input type="radio" name="mod_modalita" value="orari" onchange="toggleModModalita()" style="display:none"> ÃƒÂ°Ã…Â¸Ã¢â‚¬Â¢Ã‚Â Entrata/Uscita
           </label>
         </div>
         <div id="mgrp-ore"><div class="form-group"><label>Ore totali</label><input type="number" step="0.5" name="ore_dirette" id="mod-ore" min="0.5" max="24"></div></div>
@@ -14295,7 +14398,7 @@ window.submitConGPS = function(form, ev) {
         </div>
         <div class="form-group"><label>Fiera</label>
           <select name="cantiere_id" id="mod-cant">
-            <option value="">Ã¢â‚¬â€ nessuno Ã¢â‚¬â€</option>
+            <option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â nessuno ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
             {% for c in cantieri %}<option value="{{ c.id }}">{{ c.nome }}</option>{% endfor %}
           </select>
         </div>
@@ -14313,8 +14416,8 @@ window.submitConGPS = function(form, ev) {
 <div id="modal-bulk" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1001;align-items:center;justify-content:center">
   <div class="card" style="width:520px;max-width:95vw;max-height:92vh;overflow-y:auto">
     <div class="card-header" style="background:#0f172a;color:#fff">
-      <h3 style="color:#fff"><i class="fa fa-pen-to-square"></i> Modifica multipla Ã¢â‚¬â€ <span id="bulk-titolo"></span></h3>
-      <button onclick="document.getElementById('modal-bulk').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:rgba(255,255,255,.5)">Ãƒâ€”</button>
+      <h3 style="color:#fff"><i class="fa fa-pen-to-square"></i> Modifica multipla ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â <span id="bulk-titolo"></span></h3>
+      <button onclick="document.getElementById('modal-bulk').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:rgba(255,255,255,.5)">ÃƒÆ’Ã¢â‚¬â€</button>
     </div>
     <div class="card-body">
       <div style="background:#fef3c7;border-radius:8px;padding:10px 14px;font-size:12px;color:#92400e;margin-bottom:16px">
@@ -14333,7 +14436,7 @@ window.submitConGPS = function(form, ev) {
               <input type="checkbox" id="chk-campo-cantiere" onchange="toggleCampo('cantiere')"> Modifica cantiere
             </label>
             <select name="cantiere_id" id="bulk-cantiere" disabled style="margin-top:6px">
-              <option value="">Ã¢â‚¬â€ nessuno Ã¢â‚¬â€</option>
+              <option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â nessuno ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
               {% for c in cantieri %}<option value="{{ c.id }}">{{ c.nome }}</option>{% endfor %}
             </select>
           </div>
@@ -14383,7 +14486,7 @@ window.submitConGPS = function(form, ev) {
 </div>
 
 <script>
-// Ã¢â€â‚¬Ã¢â€â‚¬ Selezione multipla Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Selezione multipla ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 function toggleAll(cb) {
   document.querySelectorAll('.chk-pres').forEach(c => c.checked = cb.checked);
   aggiornaSelzione();
@@ -14410,7 +14513,7 @@ function aggiornaSelzione() {
   });
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Modifica bulk Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Modifica bulk ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 function apriBulkModifica() {
   var sel = Array.from(document.querySelectorAll('.chk-pres:checked'));
   if (!sel.length) return;
@@ -14424,7 +14527,7 @@ function apriBulkModifica() {
     var jolly = c.dataset.jolly === '1';
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 4px;border-bottom:1px solid #f1f5f9">' +
       '<span style="font-size:13px;font-weight:600">' + c.dataset.nome + (jolly?' <span style="font-size:10px;color:#92400e;background:#fef3c7;border-radius:4px;padding:1px 5px">JOLLY</span>':'') + '</span>' +
-      '<span style="font-size:12px;color:#64748b;font-family:monospace">' + c.dataset.data + ' Ã‚Â· ' + (c.dataset.ore||'Ã¢â‚¬â€œ') + 'h</span>' +
+      '<span style="font-size:12px;color:#64748b;font-family:monospace">' + c.dataset.data + ' Ãƒâ€šÃ‚Â· ' + (c.dataset.ore||'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“') + 'h</span>' +
       '</div>';
   }).join('');
 
@@ -14457,12 +14560,12 @@ function bulkElimina() {
   f.appendChild(inp); document.body.appendChild(f); f.submit();
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Modifica singola Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Modifica singola ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 function apriModifica(pid, data, oe, ou, ore, cid, note, nome, pausa) {
   document.getElementById('mod-pid').value   = pid;
   document.getElementById('mod-data').value  = data;
   document.getElementById('mod-note').value  = note;
-  document.getElementById('mod-pres-dip').textContent = 'Ã°Å¸â€˜Â¤ ' + nome;
+  document.getElementById('mod-pres-dip').textContent = 'ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â¤ ' + nome;
   // Imposta pausa
   var pausaSel = document.getElementById('mod-pausa');
   if (pausaSel) {
@@ -14508,10 +14611,10 @@ function toggleModModalita() {
 <div class="card" style="margin-top:20px;border-left:4px solid #10b981">
   <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
     <h3><i class="fa fa-receipt" style="color:#10b981"></i> Spese Rimborsabili Approvate
-      {% if filtro_uid %}&nbsp;Ã¢â‚¬â€œ&nbsp;{{ spese_filtrate[0].nome }} {{ spese_filtrate[0].cognome }}{% endif %}
+      {% if filtro_uid %}&nbsp;ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“&nbsp;{{ spese_filtrate[0].nome }} {{ spese_filtrate[0].cognome }}{% endif %}
     </h3>
     <span style="background:#f0fdf4;color:#15803d;border:1px solid #86efac;border-radius:8px;padding:5px 14px;font-size:13px;font-weight:700">
-      Totale: Ã¢â€šÂ¬ {{ "%.2f"|format(spese_filtrate|sum(attribute='importo')) }}
+      Totale: ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(spese_filtrate|sum(attribute='importo')) }}
     </span>
   </div>
   <div class="table-wrap">
@@ -14527,22 +14630,22 @@ function toggleModModalita() {
       {% if not filtro_uid %}<td><strong>{{ s.nome }} {{ s.cognome }}</strong></td>{% endif %}
       <td style="font-family:monospace">{{ s.data }}</td>
       <td><span class="tag">{{ s.categoria }}</span></td>
-      <td style="color:var(--text-light);font-size:13px">{{ s.descrizione or 'Ã¢â‚¬â€œ' }}</td>
-      <td style="font-size:12px">{{ s.veicolo_targa or 'Ã¢â‚¬â€œ' }}</td>
-      <td style="text-align:right;font-weight:800;color:#059669">Ã¢â€šÂ¬ {{ "%.2f"|format(s.importo) }}</td>
+      <td style="color:var(--text-light);font-size:13px">{{ s.descrizione or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
+      <td style="font-size:12px">{{ s.veicolo_targa or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
+      <td style="text-align:right;font-weight:800;color:#059669">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(s.importo) }}</td>
       <td>
         {% if s.foto_nome %}
         <a href="/admin/spese/foto/{{ s.foto_nome }}" target="_blank"
            style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;border-radius:6px;padding:4px 10px;font-size:12px;text-decoration:none;display:inline-flex;align-items:center;gap:4px">
           <i class="fa fa-image"></i> Vedi
         </a>
-        {% else %}Ã¢â‚¬â€œ{% endif %}
+        {% else %}ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“{% endif %}
       </td>
     </tr>
     {% endfor %}
     <tr style="background:#f0fdf4;font-weight:700">
       <td colspan="{{ 5 if filtro_uid else 6 }}" style="text-align:right;font-size:13px">TOTALE RIMBORSI</td>
-      <td style="text-align:right;font-size:15px;color:#059669">Ã¢â€šÂ¬ {{ "%.2f"|format(spese_filtrate|sum(attribute='importo')) }}</td>
+      <td style="text-align:right;font-size:15px;color:#059669">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(spese_filtrate|sum(attribute='importo')) }}</td>
       <td></td>
     </tr>
     </tbody>
@@ -14555,27 +14658,27 @@ function toggleModModalita() {
   <div class="card-header"><h3><i class="fa fa-paper-plane" style="color:var(--accent2);margin-right:8px"></i>Invia richiesta ore mancanti</h3></div>
   <div class="card-body">
     <form method="POST" action="/presenze/richiesta" id="form-richiesta-dip">
-      <!-- ModalitÃƒÂ : ore totali oppure entrata/uscita -->
+      <!-- ModalitÃƒÆ’Ã‚Â : ore totali oppure entrata/uscita -->
       <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:8px 16px;border-radius:8px;border:2px solid var(--accent);background:var(--accent);color:#fff;font-size:13px" id="lbl-dip-ore">
-          <input type="radio" name="modalita" value="ore" checked onchange="toggleModRichDip()" style="display:none"> Ã¢ÂÂ± Ore totali
+          <input type="radio" name="modalita" value="ore" checked onchange="toggleModRichDip()" style="display:none"> ÃƒÂ¢Ã‚ÂÃ‚Â± Ore totali
         </label>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:8px 16px;border-radius:8px;border:2px solid var(--accent);color:var(--accent);font-size:13px" id="lbl-dip-orari">
-          <input type="radio" name="modalita" value="orari" onchange="toggleModRichDip()" style="display:none"> Ã°Å¸â€¢Â Entrata / Uscita
+          <input type="radio" name="modalita" value="orari" onchange="toggleModRichDip()" style="display:none"> ÃƒÂ°Ã…Â¸Ã¢â‚¬Â¢Ã‚Â Entrata / Uscita
         </label>
       </div>
 
       <div class="form-row-4">
         <div class="form-group"><label>Data *</label><input type="date" name="data" required max="{{ oggi_iso }}"></div>
         <div class="form-group"><label>Fiera</label>
-          <select name="cantiere_id"><option value="">Ã¢â‚¬â€ nessuno Ã¢â‚¬â€</option>
+          <select name="cantiere_id"><option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â nessuno ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
           {% for c in cantieri %}<option value="{{ c.id }}">{{ c.nome }}</option>{% endfor %}
           </select></div>
         <div class="form-group" id="grp-dip-ore-tot">
           <label>Ore lavorate *</label>
           <input type="number" name="ore_dirette" step="0.5" min="0.5" max="24" placeholder="Es. 9" style="font-size:18px;font-weight:700;color:var(--accent)">
         </div>
-        <!-- Spaziatore per allineare la riga: il 4Ã‚Â° slot resta vuoto in modalitÃƒÂ  ore -->
+        <!-- Spaziatore per allineare la riga: il 4Ãƒâ€šÃ‚Â° slot resta vuoto in modalitÃƒÆ’Ã‚Â  ore -->
         <div class="form-group" id="grp-dip-spacer"></div>
       </div>
       <div class="form-row" id="grp-dip-orari" style="display:none">
@@ -14627,15 +14730,15 @@ function toggleModRichDip() {
     <tbody>{% for r in mie_richieste %}
     <tr>
       <td>{{ r.data }}</td>
-      <td>{% if r.cantiere_nome %}<span class="tag">{{ r.cantiere_nome }}</span>{% else %}Ã¢â‚¬â€œ{% endif %}</td>
-      <td style="font-family:monospace;color:var(--success)">{{ r.ora_entrata or 'Ã¢â‚¬â€œ' }}</td>
-      <td style="font-family:monospace">{{ r.ora_uscita or 'Ã¢â‚¬â€œ' }}</td>
-      <td style="font-family:monospace;font-weight:700">{{ '%.1f'|format(r.ore_totali) if r.ore_totali else 'Ã¢â‚¬â€œ' }}</td>
-      <td style="color:var(--text-light)">{{ r.note or 'Ã¢â‚¬â€œ' }}</td>
-      <td>{% if r.stato=='in_attesa' %}<span class="badge badge-amber">Ã¢ÂÂ³</span>
-          {% elif r.stato=='approvata' %}<span class="badge badge-green">Ã¢Å“â€¦</span>
-          {% else %}<span class="badge badge-red">Ã¢ÂÅ’</span>{% endif %}</td>
-      <td style="font-size:12px;color:var(--text-light)">{{ r.nota_admin or 'Ã¢â‚¬â€œ' }}</td>
+      <td>{% if r.cantiere_nome %}<span class="tag">{{ r.cantiere_nome }}</span>{% else %}ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“{% endif %}</td>
+      <td style="font-family:monospace;color:var(--success)">{{ r.ora_entrata or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
+      <td style="font-family:monospace">{{ r.ora_uscita or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
+      <td style="font-family:monospace;font-weight:700">{{ '%.1f'|format(r.ore_totali) if r.ore_totali else 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
+      <td style="color:var(--text-light)">{{ r.note or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
+      <td>{% if r.stato=='in_attesa' %}<span class="badge badge-amber">ÃƒÂ¢Ã‚ÂÃ‚Â³</span>
+          {% elif r.stato=='approvata' %}<span class="badge badge-green">ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦</span>
+          {% else %}<span class="badge badge-red">ÃƒÂ¢Ã‚ÂÃ…â€™</span>{% endif %}</td>
+      <td style="font-size:12px;color:var(--text-light)">{{ r.nota_admin or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
     </tr>{% endfor %}</tbody>
   </table></div>
 </div>{% endif %}
@@ -14751,10 +14854,10 @@ def presenza_entrata():
     db = get_db()
     if db.execute("SELECT id FROM presenze WHERE utente_id=? AND data=?",(uid,today)).fetchone():
         db.close()
-        flash("Entrata giÃƒÂ  registrata oggi.",'error')
+        flash("Entrata giÃƒÆ’Ã‚Â  registrata oggi.",'error')
         return redirect(url_for('presenze'))
 
-    # Geofencing: se la fiera ha coordinate e modalitÃƒÂ  non disattivata, calcolo distanza
+    # Geofencing: se la fiera ha coordinate e modalitÃƒÆ’Ã‚Â  non disattivata, calcolo distanza
     distanza = None
     geofence_ok = 1
     if cid:
@@ -14767,7 +14870,7 @@ def presenza_entrata():
                 if lat is None or lng is None:
                     if cant['geofence_modalita'] == 'obbligatorio':
                         db.close()
-                        flash(f'Ã¢Å¡Â Ã¯Â¸Â Per timbrare in "{cant["nome"]}" ÃƒÂ¨ richiesta la posizione GPS. Abilita la geolocalizzazione e riprova.', 'error')
+                        flash(f'ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Per timbrare in "{cant["nome"]}" ÃƒÆ’Ã‚Â¨ richiesta la posizione GPS. Abilita la geolocalizzazione e riprova.', 'error')
                         return redirect(url_for('presenze'))
                     else:
                         geofence_ok = 0  # avviso
@@ -14778,10 +14881,10 @@ def presenza_entrata():
                         geofence_ok = 0
                         if cant['geofence_modalita'] == 'obbligatorio':
                             db.close()
-                            flash(f'Ã¢â€ºâ€ Sei a {distanza}m dalla fiera "{cant["nome"]}" (raggio massimo {raggio}m). Timbratura rifiutata.', 'error')
+                            flash(f'ÃƒÂ¢Ã¢â‚¬ÂºÃ¢â‚¬Â Sei a {distanza}m dalla fiera "{cant["nome"]}" (raggio massimo {raggio}m). Timbratura rifiutata.', 'error')
                             return redirect(url_for('presenze'))
                         else:
-                            flash(f'Ã¢Å¡Â Ã¯Â¸Â Sei a {distanza}m dalla fiera (raggio {raggio}m). Timbratura registrata con avviso.', 'success')
+                            flash(f'ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Sei a {distanza}m dalla fiera (raggio {raggio}m). Timbratura registrata con avviso.', 'success')
 
     db.execute("""INSERT INTO presenze (utente_id, data, ora_entrata, cantiere_id,
                   entrata_lat, entrata_lng, entrata_distanza_m, entrata_geofence_ok)
@@ -14789,9 +14892,9 @@ def presenza_entrata():
                (uid, today, now, cid, lat, lng, distanza, geofence_ok))
     safe_commit(db); db.close()
     if geofence_ok and distanza is not None:
-        flash(f'Entrata alle {now} Ã¢Å“â€¦ ({distanza}m dalla fiera)', 'success')
+        flash(f'Entrata alle {now} ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ ({distanza}m dalla fiera)', 'success')
     elif geofence_ok:
-        flash(f'Entrata alle {now} Ã¢Å“â€¦', 'success')
+        flash(f'Entrata alle {now} ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦', 'success')
     return redirect(url_for('presenze'))
 
 @app.route('/presenze/uscita', methods=['POST'])
@@ -14829,9 +14932,9 @@ def presenza_uscita():
                    (now, ore, pausa, lat, lng, distanza, p['id']))
         safe_commit(db)
         if pausa > 0:
-            flash(f'Uscita alle {now} Ã¢â‚¬â€ {ore:.1f}h nette (pausa {pausa:g}h) Ã¢Å“â€¦','success')
+            flash(f'Uscita alle {now} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {ore:.1f}h nette (pausa {pausa:g}h) ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦','success')
         else:
-            flash(f'Uscita alle {now} Ã¢â‚¬â€ {ore:.1f}h Ã¢Å“â€¦','success')
+            flash(f'Uscita alle {now} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {ore:.1f}h ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦','success')
     db.close(); return redirect(url_for('presenze'))
 
 @app.route('/presenze/admin-inserisci', methods=['POST'])
@@ -14868,7 +14971,7 @@ def admin_inserisci_presenza():
             if ore_lorde <= 0: raise ValueError
         except:
             flash("Orari non validi.",'error'); return redirect(url_for('presenze'))
-        # Pausa: in modalitÃƒÂ  orari viene sottratta dalle ore lorde
+        # Pausa: in modalitÃƒÆ’Ã‚Â  orari viene sottratta dalle ore lorde
         try:
             pausa = float(request.form.get('pausa_ore','0') or 0)
             pausa = max(0, min(pausa, ore_lorde))  # safety: pausa non > ore_lorde
@@ -14876,7 +14979,7 @@ def admin_inserisci_presenza():
             pausa = 0
         ore = round(ore_lorde - pausa, 2)
         if ore <= 0:
-            flash('La pausa ÃƒÂ¨ uguale o superiore alle ore lavorate. Verifica gli orari.','error')
+            flash('La pausa ÃƒÆ’Ã‚Â¨ uguale o superiore alle ore lavorate. Verifica gli orari.','error')
             return redirect(url_for('presenze'))
     else:
         ore_s = request.form.get('ore_dirette','')
@@ -14886,7 +14989,7 @@ def admin_inserisci_presenza():
         except:
             flash("Inserisci un numero di ore valido.",'error'); return redirect(url_for('presenze'))
         oe = '00:00'; ou = '00:00'
-        # In modalitÃƒÂ  "ore totali" la pausa ÃƒÂ¨ facoltativa, giÃƒÂ  scorporata nelle ore inserite
+        # In modalitÃƒÆ’Ã‚Â  "ore totali" la pausa ÃƒÆ’Ã‚Â¨ facoltativa, giÃƒÆ’Ã‚Â  scorporata nelle ore inserite
         try:
             pausa = float(request.form.get('pausa_ore','0') or 0)
             pausa = max(0, pausa)
@@ -14902,7 +15005,7 @@ def admin_inserisci_presenza():
             (None, data, oe, ou, ore, pausa, cid, note, nome_jolly, cognome_jolly))
         flash(f'Presenza jolly {nome_jolly} {cognome_jolly} del {data} inserita!','success')
     else:
-        # L'admin puÃƒÂ² inserire piÃƒÂ¹ presenze nello stesso giorno (cantieri diversi)
+        # L'admin puÃƒÆ’Ã‚Â² inserire piÃƒÆ’Ã‚Â¹ presenze nello stesso giorno (cantieri diversi)
         ex = db.execute("SELECT id FROM presenze WHERE utente_id=? AND data=? AND cantiere_id IS ? AND (cantiere_id=? OR (cantiere_id IS NULL AND ? IS NULL))",
                         (uid_dest, data, cid, cid, cid)).fetchone()
         if ex:
@@ -14955,7 +15058,7 @@ def presenza_modifica():
             pausa = 0
         ore = round(ore_lorde - pausa, 2)
         if ore <= 0:
-            flash('La pausa ÃƒÂ¨ uguale o superiore alle ore lavorate.','error')
+            flash('La pausa ÃƒÆ’Ã‚Â¨ uguale o superiore alle ore lavorate.','error')
             return redirect(url_for('presenze'))
     else:
         ore_s = request.form.get('ore_dirette','')
@@ -15089,9 +15192,9 @@ def presenze_bulk_elimina():
     return redirect(url_for('presenze'))
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-#  IMPORT ORE STORICO Ã¢â‚¬â€ AI
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
+#  IMPORT ORE STORICO ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â AI
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
 IMPORT_ORE_TMPL = """
 <div style="margin-bottom:18px">
@@ -15100,7 +15203,7 @@ IMPORT_ORE_TMPL = """
 <div class="card" style="max-width:860px;margin:0 auto">
   <div class="card-header">
     <h3><i class="fa fa-robot" style="color:var(--accent2)"></i> Import ore storiche con AI</h3>
-    <div style="color:var(--text-light);font-size:13px;margin-top:2px">Carica un file (PDF/immagine/testo) con le timbrature di un mese passato Ã¢â‚¬â€ l'AI estrae e inserisce automaticamente le ore per il dipendente selezionato.</div>
+    <div style="color:var(--text-light);font-size:13px;margin-top:2px">Carica un file (PDF/immagine/testo) con le timbrature di un mese passato ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â l'AI estrae e inserisce automaticamente le ore per il dipendente selezionato.</div>
   </div>
   <div class="card-body">
 
@@ -15110,7 +15213,7 @@ IMPORT_ORE_TMPL = """
         <div class="form-group">
           <label>Dipendente *</label>
           <select id="sel_dip" style="width:100%">
-            <option value="">Ã¢â‚¬â€ Seleziona dipendente Ã¢â‚¬â€</option>
+            <option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Seleziona dipendente ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
             {% for d in dipendenti %}
             <option value="{{ d.id }}">{{ d.nome }} {{ d.cognome }}</option>
             {% endfor %}
@@ -15131,7 +15234,7 @@ IMPORT_ORE_TMPL = """
 
     <!-- Loader -->
     <div id="loader" style="display:none;text-align:center;padding:40px">
-      <div style="font-size:32px;margin-bottom:12px">Ã°Å¸Â¤â€“</div>
+      <div style="font-size:32px;margin-bottom:12px">ÃƒÂ°Ã…Â¸Ã‚Â¤Ã¢â‚¬â€œ</div>
       <div style="font-weight:700;color:var(--accent2);font-size:16px">L'AI sta analizzando il file...</div>
       <div style="color:var(--text-light);margin-top:6px;font-size:13px">Estrazione date e ore in corso</div>
     </div>
@@ -15140,13 +15243,13 @@ IMPORT_ORE_TMPL = """
     <div id="step2" style="display:none">
       <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px;margin-bottom:18px">
         <strong style="color:#15803d"><i class="fa fa-check-circle"></i> AI ha estratto <span id="n_righe">0</span> giorni lavorativi</strong>
-        <span style="color:var(--text-light);font-size:13px;margin-left:8px">Ã¢â‚¬â€ Verifica i dati prima di confermare</span>
+        <span style="color:var(--text-light);font-size:13px;margin-left:8px">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Verifica i dati prima di confermare</span>
       </div>
       <div style="overflow-x:auto;margin-bottom:16px">
         <table style="width:100%;border-collapse:collapse" id="tab_preview">
           <thead>
             <tr style="background:#0f172a;color:#fff">
-              <th style="padding:8px;text-align:center;font-size:12px;width:30px">Ã¢Å“â€œ</th>
+              <th style="padding:8px;text-align:center;font-size:12px;width:30px">ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“</th>
               <th style="padding:8px;text-align:left;font-size:12px">Data</th>
               <th style="padding:8px;text-align:center;font-size:12px">Ore</th>
               <th style="padding:8px;text-align:center;font-size:12px">Entrata</th>
@@ -15206,8 +15309,8 @@ function analizzaFile() {
         tr.innerHTML = '<td style="padding:6px;text-align:center"><input type="checkbox" checked id="chk_'+i+'"></td>'+
           '<td style="padding:6px;font-weight:600">'+r.data+'</td>'+
           '<td style="padding:6px;text-align:center"><input type="number" step="0.5" min="0" max="24" value="'+r.ore+'" id="ore_'+i+'" style="width:60px;text-align:center;border:1px solid #e2e8f0;border-radius:4px;padding:2px"></td>'+
-          '<td style="padding:6px;text-align:center;font-size:12px;color:var(--text-light)">'+( r.entrata||'Ã¢â‚¬â€')+'</td>'+
-          '<td style="padding:6px;text-align:center;font-size:12px;color:var(--text-light)">'+(r.uscita||'Ã¢â‚¬â€')+'</td>'+
+          '<td style="padding:6px;text-align:center;font-size:12px;color:var(--text-light)">'+( r.entrata||'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â')+'</td>'+
+          '<td style="padding:6px;text-align:center;font-size:12px;color:var(--text-light)">'+(r.uscita||'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â')+'</td>'+
           '<td style="padding:6px;font-size:12px;color:var(--text-light)">'+( r.nota||'')+'</td>';
         tbody.appendChild(tr);
       });
@@ -15236,7 +15339,7 @@ function confermaSalva() {
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({dip_id: _dipId, righe: righe_sel})
   }).then(r=>r.json()).then(function(d) {
-    document.getElementById('msg_salva').textContent = 'Ã¢Å“â€œ Salvate '+d.saved+' presenze!';
+    document.getElementById('msg_salva').textContent = 'ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Salvate '+d.saved+' presenze!';
     document.getElementById('msg_salva').style.display='';
     setTimeout(function(){ window.location.href='/presenze'; }, 1800);
   });
@@ -15277,7 +15380,7 @@ def presenze_import_analizza():
 
     api_key = get_setting('anthropic_api_key','')
     if not api_key:
-        return jsonify({'error':'API key Anthropic non configurata. Vai in Impostazioni Ã¢â€ â€™ AI.'})
+        return jsonify({'error':'API key Anthropic non configurata. Vai in Impostazioni ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ AI.'})
 
     # Prepara il contenuto per Claude
     import urllib.request as _urlreq
@@ -15286,7 +15389,7 @@ Estrai per ogni giorno lavorativo: data (formato YYYY-MM-DD), ore totali lavorat
 Ignora giorni festivi, sabati, domeniche se non lavorati.
 Rispondi SOLO con un JSON array senza markdown, esempio:
 [{{"data":"2026-02-03","ore":8.0,"entrata":"08:00","uscita":"16:00","nota":""}},{{"data":"2026-02-04","ore":7.5,"entrata":"08:30","uscita":"16:00","nota":"uscita anticipata"}}]
-Se non trovi ore per un giorno, non includerlo. Se l'ora non ÃƒÂ¨ presente metti null."""
+Se non trovi ore per un giorno, non includerlo. Se l'ora non ÃƒÆ’Ã‚Â¨ presente metti null."""
 
     # Costruisci messaggio con il file
     file_bytes = base64.b64decode(file_b64)
@@ -15394,17 +15497,17 @@ def invia_richiesta_presenza():
     ore = None
 
     if modalita == 'ore':
-        # ModalitÃƒÂ  "ore totali"
+        # ModalitÃƒÆ’Ã‚Â  "ore totali"
         try:
             ore_dirette = float(request.form.get('ore_dirette','') or 0)
             if not (0 < ore_dirette <= 24):
                 raise ValueError
             ore = round(ore_dirette, 2)
         except (ValueError, TypeError):
-            flash('Inserisci un numero di ore valido (0.5Ã¢â‚¬â€œ24).', 'error')
+            flash('Inserisci un numero di ore valido (0.5ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“24).', 'error')
             return redirect(url_for('presenze'))
     else:
-        # ModalitÃƒÂ  "entrata/uscita"
+        # ModalitÃƒÆ’Ã‚Â  "entrata/uscita"
         oe = request.form.get('ora_entrata','').strip()
         ou = request.form.get('ora_uscita','').strip()
         if not oe or not ou:
@@ -15422,7 +15525,7 @@ def invia_richiesta_presenza():
     if db.execute("""SELECT id FROM richieste_presenze
                      WHERE utente_id=? AND data=? AND cantiere_id IS ? AND stato='in_attesa'""",
                   (session['user_id'], data, int(cid) if cid else None)).fetchone():
-        flash('Hai giÃƒÂ  una richiesta in attesa per questo giorno e cantiere.','error')
+        flash('Hai giÃƒÆ’Ã‚Â  una richiesta in attesa per questo giorno e cantiere.','error')
         db.close(); return redirect(url_for('presenze'))
     cur_req = db.execute("""INSERT INTO richieste_presenze
                             (utente_id, data, ora_entrata, ora_uscita, ore_totali, cantiere_id, note)
@@ -15449,7 +15552,7 @@ def invia_richiesta_presenza():
         if modalita == 'ore':
             riepilogo = f"<b>{ore:.1f} ore</b>"
         else:
-            riepilogo = f"Ore: {oe}Ã¢â‚¬â€œ{ou} ({ore:.1f}h)"
+            riepilogo = f"Ore: {oe}ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“{ou} ({ore:.1f}h)"
         def _send_desk():
             try:
                 send_email(email_admin, f'[ACCESSO FIERE] Nuova richiesta da {_nome_d}',
@@ -15460,7 +15563,7 @@ def invia_richiesta_presenza():
         threading.Thread(target=_send_desk, daemon=True).start()
     flash('Richiesta inviata!','success'); return redirect(url_for('presenze'))
 
-# Ã¢â€â‚¬Ã¢â€â‚¬ Export Excel Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Export Excel ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 @app.route('/presenze/export')
 @admin_required
 def export_presenze():
@@ -15501,7 +15604,7 @@ def export_presenze():
 
     wb = openpyxl.Workbook()
 
-    # Ã¢â€â‚¬Ã¢â€â‚¬ Foglio 1: Presenze Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Foglio 1: Presenze ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     ws = wb.active; ws.title = "Presenze"
     hdr_fill = PatternFill("solid", fgColor="0F172A")
     hdr_font = Font(color="FFFFFF", bold=True)
@@ -15521,10 +15624,10 @@ def export_presenze():
     ws.cell(len(rows)+2, 5, 'TOTALE').font = Font(bold=True)
     ws.cell(len(rows)+2, 6, f'=SUM(F2:F{len(rows)+1})').font = Font(bold=True)
 
-    # Ã¢â€â‚¬Ã¢â€â‚¬ Foglio 2: Spese Rimborsabili Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Foglio 2: Spese Rimborsabili ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     ws2 = wb.create_sheet("Spese Rimborsabili")
     grn_fill = PatternFill("solid", fgColor="065F46")
-    headers2 = ['Dipendente','Data','Categoria','Descrizione','Veicolo','Importo Ã¢â€šÂ¬','Stato']
+    headers2 = ['Dipendente','Data','Categoria','Descrizione','Veicolo','Importo ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬','Stato']
     for i,h in enumerate(headers2,1):
         c = ws2.cell(1,i,h); c.font = hdr_font; c.fill = grn_fill; c.alignment = Alignment(horizontal='center')
     ws2.column_dimensions['A'].width = 22; ws2.column_dimensions['B'].width = 14
@@ -15538,14 +15641,14 @@ def export_presenze():
         ws2.cell(row_i,4,s['descrizione'] or '')
         ws2.cell(row_i,5,s['veicolo_targa'] or '')
         amt_cell = ws2.cell(row_i,6,round(s['importo'],2) if s['importo'] else 0)
-        amt_cell.number_format = '#,##0.00 Ã¢â€šÂ¬'
+        amt_cell.number_format = '#,##0.00 ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬'
         ws2.cell(row_i,7,'Approvata')
 
     if spese:
         tot_row = len(spese)+2
         ws2.cell(tot_row,5,'TOTALE RIMBORSI').font = Font(bold=True)
         tc = ws2.cell(tot_row,6,f'=SUM(F2:F{len(spese)+1})')
-        tc.font = Font(bold=True); tc.number_format = '#,##0.00 Ã¢â€šÂ¬'
+        tc.font = Font(bold=True); tc.number_format = '#,##0.00 ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬'
         tc.fill = PatternFill("solid", fgColor="D1FAE5")
 
     buf = io.BytesIO(); wb.save(buf); buf.seek(0)
@@ -15553,9 +15656,9 @@ def export_presenze():
     return Response(buf, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                     headers={'Content-Disposition': f'attachment; filename={fname}'})
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 #  FERIE & PERMESSI
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 FERIE_TMPL = """
 {% if session.ruolo != 'admin' %}
 <div class="card" style="margin-bottom:20px">
@@ -15565,10 +15668,10 @@ FERIE_TMPL = """
       <div class="form-row-4">
         <div class="form-group"><label>Tipo *</label>
           <select name="tipo" required>
-            <option value="Ferie">Ã°Å¸Å’Â´ Ferie</option>
-            <option value="Permesso">Ã¢ÂÂ° Permesso</option>
-            <option value="Malattia">Ã°Å¸ÂÂ¥ Malattia</option>
-            <option value="Permesso studio">Ã°Å¸â€œÅ¡ Permesso studio</option>
+            <option value="Ferie">ÃƒÂ°Ã…Â¸Ã…â€™Ã‚Â´ Ferie</option>
+            <option value="Permesso">ÃƒÂ¢Ã‚ÂÃ‚Â° Permesso</option>
+            <option value="Malattia">ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â¥ Malattia</option>
+            <option value="Permesso studio">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…Â¡ Permesso studio</option>
           </select></div>
         <div class="form-group"><label>Dal *</label><input type="date" name="data_inizio" required></div>
         <div class="form-group"><label>Al *</label><input type="date" name="data_fine" required></div>
@@ -15606,7 +15709,7 @@ FERIE_TMPL = """
       <td><strong>{{ r.giorni }}</strong></td>
       <td>{% if r.ora_inizio and r.ora_fine %}<span class="badge badge-blue">{{ r.ora_inizio }} - {{ r.ora_fine }}</span>{% else %}<span style="color:var(--text-light)">-</span>{% endif %}</td>
       <td>{% if r.certificato_nome %}<a href="/ferie/certificato/{{ r.id }}" class="btn btn-sm btn-secondary" target="_blank"><i class="fa fa-file-medical"></i> Apri</a>{% else %}<span style="color:var(--text-light)">-</span>{% endif %}</td>
-      <td style="color:var(--text-light)">{{ r.motivo or 'Ã¢â‚¬â€œ' }}</td>
+      <td style="color:var(--text-light)">{{ r.motivo or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
       <td>
         <form method="POST" action="/ferie/{{ r.id }}/gestisci" style="display:flex;gap:6px;align-items:center">
           <input name="nota_admin" placeholder="Nota..." style="padding:5px 8px;font-size:12px;width:120px;border:1px solid var(--border);border-radius:6px">
@@ -15640,11 +15743,11 @@ FERIE_TMPL = """
       <td>{{ r.data_inizio }}</td><td>{{ r.data_fine }}</td><td>{{ r.giorni }}</td>
       <td>{% if r.ora_inizio and r.ora_fine %}<span class="badge badge-blue">{{ r.ora_inizio }} - {{ r.ora_fine }}</span>{% else %}<span style="color:var(--text-light)">-</span>{% endif %}</td>
       <td>{% if r.certificato_nome %}<a href="/ferie/certificato/{{ r.id }}" class="btn btn-sm btn-secondary" target="_blank"><i class="fa fa-file-medical"></i> Apri</a>{% else %}<span style="color:var(--text-light)">-</span>{% endif %}</td>
-      <td style="color:var(--text-light)">{{ r.motivo or 'Ã¢â‚¬â€œ' }}</td>
-      <td>{% if r.stato=='in_attesa' %}<span class="badge badge-amber">Ã¢ÂÂ³ In attesa</span>
-          {% elif r.stato=='approvata' %}<span class="badge badge-green">Ã¢Å“â€¦ Approvata</span>
-          {% else %}<span class="badge badge-red">Ã¢ÂÅ’ Rifiutata</span>{% endif %}</td>
-      <td style="font-size:12px;color:var(--text-light)">{{ r.nota_admin or 'Ã¢â‚¬â€œ' }}</td>
+      <td style="color:var(--text-light)">{{ r.motivo or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
+      <td>{% if r.stato=='in_attesa' %}<span class="badge badge-amber">ÃƒÂ¢Ã‚ÂÃ‚Â³ In attesa</span>
+          {% elif r.stato=='approvata' %}<span class="badge badge-green">ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Approvata</span>
+          {% else %}<span class="badge badge-red">ÃƒÂ¢Ã‚ÂÃ…â€™ Rifiutata</span>{% endif %}</td>
+      <td style="font-size:12px;color:var(--text-light)">{{ r.nota_admin or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
     </tr>{% else %}
     <tr><td colspan="10"><div class="empty-state"><i class="fa fa-umbrella-beach"></i><p>Nessuna richiesta</p></div></td></tr>
     {% endfor %}</tbody>
@@ -15723,7 +15826,7 @@ def ferie_richiesta():
         send_email(email_admin, f'[ACCESSO FIERE] Richiesta {tipo} da {session["nome"]} {session["cognome"]}',
             f'<p><b>{session["nome"]} {session["cognome"]}</b> ha richiesto <b>{dettaglio}</b>.</p>')
     db.close()
-    # Ã¢â€â‚¬Ã¢â€â‚¬ Notifica agli admin Ã¢â€â‚¬Ã¢â€â‚¬
+    # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Notifica agli admin ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     try:
         notifica_admins(
             f'Nuova richiesta {tipo}',
@@ -15749,7 +15852,7 @@ def ferie_gestisci(fid):
     db.execute("UPDATE ferie_permessi SET stato=?,nota_admin=?,gestito_il=? WHERE id=?",
                (stato, nota or stato.capitalize(), now_str, fid))
     safe_commit(db); db.close()
-    # Ã¢â€â‚¬Ã¢â€â‚¬ Notifica al dipendente Ã¢â€â‚¬Ã¢â€â‚¬
+    # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Notifica al dipendente ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     if f_info:
         try:
             tipo_label = (f_info['tipo'] or 'Richiesta').capitalize()
@@ -15759,16 +15862,16 @@ def ferie_gestisci(fid):
             )
             if stato == 'approvata':
                 title = f'{tipo_label} accettata'
-                body = f"La tua richiesta di {dettaglio} ÃƒÂ¨ stata accettata."
+                body = f"La tua richiesta di {dettaglio} ÃƒÆ’Ã‚Â¨ stata accettata."
             else:
                 title = f'{tipo_label} rifiutata'
-                body = f"La tua richiesta di {dettaglio} ÃƒÂ¨ stata rifiutata."
+                body = f"La tua richiesta di {dettaglio} ÃƒÆ’Ã‚Â¨ stata rifiutata."
                 if nota:
                     body += f" Nota: {nota}"
             notifica_utente(f_info['utente_id'], title, body, '/mobile/notifiche', f'ferie_{stato}')
         except Exception as e:
             print(f'[push ferie] {e}')
-    flash(f'{"Ã¢Å“â€¦ Approvata" if stato=="approvata" else "Ã¢ÂÅ’ Rifiutata"}!','success')
+    flash(f'{"ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Approvata" if stato=="approvata" else "ÃƒÂ¢Ã‚ÂÃ…â€™ Rifiutata"}!','success')
     return redirect(url_for('ferie'))
 
 
@@ -15790,9 +15893,9 @@ def ferie_certificato(fid):
     return send_file(row['certificato_path'], mimetype=mt,
                      download_name=row['certificato_nome'] or 'certificato')
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 #  RICHIESTE PRESENZE (admin panel)
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 RIC_TMPL = """
 {% if pending > 0 %}<div class="alert alert-info"><i class="fa fa-bell"></i> {{ pending }} richieste presenze in attesa</div>{% endif %}
 
@@ -15805,16 +15908,16 @@ RIC_TMPL = """
     <tr style="background:#fffbf0">
       <td><span class="avatar-sm">{{ r.nome[0] }}{{ r.cognome[0] }}</span><strong>{{ r.nome }} {{ r.cognome }}</strong></td>
       <td style="font-family:monospace">{{ r.data }}</td>
-      <td>{% if r.cantiere_nome %}<span class="tag">{{ r.cantiere_nome }}</span>{% else %}<span style="color:var(--text-light)">Ã¢â‚¬â€œ</span>{% endif %}</td>
-      <td style="color:var(--success);font-family:monospace;font-size:12px">{{ r.ora_entrata or 'Ã¢â‚¬â€œ' }}</td>
-      <td style="font-family:monospace;font-size:12px">{{ r.ora_uscita or 'Ã¢â‚¬â€œ' }}</td>
+      <td>{% if r.cantiere_nome %}<span class="tag">{{ r.cantiere_nome }}</span>{% else %}<span style="color:var(--text-light)">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“</span>{% endif %}</td>
+      <td style="color:var(--success);font-family:monospace;font-size:12px">{{ r.ora_entrata or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
+      <td style="font-family:monospace;font-size:12px">{{ r.ora_uscita or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
       <td style="font-size:12px">
         {% if r.pausa_ore and r.pausa_ore > 0 %}
           <span style="background:#fef3c7;color:#92400e;border-radius:6px;padding:2px 7px;font-weight:600;white-space:nowrap"><i class="fa fa-mug-saucer" style="font-size:9px"></i> {{ "%.1f"|format(r.pausa_ore) }}h</span>
-        {% else %}<span style="color:var(--text-light)">Ã¢â‚¬â€œ</span>{% endif %}
+        {% else %}<span style="color:var(--text-light)">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“</span>{% endif %}
       </td>
-      <td><strong style="font-size:15px">{{ "%.1f"|format(r.ore_totali) if r.ore_totali else 'Ã¢â‚¬â€œ' }}h</strong></td>
-      <td style="color:var(--text-light);font-size:12px;max-width:160px">{{ r.note or 'Ã¢â‚¬â€œ' }}</td>
+      <td><strong style="font-size:15px">{{ "%.1f"|format(r.ore_totali) if r.ore_totali else 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}h</strong></td>
+      <td style="color:var(--text-light);font-size:12px;max-width:160px">{{ r.note or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
       <td>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
           <button onclick="apriModifica({{ r.id }},'{{ r.data }}',{{ r.ore_totali or 0 }},'{{ r.cantiere_id or '' }}','{{ r.note or '' }}')"
@@ -15838,19 +15941,19 @@ RIC_TMPL = """
     <tr>
       <td><span class="avatar-sm">{{ r.nome[0] }}{{ r.cognome[0] }}</span>{{ r.nome }} {{ r.cognome }}</td>
       <td style="font-family:monospace">{{ r.data }}</td>
-      <td>{% if r.cantiere_nome %}<span class="tag">{{ r.cantiere_nome }}</span>{% else %}Ã¢â‚¬â€œ{% endif %}</td>
-      <td style="color:var(--success);font-family:monospace;font-size:12px">{{ r.ora_entrata or 'Ã¢â‚¬â€œ' }}</td>
-      <td style="font-family:monospace;font-size:12px">{{ r.ora_uscita or 'Ã¢â‚¬â€œ' }}</td>
+      <td>{% if r.cantiere_nome %}<span class="tag">{{ r.cantiere_nome }}</span>{% else %}ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“{% endif %}</td>
+      <td style="color:var(--success);font-family:monospace;font-size:12px">{{ r.ora_entrata or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
+      <td style="font-family:monospace;font-size:12px">{{ r.ora_uscita or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
       <td style="font-size:12px">
         {% if r.pausa_ore and r.pausa_ore > 0 %}
           <span style="background:#fef3c7;color:#92400e;border-radius:6px;padding:2px 7px;font-weight:600;white-space:nowrap"><i class="fa fa-mug-saucer" style="font-size:9px"></i> {{ "%.1f"|format(r.pausa_ore) }}h</span>
-        {% else %}<span style="color:var(--text-light)">Ã¢â‚¬â€œ</span>{% endif %}
+        {% else %}<span style="color:var(--text-light)">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“</span>{% endif %}
       </td>
-      <td><strong>{{ "%.1f"|format(r.ore_totali) if r.ore_totali else 'Ã¢â‚¬â€œ' }}h</strong></td>
-      <td>{% if r.stato=='in_attesa' %}<span class="badge badge-amber">Ã¢ÂÂ³ In attesa</span>
-          {% elif r.stato=='approvata' %}<span class="badge badge-green">Ã¢Å“â€¦ Approvata</span>
-          {% else %}<span class="badge badge-red">Ã¢ÂÅ’ Rifiutata</span>{% endif %}</td>
-      <td style="font-size:12px;color:var(--text-light)">{{ r.nota_admin or 'Ã¢â‚¬â€œ' }}</td>
+      <td><strong>{{ "%.1f"|format(r.ore_totali) if r.ore_totali else 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}h</strong></td>
+      <td>{% if r.stato=='in_attesa' %}<span class="badge badge-amber">ÃƒÂ¢Ã‚ÂÃ‚Â³ In attesa</span>
+          {% elif r.stato=='approvata' %}<span class="badge badge-green">ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Approvata</span>
+          {% else %}<span class="badge badge-red">ÃƒÂ¢Ã‚ÂÃ…â€™ Rifiutata</span>{% endif %}</td>
+      <td style="font-size:12px;color:var(--text-light)">{{ r.nota_admin or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
     </tr>{% else %}
     <tr><td colspan="9"><div class="empty-state"><i class="fa fa-inbox"></i><p>Nessuna richiesta</p></div></td></tr>
     {% endfor %}</tbody>
@@ -15880,7 +15983,7 @@ RIC_TMPL = """
         <div class="form-group">
           <label>Fiera</label>
           <select name="cantiere_mod" id="mod-cantiere">
-            <option value="">Ã¢â‚¬â€ Nessuno Ã¢â‚¬â€</option>
+            <option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Nessuno ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
             {% for c in cantieri %}
             <option value="{{ c.id }}">{{ c.nome }}</option>
             {% endfor %}
@@ -15961,7 +16064,7 @@ def gestisci_richiesta(rid):
         else:
             db.execute("INSERT INTO presenze (utente_id,data,ore_totali,pausa_ore,cantiere_id,note) VALUES (?,?,?,?,?,?)",
                        (r['utente_id'], data_mod, ore_mod, pausa_orig, cantiere_mod, note_p))
-        flash(f'Ã¢Å“â€¦ Modificata ({ore_mod}h) e approvata!', 'success')
+        flash(f'ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Modificata ({ore_mod}h) e approvata!', 'success')
 
     elif azione == 'approva':
         db.execute("UPDATE richieste_presenze SET stato='approvata', nota_admin=?, gestito_il=? WHERE id=?",
@@ -15979,24 +16082,24 @@ def gestisci_richiesta(rid):
             db.execute("""INSERT INTO presenze (utente_id, data, ora_entrata, ora_uscita, ore_totali, pausa_ore, cantiere_id, note)
                           VALUES (?,?,?,?,?,?,?,?)""",
                        (r['utente_id'], r['data'], r['ora_entrata'], r['ora_uscita'], r['ore_totali'], pausa_orig, r['cantiere_id'], note_p))
-        flash('Ã¢Å“â€¦ Approvata e presenza registrata!', 'success')
+        flash('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Approvata e presenza registrata!', 'success')
 
     else:  # rifiuta
         db.execute("UPDATE richieste_presenze SET stato='rifiutata', nota_admin=?, gestito_il=? WHERE id=?",
                    (nota or 'Rifiutata', now_str, rid))
-        flash('Ã¢ÂÅ’ Rifiutata.', 'success')
+        flash('ÃƒÂ¢Ã‚ÂÃ…â€™ Rifiutata.', 'success')
 
     safe_commit(db); db.close()
-    # Ã¢â€â‚¬Ã¢â€â‚¬ Notifica al dipendente: storico in app + push immediata Ã¢â€â‚¬Ã¢â€â‚¬
+    # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Notifica al dipendente: storico in app + push immediata ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     try:
         data_notifica = request.form.get('data_mod') or r['data']
         if azione in ('approva', 'modifica_approva'):
             title = 'Timbratura accettata'
-            body = f"La tua timbratura del {data_notifica} ÃƒÂ¨ stata accettata."
+            body = f"La tua timbratura del {data_notifica} ÃƒÆ’Ã‚Â¨ stata accettata."
             tipo = 'presenza_approvata'
         else:
             title = 'Timbratura rifiutata'
-            body = f"La tua timbratura del {data_notifica} ÃƒÂ¨ stata rifiutata."
+            body = f"La tua timbratura del {data_notifica} ÃƒÆ’Ã‚Â¨ stata rifiutata."
             if nota:
                 body += f" Nota: {nota}"
             tipo = 'presenza_rifiutata'
@@ -16005,9 +16108,9 @@ def gestisci_richiesta(rid):
         print(f'[push richiesta] {e}')
     return redirect(url_for('admin_richieste'))
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 #  REPORT MENSILE
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 REPORT_TMPL = """
 <!-- Filtri -->
 <div class="card" style="margin-bottom:24px">
@@ -16018,8 +16121,8 @@ REPORT_TMPL = """
         <input type="month" name="mese" value="{{ mese_sel }}" required style="width:160px"></div>
       <div class="form-group" style="margin:0;min-width:180px"><label>Vista per</label>
         <select name="vista" onchange="this.form.submit()">
-          <option value="dipendente" {{ 'selected' if vista=='dipendente' }}>Ã°Å¸â€˜Â¤ Dipendente</option>
-          <option value="cantiere"   {{ 'selected' if vista=='cantiere'   }}>Ã°Å¸Ââ€”Ã¯Â¸Â Cantiere</option>
+          <option value="dipendente" {{ 'selected' if vista=='dipendente' }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â¤ Dipendente</option>
+          <option value="cantiere"   {{ 'selected' if vista=='cantiere'   }}>ÃƒÂ°Ã…Â¸Ã‚ÂÃ¢â‚¬â€ÃƒÂ¯Ã‚Â¸Ã‚Â Cantiere</option>
         </select></div>
       {% if vista=='dipendente' %}
       <div class="form-group" style="margin:0;min-width:180px"><label>Dipendente</label>
@@ -16049,7 +16152,7 @@ REPORT_TMPL = """
   <div class="stat-card"><div class="stat-icon green"><i class="fa fa-calendar-check"></i></div><div><div class="stat-val">{{ totali.giorni }}</div><div class="stat-lbl">Giorni totali</div></div></div>
   <div class="stat-card"><div class="stat-icon amber"><i class="fa fa-clock"></i></div><div><div class="stat-val">{{ "%.0f"|format(totali.ore) }}h</div><div class="stat-lbl">Ore totali</div></div></div>
   <div class="stat-card"><div class="stat-icon red"><i class="fa fa-clock-rotate-left"></i></div><div><div class="stat-val">{{ "%.1f"|format(totali.ore/totali.giorni) if totali.giorni else '0' }}h</div><div class="stat-lbl">Media ore/giorno</div></div></div>
-  <div class="stat-card" style="border-left:3px solid #10b981"><div class="stat-icon green"><i class="fa fa-receipt"></i></div><div><div class="stat-val">Ã¢â€šÂ¬ {{ "%.0f"|format(totali.spese) }}</div><div class="stat-lbl">Rimborsi approvati</div></div></div>
+  <div class="stat-card" style="border-left:3px solid #10b981"><div class="stat-icon green"><i class="fa fa-receipt"></i></div><div><div class="stat-val">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.0f"|format(totali.spese) }}</div><div class="stat-lbl">Rimborsi approvati</div></div></div>
 </div>
 
 <!-- Grafici -->
@@ -16077,7 +16180,7 @@ REPORT_TMPL = """
   <div class="table-wrap"><table>
     <thead>
     {% if vista=='dipendente' %}
-    <tr><th>Dipendente</th><th>Giorni lavorati</th><th>Ore totali</th><th>Media/giorno</th><th>Ferie/Permessi</th><th>Cantiere principale</th><th>Straordinari est.</th><th style="color:#10b981">Rimborsi Ã¢â€šÂ¬</th><th style="color:#dc2626">Detrazioni Ã¢â€šÂ¬</th></tr>
+    <tr><th>Dipendente</th><th>Giorni lavorati</th><th>Ore totali</th><th>Media/giorno</th><th>Ferie/Permessi</th><th>Cantiere principale</th><th>Straordinari est.</th><th style="color:#10b981">Rimborsi ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬</th><th style="color:#dc2626">Detrazioni ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬</th></tr>
     {% else %}
     <tr><th>Fiera</th><th>Giorni totali</th><th>Ore totali</th><th>Media/giorno</th><th>Dipendenti distinti</th><th>Dipendente top</th></tr>
     {% endif %}
@@ -16088,29 +16191,29 @@ REPORT_TMPL = """
       <td>
         <span class="avatar-sm" style="{% if r.is_jolly %}background:linear-gradient(135deg,#d97706,#f59e0b){% endif %}">{{ r.nome[0] }}{{ r.cognome[0] }}</span>
         <strong>{{ r.nome }} {{ r.cognome }}</strong>
-        {% if r.is_jolly %}<span style="font-size:10px;background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 6px;margin-left:4px;font-weight:700">Ã°Å¸â€˜Â· JOLLY</span>{% endif %}
+        {% if r.is_jolly %}<span style="font-size:10px;background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 6px;margin-left:4px;font-weight:700">ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â· JOLLY</span>{% endif %}
       </td>
       <td><strong>{{ r.giorni }}</strong></td>
       <td><strong style="color:var(--accent2)">{{ "%.1f"|format(r.ore) }}h</strong></td>
-      <td>{{ "%.1f"|format(r.ore/r.giorni) if r.giorni else 'Ã¢â‚¬â€œ' }}h</td>
-      <td>{% if r.ferie %}<span class="badge badge-purple">{{ r.ferie }} gg</span>{% else %}<span style="color:var(--text-light)">Ã¢â‚¬â€œ</span>{% endif %}</td>
-      <td>{% if r.cantiere %}<span class="tag"><i class="fa fa-store"></i> {{ r.cantiere }}</span>{% else %}<span style="color:var(--text-light)">Ã¢â‚¬â€œ</span>{% endif %}</td>
+      <td>{{ "%.1f"|format(r.ore/r.giorni) if r.giorni else 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}h</td>
+      <td>{% if r.ferie %}<span class="badge badge-purple">{{ r.ferie }} gg</span>{% else %}<span style="color:var(--text-light)">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“</span>{% endif %}</td>
+      <td>{% if r.cantiere %}<span class="tag"><i class="fa fa-store"></i> {{ r.cantiere }}</span>{% else %}<span style="color:var(--text-light)">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“</span>{% endif %}</td>
       <td>{% set std = r.ore - (r.giorni * 8) %}
         {% if std > 0 %}<span class="badge badge-red">+{{ "%.1f"|format(std) }}h</span>
         {% else %}<span class="badge badge-green">In orario</span>{% endif %}</td>
       <td style="text-align:right">
         {% if r.spese > 0 and r.uid %}
-        <a href="/admin/spese?uid={{ r.uid }}&stato=approvata" style="color:#059669;font-weight:800;text-decoration:none">Ã¢â€šÂ¬ {{ "%.2f"|format(r.spese) }}</a>
-        {% else %}<span style="color:var(--text-light)">Ã¢â‚¬â€œ</span>{% endif %}
+        <a href="/admin/spese?uid={{ r.uid }}&stato=approvata" style="color:#059669;font-weight:800;text-decoration:none">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(r.spese) }}</a>
+        {% else %}<span style="color:var(--text-light)">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“</span>{% endif %}
       </td>
       <td style="text-align:right">
         {% if not r.is_jolly and r.detrazioni > 0 and r.uid %}
         <a href="/admin/detrazioni?uid={{ r.uid }}&mese={{ mese_sel }}"
            style="color:#dc2626;font-weight:800;text-decoration:none"
-           title="{% for x in r.detr_dettaglio %}{{ x.descrizione }}: Ã¢â€šÂ¬{{ '%.2f'|format(x.importo) }}&#10;{% endfor %}">
-          Ã¢Ë†â€™ Ã¢â€šÂ¬ {{ "%.2f"|format(r.detrazioni) }}
+           title="{% for x in r.detr_dettaglio %}{{ x.descrizione }}: ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬{{ '%.2f'|format(x.importo) }}&#10;{% endfor %}">
+          ÃƒÂ¢Ã‹â€ Ã¢â‚¬â„¢ ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(r.detrazioni) }}
         </a>
-        {% else %}<span style="color:var(--text-light)">Ã¢â‚¬â€œ</span>{% endif %}
+        {% else %}<span style="color:var(--text-light)">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“</span>{% endif %}
       </td>
     </tr>
     {% else %}
@@ -16118,9 +16221,9 @@ REPORT_TMPL = """
       <td><i class="fa fa-hard-hat" style="color:var(--warning);margin-right:8px"></i><strong>{{ r.nome }}</strong></td>
       <td><strong>{{ r.giorni }}</strong></td>
       <td><strong style="color:var(--accent2)">{{ "%.1f"|format(r.ore) }}h</strong></td>
-      <td>{{ "%.1f"|format(r.ore/r.giorni) if r.giorni else 'Ã¢â‚¬â€œ' }}h</td>
+      <td>{{ "%.1f"|format(r.ore/r.giorni) if r.giorni else 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}h</td>
       <td><span class="badge badge-blue">{{ r.n_dipendenti }} dip.</span></td>
-      <td>{% if r.top_dip %}<span class="avatar-sm" style="font-size:9px">{{ r.top_dip[:2] }}</span>{{ r.top_dip }}{% else %}Ã¢â‚¬â€œ{% endif %}</td>
+      <td>{% if r.top_dip %}<span class="avatar-sm" style="font-size:9px">{{ r.top_dip[:2] }}</span>{{ r.top_dip }}{% else %}ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“{% endif %}</td>
     </tr>
     {% endif %}
     {% endfor %}</tbody>
@@ -16130,9 +16233,9 @@ REPORT_TMPL = """
 {% if vista=='dipendente' and spese_report %}
 <div class="card" style="margin-top:20px;border-left:4px solid #10b981">
   <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
-    <h3><i class="fa fa-receipt" style="color:#10b981"></i> Spese Rimborsabili Approvate Ã¢â‚¬â€ {{ mese_sel }}</h3>
+    <h3><i class="fa fa-receipt" style="color:#10b981"></i> Spese Rimborsabili Approvate ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {{ mese_sel }}</h3>
     <span style="background:#f0fdf4;color:#15803d;border:1px solid #86efac;border-radius:8px;padding:5px 16px;font-weight:700">
-      Totale: Ã¢â€šÂ¬ {{ "%.2f"|format(totali.spese) }}
+      Totale: ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(totali.spese) }}
     </span>
   </div>
   <div class="table-wrap"><table>
@@ -16147,22 +16250,22 @@ REPORT_TMPL = """
       {% if not uid_sel %}<td><strong>{{ s.nome }} {{ s.cognome }}</strong></td>{% endif %}
       <td style="font-family:monospace">{{ s.data }}</td>
       <td><span class="tag">{{ s.categoria }}</span></td>
-      <td style="color:var(--text-light);font-size:13px">{{ s.descrizione or 'Ã¢â‚¬â€œ' }}</td>
-      <td style="font-size:12px">{{ s.veicolo_targa or 'Ã¢â‚¬â€œ' }}</td>
-      <td style="text-align:right;font-weight:800;color:#059669">Ã¢â€šÂ¬ {{ "%.2f"|format(s.importo) }}</td>
+      <td style="color:var(--text-light);font-size:13px">{{ s.descrizione or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
+      <td style="font-size:12px">{{ s.veicolo_targa or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
+      <td style="text-align:right;font-weight:800;color:#059669">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(s.importo) }}</td>
       <td>
         {% if s.foto_nome %}
         <a href="/admin/spese/foto/{{ s.foto_nome }}" target="_blank"
            style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;border-radius:6px;padding:4px 10px;font-size:12px;text-decoration:none;display:inline-flex;align-items:center;gap:4px">
           <i class="fa fa-image"></i> Vedi
         </a>
-        {% else %}Ã¢â‚¬â€œ{% endif %}
+        {% else %}ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“{% endif %}
       </td>
     </tr>
     {% endfor %}
     <tr style="background:#f0fdf4;font-weight:700">
       <td colspan="{{ 4 if uid_sel else 5 }}" style="text-align:right">TOTALE RIMBORSI</td>
-      <td style="text-align:right;font-size:15px;color:#059669">Ã¢â€šÂ¬ {{ "%.2f"|format(totali.spese) }}</td>
+      <td style="text-align:right;font-size:15px;color:#059669">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(totali.spese) }}</td>
       <td></td>
     </tr>
     </tbody>
@@ -16173,9 +16276,9 @@ REPORT_TMPL = """
 {% if vista=='dipendente' and totali.detrazioni > 0 %}
 <div class="card" style="margin-top:20px;border-left:4px solid #dc2626">
   <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
-    <h3><i class="fa fa-minus-circle" style="color:#dc2626"></i> Detrazioni & Anticipi Ã¢â‚¬â€ {{ mese_sel }}</h3>
+    <h3><i class="fa fa-minus-circle" style="color:#dc2626"></i> Detrazioni & Anticipi ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {{ mese_sel }}</h3>
     <span style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:8px;padding:5px 16px;font-weight:700">
-      Totale: Ã¢Ë†â€™ Ã¢â€šÂ¬ {{ "%.2f"|format(totali.detrazioni) }}
+      Totale: ÃƒÂ¢Ã‹â€ Ã¢â‚¬â„¢ ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(totali.detrazioni) }}
     </span>
   </div>
   <div class="table-wrap"><table>
@@ -16189,14 +16292,14 @@ REPORT_TMPL = """
       <tr>
         {% if not uid_sel %}<td><strong>{{ r.nome }} {{ r.cognome }}</strong></td>{% endif %}
         <td><span style="background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600">{{ x.tipo }}</span></td>
-        <td style="color:var(--text-light);font-size:13px">{{ x.descrizione or 'Ã¢â‚¬â€œ' }}</td>
-        <td style="text-align:right;font-weight:800;color:#dc2626">Ã¢Ë†â€™ Ã¢â€šÂ¬ {{ "%.2f"|format(x.importo) }}</td>
+        <td style="color:var(--text-light);font-size:13px">{{ x.descrizione or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
+        <td style="text-align:right;font-weight:800;color:#dc2626">ÃƒÂ¢Ã‹â€ Ã¢â‚¬â„¢ ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(x.importo) }}</td>
       </tr>
       {% endfor %}
     {% endif %}{% endfor %}
     <tr style="background:#fef2f2;font-weight:700">
       <td colspan="{{ 2 if uid_sel else 3 }}" style="text-align:right">TOTALE DETRAZIONI</td>
-      <td style="text-align:right;font-size:15px;color:#dc2626">Ã¢Ë†â€™ Ã¢â€šÂ¬ {{ "%.2f"|format(totali.detrazioni) }}</td>
+      <td style="text-align:right;font-size:15px;color:#dc2626">ÃƒÂ¢Ã‹â€ Ã¢â‚¬â„¢ ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(totali.detrazioni) }}</td>
     </tr>
     </tbody>
   </table></div>
@@ -16363,7 +16466,7 @@ def admin_report():
             giorni = len(rows)
             ore    = sum(r['ore_totali'] or 0 for r in rows)
             dips   = len(set(r['utente_id'] for r in rows if r['utente_id']))
-            # dipendente con piÃƒÂ¹ ore
+            # dipendente con piÃƒÆ’Ã‚Â¹ ore
             dip_ore = {}
             for r in rows:
                 k = f"{r['nome']} {r['cognome']}"
@@ -16433,13 +16536,13 @@ def export_report():
     # Titolo
     ws.merge_cells('A1:G1')
     title_cell = ws['A1']
-    title_cell.value = f"REPORT MENSILE Ã¢â‚¬â€œ {mese_sel.upper()} Ã¢â‚¬â€œ {'per Dipendente' if vista=='dipendente' else 'per Cantiere'}"
+    title_cell.value = f"REPORT MENSILE ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“ {mese_sel.upper()} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“ {'per Dipendente' if vista=='dipendente' else 'per Cantiere'}"
     title_cell.font  = Font(bold=True, size=14, color="0F172A")
     title_cell.alignment = center
     ws.row_dimensions[1].height = 30
 
     if vista == 'dipendente':
-        headers = ['Dipendente','Giorni lavorati','Ore totali','Media ore/giorno','Ferie/Permessi gg','Cantiere principale','Straordinari est.','Paga Ã¢â€šÂ¬/h','Totale lordo Ã¢â€šÂ¬','Rimborsi Ã¢â€šÂ¬','Detrazioni Ã¢â€šÂ¬','Descrizione detrazioni','Totale da pagare Ã¢â€šÂ¬']
+        headers = ['Dipendente','Giorni lavorati','Ore totali','Media ore/giorno','Ferie/Permessi gg','Cantiere principale','Straordinari est.','Paga ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬/h','Totale lordo ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬','Rimborsi ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬','Detrazioni ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬','Descrizione detrazioni','Totale da pagare ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬']
         col_widths = [25,16,14,18,18,22,16,12,16,14,14,35,18]
         q_users = "SELECT * FROM utenti WHERE attivo=1 AND ruolo='dipendente'"
         if uid_sel: q_users += f" AND id={int(uid_sel)}"
@@ -16465,7 +16568,7 @@ def export_report():
             detr_rows = db.execute("SELECT tipo,descrizione,importo FROM detrazioni_dipendente WHERE utente_id=? AND mese_competenza=? ORDER BY data",
                                    (u['id'],mese_sel)).fetchall()
             detr_xl = round(sum(d['importo'] for d in detr_rows), 2)
-            detr_desc = '; '.join(f"{d['descrizione'] or d['tipo']} (Ã¢â€šÂ¬{d['importo']:.2f})" for d in detr_rows) if detr_rows else ''
+            detr_desc = '; '.join(f"{d['descrizione'] or d['tipo']} (ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬{d['importo']:.2f})" for d in detr_rows) if detr_rows else ''
 
             # Calcolo paga
             paga_oraria = float(u['paga_oraria_netta'] or 0)
@@ -16490,22 +16593,22 @@ def export_report():
                 c_str = ws.cell(row_i,7,straord); c_str.number_format=num_fmt; c_str.alignment=center
                 if straord > 0: c_str.font = Font(bold=True, color="DC2626")
                 # Paga oraria
-                c_ph = ws.cell(row_i,8, paga_oraria if paga_oraria else ''); c_ph.number_format='Ã¢â€šÂ¬ #,##0.00'; c_ph.alignment=center
-                if not paga_oraria and not paga_base: c_ph.value = 'Ã¢Å¡Â  n/d'; c_ph.font = Font(color="DC2626")
+                c_ph = ws.cell(row_i,8, paga_oraria if paga_oraria else ''); c_ph.number_format='ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ #,##0.00'; c_ph.alignment=center
+                if not paga_oraria and not paga_base: c_ph.value = 'ÃƒÂ¢Ã…Â¡Ã‚Â  n/d'; c_ph.font = Font(color="DC2626")
                 # Totale lordo
-                c_tl = ws.cell(row_i,9, totale_lordo if (paga_oraria or paga_base) else ''); c_tl.number_format='Ã¢â€šÂ¬ #,##0.00'; c_tl.alignment=center
+                c_tl = ws.cell(row_i,9, totale_lordo if (paga_oraria or paga_base) else ''); c_tl.number_format='ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ #,##0.00'; c_tl.alignment=center
                 if paga_oraria or paga_base: c_tl.font = Font(bold=True, color="10B981")
                 # Rimborsi
-                c_sp = ws.cell(row_i,10, spese_xl if spese_xl else ''); c_sp.number_format='Ã¢â€šÂ¬ #,##0.00'; c_sp.alignment=center
+                c_sp = ws.cell(row_i,10, spese_xl if spese_xl else ''); c_sp.number_format='ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ #,##0.00'; c_sp.alignment=center
                 if spese_xl > 0: c_sp.font = Font(bold=True, color="059669")
                 # Detrazioni
-                c_dt = ws.cell(row_i,11, -detr_xl if detr_xl else ''); c_dt.number_format='Ã¢â€šÂ¬ #,##0.00'; c_dt.alignment=center
+                c_dt = ws.cell(row_i,11, -detr_xl if detr_xl else ''); c_dt.number_format='ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ #,##0.00'; c_dt.alignment=center
                 if detr_xl > 0: c_dt.font = Font(bold=True, color="DC2626")
                 # Descrizione detrazioni
                 ws.cell(row_i,12, detr_desc)
                 # Totale da pagare
                 c_tn = ws.cell(row_i,13, totale_netto if (paga_oraria or paga_base) else '')
-                c_tn.number_format='Ã¢â€šÂ¬ #,##0.00'; c_tn.alignment=center
+                c_tn.number_format='ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ #,##0.00'; c_tn.alignment=center
                 if paga_oraria or paga_base:
                     c_tn.font = Font(bold=True, size=11, color="059669" if totale_netto >= 0 else "DC2626")
                     c_tn.fill = PatternFill("solid", fgColor="F0FDF4" if totale_netto >= 0 else "FEF2F2")
@@ -16514,7 +16617,7 @@ def export_report():
                 tot_lordo+=totale_lordo; tot_netto+=totale_netto
                 row_i+=1
 
-        # Jolly nel foglio Excel Ã¢â‚¬â€ solo se non ÃƒÂ¨ filtrato su un singolo dipendente
+        # Jolly nel foglio Excel ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â solo se non ÃƒÆ’Ã‚Â¨ filtrato su un singolo dipendente
         if not uid_sel:
             jolly_rows = db.execute("""
                 SELECT nome_jolly, cognome_jolly,
@@ -16531,7 +16634,7 @@ def export_report():
                 giorni_j = j['giorni']; ore_j = round(float(j['ore']),1)
                 if giorni_j == 0: continue
                 straord_j = round(ore_j - (giorni_j * 8), 1)
-                c1 = ws.cell(row_i,1,f"Ã°Å¸â€˜Â· {j['nome_jolly']} {j['cognome_jolly']} (Jolly)")
+                c1 = ws.cell(row_i,1,f"ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â· {j['nome_jolly']} {j['cognome_jolly']} (Jolly)")
                 c1.fill = jolly_fill
                 ws.cell(row_i,2,giorni_j).alignment = center; ws.cell(row_i,2).fill = jolly_fill
                 c_ore = ws.cell(row_i,3,ore_j); c_ore.number_format=num_fmt; c_ore.alignment=center; c_ore.fill=jolly_fill
@@ -16541,7 +16644,7 @@ def export_report():
                 ws.cell(row_i,6,j['cantiere'] or '').alignment=center; ws.cell(row_i,6).fill=jolly_fill
                 c_str = ws.cell(row_i,7,straord_j); c_str.number_format=num_fmt; c_str.alignment=center; c_str.fill=jolly_fill
                 for col in [8,9,10,11,12,13]:
-                    ws.cell(row_i,col,'Ã¢â‚¬â€œ').fill=jolly_fill; ws.cell(row_i,col).alignment=center
+                    ws.cell(row_i,col,'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“').fill=jolly_fill; ws.cell(row_i,col).alignment=center
                 tot_giorni+=giorni_j; tot_ore+=ore_j; row_i+=1
 
         # Riga totali
@@ -16549,10 +16652,10 @@ def export_report():
         ws.cell(row_i,2,tot_giorni).font=tot_font; ws.cell(row_i,2).fill=tot_fill; ws.cell(row_i,2).alignment=center
         tc=ws.cell(row_i,3,round(tot_ore,1)); tc.font=tot_font; tc.fill=tot_fill; tc.number_format=num_fmt; tc.alignment=center
         ws.cell(row_i,5,tot_ferie).font=tot_font; ws.cell(row_i,5).fill=tot_fill; ws.cell(row_i,5).alignment=center
-        c_tlt=ws.cell(row_i,9,round(tot_lordo,2)); c_tlt.font=Font(bold=True,color="10B981"); c_tlt.fill=tot_fill; c_tlt.number_format='Ã¢â€šÂ¬ #,##0.00'; c_tlt.alignment=center
-        c_spt=ws.cell(row_i,10,round(tot_spese_xl,2)); c_spt.font=Font(bold=True,color="059669"); c_spt.fill=tot_fill; c_spt.number_format='Ã¢â€šÂ¬ #,##0.00'; c_spt.alignment=center
-        c_dtt=ws.cell(row_i,11,-round(tot_detr_xl,2) if tot_detr_xl else ''); c_dtt.font=Font(bold=True,color="DC2626"); c_dtt.fill=tot_fill; c_dtt.number_format='Ã¢â€šÂ¬ #,##0.00'; c_dtt.alignment=center
-        c_tnt=ws.cell(row_i,13,round(tot_netto,2)); c_tnt.font=Font(bold=True,size=12,color="059669"); c_tnt.fill=PatternFill("solid",fgColor="D1FAE5"); c_tnt.number_format='Ã¢â€šÂ¬ #,##0.00'; c_tnt.alignment=center
+        c_tlt=ws.cell(row_i,9,round(tot_lordo,2)); c_tlt.font=Font(bold=True,color="10B981"); c_tlt.fill=tot_fill; c_tlt.number_format='ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ #,##0.00'; c_tlt.alignment=center
+        c_spt=ws.cell(row_i,10,round(tot_spese_xl,2)); c_spt.font=Font(bold=True,color="059669"); c_spt.fill=tot_fill; c_spt.number_format='ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ #,##0.00'; c_spt.alignment=center
+        c_dtt=ws.cell(row_i,11,-round(tot_detr_xl,2) if tot_detr_xl else ''); c_dtt.font=Font(bold=True,color="DC2626"); c_dtt.fill=tot_fill; c_dtt.number_format='ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ #,##0.00'; c_dtt.alignment=center
+        c_tnt=ws.cell(row_i,13,round(tot_netto,2)); c_tnt.font=Font(bold=True,size=12,color="059669"); c_tnt.fill=PatternFill("solid",fgColor="D1FAE5"); c_tnt.number_format='ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ #,##0.00'; c_tnt.alignment=center
 
     else:  # cantiere
         headers = ['Cantiere','Giorni totali','Ore totali','Media ore/giorno','Dipendenti distinti','Dipendente top']
@@ -16630,11 +16733,11 @@ def export_report():
         ws2.cell(ri,5,r['ora_uscita'] or '')
         oc=ws2.cell(ri,6,round(r['ore_totali'],1) if r['ore_totali'] else ''); oc.number_format=num_fmt
 
-    # Ã¢â€â‚¬Ã¢â€â‚¬ Foglio 3: Spese Rimborsabili (solo vista dipendente) Ã¢â€â‚¬Ã¢â€â‚¬
+    # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Foglio 3: Spese Rimborsabili (solo vista dipendente) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     if vista == 'dipendente':
         grn_fill = PatternFill("solid", fgColor="065F46")
         ws3 = wb.create_sheet("Spese Rimborsabili")
-        sp_headers = ['Dipendente','Data','Categoria','Descrizione','Veicolo','Importo Ã¢â€šÂ¬']
+        sp_headers = ['Dipendente','Data','Categoria','Descrizione','Veicolo','Importo ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬']
         for i,h in enumerate(sp_headers,1):
             c=ws3.cell(1,i,h); c.font=Font(color="FFFFFF",bold=True); c.fill=grn_fill; c.alignment=center
         ws3.column_dimensions['A'].width=22; ws3.column_dimensions['B'].width=14
@@ -16661,13 +16764,13 @@ def export_report():
             ws3.cell(ri,4,s['descrizione'] or '')
             ws3.cell(ri,5,s['veicolo_targa'] or '')
             ac = ws3.cell(ri,6, round(s['importo'],2) if s['importo'] else 0)
-            ac.number_format = '#,##0.00 Ã¢â€šÂ¬'; ac.alignment = Alignment(horizontal='right')
+            ac.number_format = '#,##0.00 ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬'; ac.alignment = Alignment(horizontal='right')
             tot_sp += s['importo'] or 0
         if sp_rows:
             tr = len(sp_rows)+2
             ws3.cell(tr,5,'TOTALE RIMBORSI').font = Font(bold=True)
             tc3 = ws3.cell(tr,6,round(tot_sp,2))
-            tc3.font = Font(bold=True); tc3.number_format = '#,##0.00 Ã¢â€šÂ¬'
+            tc3.font = Font(bold=True); tc3.number_format = '#,##0.00 ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬'
             tc3.fill = PatternFill("solid", fgColor="D1FAE5")
             tc3.alignment = Alignment(horizontal='right')
 
@@ -16678,9 +16781,9 @@ def export_report():
         headers={'Content-Disposition': f'attachment; filename={fname}',
                  'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 #  DIPENDENTI
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 DIP_TMPL = """
 <style>
 .dip-tabs{display:flex;gap:8px;margin-bottom:18px;border-bottom:2px solid var(--border);flex-wrap:wrap}
@@ -16724,7 +16827,7 @@ tr.riga-disattivo td{color:#94a3b8}
 
 {% if mostra == 'disattivati' and dipendenti %}
 <div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:12px 16px;border-radius:8px;margin-bottom:16px;font-size:13px;color:#92400e">
-  <i class="fa fa-circle-info"></i> Questi account sono <strong>disattivati</strong>: i dipendenti non possono piÃƒÂ¹ accedere al sistema, ma tutte le loro presenze, ore e documenti rimangono salvati nel portale e visibili nei report. Puoi <strong>riattivare</strong> un account in qualsiasi momento.
+  <i class="fa fa-circle-info"></i> Questi account sono <strong>disattivati</strong>: i dipendenti non possono piÃƒÆ’Ã‚Â¹ accedere al sistema, ma tutte le loro presenze, ore e documenti rimangono salvati nel portale e visibili nei report. Puoi <strong>riattivare</strong> un account in qualsiasi momento.
 </div>
 {% endif %}
 
@@ -16744,9 +16847,9 @@ tr.riga-disattivo td{color:#94a3b8}
     <tbody>{% for d in dipendenti %}
     <tr class="{% if not d.attivo %}riga-disattivo{% endif %}">
       <td><div style="display:flex;align-items:center"><span class="avatar-sm">{{ d.nome[0] }}{{ d.cognome[0] }}</span><div><div style="font-weight:600">{{ d.nome }} {{ d.cognome }}</div><div style="font-size:11px;color:var(--text-light)">{{ d.ruolo }}</div></div></div></td>
-      <td>{{ d.mansione or d.titolo or 'Ã¢â‚¬â€œ' }}</td>
+      <td>{{ d.mansione or d.titolo or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
       <td style="color:var(--accent2)">{{ d.email }}</td>
-      <td>{{ d.data_assunzione or 'Ã¢â‚¬â€œ' }}</td>
+      <td>{{ d.data_assunzione or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
       <td style="text-align:right;font-family:monospace;font-size:12px">{{ d.n_presenze or 0 }}</td>
       <td style="text-align:right;font-family:monospace;font-size:12px;font-weight:700">{{ "%.1f"|format(d.tot_ore or 0) }} h</td>
       <td>
@@ -16756,7 +16859,7 @@ tr.riga-disattivo td{color:#94a3b8}
         </a>
       </td>
       <td>
-        {% if d.attivo %}<span class="badge badge-green">Ã¢â€”Â Attivo</span>
+        {% if d.attivo %}<span class="badge badge-green">ÃƒÂ¢Ã¢â‚¬â€Ã‚Â Attivo</span>
         {% else %}<span class="badge badge-red" style="background:#fee2e2;color:#991b1b"><i class="fa fa-ban"></i> Disattivato</span>{% endif %}
       </td>
       {% if session.ruolo=='admin' %}<td style="display:flex;gap:6px">
@@ -16764,13 +16867,13 @@ tr.riga-disattivo td{color:#94a3b8}
         <a href="/dipendenti/{{ d.id }}/tesserino" class="btn btn-secondary btn-sm" title="Tesserino di servizio"><i class="fa fa-id-badge"></i></a>
         {% if d.attivo %}
         <a href="/dipendenti/{{ d.id }}/elimina"
-           onclick="return confirm('Disattivare l&#39;account di {{ d.nome }} {{ d.cognome }}?\\n\\nÃ¢Å“â€œ Le presenze, ore e documenti restano salvati nel portale\\nÃ¢Å“â€” {{ d.nome }} non potrÃƒÂ  piÃƒÂ¹ accedere al sistema')"
+           onclick="return confirm('Disattivare l&#39;account di {{ d.nome }} {{ d.cognome }}?\\n\\nÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Le presenze, ore e documenti restano salvati nel portale\\nÃƒÂ¢Ã…â€œÃ¢â‚¬â€ {{ d.nome }} non potrÃƒÆ’Ã‚Â  piÃƒÆ’Ã‚Â¹ accedere al sistema')"
            class="btn btn-sm" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca" title="Disattiva account">
            <i class="fa fa-user-slash"></i> Disattiva
         </a>
         {% else %}
         <a href="/dipendenti/{{ d.id }}/riattiva"
-           onclick="return confirm('Riattivare l&#39;account di {{ d.nome }} {{ d.cognome }}?\\nPotrÃƒÂ  accedere nuovamente.')"
+           onclick="return confirm('Riattivare l&#39;account di {{ d.nome }} {{ d.cognome }}?\\nPotrÃƒÆ’Ã‚Â  accedere nuovamente.')"
            class="btn btn-sm" style="background:#f0fdf4;color:#16a34a;border:1px solid #86efac" title="Riattiva account">
            <i class="fa fa-user-check"></i> Riattiva
         </a>
@@ -16794,10 +16897,10 @@ tr.riga-disattivo td{color:#94a3b8}
 <script>
 function confirmDeleteForever(nomeCompleto) {
   var primo = confirm(
-    'Ã¢Å¡Â Ã¯Â¸Â ATTENZIONE: stai per eliminare DEFINITIVAMENTE ' + nomeCompleto + '.\n\n' +
-    'Ã¢Å“â€œ Presenze, timbrature, rimborsi spese e movimenti banca ore RESTANO SALVATI (visibili nei report)\n' +
-    'Ã¢Å“â€” L\\'account verrÃƒÂ  rimosso dall\\'elenco\n' +
-    'Ã¢Å“â€” L\\'operazione NON ÃƒÂ¨ reversibile\n\n' +
+    'ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â ATTENZIONE: stai per eliminare DEFINITIVAMENTE ' + nomeCompleto + '.\n\n' +
+    'ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Presenze, timbrature, rimborsi spese e movimenti banca ore RESTANO SALVATI (visibili nei report)\n' +
+    'ÃƒÂ¢Ã…â€œÃ¢â‚¬â€ L\\'account verrÃƒÆ’Ã‚Â  rimosso dall\\'elenco\n' +
+    'ÃƒÂ¢Ã…â€œÃ¢â‚¬â€ L\\'operazione NON ÃƒÆ’Ã‚Â¨ reversibile\n\n' +
     'Vuoi procedere?'
   );
   if (!primo) return false;
@@ -16852,7 +16955,7 @@ DIP_FORM_TMPL = """
 
     <div style="background:#f0fdf4;border-radius:10px;padding:16px;margin-bottom:20px;border:1px solid #86efac">
       <div style="font-size:11px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">
-        <i class="fa fa-piggy-bank"></i> Banca ore Ã¢â‚¬â€ orario di lavoro contrattuale
+        <i class="fa fa-piggy-bank"></i> Banca ore ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â orario di lavoro contrattuale
       </div>
       <p style="font-size:12px;color:#16a34a;margin-bottom:14px">
         Indica quante ore al giorno lavora questo dipendente da contratto.
@@ -16868,7 +16971,7 @@ DIP_FORM_TMPL = """
                  placeholder="Es. 8 (full-time)">
         </div>
         <div class="form-group">
-          <label>Costo orario aziendale (Ã¢â€šÂ¬/h)</label>
+          <label>Costo orario aziendale (ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬/h)</label>
           <input type="number" name="costo_orario" step="0.50" min="0"
                  value="{{ '%.2f'|format(dip.costo_orario) if dip and dip.costo_orario else '' }}"
                  placeholder="Es. 22.50">
@@ -16876,15 +16979,15 @@ DIP_FORM_TMPL = """
         </div>
       </div>
       <div style="font-size:12px;color:#16a34a;padding:8px 12px;background:#fff;border-radius:6px;border:1px dashed #86efac;margin-top:6px">
-        <strong>Esempi ore:</strong> Full-time = 8h/g Ã‚Â· Part-time 30h/sett = 6h/g Ã‚Â· Part-time 20h/sett = 4h/g
+        <strong>Esempi ore:</strong> Full-time = 8h/g Ãƒâ€šÃ‚Â· Part-time 30h/sett = 6h/g Ãƒâ€šÃ‚Â· Part-time 20h/sett = 4h/g
       </div>
     </div>
 
     <div style="background:#eff6ff;border-radius:10px;padding:16px;margin-bottom:20px;border:1px solid #bfdbfe">
       <div style="font-size:11px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">
-        <i class="fa fa-key"></i> Credenziali di accesso Ã¢â‚¬â€ App mobile
+        <i class="fa fa-key"></i> Credenziali di accesso ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â App mobile
       </div>
-      <p style="font-size:12px;color:#3b82f6;margin-bottom:14px">Il dipendente userÃƒÂ  email e password per accedere all'app dal telefono. PotrÃƒÂ  cambiarle dopo il primo accesso.</p>
+      <p style="font-size:12px;color:#3b82f6;margin-bottom:14px">Il dipendente userÃƒÆ’Ã‚Â  email e password per accedere all'app dal telefono. PotrÃƒÆ’Ã‚Â  cambiarle dopo il primo accesso.</p>
       <div class="form-group">
         <label>Email di accesso *</label>
         <input type="email" name="email" value="{{ dip.email if dip else '' }}" required placeholder="mario.rossi@email.it">
@@ -16898,13 +17001,13 @@ DIP_FORM_TMPL = """
             <i class="fa fa-magic"></i>
           </button>
         </div>
-        <div style="font-size:11px;color:#64748b;margin-top:4px"><i class="fa fa-info-circle"></i> Comunica questa password al dipendente Ã¢â‚¬â€ potrÃƒÂ  cambiarla dall'app</div>
+        <div style="font-size:11px;color:#64748b;margin-top:4px"><i class="fa fa-info-circle"></i> Comunica questa password al dipendente ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â potrÃƒÆ’Ã‚Â  cambiarla dall'app</div>
       </div>
       {% else %}
       <div style="background:#fff;border-radius:8px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;border:1px solid #bfdbfe">
         <div>
           <div style="font-size:12px;color:#64748b">Password attuale</div>
-          <div style="font-size:13px;font-weight:600;color:#1e293b;margin-top:2px">Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢</div>
+          <div style="font-size:13px;font-weight:600;color:#1e293b;margin-top:2px">ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</div>
         </div>
         <a href="/dipendenti/{{ dip.id }}/reset-password" class="btn btn-blue btn-sm" onclick="return confirm('Generare una nuova password temporanea per {{ dip.nome }}?')">
           <i class="fa fa-rotate"></i> Reset password
@@ -16920,7 +17023,7 @@ DIP_FORM_TMPL = """
   </form>
 
   {% if dip %}
-  <!-- Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Fototessera & Tesserino (form separato perchÃƒÂ© multipart) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ -->
+  <!-- ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Fototessera & Tesserino (form separato perchÃƒÆ’Ã‚Â© multipart) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ -->
   <div style="background:#f8fafc;border-radius:10px;padding:18px;margin-top:24px;border:1px solid var(--border)">
     <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px;display:flex;align-items:center;gap:8px">
       <i class="fa fa-id-card"></i> Fototessera & Tesserino di servizio
@@ -16959,7 +17062,7 @@ DIP_FORM_TMPL = """
         <div style="font-size:11.5px;color:var(--text-light);margin-bottom:6px">Sostituisci la fototessera caricandone una nuova:</div>
         {% else %}
         <div style="font-size:13px;color:var(--text-light);margin-bottom:10px;line-height:1.5">
-          Carica una fototessera del dipendente per generare il <strong style="color:var(--text)">tesserino di riconoscimento</strong> stampabile (formato carta di credito 54Ãƒâ€”85.6mm) e digitale.
+          Carica una fototessera del dipendente per generare il <strong style="color:var(--text)">tesserino di riconoscimento</strong> stampabile (formato carta di credito 54ÃƒÆ’Ã¢â‚¬â€85.6mm) e digitale.
         </div>
         {% endif %}
 
@@ -17034,7 +17137,7 @@ def dipendente_nuovo():
             ore_g = request.form.get('ore_contratto_giornaliere', '') or 0
             try: ore_g = float(ore_g)
             except: ore_g = 0
-            # Per retrocompatibilitÃƒÂ  salvo anche ore_contratto_mensili (= ore_g * 22)
+            # Per retrocompatibilitÃƒÆ’Ã‚Â  salvo anche ore_contratto_mensili (= ore_g * 22)
             ore_m = round(ore_g * 22, 2) if ore_g > 0 else 0
             try: costo_orario = float(request.form.get('costo_orario', '') or 0)
             except: costo_orario = 0
@@ -17045,7 +17148,7 @@ def dipendente_nuovo():
             safe_commit(db);flash('Dipendente aggiunto!','success')
         except Exception as e:
             if 'UNIQUE' in str(e):
-                flash('Esiste giÃƒÂ  un dipendente con questa email. Usane una diversa.','error')
+                flash('Esiste giÃƒÆ’Ã‚Â  un dipendente con questa email. Usane una diversa.','error')
             else:
                 flash(f'Errore: {e}','error')
         finally:db.close()
@@ -17074,14 +17177,14 @@ def dipendente_modifica(uid):
 @app.route('/dipendenti/<int:uid>/elimina')
 @admin_required
 def dipendente_elimina(uid):
-    """Disattiva l'account del dipendente: non puÃƒÂ² piÃƒÂ¹ accedere, ma ore e presenze restano salvate."""
+    """Disattiva l'account del dipendente: non puÃƒÆ’Ã‚Â² piÃƒÆ’Ã‚Â¹ accedere, ma ore e presenze restano salvate."""
     db = get_db()
     dip = db.execute("SELECT nome, cognome FROM utenti WHERE id=?", (uid,)).fetchone()
     if not dip:
         db.close(); flash('Dipendente non trovato.', 'error'); return redirect(url_for('dipendenti'))
     db.execute("UPDATE utenti SET attivo=0 WHERE id=?", (uid,))
     safe_commit(db); db.close()
-    flash(f'Ã¢Å“â€¦ Account di {dip["nome"]} {dip["cognome"]} disattivato. Non potrÃƒÂ  piÃƒÂ¹ accedere, ma presenze, ore e documenti restano salvati nel portale.', 'success')
+    flash(f'ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Account di {dip["nome"]} {dip["cognome"]} disattivato. Non potrÃƒÆ’Ã‚Â  piÃƒÆ’Ã‚Â¹ accedere, ma presenze, ore e documenti restano salvati nel portale.', 'success')
     return redirect(url_for('dipendenti'))
 
 @app.route('/dipendenti/<int:uid>/riattiva')
@@ -17094,7 +17197,7 @@ def dipendente_riattiva(uid):
         db.close(); flash('Dipendente non trovato.', 'error'); return redirect(url_for('dipendenti'))
     db.execute("UPDATE utenti SET attivo=1 WHERE id=?", (uid,))
     safe_commit(db); db.close()
-    flash(f'Ã¢Å“â€¦ Account di {dip["nome"]} {dip["cognome"]} riattivato. PotrÃƒÂ  accedere nuovamente.', 'success')
+    flash(f'ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Account di {dip["nome"]} {dip["cognome"]} riattivato. PotrÃƒÆ’Ã‚Â  accedere nuovamente.', 'success')
     return redirect(url_for('dipendenti', mostra='attivi'))
 
 
@@ -17102,7 +17205,7 @@ def dipendente_riattiva(uid):
 @admin_required
 def dipendente_elimina_definitivo(uid):
     """Elimina DEFINITIVAMENTE il dipendente dalla tabella utenti.
-    Prima copia i dati anagrafici minimi in utenti_storico cosÃƒÂ¬ le JOIN continuano a funzionare:
+    Prima copia i dati anagrafici minimi in utenti_storico cosÃƒÆ’Ã‚Â¬ le JOIN continuano a funzionare:
     presenze, rimborsi spese, rettifiche banca ore restano salvati e visibili nei report."""
     db = get_db()
     dip = db.execute("SELECT id, nome, cognome, email, mansione, data_assunzione, attivo, ruolo FROM utenti WHERE id=?",
@@ -17117,13 +17220,13 @@ def dipendente_elimina_definitivo(uid):
         flash('Non puoi eliminare un amministratore.', 'error')
         return redirect(url_for('dipendenti'))
 
-    # Protezione: solo dipendenti giÃƒÂ  disattivati possono essere eliminati definitivamente
+    # Protezione: solo dipendenti giÃƒÆ’Ã‚Â  disattivati possono essere eliminati definitivamente
     if dip['attivo'] == 1:
         db.close()
         flash('Per sicurezza, prima devi disattivare il dipendente. Poi potrai eliminarlo definitivamente.', 'error')
         return redirect(url_for('dipendenti'))
 
-    # Copio in utenti_storico (idempotente: se giÃƒÂ  presente, aggiorno)
+    # Copio in utenti_storico (idempotente: se giÃƒÆ’Ã‚Â  presente, aggiorno)
     try:
         db.execute("""INSERT OR REPLACE INTO utenti_storico (id, nome, cognome, email, mansione, data_assunzione, data_eliminazione)
                       VALUES (?,?,?,?,?,?,datetime('now'))""",
@@ -17136,7 +17239,7 @@ def dipendente_elimina_definitivo(uid):
     n_spese = db.execute("SELECT COUNT(*) FROM spese_rimborso WHERE utente_id=?", (uid,)).fetchone()[0]
     n_bo = db.execute("SELECT COUNT(*) FROM banca_ore_movimenti WHERE utente_id=?", (uid,)).fetchone()[0]
 
-    # Rimuovo documenti dipendente (sia file che record) Ã¢â‚¬â€ NON fanno parte dello storico ore
+    # Rimuovo documenti dipendente (sia file che record) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â NON fanno parte dello storico ore
     try:
         docs = db.execute("SELECT nome_file FROM documenti_dipendente WHERE utente_id=?", (uid,)).fetchall()
         for d_ in docs:
@@ -17157,12 +17260,12 @@ def dipendente_elimina_definitivo(uid):
         except Exception:
             pass  # tabella potrebbe non esistere
 
-    # Elimino la riga da utenti Ã¢â‚¬â€ le presenze/spese/rettifiche NON vengono toccate,
-    # rimangono col loro utente_id e la JOIN userÃƒÂ  utenti_storico.
+    # Elimino la riga da utenti ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â le presenze/spese/rettifiche NON vengono toccate,
+    # rimangono col loro utente_id e la JOIN userÃƒÆ’Ã‚Â  utenti_storico.
     db.execute("DELETE FROM utenti WHERE id=?", (uid,))
     safe_commit(db); db.close()
 
-    flash(f'Ã°Å¸â€”â€˜Ã¯Â¸Â {dip["nome"]} {dip["cognome"]} eliminato definitivamente. '
+    flash(f'ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã¢â‚¬ËœÃƒÂ¯Ã‚Â¸Ã‚Â {dip["nome"]} {dip["cognome"]} eliminato definitivamente. '
           f'Conservati: {n_pres} presenze, {n_spese} rimborsi, {n_bo} movimenti banca ore (visibili nei report).',
           'success')
     return redirect(url_for('dipendenti', mostra='disattivati'))
@@ -17178,12 +17281,12 @@ def dipendente_reset_password(uid):
     dip = db.execute("SELECT nome, cognome, email FROM utenti WHERE id=?", (uid,)).fetchone()
     db.execute("UPDATE utenti SET password=? WHERE id=?", (hash_pw(new_pwd), uid))
     safe_commit(db); db.close()
-    flash(f'Ã¢Å“â€¦ Password di {dip["nome"]} {dip["cognome"]} resettata. Nuova password temporanea: <strong>{new_pwd}</strong> Ã¢â‚¬â€ comunicala al dipendente.', 'success')
+    flash(f'ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Password di {dip["nome"]} {dip["cognome"]} resettata. Nuova password temporanea: <strong>{new_pwd}</strong> ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â comunicala al dipendente.', 'success')
     return redirect(url_for('dipendente_modifica', uid=uid))
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 #  FOTOTESSERA & TESSERINO DIGITALE
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 ALLOWED_FOTOTESSERA_EXT = {'jpg', 'jpeg', 'png', 'webp'}
 MAX_FOTOTESSERA_SIZE = 5 * 1024 * 1024  # 5 MB
 
@@ -17227,8 +17330,8 @@ def _ensure_tesserino_token(db, az_id, uid):
     return None
 
 def _hash_pin(pin: str) -> str:
-    """Hash sha256 del PIN (4 cifre). Non ÃƒÂ¨ bcrypt ma ÃƒÂ¨ sufficiente per un PIN
-    che giÃƒÂ  di per sÃƒÂ© ha solo 10000 combinazioni e viene protetto dal token URL."""
+    """Hash sha256 del PIN (4 cifre). Non ÃƒÆ’Ã‚Â¨ bcrypt ma ÃƒÆ’Ã‚Â¨ sufficiente per un PIN
+    che giÃƒÆ’Ã‚Â  di per sÃƒÆ’Ã‚Â© ha solo 10000 combinazioni e viene protetto dal token URL."""
     import hashlib
     return hashlib.sha256(f'tess-pin-salt::{pin}'.encode()).hexdigest()
 
@@ -17289,7 +17392,7 @@ def fototessera_upload(uid):
         db.execute("UPDATE utenti SET fototessera_filename=? WHERE id=?", (fname, uid))
     safe_commit(db); db.close()
 
-    flash('Ã¢Å“â€¦ Fototessera caricata correttamente.', 'success')
+    flash('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Fototessera caricata correttamente.', 'success')
     return redirect(url_for('dipendente_modifica', uid=uid))
 
 
@@ -17344,7 +17447,7 @@ def fototessera_elimina(uid):
 @app.route('/dipendenti/<int:uid>/tesserino')
 @admin_required
 def tesserino_digitale(uid):
-    """Tesserino di riconoscimento Ã¢â‚¬â€ visualizzazione + stampa."""
+    """Tesserino di riconoscimento ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â visualizzazione + stampa."""
     az_id = session['azienda_id']
     db = get_db()
     dip = db.execute("""SELECT id, nome, cognome, email, telefono, mansione, titolo,
@@ -17403,7 +17506,7 @@ def tesserino_digitale(uid):
 @app.route('/dipendenti/<int:uid>/tesserino/qr.png')
 @admin_required
 def tesserino_qr_png(uid):
-    """Genera il PNG del QR del tesserino. Prova piÃƒÂ¹ provider esterni in sequenza,
+    """Genera il PNG del QR del tesserino. Prova piÃƒÆ’Ã‚Â¹ provider esterni in sequenza,
     altrimenti restituisce un SVG pseudo-QR di fallback."""
     az_id = session['azienda_id']
     db = get_db()
@@ -17442,7 +17545,7 @@ def tesserino_qr_png(uid):
             with urllib.request.urlopen(req, timeout=8) as resp:
                 data = resp.read()
                 if len(data) < 200:
-                    continue  # risposta troppo piccola Ã¢â€ â€™ probabilmente errore
+                    continue  # risposta troppo piccola ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ probabilmente errore
                 return Response(data, mimetype='image/png',
                                 headers={'Cache-Control': 'public, max-age=3600'})
         except Exception as e:
@@ -17491,7 +17594,7 @@ def tesserino_pin_imposta(uid):
 
     db.execute("UPDATE utenti SET tesserino_pin_hash=? WHERE id=?", (_hash_pin(pin), uid))
     safe_commit(db); db.close()
-    flash(f'PIN impostato: <strong>{pin}</strong> Ã¢â‚¬â€ comunicalo a chi deve poter vedere i documenti del dipendente.', 'success')
+    flash(f'PIN impostato: <strong>{pin}</strong> ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â comunicalo a chi deve poter vedere i documenti del dipendente.', 'success')
     return redirect(url_for('tesserino_digitale', uid=uid))
 
 
@@ -17510,7 +17613,7 @@ TESSERINO_TMPL = """
   display:flex;flex-direction:column;
 }
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ FRONTE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ FRONTE ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 .tess-card{background:linear-gradient(160deg,#0f4c81 0%,#1e3a8a 50%,#312e81 100%);padding:13px 13px 11px;color:#fff}
 .tess-card::before{content:"";position:absolute;top:-50%;right:-30%;width:280px;height:280px;background:radial-gradient(circle,rgba(0,180,216,.28) 0%,transparent 65%);pointer-events:none}
 .tess-card::after{content:"";position:absolute;bottom:-25%;left:-30%;width:220px;height:220px;background:radial-gradient(circle,rgba(0,180,216,.13) 0%,transparent 60%);pointer-events:none}
@@ -17537,7 +17640,7 @@ TESSERINO_TMPL = """
 .tess-meta{flex:1;min-width:0;font-size:7.5px;color:rgba(255,255,255,.7);font-weight:500;line-height:1.35;letter-spacing:.2px}
 .tess-meta strong{color:#fff;font-weight:700;letter-spacing:.5px;display:block;font-size:9px;font-family:monospace}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ RETRO Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ RETRO ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 .tess-card-back{background:#fff;padding:14px 13px;border:1px solid #e2e8f0}
 .tess-back-band{position:absolute;top:0;left:0;right:0;height:8px;background:linear-gradient(90deg,#0f4c81 0%,#1e3a8a 50%,#312e81 100%)}
 .tess-back-head{padding-top:6px;display:flex;align-items:center;gap:8px;margin-bottom:10px}
@@ -17557,7 +17660,7 @@ TESSERINO_TMPL = """
 .tess-back-contact .v{flex:1;word-break:break-word}
 .tess-back-rules{font-size:7px;color:#94a3b8;line-height:1.45;text-align:center;font-style:italic;margin-top:6px;padding:0 4px}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ PIN box Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ PIN box ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 .pin-card{background:#fff;border-radius:14px;border:1px solid var(--border);padding:18px;max-width:560px;margin:0 auto 20px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
 .pin-card .head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .pin-card .head-ico{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
@@ -17599,7 +17702,7 @@ TESSERINO_TMPL = """
       <span>Tesserino</span>
     </div>
     <div class="page-title">Tesserino di riconoscimento</div>
-    <div class="page-desc">Tesserino digitale e stampabile (formato carta di credito 54Ãƒâ€”85.6mm). Il QR sul retro permette di vedere i documenti del dipendente, protetti da PIN.</div>
+    <div class="page-desc">Tesserino digitale e stampabile (formato carta di credito 54ÃƒÆ’Ã¢â‚¬â€85.6mm). Il QR sul retro permette di vedere i documenti del dipendente, protetti da PIN.</div>
   </div>
   <div class="page-actions">
     <a href="/dipendenti/{{ dip.id }}/modifica" class="btn btn-secondary"><i class="fa fa-arrow-left"></i> Torna al profilo</a>
@@ -17615,11 +17718,11 @@ TESSERINO_TMPL = """
 {% if not ha_foto %}
 <div class="alert alert-info">
   <i class="fa fa-circle-info"></i>
-  Per generare un tesserino completo ÃƒÂ¨ consigliato caricare una <strong>fototessera</strong>. <a href="/dipendenti/{{ dip.id }}/modifica" style="color:inherit;text-decoration:underline">Carica ora la fototessera Ã¢â€ â€™</a>
+  Per generare un tesserino completo ÃƒÆ’Ã‚Â¨ consigliato caricare una <strong>fototessera</strong>. <a href="/dipendenti/{{ dip.id }}/modifica" style="color:inherit;text-decoration:underline">Carica ora la fototessera ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</a>
 </div>
 {% endif %}
 
-<!-- Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ PIN management Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ -->
+<!-- ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ PIN management ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ -->
 <div class="pin-card">
   <div class="head">
     <div class="head-ico"><i class="fa fa-lock"></i></div>
@@ -17631,19 +17734,19 @@ TESSERINO_TMPL = """
   {% if ha_pin %}
   <div class="pin-status set">
     <i class="fa fa-shield-halved"></i>
-    <span><strong>PIN impostato</strong> Ã¢â‚¬â€ la pagina pubblica ÃƒÂ¨ protetta. Comunica il PIN solo a chi ÃƒÂ¨ autorizzato.</span>
+    <span><strong>PIN impostato</strong> ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â la pagina pubblica ÃƒÆ’Ã‚Â¨ protetta. Comunica il PIN solo a chi ÃƒÆ’Ã‚Â¨ autorizzato.</span>
   </div>
   {% else %}
   <div class="pin-status unset">
     <i class="fa fa-triangle-exclamation"></i>
-    <span><strong>Nessun PIN impostato</strong> Ã¢â‚¬â€ chiunque scansioni il QR puÃƒÂ² vedere i documenti. Imposta un PIN per proteggerli.</span>
+    <span><strong>Nessun PIN impostato</strong> ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â chiunque scansioni il QR puÃƒÆ’Ã‚Â² vedere i documenti. Imposta un PIN per proteggerli.</span>
   </div>
   {% endif %}
   <form method="POST" action="/dipendenti/{{ dip.id }}/tesserino/pin" class="pin-form">
-    <input type="text" name="pin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢" autocomplete="off" required>
+    <input type="text" name="pin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢" autocomplete="off" required>
     <button type="submit" name="azione" value="imposta" class="btn btn-primary"><i class="fa fa-key"></i> {% if ha_pin %}Cambia PIN{% else %}Imposta PIN{% endif %}</button>
     {% if ha_pin %}
-    <button type="submit" name="azione" value="rimuovi" class="btn btn-secondary" onclick="return confirm('Rimuovere il PIN? Chi scansiona il QR vedrÃƒÂ  i documenti senza protezione.')"><i class="fa fa-times"></i> Rimuovi PIN</button>
+    <button type="submit" name="azione" value="rimuovi" class="btn btn-secondary" onclick="return confirm('Rimuovere il PIN? Chi scansiona il QR vedrÃƒÆ’Ã‚Â  i documenti senza protezione.')"><i class="fa fa-times"></i> Rimuovi PIN</button>
     {% endif %}
     <div class="info">PIN di 4 cifre. Niente sequenze ovvie (1234, 0000, ecc.).</div>
   </form>
@@ -17672,7 +17775,7 @@ TESSERINO_TMPL = """
       <div class="tess-name">{{ dip.nome }} {{ dip.cognome }}</div>
       <div class="tess-role">{{ dip.mansione or dip.titolo or 'Dipendente' }}</div>
       {% if sede_legale %}
-      <div class="tess-info-line"><i class="fa fa-location-dot"></i>{{ sede_legale[:38] }}{% if sede_legale|length > 38 %}Ã¢â‚¬Â¦{% endif %}</div>
+      <div class="tess-info-line"><i class="fa fa-location-dot"></i>{{ sede_legale[:38] }}{% if sede_legale|length > 38 %}ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦{% endif %}</div>
       {% endif %}
       {% if dip.telefono %}
       <div class="tess-info-line"><i class="fa fa-phone"></i>{{ dip.telefono }}</div>
@@ -17695,7 +17798,7 @@ TESSERINO_TMPL = """
         <div class="ico"><i class="fa fa-qrcode"></i></div>
         <div>
           <div class="ttl">Verifica documenti</div>
-          <div class="sub">Scansiona Ã‚Â· Inserisci PIN</div>
+          <div class="sub">Scansiona Ãƒâ€šÃ‚Â· Inserisci PIN</div>
         </div>
       </div>
       <div class="tess-qr-big">
@@ -17722,12 +17825,12 @@ TESSERINO_TMPL = """
 """
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-#  TESSERINO PUBBLICO (scansione QR) Ã¢â‚¬â€ pin protected
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
+#  TESSERINO PUBBLICO (scansione QR) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â pin protected
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 # Rate limiting in memory (per evitare brute-force PIN). Per produzione vera serve redis,
 # qui basta a fermare attacchi da singolo IP/token.
-_TESS_PIN_ATTEMPTS = {}   # key: f"{token}::{ip}" Ã¢â€ â€™ {'count': n, 'until': timestamp}
+_TESS_PIN_ATTEMPTS = {}   # key: f"{token}::{ip}" ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ {'count': n, 'until': timestamp}
 _TESS_PIN_MAX = 5
 _TESS_PIN_WINDOW = 600    # 10 minuti di blocco
 
@@ -17742,7 +17845,7 @@ def _pin_rate_limit_check(token, ip):
     now = time.time()
     if rec and rec['count'] >= _TESS_PIN_MAX and rec['until'] > now:
         return False, int(rec['until'] - now)
-    # Se la finestra di blocco ÃƒÂ¨ scaduta (rec con until>0 nel passato) Ã¢â€ â€™ reset
+    # Se la finestra di blocco ÃƒÆ’Ã‚Â¨ scaduta (rec con until>0 nel passato) ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ reset
     if rec and rec['until'] > 0 and rec['until'] <= now:
         _TESS_PIN_ATTEMPTS.pop(k, None)
     return True, 0
@@ -17798,7 +17901,7 @@ def _client_ip():
 
 @app.route('/t/<token>', methods=['GET','POST'])
 def tesserino_pubblico(token):
-    """Pagina pubblica del tesserino: form PIN Ã¢â€ â€™ vista documenti."""
+    """Pagina pubblica del tesserino: form PIN ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ vista documenti."""
     db, dip, az_id = _carica_tesserino_da_token(token)
     if not dip:
         return abort(404)
@@ -17831,20 +17934,20 @@ def tesserino_pubblico(token):
                     ha_foto = True; break
         except Exception: pass
 
-        # Se il dipendente non ÃƒÂ¨ attivo Ã¢â€ â€™ blocca subito (privacy)
+        # Se il dipendente non ÃƒÆ’Ã‚Â¨ attivo ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ blocca subito (privacy)
         if not dip['attivo']:
             return render_template_string(TESSERINO_PUB_DISABLED_TMPL,
                 azienda_nome=azienda_nome, ha_logo_az=ha_logo_az)
 
         ip = _client_ip()
 
-        # Caso 1: nessun PIN impostato Ã¢â€ â€™ mostra messaggio "non disponibile"
+        # Caso 1: nessun PIN impostato ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ mostra messaggio "non disponibile"
         if not dip['tesserino_pin_hash']:
             return render_template_string(TESSERINO_PUB_NOPIN_TMPL,
                 dip=dict(dip), azienda_nome=azienda_nome, ha_logo_az=ha_logo_az, ha_foto=ha_foto,
                 token=token)
 
-        # Caso 2: POST con PIN Ã¢â€ â€™ verifica
+        # Caso 2: POST con PIN ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ verifica
         if request.method == 'POST':
             ok, secs = _pin_rate_limit_check(token, ip)
             if not ok:
@@ -17861,7 +17964,7 @@ def tesserino_pubblico(token):
                 return render_template_string(TESSERINO_PUB_PIN_TMPL,
                     dip=dict(dip), azienda_nome=azienda_nome, ha_logo_az=ha_logo_az, ha_foto=ha_foto,
                     token=token, error=err, blocked=False)
-            # PIN corretto Ã¢â€ â€™ reset rate limit + segna come "sbloccato" in sessione + carica documenti
+            # PIN corretto ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ reset rate limit + segna come "sbloccato" in sessione + carica documenti
             _pin_rate_limit_clear(token, ip)
             unlocked = session.get('tess_pin_ok', {})
             if not isinstance(unlocked, dict): unlocked = {}
@@ -17869,7 +17972,7 @@ def tesserino_pubblico(token):
             session['tess_pin_ok'] = unlocked
             return _render_tesserino_docs(db, dip, az_id, azienda_nome, sede_legale, ha_logo_az, ha_foto, token)
 
-        # Caso 3: GET Ã¢â€ â€™ mostra form PIN
+        # Caso 3: GET ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ mostra form PIN
         return render_template_string(TESSERINO_PUB_PIN_TMPL,
             dip=dict(dip), azienda_nome=azienda_nome, ha_logo_az=ha_logo_az, ha_foto=ha_foto,
             token=token, error=None, blocked=False)
@@ -17895,7 +17998,7 @@ def _render_tesserino_docs(db, dip, az_id, azienda_nome, sede_legale, ha_logo_az
             else: row['stato'] = 'ok'
         else:
             row['stato'] = 'nessuna'
-        # Determina se ÃƒÂ¨ visualizzabile inline (PDF/immagine)
+        # Determina se ÃƒÆ’Ã‚Â¨ visualizzabile inline (PDF/immagine)
         if row.get('nome_file'):
             mt = mimetypes.guess_type(row['nome_file'])[0] or ''
             row['viewable'] = (mt == 'application/pdf') or mt.startswith('image/')
@@ -17967,7 +18070,7 @@ def tesserino_pubblico_doc_view(token, did):
     db.close()
     if not doc or not doc['nome_file']:
         return abort(404)
-    # Path: il file ÃƒÂ¨ in /data/uploads_dipendenti/<uid>/
+    # Path: il file ÃƒÆ’Ã‚Â¨ in /data/uploads_dipendenti/<uid>/
     path = os.path.join(UPLOAD_DIR, str(dip['id']), doc['nome_file'])
     if not os.path.exists(path):
         return abort(404)
@@ -18010,7 +18113,7 @@ TESSERINO_PUB_PIN_TMPL = """<!DOCTYPE html>
 <html lang="it"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>Verifica Ã‚Â· {{ dip.nome }} {{ dip.cognome }}</title>
+<title>Verifica Ãƒâ€šÃ‚Â· {{ dip.nome }} {{ dip.cognome }}</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>""" + _TESS_PUB_BASE_CSS + """
@@ -18048,23 +18151,23 @@ TESSERINO_PUB_PIN_TMPL = """<!DOCTYPE html>
   <div class="section pin-section">
     <div class="pin-icon"><i class="fa fa-lock"></i></div>
     <div class="pin-title">Inserisci il PIN</div>
-    <div class="pin-sub">Per visualizzare i documenti di questo dipendente ÃƒÂ¨ necessario il PIN comunicato dall'azienda.</div>
+    <div class="pin-sub">Per visualizzare i documenti di questo dipendente ÃƒÆ’Ã‚Â¨ necessario il PIN comunicato dall'azienda.</div>
     {% if blocked %}
     <div class="pin-blocked"><i class="fa fa-ban"></i> {{ error }}</div>
     {% else %}
     <form method="POST" autocomplete="off">
       <input type="text" name="pin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4"
-             placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢" autofocus required class="pin-input{% if error %} error{% endif %}">
+             placeholder="ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢" autofocus required class="pin-input{% if error %} error{% endif %}">
       <button type="submit" class="pin-btn"><i class="fa fa-unlock"></i> Verifica PIN</button>
     </form>
     {% if error %}<div class="pin-error"><i class="fa fa-circle-exclamation"></i> {{ error }}</div>{% endif %}
     {% endif %}
     <div class="pin-info">
-      <i class="fa fa-shield-halved"></i> Il PIN ÃƒÂ¨ personale: non condividerlo se non con personale autorizzato.<br>
+      <i class="fa fa-shield-halved"></i> Il PIN ÃƒÆ’Ã‚Â¨ personale: non condividerlo se non con personale autorizzato.<br>
       Dopo 5 tentativi errati l'accesso viene bloccato per 10 minuti.
     </div>
   </div>
-  <div class="footer">Tesserino di servizio Ã‚Â· Sistema gestionale aziendale<div class="priv">Pagina protetta da PIN Ã¢â‚¬â€ i dati non sono indicizzati dai motori di ricerca</div></div>
+  <div class="footer">Tesserino di servizio Ãƒâ€šÃ‚Â· Sistema gestionale aziendale<div class="priv">Pagina protetta da PIN ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â i dati non sono indicizzati dai motori di ricerca</div></div>
 </div>
 </body></html>"""
 
@@ -18073,7 +18176,7 @@ TESSERINO_PUB_DOCS_TMPL = """<!DOCTYPE html>
 <html lang="it"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>Documenti Ã‚Â· {{ dip.nome }} {{ dip.cognome }}</title>
+<title>Documenti Ãƒâ€šÃ‚Â· {{ dip.nome }} {{ dip.cognome }}</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>""" + _TESS_PUB_BASE_CSS + """
@@ -18163,14 +18266,14 @@ TESSERINO_PUB_DOCS_TMPL = """<!DOCTYPE html>
               {% else %}Scade il {{ d.data_scadenza }}
               {% endif %}
             {% else %}Nessuna scadenza{% endif %}
-            {% if d.viewable %} Ã‚Â· <span class="doc-tap-hint">tocca per visualizzare</span>{% endif %}
+            {% if d.viewable %} Ãƒâ€šÃ‚Â· <span class="doc-tap-hint">tocca per visualizzare</span>{% endif %}
           </div>
         </div>
         <div class="doc-stato {{ d.stato }}">
           {% if d.stato == 'scaduto' %}Scaduto
           {% elif d.stato == 'in_scadenza' %}In scadenza
           {% elif d.stato == 'ok' %}OK
-          {% else %}Ã¢â‚¬â€{% endif %}
+          {% else %}ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â{% endif %}
         </div>
       {% if d.viewable %}</a>{% else %}</div>{% endif %}
     {% endfor %}
@@ -18191,7 +18294,7 @@ TESSERINO_PUB_DOCS_TMPL = """<!DOCTYPE html>
   {% endif %}
 
   <div class="footer">
-    <i class="fa fa-shield-halved"></i> Pagina riservata Ã‚Â· accesso protetto da PIN
+    <i class="fa fa-shield-halved"></i> Pagina riservata Ãƒâ€šÃ‚Â· accesso protetto da PIN
     <div class="priv">I dati visualizzati sono di sola consultazione</div>
   </div>
 </div>
@@ -18202,7 +18305,7 @@ TESSERINO_PUB_NOPIN_TMPL = """<!DOCTYPE html>
 <html lang="it"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>Tesserino Ã‚Â· {{ dip.nome }} {{ dip.cognome }}</title>
+<title>Tesserino Ãƒâ€šÃ‚Â· {{ dip.nome }} {{ dip.cognome }}</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>""" + _TESS_PUB_BASE_CSS + """
@@ -18259,17 +18362,17 @@ TESSERINO_PUB_DISABLED_TMPL = """<!DOCTYPE html>
   </div>
   <div class="disabled-card">
     <div class="disabled-icon"><i class="fa fa-circle-xmark"></i></div>
-    <div class="disabled-title">Tesserino non piÃƒÂ¹ valido</div>
-    <div class="disabled-sub">Il dipendente non risulta piÃƒÂ¹ in forza all'azienda. Per ulteriori informazioni contattare direttamente l'azienda.</div>
+    <div class="disabled-title">Tesserino non piÃƒÆ’Ã‚Â¹ valido</div>
+    <div class="disabled-sub">Il dipendente non risulta piÃƒÆ’Ã‚Â¹ in forza all'azienda. Per ulteriori informazioni contattare direttamente l'azienda.</div>
   </div>
   <div class="footer">Tesserino di servizio</div>
 </div>
 </body></html>"""
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 #  DOCUMENTI & SCADENZE
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 DOC_TMPL = """
 {% if session.ruolo in ['admin','amministrazione'] and scadenze_app and scadenze_app.docs_dip_scaduti > 0 %}
 <div style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border:1px solid #fca5a5;border-left:4px solid #dc2626;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:14px">
@@ -18281,7 +18384,7 @@ DOC_TMPL = """
       {{ scadenze_app.docs_dip_scaduti }} document{{ 'o' if scadenze_app.docs_dip_scaduti==1 else 'i' }} dei dipendenti scadut{{ 'o' if scadenze_app.docs_dip_scaduti==1 else 'i' }}
     </div>
     <div style="font-size:12.5px;color:#7f1d1d;margin-top:2px">
-      Carta d'identitÃƒÂ , patente, visita medica o altri documenti scaduti Ã¢â‚¬â€ chiedi ai dipendenti il rinnovo.
+      Carta d'identitÃƒÆ’Ã‚Â , patente, visita medica o altri documenti scaduti ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â chiedi ai dipendenti il rinnovo.
     </div>
   </div>
   <a href="?stato=scaduto" class="btn btn-sm" style="background:#fff;color:#991b1b;border:1px solid #dc2626;font-weight:700">Mostra solo scaduti</a>
@@ -18310,9 +18413,9 @@ DOC_TMPL = """
         <label>Stato</label>
         <select name="stato">
           <option value="">Tutti</option>
-          <option value="scaduto" {{ 'selected' if filtro_stato=='scaduto' }}>Ã¢Å¡Â  Scaduti</option>
-          <option value="presto" {{ 'selected' if filtro_stato=='presto' }}>Ã°Å¸â€Â¶ In scadenza (30gg)</option>
-          <option value="ok" {{ 'selected' if filtro_stato=='ok' }}>Ã¢Å“â€¦ Validi</option>
+          <option value="scaduto" {{ 'selected' if filtro_stato=='scaduto' }}>ÃƒÂ¢Ã…Â¡Ã‚Â  Scaduti</option>
+          <option value="presto" {{ 'selected' if filtro_stato=='presto' }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¶ In scadenza (30gg)</option>
+          <option value="ok" {{ 'selected' if filtro_stato=='ok' }}>ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Validi</option>
         </select>
       </div>
       <button type="submit" class="btn btn-primary" style="height:40px"><i class="fa fa-search"></i> Filtra</button>
@@ -18347,7 +18450,7 @@ DOC_TMPL = """
         <i class="fa fa-file-alt" style="color:var(--accent);margin-right:8px"></i>
         <strong>{{ d.titolo }}</strong>
         {% if d.sorgente == 'dipendente' %}
-          <span style="font-size:10px;background:#eff6ff;color:#2563eb;border-radius:4px;padding:1px 6px;margin-left:4px">Ã°Å¸â€œÅ½ file</span>
+          <span style="font-size:10px;background:#eff6ff;color:#2563eb;border-radius:4px;padding:1px 6px;margin-left:4px">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…Â½ file</span>
         {% endif %}
         {% if d.descrizione %}<div style="font-size:11px;color:var(--text-light)">{{ d.descrizione[:80] }}</div>{% endif %}
       </td>
@@ -18357,11 +18460,11 @@ DOC_TMPL = """
           <span class="avatar-sm" style="font-size:9px">{{ d.dest_nome[:2] }}</span>{{ d.dest_nome }}
         {% else %}<span style="color:var(--text-light)">Tutti</span>{% endif %}
       </td>
-      <td style="font-family:monospace;font-size:12px">{{ d.data_scadenza or 'Ã¢â‚¬â€œ' }}</td>
+      <td style="font-family:monospace;font-size:12px">{{ d.data_scadenza or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
       <td>
-        {% if not d.data_scadenza %}<span class="badge badge-gray">Ã¢â‚¬â€œ</span>
+        {% if not d.data_scadenza %}<span class="badge badge-gray">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“</span>
         {% elif d.days_left < 0 %}<span class="badge badge-red">Scaduto</span>
-        {% elif d.days_left <= 7 %}<span class="badge badge-red">Ã¢Å¡Â  {{ d.days_left }}gg</span>
+        {% elif d.days_left <= 7 %}<span class="badge badge-red">ÃƒÂ¢Ã…Â¡Ã‚Â  {{ d.days_left }}gg</span>
         {% elif d.days_left <= 30 %}<span class="badge badge-amber">{{ d.days_left }}gg</span>
         {% else %}<span class="badge badge-green">OK</span>{% endif %}
       </td>
@@ -18428,8 +18531,8 @@ DOC_FORM_TMPL = """
       <div class="form-group">
         <label>Categoria</label>
         <select name="categoria">
-          <option value="">Ã¢â‚¬â€ Seleziona Ã¢â‚¬â€</option>
-          {% set cats = ['Contratto','UNILAV','Visita medica','Corso / Attestato','Documento identitÃƒÂ ','Normativa','Sicurezza','Altro'] %}
+          <option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Seleziona ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
+          {% set cats = ['Contratto','UNILAV','Visita medica','Corso / Attestato','Documento identitÃƒÆ’Ã‚Â ','Normativa','Sicurezza','Altro'] %}
           {% for c in cats %}
           <option value="{{ c }}" {{ 'selected' if doc and doc.categoria==c }}>{{ c }}</option>
           {% endfor %}
@@ -18443,7 +18546,7 @@ DOC_FORM_TMPL = """
     <div class="form-group">
       <label>Assegnato a</label>
       <select name="assegnato_a">
-        <option value="">Ã¢â‚¬â€ Aziendale (tutti) Ã¢â‚¬â€</option>
+        <option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Aziendale (tutti) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
         {% for u in utenti %}
         <option value="{{ u.id }}" {{ 'selected' if doc and doc.assegnato_a==u.id }}>{{ u.nome }} {{ u.cognome }}</option>
         {% endfor %}
@@ -18466,7 +18569,7 @@ DOC_FORM_TMPL = """
       <p style="font-size:12px;color:#64748b;margin-bottom:6px">Carica un nuovo file per sostituire quello attuale.</p>
       {% endif %}
       <input type="file" name="file_doc" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.bmp,.doc,.docx,.xls,.xlsx" style="padding:8px;border:1.5px dashed var(--border);border-radius:8px;background:#f8fafc;cursor:pointer">
-      <div style="font-size:11px;color:var(--text-light);margin-top:5px"><i class="fa fa-info-circle"></i> Max 20 MB Ã¢â‚¬â€ PDF, immagini, Word, Excel</div>
+      <div style="font-size:11px;color:var(--text-light);margin-top:5px"><i class="fa fa-info-circle"></i> Max 20 MB ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â PDF, immagini, Word, Excel</div>
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
       <a href="/documenti" class="btn btn-secondary">Annulla</a>
@@ -18485,7 +18588,7 @@ def documenti():
     filtro_uid  = request.args.get('uid','')
     filtro_stato= request.args.get('stato','')
 
-    # Ã¢â€â‚¬Ã¢â€â‚¬ Tabella "documenti" (senza file fisico) Ã¢â€â‚¬Ã¢â€â‚¬
+    # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Tabella "documenti" (senza file fisico) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     q = """SELECT d.id, d.titolo, d.categoria, d.data_scadenza,
                u.nome||' '||u.cognome as dest_nome, d.assegnato_a,
                CAST(julianday(d.data_scadenza)-julianday('now') AS INTEGER) as days_left,
@@ -18499,9 +18602,9 @@ def documenti():
 
     docs1 = [dict(d) for d in db.execute(q, params).fetchall()]
 
-    # Ã¢â€â‚¬Ã¢â€â‚¬ Tabella "documenti_dipendente" (con file fisico, caricati da Dipendenti) Ã¢â€â‚¬Ã¢â€â‚¬
+    # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Tabella "documenti_dipendente" (con file fisico, caricati da Dipendenti) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     # Usa la nuova colonna 'categoria' (ricca di categorie del settore allestimenti),
-    # con fallback su tipo_doc per compatibilitÃƒÂ  con record vecchi.
+    # con fallback su tipo_doc per compatibilitÃƒÆ’Ã‚Â  con record vecchi.
     q2 = """SELECT dd.id, dd.nome_originale as titolo,
                 COALESCE(dd.categoria, dd.tipo_doc, 'Altro') as categoria,
                 dd.data_scadenza,
@@ -18522,7 +18625,7 @@ def documenti():
         'Contratto',
         'Patente',
         'Visita medica',
-        'IdoneitÃƒÂ  sanitaria',
+        'IdoneitÃƒÆ’Ã‚Â  sanitaria',
         'Formazione PSC',
         'Lavori in altezza',
         'Abilitazione muletto',
@@ -18530,7 +18633,7 @@ def documenti():
         'Primo soccorso',
         'DPI consegnati',
         'UNILAV',
-        'Documento identitÃƒÂ ',
+        'Documento identitÃƒÆ’Ã‚Â ',
         'Corso/Attestato',
         'Altro'
     ]
@@ -18689,14 +18792,14 @@ def documenti_scarica_zip():
                     "SELECT * FROM documenti_dipendente WHERE id=?",
                     (doc['doc_dipendente_id'],)).fetchone()
 
-            # Fallback: cerca per categoria Ã¢â€ â€™ tipo_doc
+            # Fallback: cerca per categoria ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ tipo_doc
             if not file_doc:
                 cat = (doc['categoria'] or '').upper()
                 tipo_like = {
                     'UNILAV': '%UNILAV%',
                     'VISITA MEDICA': '%VISITA%',
                     'CORSO/ATTESTATO': '%ATTESTAT%',
-                    'DOCUMENTO IDENTITÃƒâ‚¬': '%IDENTIT%',
+                    'DOCUMENTO IDENTITÃƒÆ’Ã¢â€šÂ¬': '%IDENTIT%',
                     'CONTRATTO': '%CONTRATT%',
                 }.get(cat, '%%')
                 file_doc = db.execute(
@@ -18759,12 +18862,12 @@ def scadenze():
           AND COALESCE(u.attivo,1)=1
           AND dd.nome_file IS NOT NULL AND dd.nome_file != ''
         ORDER BY dd.data_scadenza""").fetchall()
-    # Veicoli Ã¢â‚¬â€ espando ogni scadenza non vuota in una riga
+    # Veicoli ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â espando ogni scadenza non vuota in una riga
     veicoli=db.execute("""SELECT id, targa, marca, modello,
                                  scad_assicurazione, scad_revisione, scad_bollo, scad_tagliando
                           FROM veicoli WHERE COALESCE(attivo,1)=1""").fetchall()
 
-    # Conta record fantasma (esistono nel DB ma senza file) Ã¢â€ â€™ da pulire
+    # Conta record fantasma (esistono nel DB ma senza file) ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ da pulire
     record_fantasma = db.execute("""SELECT COUNT(*) FROM documenti_dipendente dd
                                     JOIN utenti u ON u.id=dd.utente_id
                                     WHERE dd.data_scadenza IS NOT NULL
@@ -18812,7 +18915,7 @@ def scadenze():
           {{ record_fantasma }} record di scadenza {{ 'fantasma' if record_fantasma==1 else 'fantasma' }} (senza file allegato)
         </div>
         <div style="font-size:12.5px;color:#92400e;margin-top:2px">
-          Sono record con scadenza ma a cui ÃƒÂ¨ stato rimosso il file. Stai inquinando i contatori.
+          Sono record con scadenza ma a cui ÃƒÆ’Ã‚Â¨ stato rimosso il file. Stai inquinando i contatori.
         </div>
       </div>
       <form method="POST" action="/scadenze/pulisci-fantasma" onsubmit="return confirm('Eliminare {{ record_fantasma }} record fantasma? Sono record di scadenza senza file. Operazione irreversibile.')">
@@ -18831,11 +18934,11 @@ def scadenze():
       <tr>
         <td><strong>{{ d.titolo }}</strong></td>
         <td>
-          {% if d.tipo == 'veicolo' %}<span class="tag" style="background:#fef3c7;color:#92400e">Ã°Å¸Å¡â€º Veicolo</span>
-          {% elif d.tipo == 'dipendente' %}<span class="tag" style="background:#dbeafe;color:#1e40af">Ã°Å¸â€˜Â¤ Dipendente</span>
-          {% else %}<span class="tag" style="background:#e0e7ff;color:#3730a3">Ã°Å¸ÂÂ¢ Aziendale</span>{% endif %}
+          {% if d.tipo == 'veicolo' %}<span class="tag" style="background:#fef3c7;color:#92400e">ÃƒÂ°Ã…Â¸Ã…Â¡Ã¢â‚¬Âº Veicolo</span>
+          {% elif d.tipo == 'dipendente' %}<span class="tag" style="background:#dbeafe;color:#1e40af">ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â¤ Dipendente</span>
+          {% else %}<span class="tag" style="background:#e0e7ff;color:#3730a3">ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â¢ Aziendale</span>{% endif %}
         </td>
-        <td><span class="tag">{{ d.categoria or 'Ã¢â‚¬â€œ' }}</span></td>
+        <td><span class="tag">{{ d.categoria or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</span></td>
         <td>{{ d.dest_nome or 'Tutti' }}</td>
         <td style="font-family:monospace;font-size:12px">{{ d.data_scadenza }}</td>
         <td>{% if d.days_left<0 %}<span class="badge badge-red">Scaduto</span>
@@ -18861,14 +18964,14 @@ def scadenze_pulisci_fantasma():
                   WHERE nome_file IS NULL OR nome_file = ''""")
     safe_commit(db); db.close()
     if n > 0:
-        flash(f'Ã¢Å“â€¦ Eliminati {n} record fantasma (scadenze senza file).', 'success')
+        flash(f'ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Eliminati {n} record fantasma (scadenze senza file).', 'success')
     else:
         flash('Nessun record fantasma trovato.', 'info')
     return redirect(url_for('scadenze'))
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 #  CALENDARIO
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
 TIPO_COLORI_MAP = {
     'montaggio':  '#16a34a',
@@ -18877,10 +18980,10 @@ TIPO_COLORI_MAP = {
     'altro':      '#8b5cf6',
 }
 TIPO_LABEL_MAP = {
-    'montaggio':  'Ã°Å¸â€Â§ Montaggio',
-    'fiera':      'Ã°Å¸Ââ€ºÃ¯Â¸Â Fiera',
-    'smontaggio': 'Ã°Å¸â€Â© Smontaggio',
-    'altro':      'Ã°Å¸â€œÅ’ Altro',
+    'montaggio':  'ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â§ Montaggio',
+    'fiera':      'ÃƒÂ°Ã…Â¸Ã‚ÂÃ¢â‚¬ÂºÃƒÂ¯Ã‚Â¸Ã‚Â Fiera',
+    'smontaggio': 'ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â© Smontaggio',
+    'altro':      'ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…â€™ Altro',
 }
 
 CAL_TMPL = """
@@ -18900,10 +19003,10 @@ CAL_TMPL = """
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
     <!-- Legenda tipi -->
-    <span class="ev-badge" style="background:#16a34a">Ã°Å¸â€Â§ Montaggio</span>
-    <span class="ev-badge" style="background:#2196F3">Ã°Å¸Ââ€ºÃ¯Â¸Â Fiera</span>
-    <span class="ev-badge" style="background:#0f4c81">Ã°Å¸â€Â© Smontaggio</span>
-    <span class="ev-badge" style="background:#8b5cf6">Ã°Å¸â€œÅ’ Altro</span>
+    <span class="ev-badge" style="background:#16a34a">ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â§ Montaggio</span>
+    <span class="ev-badge" style="background:#2196F3">ÃƒÂ°Ã…Â¸Ã‚ÂÃ¢â‚¬ÂºÃƒÂ¯Ã‚Â¸Ã‚Â Fiera</span>
+    <span class="ev-badge" style="background:#0f4c81">ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â© Smontaggio</span>
+    <span class="ev-badge" style="background:#8b5cf6">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…â€™ Altro</span>
     {% if session.ruolo=='admin' %}
     <a href="/calendario/nuovo" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> Nuovo evento</a>
     <a href="/calendario/pdf?m={{ m }}&y={{ anno }}" target="_blank" class="btn btn-sm" style="background:#0f172a;color:#fff"><i class="fa fa-file-pdf"></i> PDF Calendario</a>
@@ -18948,7 +19051,7 @@ CAL_TMPL = """
           <span style="width:20px;height:20px;border-radius:50%;background:var(--accent2);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:700">{{ d.iniziali }}</span>
           {{ d.nome }}
         </span>
-        {% else %}<span style="color:var(--text-light);font-size:12px">Ã¢â‚¬â€</span>{% endfor %}
+        {% else %}<span style="color:var(--text-light);font-size:12px">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</span>{% endfor %}
       </td>
       {% if session.ruolo=='admin' %}
       <td style="display:flex;gap:6px">
@@ -18984,7 +19087,7 @@ CAL_DETAIL_TMPL = """
   {% if team or veicoli_evento %}
   <a href="/calendario/{{ ev.id }}/pacchetto-pass" target="_blank" class="pass-btn" style="margin-left:auto">
     <i class="fa fa-id-card"></i> Genera Pacchetto Pass
-    <span style="background:rgba(255,255,255,.15);border-radius:99px;padding:2px 8px;font-size:11px">{{ team|length }} pers. Ã‚Â· {{ veicoli_evento|length }} mezzi</span>
+    <span style="background:rgba(255,255,255,.15);border-radius:99px;padding:2px 8px;font-size:11px">{{ team|length }} pers. Ãƒâ€šÃ‚Â· {{ veicoli_evento|length }} mezzi</span>
   </a>
   {% endif %}
 </div>
@@ -18997,11 +19100,11 @@ CAL_DETAIL_TMPL = """
     </div>
     <div>
       <div style="font-size:11px;color:#3b82f6;font-weight:700;text-transform:uppercase;letter-spacing:.6px">Preventivo collegato</div>
-      <div style="font-weight:700;font-size:15px;color:#1e293b">N.{{ prev_collegato.numero }} Ã¢â‚¬â€ {{ prev_collegato.oggetto or '' }}</div>
+      <div style="font-weight:700;font-size:15px;color:#1e293b">N.{{ prev_collegato.numero }} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {{ prev_collegato.oggetto or '' }}</div>
       <div style="font-size:12px;color:#64748b">
-        Cliente: <strong>{{ prev_collegato.cliente_nome or 'Ã¢â‚¬â€œ' }}</strong>
-        {% if prev_collegato.totale_finale %} &nbsp;Ã‚Â·&nbsp; Totale: <strong>Ã¢â€šÂ¬ {{ "%.2f"|format(prev_collegato.totale_finale) }}</strong>{% endif %}
-        {% if prev_collegato.data_inizio_lavoro %} &nbsp;Ã‚Â·&nbsp; Ã°Å¸â€œâ€¦ {{ prev_collegato.data_inizio_lavoro }}{% if prev_collegato.data_fine_lavoro %} Ã¢â€ â€™ {{ prev_collegato.data_fine_lavoro }}{% endif %}{% endif %}
+        Cliente: <strong>{{ prev_collegato.cliente_nome or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</strong>
+        {% if prev_collegato.totale_finale %} &nbsp;Ãƒâ€šÃ‚Â·&nbsp; Totale: <strong>ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(prev_collegato.totale_finale) }}</strong>{% endif %}
+        {% if prev_collegato.data_inizio_lavoro %} &nbsp;Ãƒâ€šÃ‚Â·&nbsp; ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¦ {{ prev_collegato.data_inizio_lavoro }}{% if prev_collegato.data_fine_lavoro %} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ {{ prev_collegato.data_fine_lavoro }}{% endif %}{% endif %}
       </div>
     </div>
   </div>
@@ -19020,9 +19123,9 @@ CAL_DETAIL_TMPL = """
     <div class="card-body">
       <table style="width:100%;font-size:13.5px"><tbody>
         {% if ev.luogo %}<tr><td style="color:var(--text-light);padding:6px 0;width:40%"><i class="fa fa-map-marker-alt"></i> Luogo</td><td><strong>{{ ev.luogo }}</strong></td></tr>{% endif %}
-        <tr><td style="color:var(--text-light);padding:6px 0">Ã°Å¸â€œâ€¦ Inizio</td><td><strong>{{ ev.data_inizio }}</strong></td></tr>
-        <tr><td style="color:var(--text-light);padding:6px 0">Ã°Å¸â€œâ€¦ Fine</td><td><strong>{{ ev.data_fine or ev.data_inizio }}</strong></td></tr>
-        {% if ev.descrizione %}<tr><td style="color:var(--text-light);padding:6px 0">Ã°Å¸â€œÂ Note</td><td>{{ ev.descrizione }}</td></tr>{% endif %}
+        <tr><td style="color:var(--text-light);padding:6px 0">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¦ Inizio</td><td><strong>{{ ev.data_inizio }}</strong></td></tr>
+        <tr><td style="color:var(--text-light);padding:6px 0">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¦ Fine</td><td><strong>{{ ev.data_fine or ev.data_inizio }}</strong></td></tr>
+        {% if ev.descrizione %}<tr><td style="color:var(--text-light);padding:6px 0">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â Note</td><td>{{ ev.descrizione }}</td></tr>{% endif %}
       </tbody></table>
     </div>
   </div>
@@ -19047,12 +19150,12 @@ CAL_DETAIL_TMPL = """
             <div>
               <div style="font-weight:600;font-size:13px">{{ d.nome }}</div>
               <div style="font-size:11px;color:var(--text-light);display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-                {% if d.ha_ci %}<span class="doc-chip ok" style="padding:2px 7px;font-size:10px"><i class="fa fa-id-card"></i> CI Ã¢Å“â€œ</span>
+                {% if d.ha_ci %}<span class="doc-chip ok" style="padding:2px 7px;font-size:10px"><i class="fa fa-id-card"></i> CI ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“</span>
                 {% else %}<span class="doc-chip missing" style="padding:2px 7px;font-size:10px"><i class="fa fa-id-card"></i> CI mancante</span>{% endif %}
                 {% if d.data_da or d.data_a %}
                 <span style="background:#dbeafe;color:#1d4ed8;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:600">
                   <i class="fa fa-calendar-days"></i>
-                  {{ d.data_da or ev.data_inizio }} Ã¢â€ â€™ {{ d.data_a or ev.data_fine or ev.data_inizio }}
+                  {{ d.data_da or ev.data_inizio }} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ {{ d.data_a or ev.data_fine or ev.data_inizio }}
                 </span>
                 {% else %}
                 <span style="background:#f1f5f9;color:#64748b;border-radius:5px;padding:2px 7px;font-size:10px">tutto l'evento</span>
@@ -19093,13 +19196,13 @@ CAL_DETAIL_TMPL = """
     <div class="veicolo-card">
       <div style="display:flex;align-items:center;gap:12px;flex:1">
         <div style="width:42px;height:42px;background:#fef3c7;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">
-          {{ 'Ã°Å¸Å¡Â' if v.tipo=='Furgone' else ('Ã°Å¸Å¡â€º' if v.tipo in ('Camion','Autocarro') else 'Ã°Å¸Å¡â€”') }}
+          {{ 'ÃƒÂ°Ã…Â¸Ã…Â¡Ã‚Â' if v.tipo=='Furgone' else ('ÃƒÂ°Ã…Â¸Ã…Â¡Ã¢â‚¬Âº' if v.tipo in ('Camion','Autocarro') else 'ÃƒÂ°Ã…Â¸Ã…Â¡Ã¢â‚¬â€') }}
         </div>
         <div>
           <div style="font-weight:800;font-size:16px;font-family:monospace;letter-spacing:2px;color:var(--accent2)">{{ v.targa }}</div>
-          <div style="font-size:12px;color:var(--text-light);margin-top:1px">{{ v.marca or '' }} {{ v.modello or '' }}{% if v.tipo %} Ã‚Â· {{ v.tipo }}{% endif %}</div>
+          <div style="font-size:12px;color:var(--text-light);margin-top:1px">{{ v.marca or '' }} {{ v.modello or '' }}{% if v.tipo %} Ãƒâ€šÃ‚Â· {{ v.tipo }}{% endif %}</div>
           <div style="margin-top:5px;display:flex;gap:5px;flex-wrap:wrap">
-            {% if v.ha_libretto %}<span class="doc-chip ok" style="padding:2px 7px;font-size:10px"><i class="fa fa-file-alt"></i> Libretto Ã¢Å“â€œ</span>
+            {% if v.ha_libretto %}<span class="doc-chip ok" style="padding:2px 7px;font-size:10px"><i class="fa fa-file-alt"></i> Libretto ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“</span>
             {% else %}<span class="doc-chip missing" style="padding:2px 7px;font-size:10px"><i class="fa fa-file-alt"></i> Libretto mancante</span>{% endif %}
           </div>
         </div>
@@ -19116,7 +19219,7 @@ CAL_DETAIL_TMPL = """
   </div>
 </div>
 
-<!-- Ã¢â€â‚¬Ã¢â€â‚¬ Disegni / Progetti Ã¢â€â‚¬Ã¢â€â‚¬ -->
+<!-- ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Disegni / Progetti ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ -->
 <div class="card" style="margin-bottom:20px">
   <div class="card-header">
     <h3><i class="fa fa-drafting-compass" style="color:#6d28d9"></i> Disegni / Progetti</h3>
@@ -19133,12 +19236,12 @@ CAL_DETAIL_TMPL = """
     {% for f in disegni %}
     <div style="background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px">
       <div style="width:40px;height:40px;background:#ede9fe;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">
-        {{ 'Ã°Å¸â€œÂ' if f.nome_originale.lower().endswith(('.dwg','.dxf')) else ('Ã°Å¸â€“Â¼Ã¯Â¸Â' if f.nome_originale.lower().endswith(('.jpg','.jpeg','.png','.gif')) else 'Ã°Å¸â€œâ€ž') }}
+        {{ 'ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â' if f.nome_originale.lower().endswith(('.dwg','.dxf')) else ('ÃƒÂ°Ã…Â¸Ã¢â‚¬â€œÃ‚Â¼ÃƒÂ¯Ã‚Â¸Ã‚Â' if f.nome_originale.lower().endswith(('.jpg','.jpeg','.png','.gif')) else 'ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Å¾') }}
       </div>
       <div style="flex:1;min-width:0">
         <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.nome_originale }}</div>
         {% if f.note %}<div style="font-size:11px;color:var(--text-muted)">{{ f.note }}</div>{% endif %}
-        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">{{ (f.dimensione/1024)|round(0)|int }} KB Ã‚Â· {{ f.caricato_il[:10] }}</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">{{ (f.dimensione/1024)|round(0)|int }} KB Ãƒâ€šÃ‚Â· {{ f.caricato_il[:10] }}</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px">
         <a href="/calendario/{{ ev.id }}/files/{{ f.id }}/scarica" class="btn btn-sm btn-blue" title="Scarica"><i class="fa fa-download"></i></a>
@@ -19155,7 +19258,7 @@ CAL_DETAIL_TMPL = """
   </div>
 </div>
 
-<!-- Ã¢â€â‚¬Ã¢â€â‚¬ Pass Ã¢â€â‚¬Ã¢â€â‚¬ -->
+<!-- ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Pass ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ -->
 <div class="card" style="margin-bottom:20px">
   <div class="card-header">
     <h3><i class="fa fa-id-badge" style="color:#0891b2"></i> Pass</h3>
@@ -19171,7 +19274,7 @@ CAL_DETAIL_TMPL = """
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px">
     {% for f in pass_files %}
     <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px">
-      <div style="width:40px;height:40px;background:#e0f2fe;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">Ã°Å¸Å½Â«</div>
+      <div style="width:40px;height:40px;background:#e0f2fe;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â«</div>
       <div style="flex:1;min-width:0">
         <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.nome_originale }}</div>
         {% if f.dipendente_id %}
@@ -19184,7 +19287,7 @@ CAL_DETAIL_TMPL = """
           <div style="font-size:11px;color:#64748b;margin-top:3px"><i class="fa fa-users"></i> Visibile a tutti</div>
         {% endif %}
         {% if f.note %}<div style="font-size:11px;color:var(--text-muted)">{{ f.note }}</div>{% endif %}
-        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">{{ (f.dimensione/1024)|round(0)|int }} KB Ã‚Â· {{ f.caricato_il[:10] }}</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">{{ (f.dimensione/1024)|round(0)|int }} KB Ãƒâ€šÃ‚Â· {{ f.caricato_il[:10] }}</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px">
         <a href="/calendario/{{ ev.id }}/files/{{ f.id }}/scarica" class="btn btn-sm btn-blue" title="Scarica"><i class="fa fa-download"></i></a>
@@ -19210,8 +19313,8 @@ CAL_DETAIL_TMPL = """
   <i class="fa fa-exclamation-triangle"></i>
   <div>
     <strong>Documenti mancanti per il pacchetto pass!</strong>
-    {% if n_ci_mancanti > 0 %}<div>Ã¢â‚¬Â¢ {{ n_ci_mancanti }} dipendente/i senza carta d'identitÃƒÂ  caricata</div>{% endif %}
-    {% if n_lib_mancanti > 0 %}<div>Ã¢â‚¬Â¢ {{ n_lib_mancanti }} veicolo/i senza libretto caricato</div>{% endif %}
+    {% if n_ci_mancanti > 0 %}<div>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ {{ n_ci_mancanti }} dipendente/i senza carta d'identitÃƒÆ’Ã‚Â  caricata</div>{% endif %}
+    {% if n_lib_mancanti > 0 %}<div>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ {{ n_lib_mancanti }} veicolo/i senza libretto caricato</div>{% endif %}
     <div style="margin-top:6px;font-size:12px">Carica i documenti mancanti nelle schede dipendenti/veicoli prima di generare il pacchetto pass.</div>
   </div>
 </div>
@@ -19229,19 +19332,19 @@ CAL_DETAIL_TMPL = """
         <div class="form-group">
           <label>Dipendente</label>
           <select name="dipendente_id" required>
-            <option value="">Ã¢â‚¬â€ Seleziona Ã¢â‚¬â€</option>
+            <option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Seleziona ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
             {% for d in dipendenti_disponibili %}<option value="{{ d.id }}">{{ d.nome }} {{ d.cognome }}</option>{% endfor %}
           </select>
         </div>
         <div class="form-group">
           <label>Ruolo / Servizio</label>
           <select name="ruolo">
-            <option value="Montaggio">Ã°Å¸â€Â§ Montaggio</option>
-            <option value="Assistenza fiera">Ã°Å¸Ââ€ºÃ¯Â¸Â Assistenza fiera</option>
-            <option value="Smontaggio">Ã°Å¸â€Â© Smontaggio</option>
-            <option value="Logistica">Ã°Å¸Å¡Å¡ Logistica</option>
-            <option value="Supervisore">Ã°Å¸â€˜Â· Supervisore</option>
-            <option value="Generico">Ã°Å¸â€œÅ’ Generico</option>
+            <option value="Montaggio">ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â§ Montaggio</option>
+            <option value="Assistenza fiera">ÃƒÂ°Ã…Â¸Ã‚ÂÃ¢â‚¬ÂºÃƒÂ¯Ã‚Â¸Ã‚Â Assistenza fiera</option>
+            <option value="Smontaggio">ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â© Smontaggio</option>
+            <option value="Logistica">ÃƒÂ°Ã…Â¸Ã…Â¡Ã…Â¡ Logistica</option>
+            <option value="Supervisore">ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â· Supervisore</option>
+            <option value="Generico">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…â€™ Generico</option>
           </select>
         </div>
         <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:14px;margin-bottom:12px">
@@ -19308,9 +19411,9 @@ CAL_DETAIL_TMPL = """
           <input type="file" name="file" required accept=".pdf,.png,.jpg,.jpeg,.gif,.webp">
         </div>
         <div class="form-group">
-          <label><i class="fa fa-user" style="color:#0891b2"></i> Assegna a dipendente <span style="color:#94a3b8;font-weight:400;font-size:12px">(solo quel dipendente lo vedrÃƒÂ  sul mobile)</span></label>
+          <label><i class="fa fa-user" style="color:#0891b2"></i> Assegna a dipendente <span style="color:#94a3b8;font-weight:400;font-size:12px">(solo quel dipendente lo vedrÃƒÆ’Ã‚Â  sul mobile)</span></label>
           <select name="dipendente_id" class="form-control">
-            <option value="">Ã¢â‚¬â€ Visibile a tutti Ã¢â‚¬â€</option>
+            <option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Visibile a tutti ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
             {% for m in team %}
             <option value="{{ m.uid }}">{{ m.nome }} {{ m.cognome }}</option>
             {% endfor %}
@@ -19341,9 +19444,9 @@ CAL_DETAIL_TMPL = """
         <div class="form-group">
           <label>Veicolo</label>
           <select name="veicolo_id" required>
-            <option value="">Ã¢â‚¬â€ Seleziona mezzo Ã¢â‚¬â€</option>
+            <option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Seleziona mezzo ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
             {% for v in veicoli_disponibili %}
-            <option value="{{ v.id }}">{{ v.targa }} Ã¢â‚¬â€ {{ v.marca or '' }} {{ v.modello or '' }} ({{ v.tipo or '' }})</option>
+            <option value="{{ v.id }}">{{ v.targa }} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {{ v.marca or '' }} {{ v.modello or '' }} ({{ v.tipo or '' }})</option>
             {% endfor %}
           </select>
         </div>
@@ -19384,9 +19487,9 @@ CAL_DETAIL_TMPL = """
       {% for s in spese_evento %}
       <tr style="border-bottom:1px solid #fef3c7">
         <td style="padding:9px 14px"><span style="background:#fef3c7;color:#92400e;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:700">{{ s.categoria }}</span></td>
-        <td style="padding:9px 14px">{{ s.descrizione or 'Ã¢â‚¬â€œ' }}</td>
-        <td style="padding:9px 14px;color:#64748b;font-size:12px">{{ s.data or 'Ã¢â‚¬â€œ' }}</td>
-        <td style="padding:9px 14px;text-align:right;font-weight:700">Ã¢â€šÂ¬ {{ "%.2f"|format(s.importo) }}</td>
+        <td style="padding:9px 14px">{{ s.descrizione or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
+        <td style="padding:9px 14px;color:#64748b;font-size:12px">{{ s.data or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
+        <td style="padding:9px 14px;text-align:right;font-weight:700">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(s.importo) }}</td>
         {% if session.ruolo=='admin' %}
         <td style="padding:9px 14px">
           <a href="/calendario/{{ ev.id }}/spese/{{ s.id }}/elimina" onclick="return confirm('Eliminare?')" style="color:#dc2626;font-size:12px"><i class="fa fa-trash"></i></a>
@@ -19396,7 +19499,7 @@ CAL_DETAIL_TMPL = """
       </tbody>
       <tfoot><tr style="background:#fef3c7">
         <td colspan="3" style="padding:10px 14px;font-weight:700;text-align:right">TOTALE SPESE EXTRA</td>
-        <td style="padding:10px 14px;text-align:right;font-weight:700;color:#d97706">Ã¢â€šÂ¬ {{ "%.2f"|format(spese_evento|sum(attribute='importo')) }}</td>
+        <td style="padding:10px 14px;text-align:right;font-weight:700;color:#d97706">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(spese_evento|sum(attribute='importo')) }}</td>
         {% if session.ruolo=='admin' %}<td></td>{% endif %}
       </tr></tfoot>
     </table>
@@ -19414,21 +19517,21 @@ CAL_DETAIL_TMPL = """
       <div class="form-group">
         <label>Categoria</label>
         <select name="categoria" required>
-          <option value="Hotel">Ã°Å¸ÂÂ¨ Hotel</option>
-          <option value="Gasolio">Ã¢â€ºÂ½ Gasolio</option>
-          <option value="Autostrada">Ã°Å¸â€ºÂ£Ã¯Â¸Â Autostrada</option>
-          <option value="Aereo">Ã¢Å“Ë†Ã¯Â¸Â Aereo</option>
-          <option value="Treno">Ã°Å¸Å¡â€š Treno</option>
-          <option value="Cibo">Ã°Å¸ÂÂ½Ã¯Â¸Â Cibo</option>
-          <option value="Noleggio furgone">Ã°Å¸Å¡Â Noleggio furgone</option>
-          <option value="Noleggio attrezzatura">Ã°Å¸â€Â§ Noleggio attrezzatura</option>
-          <option value="Parcheggio">Ã°Å¸â€¦Â¿Ã¯Â¸Â Parcheggio</option>
-          <option value="Altro">Ã°Å¸â€œÂ¦ Altro</option>
+          <option value="Hotel">ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â¨ Hotel</option>
+          <option value="Gasolio">ÃƒÂ¢Ã¢â‚¬ÂºÃ‚Â½ Gasolio</option>
+          <option value="Autostrada">ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂºÃ‚Â£ÃƒÂ¯Ã‚Â¸Ã‚Â Autostrada</option>
+          <option value="Aereo">ÃƒÂ¢Ã…â€œÃ‹â€ ÃƒÂ¯Ã‚Â¸Ã‚Â Aereo</option>
+          <option value="Treno">ÃƒÂ°Ã…Â¸Ã…Â¡Ã¢â‚¬Å¡ Treno</option>
+          <option value="Cibo">ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â½ÃƒÂ¯Ã‚Â¸Ã‚Â Cibo</option>
+          <option value="Noleggio furgone">ÃƒÂ°Ã…Â¸Ã…Â¡Ã‚Â Noleggio furgone</option>
+          <option value="Noleggio attrezzatura">ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â§ Noleggio attrezzatura</option>
+          <option value="Parcheggio">ÃƒÂ°Ã…Â¸Ã¢â‚¬Â¦Ã‚Â¿ÃƒÂ¯Ã‚Â¸Ã‚Â Parcheggio</option>
+          <option value="Altro">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¦ Altro</option>
         </select>
       </div>
       <div class="form-group"><label>Descrizione</label><input name="descrizione" placeholder="Es. Hotel Novotel 2 notti"></div>
       <div class="form-row">
-        <div class="form-group"><label>Importo Ã¢â€šÂ¬</label><input type="number" name="importo" step="0.01" min="0" required placeholder="0.00"></div>
+        <div class="form-group"><label>Importo ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬</label><input type="number" name="importo" step="0.01" min="0" required placeholder="0.00"></div>
         <div class="form-group"><label>Data</label><input type="date" name="data" value="{{ ev.data_inizio }}"></div>
       </div>
       <div class="form-group"><label>Nota</label><input name="nota" placeholder="Facoltativa"></div>
@@ -19453,24 +19556,24 @@ CAL_FORM_TMPL = """
         <div class="form-group">
           <label>Tipo servizio</label>
           <select name="tipo">
-            <option value="montaggio"  {{ 'selected' if ev and ev.tipo=='montaggio' }}>Ã°Å¸â€Â§ Montaggio</option>
-            <option value="fiera"      {{ 'selected' if ev and ev.tipo=='fiera' }}>Ã°Å¸Ââ€ºÃ¯Â¸Â Fiera</option>
-            <option value="smontaggio" {{ 'selected' if ev and ev.tipo=='smontaggio' }}>Ã°Å¸â€Â© Smontaggio</option>
-            <option value="altro"      {{ 'selected' if ev and ev.tipo=='altro' }}>Ã°Å¸â€œÅ’ Altro</option>
+            <option value="montaggio"  {{ 'selected' if ev and ev.tipo=='montaggio' }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â§ Montaggio</option>
+            <option value="fiera"      {{ 'selected' if ev and ev.tipo=='fiera' }}>ÃƒÂ°Ã…Â¸Ã‚ÂÃ¢â‚¬ÂºÃƒÂ¯Ã‚Â¸Ã‚Â Fiera</option>
+            <option value="smontaggio" {{ 'selected' if ev and ev.tipo=='smontaggio' }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â© Smontaggio</option>
+            <option value="altro"      {{ 'selected' if ev and ev.tipo=='altro' }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…â€™ Altro</option>
           </select>
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
           <label>Luogo / Sede fiera</label>
-          <input name="luogo" value="{{ ev.luogo if ev else request.args.get('luogo','') }}" placeholder="Es. Fiera di Verona Ã¢â‚¬â€ Pad. 4">
+          <input name="luogo" value="{{ ev.luogo if ev else request.args.get('luogo','') }}" placeholder="Es. Fiera di Verona ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Pad. 4">
         </div>
         <div class="form-group">
           <label>Cantiere collegato (opzionale)</label>
           <select name="cantiere_id">
-            <option value="">Ã¢â‚¬â€ Nessuna fiera Ã¢â‚¬â€</option>
+            <option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Nessuna fiera ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
             {% for c in cantieri %}
-            <option value="{{ c.id }}" {{ 'selected' if ev and ev.cantiere_id==c.id }}>{{ c.nome }}{% if c.indirizzo %} Ã¢â‚¬â€ {{ c.indirizzo }}{% endif %}</option>
+            <option value="{{ c.id }}" {{ 'selected' if ev and ev.cantiere_id==c.id }}>{{ c.nome }}{% if c.indirizzo %} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {{ c.indirizzo }}{% endif %}</option>
             {% endfor %}
           </select>
         </div>
@@ -19497,12 +19600,12 @@ CAL_FORM_TMPL = """
       <div class="form-group">
         <label>Ruolo per i dipendenti selezionati</label>
         <select name="ruolo_default">
-          <option value="Montaggio">Ã°Å¸â€Â§ Montaggio</option>
-          <option value="Assistenza fiera">Ã°Å¸Ââ€ºÃ¯Â¸Â Assistenza fiera</option>
-          <option value="Smontaggio">Ã°Å¸â€Â© Smontaggio</option>
-          <option value="Logistica">Ã°Å¸Å¡Å¡ Logistica</option>
-          <option value="Supervisore">Ã°Å¸â€˜Â· Supervisore</option>
-          <option value="Generico">Ã°Å¸â€œÅ’ Generico</option>
+          <option value="Montaggio">ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â§ Montaggio</option>
+          <option value="Assistenza fiera">ÃƒÂ°Ã…Â¸Ã‚ÂÃ¢â‚¬ÂºÃƒÂ¯Ã‚Â¸Ã‚Â Assistenza fiera</option>
+          <option value="Smontaggio">ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â© Smontaggio</option>
+          <option value="Logistica">ÃƒÂ°Ã…Â¸Ã…Â¡Ã…Â¡ Logistica</option>
+          <option value="Supervisore">ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â· Supervisore</option>
+          <option value="Generico">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…â€™ Generico</option>
         </select>
       </div>
 
@@ -19510,7 +19613,7 @@ CAL_FORM_TMPL = """
       <div class="form-group" style="background:#eef4ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px;margin-bottom:12px">
         <label style="color:#1d4ed8;font-weight:700"><i class="fa fa-file-invoice" style="margin-right:6px"></i>Collega a preventivo confermato (opzionale)</label>
         <select name="preventivo_id" id="prev_sel" onchange="caricaDatiPreventivo(this)" data-presel="{{ request.args.get('prev_id','') }}" data-tipo="{{ request.args.get('tipo','') }}">
-          <option value="">Ã¢â‚¬â€ Nessun preventivo collegato Ã¢â‚¬â€</option>
+          <option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Nessun preventivo collegato ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
           {% for p in preventivi_acc %}
           <option value="{{ p.id }}"
             data-titolo="{{ p.oggetto or '' }}"
@@ -19518,7 +19621,7 @@ CAL_FORM_TMPL = """
             data-fine="{{ p.data_fine_lavoro or '' }}"
             data-luogo="{{ p.luogo_lavoro or '' }}"
             {{ 'selected' if ev and ev.preventivo_id == p.id }}>
-            N.{{ p.numero }} Ã¢â‚¬â€ {{ p.cliente_nome or '' }} Ã¢â‚¬â€ {{ p.oggetto or '' }}
+            N.{{ p.numero }} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {{ p.cliente_nome or '' }} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {{ p.oggetto or '' }}
             {% if p.data_inizio_lavoro %} ({{ p.data_inizio_lavoro }}){% endif %}
           </option>
           {% endfor %}
@@ -19593,7 +19696,7 @@ def calendario():
         ed = dict(e)
         tipo = ed.get('tipo') or 'altro'
         ed['colore'] = TIPO_COLORI_MAP.get(tipo, ed.get('colore') or '#8b5cf6')
-        ed['tipo_label'] = TIPO_LABEL_MAP.get(tipo, 'Ã°Å¸â€œÅ’ Altro')
+        ed['tipo_label'] = TIPO_LABEL_MAP.get(tipo, 'ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…â€™ Altro')
         return ed
 
     eventi_raw = [_enrich(e) for e in eventi_raw]
@@ -19613,7 +19716,7 @@ def calendario():
         ed['team'] = [dict(t, iniziali=(t['nome'][0]+t['cognome'][0]).upper()) for t in team_raw]
         eventi_mese.append(ed)
 
-    # Mappa giorno Ã¢â€ â€™ eventi
+    # Mappa giorno ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ eventi
     ev_map = {}
     for e in eventi_raw:
         d_start = datetime.strptime(e['data_inizio'], '%Y-%m-%d').date()
@@ -19710,7 +19813,7 @@ def calendario_pdf():
             (mese_fine, mese_inizio)
         ).fetchall()
 
-        # Mappa giorno Ã¢â€ â€™ lista eventi
+        # Mappa giorno ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ lista eventi
         ev_map = {}
         for e in eventi_raw:
             ev = dict(e)
@@ -19727,7 +19830,7 @@ def calendario_pdf():
                 if date(y, m, 1) <= d1 + timedelta(days=dd) <= date(y, m, ultimo_g):
                     ev_map.setdefault(g, []).append(ev)
 
-        # Ã¢â€â‚¬Ã¢â€â‚¬ Intestazione mese Ã¢â€â‚¬Ã¢â€â‚¬
+        # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Intestazione mese ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
         hdr = Table([[
             P(f'{mesi_it[m].upper()} {y}', 'Helvetica-Bold', 14, BLU, TA_LEFT),
             P(az_nome, 'Helvetica', 9, colors.HexColor('#64748b'), TA_LEFT),
@@ -19742,15 +19845,15 @@ def calendario_pdf():
         story.append(hdr)
         story.append(Spacer(1, 2*mm))
 
-        # Ã¢â€â‚¬Ã¢â€â‚¬ Legenda Ã¢â€â‚¬Ã¢â€â‚¬
+        # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Legenda ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
         legenda_data = [[
-            P('Ã¢â€“Â ', 'Helvetica-Bold', 11, CMAP['montaggio'], TA_CENTER),
+            P('ÃƒÂ¢Ã¢â‚¬â€œÃ‚Â ', 'Helvetica-Bold', 11, CMAP['montaggio'], TA_CENTER),
             P('Montaggio', 'Helvetica', 8, BLU),
-            P('Ã¢â€“Â ', 'Helvetica-Bold', 11, CMAP['fiera'], TA_CENTER),
+            P('ÃƒÂ¢Ã¢â‚¬â€œÃ‚Â ', 'Helvetica-Bold', 11, CMAP['fiera'], TA_CENTER),
             P('Fiera/Evento', 'Helvetica', 8, BLU),
-            P('Ã¢â€“Â ', 'Helvetica-Bold', 11, CMAP['smontaggio'], TA_CENTER),
+            P('ÃƒÂ¢Ã¢â‚¬â€œÃ‚Â ', 'Helvetica-Bold', 11, CMAP['smontaggio'], TA_CENTER),
             P('Smontaggio', 'Helvetica', 8, BLU),
-            P('Ã¢â€“Â ', 'Helvetica-Bold', 11, CMAP['altro'], TA_CENTER),
+            P('ÃƒÂ¢Ã¢â‚¬â€œÃ‚Â ', 'Helvetica-Bold', 11, CMAP['altro'], TA_CENTER),
             P('Altro', 'Helvetica', 8, BLU),
         ]]
         leg = Table(legenda_data, colWidths=[6*mm,28*mm,6*mm,30*mm,6*mm,28*mm,6*mm,20*mm])
@@ -19762,7 +19865,7 @@ def calendario_pdf():
         story.append(leg)
         story.append(Spacer(1, 3*mm))
 
-        # Ã¢â€â‚¬Ã¢â€â‚¬ Griglia calendario Ã¢â‚¬â€ 7 colonne Ã¢â€â‚¬Ã¢â€â‚¬
+        # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Griglia calendario ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â 7 colonne ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
         W = 267*mm  # larghezza utile landscape A4
         col_w = [W/7]*7
 
@@ -19788,7 +19891,7 @@ def calendario_pdf():
 
         # Costruisci tabella celle
         cell_height = 18*mm
-        tdata = [rows[0]]  # header giÃƒÂ  fatto sopra
+        tdata = [rows[0]]  # header giÃƒÆ’Ã‚Â  fatto sopra
         tstyles = [
             ('BACKGROUND', (0,0), (-1,0), BLU),
             ('TEXTCOLOR',  (0,0), (-1,0), WHITE),
@@ -19897,9 +20000,9 @@ def evento_dettaglio(eid):
     ev = dict(ev_raw)
     tipo = ev.get('tipo') or 'altro'
     ev['colore'] = TIPO_COLORI_MAP.get(tipo, ev.get('colore') or '#8b5cf6')
-    ev['tipo_label'] = TIPO_LABEL_MAP.get(tipo, 'Ã°Å¸â€œÅ’ Altro')
+    ev['tipo_label'] = TIPO_LABEL_MAP.get(tipo, 'ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…â€™ Altro')
 
-    # Ã¢â€â‚¬Ã¢â€â‚¬ Team Ã¢â€â‚¬Ã¢â€â‚¬
+    # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Team ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     team_raw = db.execute("""
         SELECT u.id as uid, u.nome, u.cognome, ed.id as assegn_id, ed.ruolo,
                ed.data_da, ed.data_a
@@ -19911,7 +20014,7 @@ def evento_dettaglio(eid):
     for t in team_raw:
         td = dict(t)
         td['iniziali'] = (t['nome'][0]+t['cognome'][0]).upper()
-        # Controlla se ha carta d'identitÃƒÂ  caricata
+        # Controlla se ha carta d'identitÃƒÆ’Ã‚Â  caricata
         ci = db.execute("""SELECT id FROM documenti_dipendente
             WHERE utente_id=? AND (tipo_doc LIKE '%identit%' OR tipo_doc LIKE '%CI%' OR tipo_doc LIKE '%carta%' OR tipo_doc LIKE '%passaporto%')
             LIMIT 1""", (t['uid'],)).fetchone()
@@ -19922,7 +20025,7 @@ def evento_dettaglio(eid):
     for t in team:
         team_per_ruolo.setdefault(t['ruolo'], []).append(t)
 
-    # Ã¢â€â‚¬Ã¢â€â‚¬ Dipendenti disponibili Ã¢â€â‚¬Ã¢â€â‚¬
+    # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Dipendenti disponibili ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     assegnati_ids = [row['dipendente_id'] for row in
         db.execute("SELECT dipendente_id FROM eventi_dipendenti WHERE evento_id=?", (eid,)).fetchall()]
     dipendenti_disponibili = db.execute(
@@ -19930,7 +20033,7 @@ def evento_dettaglio(eid):
             ','.join(['?']*len(assegnati_ids)) if assegnati_ids else '0'),
         assegnati_ids if assegnati_ids else []).fetchall()
 
-    # Ã¢â€â‚¬Ã¢â€â‚¬ Veicoli assegnati Ã¢â€â‚¬Ã¢â€â‚¬
+    # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Veicoli assegnati ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     veicoli_raw = db.execute("""
         SELECT v.*, ev.id as ev_veicolo_id, ev.note as ev_note
         FROM eventi_veicoli ev JOIN veicoli v ON v.id=ev.veicolo_id
@@ -19946,29 +20049,29 @@ def evento_dettaglio(eid):
         vd['ha_libretto'] = lib is not None
         veicoli_evento.append(vd)
 
-    # Ã¢â€â‚¬Ã¢â€â‚¬ Veicoli disponibili (non giÃƒÂ  assegnati) Ã¢â€â‚¬Ã¢â€â‚¬
+    # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Veicoli disponibili (non giÃƒÆ’Ã‚Â  assegnati) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     assegnati_vid = [v['id'] for v in veicoli_raw]
     veicoli_disponibili = db.execute(
         "SELECT id,targa,marca,modello,tipo FROM veicoli WHERE attivo=1 AND id NOT IN ({}) ORDER BY targa".format(
             ','.join(['?']*len(assegnati_vid)) if assegnati_vid else '0'),
         assegnati_vid if assegnati_vid else []).fetchall()
 
-    # Ã¢â€â‚¬Ã¢â€â‚¬ Files (disegni + pass) Ã¢â€â‚¬Ã¢â€â‚¬
+    # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Files (disegni + pass) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     files_evento = db.execute(
         "SELECT * FROM eventi_files WHERE evento_id=? ORDER BY categoria, caricato_il DESC", (eid,)
     ).fetchall()
 
-    # Ã¢â€â‚¬Ã¢â€â‚¬ Cantiere Ã¢â€â‚¬Ã¢â€â‚¬
+    # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Cantiere ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     cantiere = None
     if ev.get('cantiere_id'):
         cantiere = db.execute("SELECT * FROM cantieri WHERE id=?", (ev['cantiere_id'],)).fetchone()
 
-    # Ã¢â€â‚¬Ã¢â€â‚¬ Preventivo collegato Ã¢â€â‚¬Ã¢â€â‚¬
+    # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Preventivo collegato ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     prev_collegato = None
     if ev.get('preventivo_id'):
         prev_collegato = db.execute("SELECT * FROM preventivi WHERE id=?", (ev['preventivo_id'],)).fetchone()
 
-    # Ã¢â€â‚¬Ã¢â€â‚¬ Spese extra Ã¢â€â‚¬Ã¢â€â‚¬
+    # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Spese extra ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     spese_evento = db.execute(
         "SELECT * FROM spese_evento WHERE evento_id=? ORDER BY data, id", (eid,)).fetchall()
 
@@ -20066,7 +20169,7 @@ def evento_assegna(eid):
             safe_commit(db)
             flash('Dipendente assegnato!', 'success')
 
-            # Ã¢â€â‚¬Ã¢â€â‚¬ Notifica email al dipendente Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+            # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Notifica email al dipendente ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
             ev  = db.execute("SELECT * FROM eventi WHERE id=?", (eid,)).fetchone()
             dip = db.execute("SELECT nome, cognome, email FROM utenti WHERE id=?", (int(did),)).fetchone()
             azienda = get_setting('azienda', 'La tua azienda')
@@ -20074,7 +20177,7 @@ def evento_assegna(eid):
             if ev and dip and dip['email']:
                 data_inizio = ev['data_inizio'] or ''
                 data_fine   = ev['data_fine']   or data_inizio
-                luogo       = ev['luogo']        or 'Ã¢â‚¬â€'
+                luogo       = ev['luogo']        or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â'
                 titolo      = ev['titolo']       or 'Nuovo lavoro'
                 app_url     = request.host_url.rstrip('/')
                 link        = f"{app_url}/mobile/calendario"
@@ -20082,7 +20185,7 @@ def evento_assegna(eid):
                 corpo = f"""
 <div style="font-family:Arial,sans-serif;max-width:580px;margin:0 auto;background:#f8fafc;padding:24px;border-radius:12px">
   <div style="background:linear-gradient(135deg,#1e3a5f,#0f172a);border-radius:10px;padding:24px;text-align:center;margin-bottom:24px">
-    <div style="font-size:28px;margin-bottom:8px">Ã°Å¸â€œâ€¹</div>
+    <div style="font-size:28px;margin-bottom:8px">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¹</div>
     <h1 style="color:#fff;font-size:20px;margin:0">Sei stato assegnato a un nuovo lavoro</h1>
     <p style="color:rgba(255,255,255,.6);font-size:13px;margin:6px 0 0">{azienda}</p>
   </div>
@@ -20093,23 +20196,23 @@ def evento_assegna(eid):
   <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px;margin:16px 0">
     <table style="width:100%;border-collapse:collapse">
       <tr>
-        <td style="padding:8px 0;color:#64748b;font-size:13px;width:40%"><strong>Ã°Å¸â€œÅ’ Lavoro</strong></td>
+        <td style="padding:8px 0;color:#64748b;font-size:13px;width:40%"><strong>ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…â€™ Lavoro</strong></td>
         <td style="padding:8px 0;color:#1e293b;font-size:14px;font-weight:700">{titolo}</td>
       </tr>
       <tr style="border-top:1px solid #f1f5f9">
-        <td style="padding:8px 0;color:#64748b;font-size:13px"><strong>Ã°Å¸â€˜Â¤ Ruolo</strong></td>
+        <td style="padding:8px 0;color:#64748b;font-size:13px"><strong>ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â¤ Ruolo</strong></td>
         <td style="padding:8px 0;color:#1e293b;font-size:14px">{ruolo}</td>
       </tr>
       <tr style="border-top:1px solid #f1f5f9">
-        <td style="padding:8px 0;color:#64748b;font-size:13px"><strong>Ã°Å¸â€œâ€¦ Dal</strong></td>
+        <td style="padding:8px 0;color:#64748b;font-size:13px"><strong>ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¦ Dal</strong></td>
         <td style="padding:8px 0;color:#1e293b;font-size:14px">{data_inizio}</td>
       </tr>
       <tr style="border-top:1px solid #f1f5f9">
-        <td style="padding:8px 0;color:#64748b;font-size:13px"><strong>Ã°Å¸â€œâ€¦ Al</strong></td>
+        <td style="padding:8px 0;color:#64748b;font-size:13px"><strong>ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¦ Al</strong></td>
         <td style="padding:8px 0;color:#1e293b;font-size:14px">{data_fine}</td>
       </tr>
       <tr style="border-top:1px solid #f1f5f9">
-        <td style="padding:8px 0;color:#64748b;font-size:13px"><strong>Ã°Å¸â€œÂ Luogo</strong></td>
+        <td style="padding:8px 0;color:#64748b;font-size:13px"><strong>ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â Luogo</strong></td>
         <td style="padding:8px 0;color:#1e293b;font-size:14px">{luogo}</td>
       </tr>
     </table>
@@ -20117,21 +20220,21 @@ def evento_assegna(eid):
 
   <div style="text-align:center;margin:24px 0">
     <a href="{link}" style="background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;text-decoration:none;padding:14px 28px;border-radius:10px;font-weight:700;font-size:15px;display:inline-block">
-      Ã°Å¸â€œÂ± Apri Calendario Lavori
+      ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â± Apri Calendario Lavori
     </a>
   </div>
 
   <p style="font-size:12px;color:#94a3b8;text-align:center;margin-top:24px">
-    {azienda} Ã‚Â· Notifica automatica
+    {azienda} Ãƒâ€šÃ‚Â· Notifica automatica
   </p>
 </div>"""
 
-                # Invio diretto (sincrono) Ã¢â‚¬â€ il thread separato perde il Flask app context
+                # Invio diretto (sincrono) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â il thread separato perde il Flask app context
                 ok = send_email(dip['email'], f"[{azienda}] Nuovo lavoro assegnato: {titolo}", corpo)
                 if ok:
                     flash(f'Email inviata a {dip["email"]}', 'success')
                 else:
-                    flash('Assegnato ma email non inviata Ã¢â‚¬â€ controlla impostazioni SMTP.', 'error')
+                    flash('Assegnato ma email non inviata ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â controlla impostazioni SMTP.', 'error')
             else:
                 if ev and dip and not dip['email']:
                     flash('Dipendente assegnato (nessuna email configurata sul profilo).', 'success')
@@ -20166,11 +20269,11 @@ def evento_assegna_periodo(eid, assegn_id):
     return render_page(f"""
 <div class="card" style="max-width:480px;margin:0 auto">
   <div class="card-header">
-    <h3><i class="fa fa-calendar-pen" style="color:var(--accent)"></i> Modifica periodo Ã¢â‚¬â€ {row['nome']} {row['cognome']}</h3>
+    <h3><i class="fa fa-calendar-pen" style="color:var(--accent)"></i> Modifica periodo ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {row['nome']} {row['cognome']}</h3>
   </div>
   <div class="card-body">
     <p style="color:var(--text-light);font-size:13px;margin-bottom:16px">
-      Evento: <strong>{ev['titolo']}</strong> ({ev['data_inizio']} Ã¢â€ â€™ {ev.get('data_fine') or ev['data_inizio']})
+      Evento: <strong>{ev['titolo']}</strong> ({ev['data_inizio']} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ {ev.get('data_fine') or ev['data_inizio']})
     </p>
     <form method="POST">
       <div class="form-row">
@@ -20258,9 +20361,9 @@ def evento_pacchetto_pass(eid):
     ev = dict(db.execute("SELECT * FROM eventi WHERE id=?", (eid,)).fetchone())
     tipo = ev.get('tipo') or 'altro'
     ev['colore'] = TIPO_COLORI_MAP.get(tipo, '#8b5cf6')
-    ev['tipo_label'] = TIPO_LABEL_MAP.get(tipo, 'Ã°Å¸â€œÅ’ Altro')
+    ev['tipo_label'] = TIPO_LABEL_MAP.get(tipo, 'ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…â€™ Altro')
 
-    # Ã¢â€â‚¬Ã¢â€â‚¬ Dipendenti con i loro docs identitÃƒÂ  Ã¢â€â‚¬Ã¢â€â‚¬
+    # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Dipendenti con i loro docs identitÃƒÆ’Ã‚Â  ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     team_raw = db.execute("""
         SELECT u.id as uid, u.nome, u.cognome, u.titolo, u.telefono, ed.ruolo
         FROM eventi_dipendenti ed JOIN utenti u ON u.id=ed.dipendente_id
@@ -20272,7 +20375,7 @@ def evento_pacchetto_pass(eid):
         td = dict(t)
         td['iniziali'] = (t['nome'][0]+t['cognome'][0]).upper()
 
-        # Cerca carta d'identitÃƒÂ  o passaporto
+        # Cerca carta d'identitÃƒÆ’Ã‚Â  o passaporto
         docs_ci = db.execute("""
             SELECT * FROM documenti_dipendente
             WHERE utente_id=?
@@ -20305,7 +20408,7 @@ def evento_pacchetto_pass(eid):
             })
         persone.append(td)
 
-    # Ã¢â€â‚¬Ã¢â€â‚¬ Veicoli con libretto Ã¢â€â‚¬Ã¢â€â‚¬
+    # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Veicoli con libretto ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     veicoli_raw = db.execute("""
         SELECT v.*, ev.note as ev_note
         FROM eventi_veicoli ev JOIN veicoli v ON v.id=ev.veicolo_id
@@ -20366,7 +20469,7 @@ def evento_scarica_zip(eid):
     zip_buf = io.BytesIO()
     with zipfile.ZipFile(zip_buf, 'w', zipfile.ZIP_DEFLATED) as zf:
 
-        # Ã¢â€â‚¬Ã¢â€â‚¬ Documenti identitÃƒÂ  dipendenti Ã¢â€â‚¬Ã¢â€â‚¬
+        # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Documenti identitÃƒÆ’Ã‚Â  dipendenti ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
         team_raw = db.execute("""
             SELECT u.id as uid, u.nome, u.cognome
             FROM eventi_dipendenti ed JOIN utenti u ON u.id=ed.dipendente_id
@@ -20391,7 +20494,7 @@ def evento_scarica_zip(eid):
                     arcname = f"{folder}/{doc['tipo_doc']}_{doc['nome_originale']}"
                     zf.write(fpath, arcname)
 
-        # Ã¢â€â‚¬Ã¢â€â‚¬ Documenti veicoli Ã¢â€â‚¬Ã¢â€â‚¬
+        # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Documenti veicoli ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
         veicoli_raw = db.execute("""
             SELECT v.* FROM eventi_veicoli ev JOIN veicoli v ON v.id=ev.veicolo_id
             WHERE ev.evento_id=? ORDER BY v.targa
@@ -20424,7 +20527,7 @@ PASS_TMPL = """<!DOCTYPE html>
 <html lang="it"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Pacchetto Pass Ã¢â‚¬â€ {{ ev.titolo }}</title>
+<title>Pacchetto Pass ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {{ ev.titolo }}</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f5;color:#1a1a2e;font-size:13px}
@@ -20483,12 +20586,12 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f5;color:#1a1a2e;fo
 
 <div class="page-header">
   <div>
-    <div style="font-size:12px;opacity:.6;font-weight:600;letter-spacing:1px;text-transform:uppercase">{{ azienda }} Ã‚Â· Pacchetto Pass</div>
+    <div style="font-size:12px;opacity:.6;font-weight:600;letter-spacing:1px;text-transform:uppercase">{{ azienda }} Ãƒâ€šÃ‚Â· Pacchetto Pass</div>
     <h1>{{ ev.titolo }}</h1>
     {% if ev.luogo %}<div class="sub"><i class="fa fa-map-marker-alt"></i> {{ ev.luogo }}</div>{% endif %}
     <div class="sub" style="margin-top:4px">
-      Ã°Å¸â€œâ€¦ {{ ev.data_inizio }} Ã¢â€ â€™ {{ ev.data_fine or ev.data_inizio }}
-      &nbsp;Ã‚Â·&nbsp; Generato il {{ oggi }}
+      ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¦ {{ ev.data_inizio }} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ {{ ev.data_fine or ev.data_inizio }}
+      &nbsp;Ãƒâ€šÃ‚Â·&nbsp; Generato il {{ oggi }}
     </div>
     <span class="badge-tipo">{{ ev.tipo_label }}</span>
   </div>
@@ -20589,7 +20692,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f5;color:#1a1a2e;fo
     {% else %}
     <div class="no-doc" style="padding:28px">
       <i class="fa fa-exclamation-circle" style="font-size:28px;color:#fca5a5;display:block;margin-bottom:8px"></i>
-      <strong style="color:#dc2626">Carta d'identitÃƒÂ  non caricata</strong>
+      <strong style="color:#dc2626">Carta d'identitÃƒÆ’Ã‚Â  non caricata</strong>
       <div style="margin-top:4px;font-size:11px">Carica il documento nella scheda dipendente</div>
     </div>
     {% endif %}
@@ -20601,13 +20704,13 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f5;color:#1a1a2e;fo
   {% for v in veicoli %}
   <div class="veicolo-card">
     <div class="veicolo-header">
-      <div style="font-size:28px">{{ 'Ã°Å¸Å¡Â' if v.tipo=='Furgone' else ('Ã°Å¸Å¡â€º' if v.tipo in ('Camion','Autocarro') else 'Ã°Å¸Å¡â€”') }}</div>
+      <div style="font-size:28px">{{ 'ÃƒÂ°Ã…Â¸Ã…Â¡Ã‚Â' if v.tipo=='Furgone' else ('ÃƒÂ°Ã…Â¸Ã…Â¡Ã¢â‚¬Âº' if v.tipo in ('Camion','Autocarro') else 'ÃƒÂ°Ã…Â¸Ã…Â¡Ã¢â‚¬â€') }}</div>
       <div>
         <div class="targa-box">{{ v.targa }}</div>
       </div>
       <div style="margin-left:8px">
         <div style="font-size:16px;font-weight:800">{{ v.marca or '' }} {{ v.modello or '' }}</div>
-        <div class="veicolo-info">{{ v.tipo or '' }}{% if v.anno %} Ã‚Â· Anno {{ v.anno }}{% endif %}</div>
+        <div class="veicolo-info">{{ v.tipo or '' }}{% if v.anno %} Ãƒâ€šÃ‚Â· Anno {{ v.anno }}{% endif %}</div>
       </div>
       <div style="margin-left:auto;text-align:right">
         {% if v.docs_lib %}
@@ -20622,7 +20725,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f5;color:#1a1a2e;fo
       {% for doc in v.docs_lib %}
       <div class="doc-item">
         <div class="doc-item-header">
-          <span class="doc-nome"><i class="fa fa-file-alt"></i> {{ doc.tipo }} Ã‚Â· {{ doc.nome }}</span>
+          <span class="doc-nome"><i class="fa fa-file-alt"></i> {{ doc.tipo }} Ãƒâ€šÃ‚Â· {{ doc.nome }}</span>
           {% if doc.scadenza %}<span class="doc-scad">Scad. {{ doc.scadenza }}</span>{% endif %}
         </div>
         {% if doc.img_b64 %}
@@ -20659,7 +20762,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f5;color:#1a1a2e;fo
 </html>"""
 
 
-# Ã¢â€â‚¬Ã¢â€â‚¬ Evento Files: upload / download / delete Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Evento Files: upload / download / delete ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 
 ALLOWED_EXT_EVENTI = {'pdf','png','jpg','jpeg','gif','webp','bmp','dwg','dxf','zip','rar','7z'}
 
@@ -20732,7 +20835,7 @@ def evento_file_elimina(eid, fid):
     return redirect(url_for('evento_dettaglio', eid=eid))
 
 
-# Ã¢â€â‚¬Ã¢â€â‚¬ Mobile: Calendario dipendente Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Mobile: Calendario dipendente ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 
 MOBILE_CAL_DIPENDENTE_TMPL = """<!DOCTYPE html>
 <html lang="{{ lang }}" dir="{{ t.dir }}">
@@ -20827,7 +20930,7 @@ body{background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
 
     <div class="ev-date-row">
       <div class="ev-date-chip"><strong>{{ ev.data_inizio }}</strong>{{ t.start }}</div>
-      <div style="display:flex;align-items:center;color:rgba(255,255,255,.2);font-size:16px">Ã¢â€ â€™</div>
+      <div style="display:flex;align-items:center;color:rgba(255,255,255,.2);font-size:16px">ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</div>
       <div class="ev-date-chip"><strong>{{ ev.data_fine or ev.data_inizio }}</strong>{{ t.end }}</div>
       <div class="ev-date-chip"><strong>{{ ev.giorni }}{{ t.days_unit }}</strong>{{ t.duration }}</div>
     </div>
@@ -20849,10 +20952,10 @@ body{background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
       <div class="team-member">
         <div class="avatar-sm {{ 'avatar-me' if m.sono_io }}">{{ m.iniziali }}</div>
         <div style="flex:1">
-          <div class="member-name">{{ m.nome }} {{ m.cognome }}{% if m.sono_io %} Ã¢Å“â€œ{% endif %}</div>
+          <div class="member-name">{{ m.nome }} {{ m.cognome }}{% if m.sono_io %} ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“{% endif %}</div>
           {% if m.data_da or m.data_a %}
           <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px">
-            <i class="fa fa-calendar-days"></i> {{ m.data_da or '' }} Ã¢â€ â€™ {{ m.data_a or '' }}
+            <i class="fa fa-calendar-days"></i> {{ m.data_da or '' }} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ {{ m.data_a or '' }}
           </div>
           {% endif %}
         </div>
@@ -20867,7 +20970,7 @@ body{background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
       <div class="team-title"><i class="fa fa-drafting-compass" style="color:#a78bfa"></i> {{ t.drawings }}</div>
       {% for f in ev.disegni %}
       <a href="/calendario/{{ ev.id }}/files/{{ f.id }}/scarica" class="file-link" style="background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.2)">
-        <div style="width:36px;height:36px;background:rgba(139,92,246,.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">Ã°Å¸â€œÂ</div>
+        <div style="width:36px;height:36px;background:rgba(139,92,246,.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â</div>
         <div style="flex:1;min-width:0">
           <div style="color:#c4b5fd;font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.nome_originale }}</div>
           {% if f.note %}<div style="color:rgba(255,255,255,.4);font-size:11px">{{ f.note }}</div>{% endif %}
@@ -20883,7 +20986,7 @@ body{background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
       <div class="team-title"><i class="fa fa-id-badge" style="color:#22d3ee"></i> {{ t.passes }}</div>
       {% for f in ev.pass_files %}
       <a href="/calendario/{{ ev.id }}/files/{{ f.id }}/scarica" class="file-link" style="background:rgba(8,145,178,.15);border:1px solid rgba(8,145,178,.35);border-radius:12px;margin-bottom:8px">
-        <div style="width:40px;height:40px;background:rgba(8,145,178,.25);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">Ã°Å¸Å½Â«</div>
+        <div style="width:40px;height:40px;background:rgba(8,145,178,.25);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â«</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:10px;font-weight:700;color:#22d3ee;text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px">
             {% if f.dipendente_id %}Il tuo pass{% else %}Pass evento{% endif %}
@@ -20911,7 +21014,7 @@ body{background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
 </html>"""
 
 
-# Ã¢â€â‚¬Ã¢â€â‚¬ Mobile: Calendario dipendente route Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Mobile: Calendario dipendente route ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 
 @app.route('/mobile/calendario')
 @login_required
@@ -20942,7 +21045,7 @@ def mobile_calendario():
         ed = dict(e)
         tipo = ed.get('tipo') or 'altro'
         ed['colore']     = TIPO_COLORI_MAP.get(tipo, '#8b5cf6')
-        ed['tipo_label'] = TIPO_LABEL_MAP.get(tipo, 'Ã°Å¸â€œÅ’ Altro')
+        ed['tipo_label'] = TIPO_LABEL_MAP.get(tipo, 'ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…â€™ Altro')
         try:
             d1 = datetime.strptime(ed['data_inizio'], '%Y-%m-%d').date()
             d2 = datetime.strptime(ed['data_fine'] or ed['data_inizio'], '%Y-%m-%d').date()
@@ -20993,9 +21096,9 @@ def mobile_calendario():
         prev_m=prev_m, prev_y=prev_y, next_m=next_m, next_y=next_y,
         nome=nome, t=t, lang=lang, langs=LANGS, current_lang=lang)
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 #  VEICOLI
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
 TIPI_DOC_VEICOLO = ['Assicurazione','Revisione','Bollo','Manutenzione','Tagliando','Carta di circolazione','Collaudo','Altro']
 
@@ -21068,7 +21171,7 @@ body:not(.theme-light) .scad-card.none{background:rgba(15,23,42,.50)!important}
       Attenzione: {{ scaduti }} veicol{{ 'o' if scaduti==1 else 'i' }} con documenti scaduti
     </div>
     <div style="font-size:12.5px;color:#7f1d1d;margin-top:2px">
-      Controlla assicurazione, revisione, bollo o tagliando Ã¢â‚¬â€ alcuni veicoli potrebbero non essere utilizzabili legalmente.
+      Controlla assicurazione, revisione, bollo o tagliando ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â alcuni veicoli potrebbero non essere utilizzabili legalmente.
     </div>
   </div>
 </div>
@@ -21106,9 +21209,9 @@ body:not(.theme-light) .scad-card.none{background:rgba(15,23,42,.50)!important}
           <i class="fa fa-folder"></i> {{ v.n_docs }}
         </span>
       </td>
-      <td style="font-family:monospace;font-size:12px">{{ v.prossima_scadenza or \'Ã¢â‚¬â€œ\' }}</td>
-      <td>{% if v.days_left is none %}<span class="badge badge-gray">Ã¢â‚¬â€œ</span>
-          {% elif v.days_left < 0 %}<span class="badge badge-red">Ã¢Å¡Â  Scaduto</span>
+      <td style="font-family:monospace;font-size:12px">{{ v.prossima_scadenza or \'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“\' }}</td>
+      <td>{% if v.days_left is none %}<span class="badge badge-gray">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“</span>
+          {% elif v.days_left < 0 %}<span class="badge badge-red">ÃƒÂ¢Ã…Â¡Ã‚Â  Scaduto</span>
           {% elif v.days_left <= 30 %}<span class="badge badge-amber">{{ v.days_left }}gg</span>
           {% else %}<span class="badge badge-green">OK</span>{% endif %}</td>
     </tr>
@@ -21120,36 +21223,36 @@ body:not(.theme-light) .scad-card.none{background:rgba(15,23,42,.50)!important}
             {% set dl = v.dl_scad_assicurazione if v.dl_scad_assicurazione != 9999 else none %}
             <div class="scad-card {% if dl is none %}none{% elif dl < 0 %}expired{% elif dl <= 30 %}warn{% else %}ok{% endif %}">
               <div class="lbl"><i class="fa fa-shield-halved"></i> Assicurazione</div>
-              <div class="dt">{{ v.scad_assicurazione or \'Ã¢â‚¬â€\' }}</div>
+              <div class="dt">{{ v.scad_assicurazione or \'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â\' }}</div>
               {% if dl is not none %}
-              <div class="sub">{% if dl < 0 %}Ã¢Å¡Â  scaduta da {{ -dl }} giorni{% elif dl == 0 %}Ã¢ÂÂ° scade oggi{% elif dl <= 30 %}Ã¢ÂÂ° scade tra {{ dl }} giorni{% else %}Ã¢Å“â€œ valida per altri {{ dl }} giorni{% endif %}</div>
+              <div class="sub">{% if dl < 0 %}ÃƒÂ¢Ã…Â¡Ã‚Â  scaduta da {{ -dl }} giorni{% elif dl == 0 %}ÃƒÂ¢Ã‚ÂÃ‚Â° scade oggi{% elif dl <= 30 %}ÃƒÂ¢Ã‚ÂÃ‚Â° scade tra {{ dl }} giorni{% else %}ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ valida per altri {{ dl }} giorni{% endif %}</div>
               {% endif %}
               {% if v.note_assicurazione %}<div class="note">{{ v.note_assicurazione }}</div>{% endif %}
             </div>
             {% set dl = v.dl_scad_revisione if v.dl_scad_revisione != 9999 else none %}
             <div class="scad-card {% if dl is none %}none{% elif dl < 0 %}expired{% elif dl <= 30 %}warn{% else %}ok{% endif %}">
               <div class="lbl"><i class="fa fa-wrench"></i> Revisione</div>
-              <div class="dt">{{ v.scad_revisione or \'Ã¢â‚¬â€\' }}</div>
+              <div class="dt">{{ v.scad_revisione or \'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â\' }}</div>
               {% if dl is not none %}
-              <div class="sub">{% if dl < 0 %}Ã¢Å¡Â  scaduta da {{ -dl }} giorni{% elif dl == 0 %}Ã¢ÂÂ° scade oggi{% elif dl <= 30 %}Ã¢ÂÂ° scade tra {{ dl }} giorni{% else %}Ã¢Å“â€œ valida per altri {{ dl }} giorni{% endif %}</div>
+              <div class="sub">{% if dl < 0 %}ÃƒÂ¢Ã…Â¡Ã‚Â  scaduta da {{ -dl }} giorni{% elif dl == 0 %}ÃƒÂ¢Ã‚ÂÃ‚Â° scade oggi{% elif dl <= 30 %}ÃƒÂ¢Ã‚ÂÃ‚Â° scade tra {{ dl }} giorni{% else %}ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ valida per altri {{ dl }} giorni{% endif %}</div>
               {% endif %}
               {% if v.note_revisione %}<div class="note">{{ v.note_revisione }}</div>{% endif %}
             </div>
             {% set dl = v.dl_scad_bollo if v.dl_scad_bollo != 9999 else none %}
             <div class="scad-card {% if dl is none %}none{% elif dl < 0 %}expired{% elif dl <= 30 %}warn{% else %}ok{% endif %}">
               <div class="lbl"><i class="fa fa-receipt"></i> Bollo</div>
-              <div class="dt">{{ v.scad_bollo or \'Ã¢â‚¬â€\' }}</div>
+              <div class="dt">{{ v.scad_bollo or \'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â\' }}</div>
               {% if dl is not none %}
-              <div class="sub">{% if dl < 0 %}Ã¢Å¡Â  scaduto da {{ -dl }} giorni{% elif dl == 0 %}Ã¢ÂÂ° scade oggi{% elif dl <= 30 %}Ã¢ÂÂ° scade tra {{ dl }} giorni{% else %}Ã¢Å“â€œ valido per altri {{ dl }} giorni{% endif %}</div>
+              <div class="sub">{% if dl < 0 %}ÃƒÂ¢Ã…Â¡Ã‚Â  scaduto da {{ -dl }} giorni{% elif dl == 0 %}ÃƒÂ¢Ã‚ÂÃ‚Â° scade oggi{% elif dl <= 30 %}ÃƒÂ¢Ã‚ÂÃ‚Â° scade tra {{ dl }} giorni{% else %}ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ valido per altri {{ dl }} giorni{% endif %}</div>
               {% endif %}
               {% if v.note_bollo %}<div class="note">{{ v.note_bollo }}</div>{% endif %}
             </div>
             {% set dl = v.dl_scad_tagliando if v.dl_scad_tagliando != 9999 else none %}
             <div class="scad-card {% if dl is none %}none{% elif dl < 0 %}expired{% elif dl <= 30 %}warn{% else %}ok{% endif %}">
               <div class="lbl"><i class="fa fa-screwdriver-wrench"></i> Tagliando</div>
-              <div class="dt">{{ v.scad_tagliando or \'Ã¢â‚¬â€\' }}</div>
+              <div class="dt">{{ v.scad_tagliando or \'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â\' }}</div>
               {% if dl is not none %}
-              <div class="sub">{% if dl < 0 %}Ã¢Å¡Â  scaduto da {{ -dl }} giorni{% elif dl == 0 %}Ã¢ÂÂ° scade oggi{% elif dl <= 30 %}Ã¢ÂÂ° scade tra {{ dl }} giorni{% else %}Ã¢Å“â€œ valido per altri {{ dl }} giorni{% endif %}</div>
+              <div class="sub">{% if dl < 0 %}ÃƒÂ¢Ã…Â¡Ã‚Â  scaduto da {{ -dl }} giorni{% elif dl == 0 %}ÃƒÂ¢Ã‚ÂÃ‚Â° scade oggi{% elif dl <= 30 %}ÃƒÂ¢Ã‚ÂÃ‚Â° scade tra {{ dl }} giorni{% else %}ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ valido per altri {{ dl }} giorni{% endif %}</div>
               {% endif %}
               {% if v.note_tagliando %}<div class="note">{{ v.note_tagliando }}</div>{% endif %}
             </div>
@@ -21241,10 +21344,10 @@ VEICOLO_DETAIL_TMPL = """
   </div>
   <div class="card-body">
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px">
-      <div><div style="font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:600;margin-bottom:4px">Marca</div><div style="font-weight:600">{{ v.marca or "Ã¢â‚¬â€œ" }}</div></div>
-      <div><div style="font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:600;margin-bottom:4px">Modello</div><div style="font-weight:600">{{ v.modello or "Ã¢â‚¬â€œ" }}</div></div>
-      <div><div style="font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:600;margin-bottom:4px">Anno</div><div style="font-weight:600">{{ v.anno or "Ã¢â‚¬â€œ" }}</div></div>
-      <div><div style="font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:600;margin-bottom:4px">Colore</div><div style="font-weight:600">{{ v.colore or "Ã¢â‚¬â€œ" }}</div></div>
+      <div><div style="font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:600;margin-bottom:4px">Marca</div><div style="font-weight:600">{{ v.marca or "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“" }}</div></div>
+      <div><div style="font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:600;margin-bottom:4px">Modello</div><div style="font-weight:600">{{ v.modello or "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“" }}</div></div>
+      <div><div style="font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:600;margin-bottom:4px">Anno</div><div style="font-weight:600">{{ v.anno or "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“" }}</div></div>
+      <div><div style="font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:600;margin-bottom:4px">Colore</div><div style="font-weight:600">{{ v.colore or "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“" }}</div></div>
     </div>
     {% if v.note %}<div style="margin-top:12px;padding:10px;background:#f8fafc;border-radius:8px;font-size:13px;color:#64748b">{{ v.note }}</div>{% endif %}
   </div>
@@ -21255,25 +21358,25 @@ VEICOLO_DETAIL_TMPL = """
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px">
       <div style="padding:14px;border:1px solid var(--border);border-radius:10px">
         <div style="font-size:12px;color:#64748b;font-weight:600;margin-bottom:8px"><i class="fa fa-shield-halved" style="color:#3b82f6"></i> Assicurazione</div>
-        <div style="font-family:monospace;font-size:13px;margin-bottom:6px">{{ v.scad_assicurazione or "Ã¢â‚¬â€œ" }}</div>
+        <div style="font-family:monospace;font-size:13px;margin-bottom:6px">{{ v.scad_assicurazione or "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“" }}</div>
         {{ scad_badge(v.dl_ass) }}
         {% if v.note_assicurazione %}<div style="font-size:11px;color:#94a3b8;margin-top:6px">{{ v.note_assicurazione }}</div>{% endif %}
       </div>
       <div style="padding:14px;border:1px solid var(--border);border-radius:10px">
         <div style="font-size:12px;color:#64748b;font-weight:600;margin-bottom:8px"><i class="fa fa-wrench" style="color:#8b5cf6"></i> Revisione</div>
-        <div style="font-family:monospace;font-size:13px;margin-bottom:6px">{{ v.scad_revisione or "Ã¢â‚¬â€œ" }}</div>
+        <div style="font-family:monospace;font-size:13px;margin-bottom:6px">{{ v.scad_revisione or "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“" }}</div>
         {{ scad_badge(v.dl_rev) }}
         {% if v.note_revisione %}<div style="font-size:11px;color:#94a3b8;margin-top:6px">{{ v.note_revisione }}</div>{% endif %}
       </div>
       <div style="padding:14px;border:1px solid var(--border);border-radius:10px">
         <div style="font-size:12px;color:#64748b;font-weight:600;margin-bottom:8px"><i class="fa fa-receipt" style="color:#f59e0b"></i> Bollo</div>
-        <div style="font-family:monospace;font-size:13px;margin-bottom:6px">{{ v.scad_bollo or "Ã¢â‚¬â€œ" }}</div>
+        <div style="font-family:monospace;font-size:13px;margin-bottom:6px">{{ v.scad_bollo or "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“" }}</div>
         {{ scad_badge(v.dl_bol) }}
         {% if v.note_bollo %}<div style="font-size:11px;color:#94a3b8;margin-top:6px">{{ v.note_bollo }}</div>{% endif %}
       </div>
       <div style="padding:14px;border:1px solid var(--border);border-radius:10px">
         <div style="font-size:12px;color:#64748b;font-weight:600;margin-bottom:8px"><i class="fa fa-oil-can" style="color:#16a34a"></i> Tagliando</div>
-        <div style="font-family:monospace;font-size:13px;margin-bottom:6px">{{ v.scad_tagliando or "Ã¢â‚¬â€œ" }}</div>
+        <div style="font-family:monospace;font-size:13px;margin-bottom:6px">{{ v.scad_tagliando or "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“" }}</div>
         {{ scad_badge(v.dl_tag) }}
         {% if v.note_tagliando %}<div style="font-size:11px;color:#94a3b8;margin-top:6px">{{ v.note_tagliando }}</div>{% endif %}
       </div>
@@ -21336,7 +21439,7 @@ VEICOLO_DOCS_TMPL = """
       <input type="hidden" name="tipo_doc" value="Auto">
       <div class="form-row-4">
         <div class="form-group" style="grid-column:span 2">
-          <label>File * (PDF, JPG, PNG Ã¢â‚¬â€ max 20MB)</label>
+          <label>File * (PDF, JPG, PNG ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â max 20MB)</label>
           <input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.bmp" required>
         </div>
         <div class="form-group">
@@ -21348,7 +21451,7 @@ VEICOLO_DOCS_TMPL = """
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <button type="submit" name="analizza" value="1" class="btn" style="background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;font-size:15px;padding:10px 22px"
           {{ \'disabled\' if not ai_ok }}>
-          <i class="fa fa-robot"></i> Carica + Analizza con AI Ã¢Å“Â¨
+          <i class="fa fa-robot"></i> Carica + Analizza con AI ÃƒÂ¢Ã…â€œÃ‚Â¨
         </button>
         <button type="submit" class="btn btn-secondary"><i class="fa fa-upload"></i> Carica senza analisi</button>
       </div>
@@ -21360,7 +21463,7 @@ VEICOLO_DOCS_TMPL = """
 {% if ai_result %}
 <div class="card" style="margin-bottom:20px;border:2px solid #7c3aed">
   <div class="card-header" style="background:linear-gradient(135deg,#7c3aed22,#4f46e522)">
-    <h3><i class="fa fa-robot" style="color:#7c3aed"></i> Risultato analisi AI Ã¢Å“Â¨</h3>
+    <h3><i class="fa fa-robot" style="color:#7c3aed"></i> Risultato analisi AI ÃƒÂ¢Ã…â€œÃ‚Â¨</h3>
     <form method="POST" action="/veicoli/{{ veicolo.id }}/applica-ai">
       <input type="hidden" name="dati_json" value=\'{{ ai_result.dati_json }}\'>
       <button type="submit" class="btn btn-sm" style="background:#7c3aed;color:#fff"><i class="fa fa-check"></i> Applica dati</button>
@@ -21370,7 +21473,7 @@ VEICOLO_DOCS_TMPL = """
     <p style="font-size:13px;color:var(--text-light);margin-bottom:14px"><strong>Tipo rilevato:</strong> {{ ai_result.tipo_doc }}</p>
     <p style="font-size:13px;color:var(--text-light);margin-bottom:14px">{{ ai_result.testo }}</p>
     {% if ai_result.dati_estratti %}
-    {% set LABELS = {\'data_scadenza\':\'Scadenza\',\'tipo_doc\':\'Tipo documento\',\'compagnia\':\'Compagnia\',\'numero_polizza\':\'NÃ‚Â° Polizza\',\'massimale\':\'Massimale\',\'data_revisione\':\'Data revisione\',\'km_manutenzione\':\'Km manutenzione\',\'data_manutenzione\':\'Data manutenzione\',\'officina\':\'Officina\',\'descrizione\':\'Descrizione\'} %}
+    {% set LABELS = {\'data_scadenza\':\'Scadenza\',\'tipo_doc\':\'Tipo documento\',\'compagnia\':\'Compagnia\',\'numero_polizza\':\'NÃƒâ€šÃ‚Â° Polizza\',\'massimale\':\'Massimale\',\'data_revisione\':\'Data revisione\',\'km_manutenzione\':\'Km manutenzione\',\'data_manutenzione\':\'Data manutenzione\',\'officina\':\'Officina\',\'descrizione\':\'Descrizione\'} %}
     <div class="form-row" style="font-size:13px">
       {% for k,v in ai_result.dati_estratti.items() %}
       {% if v %}<div><span style="color:var(--text-light)">{{ LABELS.get(k,k) }}:</span> <strong>{{ v }}</strong></div>{% endif %}
@@ -21400,13 +21503,13 @@ VEICOLO_DOCS_TMPL = """
           <i class="fa fa-file-image" style="color:#2196F3"></i>
         {% endif %}
         <strong>{{ d.nome_originale }}</strong>
-        <div style="font-size:10px;color:var(--text-light)">{{ (d.dimensione//1024)|string }}KB Ã‚Â· {{ d.caricato_il[:10] }}</div>
+        <div style="font-size:10px;color:var(--text-light)">{{ (d.dimensione//1024)|string }}KB Ãƒâ€šÃ‚Â· {{ d.caricato_il[:10] }}</div>
       </td>
-      <td style="font-size:12px;color:var(--text-light)">{{ d.note or \'Ã¢â‚¬â€œ\' }}</td>
-      <td style="font-family:monospace;font-size:12px">{{ d.data_scadenza or \'Ã¢â‚¬â€œ\' }}</td>
-      <td>{% if not d.data_scadenza %}<span class="badge badge-gray">Ã¢â‚¬â€œ</span>
+      <td style="font-size:12px;color:var(--text-light)">{{ d.note or \'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“\' }}</td>
+      <td style="font-family:monospace;font-size:12px">{{ d.data_scadenza or \'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“\' }}</td>
+      <td>{% if not d.data_scadenza %}<span class="badge badge-gray">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“</span>
           {% elif d.days_left < 0 %}<span class="badge badge-red">Scaduto</span>
-          {% elif d.days_left <= 7 %}<span class="badge badge-red">Ã¢Å¡Â  {{ d.days_left }}gg</span>
+          {% elif d.days_left <= 7 %}<span class="badge badge-red">ÃƒÂ¢Ã…Â¡Ã‚Â  {{ d.days_left }}gg</span>
           {% elif d.days_left <= 30 %}<span class="badge badge-amber">{{ d.days_left }}gg</span>
           {% else %}<span class="badge badge-green">OK</span>{% endif %}</td>
       <td style="display:flex;gap:6px">
@@ -21451,7 +21554,7 @@ def _conta_scadenze_app(db=None):
         'docs_az_scaduti': 0, 'docs_az_in_scadenza': 0,
     }
     try:
-        # Veicoli Ã¢â‚¬â€ scadenza minima fra assicurazione/revisione/bollo/tagliando
+        # Veicoli ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â scadenza minima fra assicurazione/revisione/bollo/tagliando
         vs = db.execute("SELECT scad_assicurazione, scad_revisione, scad_bollo, scad_tagliando "
                         "FROM veicoli WHERE COALESCE(attivo,1)=1").fetchall()
         for v in vs:
@@ -21468,7 +21571,7 @@ def _conta_scadenze_app(db=None):
                     out['veicoli_in_scadenza'] += 1
     except Exception: pass
     try:
-        # Documenti dipendenti Ã¢â‚¬â€ SOLO di utenti ATTIVI E con file allegato
+        # Documenti dipendenti ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â SOLO di utenti ATTIVI E con file allegato
         rows = db.execute("""SELECT
                 CAST(julianday(dd.data_scadenza)-julianday('now') AS INTEGER) as dl
                 FROM documenti_dipendente dd
@@ -21483,8 +21586,8 @@ def _conta_scadenze_app(db=None):
             elif dl <= 30: out['docs_dip_in_scadenza'] += 1
     except Exception: pass
     try:
-        # Documenti aziendali Ã¢â‚¬â€ esclude quelli assegnati a utenti disattivati
-        # (se assegnato_a ÃƒÂ¨ NULL il documento ÃƒÂ¨ "globale" e va comunque contato)
+        # Documenti aziendali ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â esclude quelli assegnati a utenti disattivati
+        # (se assegnato_a ÃƒÆ’Ã‚Â¨ NULL il documento ÃƒÆ’Ã‚Â¨ "globale" e va comunque contato)
         rows = db.execute("""SELECT
                 CAST(julianday(d.data_scadenza)-julianday('now') AS INTEGER) as dl,
                 d.file_nome
@@ -21628,7 +21731,7 @@ def veicolo_modifica(vid):
     db.close()
     form_html = """
 <div class="card" style="max-width:600px;margin:0 auto">
-  <div class="card-header"><h3><i class="fa fa-pen" style="color:#3b82f6"></i> Modifica Veicolo Ã¢â‚¬â€ {{ v.targa }}</h3></div>
+  <div class="card-header"><h3><i class="fa fa-pen" style="color:#3b82f6"></i> Modifica Veicolo ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {{ v.targa }}</h3></div>
   <div class="card-body"><form method="POST">
     <div class="form-row">
       <div class="form-group"><label>Targa *</label><input name="targa" required value="{{ v.targa }}" style="text-transform:uppercase"></div>
@@ -21771,7 +21874,7 @@ def veicolo_applica_ai(vid):
         safe_commit(db)
         flash(f'Scadenza {scad} aggiornata nell\'anagrafica veicolo!', 'success')
     else:
-        flash('Nessuna scadenza rilevata dall\'AI Ã¢â‚¬â€ controlla i dati estratti.', 'error')
+        flash('Nessuna scadenza rilevata dall\'AI ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â controlla i dati estratti.', 'error')
     db.close()
     return redirect(url_for('veicolo_documenti', vid=vid))
 
@@ -21879,9 +21982,9 @@ def analizza_documento_veicolo_ai(file_path, nome_file, vid, doc_id):
                 'dati_estratti': {}, 'dati_json': '{}'}
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 #  FATTURAZIONE
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
 import os as _os
 
@@ -21897,9 +22000,9 @@ def get_docs_azienda_path():
     os.makedirs(p, exist_ok=True)
     return p
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 #  DOCUMENTI AZIENDA
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
 DOCS_AZ_CATEGORIE = [
     'DURC', 'Visura camerale', 'Assicurazione', 'Certificato antimafia',
@@ -21925,9 +22028,9 @@ DOCS_AZ_TMPL = """
     </div>
     {% if d.data_scadenza %}
     <div class="doc-scad scad-{{ d.stato_scad }}">
-      {% if d.stato_scad == 'scaduto' %}Ã¢â€ºâ€ Scaduto il {{ d.data_scadenza }}
-      {% elif d.stato_scad == 'warning' %}Ã¢Å¡Â Ã¯Â¸Â Scade il {{ d.data_scadenza }} ({{ d.giorni_alla_scad }} giorni)
-      {% else %}Ã¢Å“â€¦ Scade il {{ d.data_scadenza }} ({{ d.giorni_alla_scad }} giorni)
+      {% if d.stato_scad == 'scaduto' %}ÃƒÂ¢Ã¢â‚¬ÂºÃ¢â‚¬Â Scaduto il {{ d.data_scadenza }}
+      {% elif d.stato_scad == 'warning' %}ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Scade il {{ d.data_scadenza }} ({{ d.giorni_alla_scad }} giorni)
+      {% else %}ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Scade il {{ d.data_scadenza }} ({{ d.giorni_alla_scad }} giorni)
       {% endif %}
     </div>
     {% else %}<div class="doc-scad scad-none"><i class="fa fa-infinity" style="font-size:11px"></i> Nessuna scadenza</div>{% endif %}
@@ -21971,7 +22074,7 @@ DOCS_AZ_TMPL = """
       {{ scadenze_app.docs_az_scaduti }} document{{ 'o' if scadenze_app.docs_az_scaduti==1 else 'i' }} aziendal{{ 'e' if scadenze_app.docs_az_scaduti==1 else 'i' }} scadut{{ 'o' if scadenze_app.docs_az_scaduti==1 else 'i' }}
     </div>
     <div style="font-size:12.5px;color:#7f1d1d;margin-top:2px">
-      DURC, certificazioni, visure o altri documenti aziendali scaduti Ã¢â‚¬â€ verifica e rinnova al piÃƒÂ¹ presto.
+      DURC, certificazioni, visure o altri documenti aziendali scaduti ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â verifica e rinnova al piÃƒÆ’Ã‚Â¹ presto.
     </div>
   </div>
 </div>
@@ -22011,7 +22114,7 @@ DOCS_AZ_TMPL = """
 </div>
 {% endif %}
 
-<!-- Form ZIP Ã¢â‚¬â€ contiene SOLO le checkbox, nessun form annidato -->
+<!-- Form ZIP ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â contiene SOLO le checkbox, nessun form annidato -->
 <form id="form-zip" method="POST" action="/documenti-azienda/scarica-zip">
 
 {% if not docs %}
@@ -22080,15 +22183,15 @@ DOCS_AZ_FORM_TMPL = """
 <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:flex-start;gap:12px">
   <i class="fa fa-triangle-exclamation" style="color:#f59e0b;font-size:20px;margin-top:2px;flex-shrink:0"></i>
   <div>
-    <div style="font-weight:700;color:#92400e;margin-bottom:4px">L'AI non ÃƒÂ¨ riuscita a leggere il documento</div>
-    <div style="font-size:13px;color:#78350f">Il file ÃƒÂ¨ stato caricato correttamente e verrÃƒÂ  salvato. Compila i campi manualmente qui sotto.</div>
+    <div style="font-weight:700;color:#92400e;margin-bottom:4px">L'AI non ÃƒÆ’Ã‚Â¨ riuscita a leggere il documento</div>
+    <div style="font-size:13px;color:#78350f">Il file ÃƒÆ’Ã‚Â¨ stato caricato correttamente e verrÃƒÆ’Ã‚Â  salvato. Compila i campi manualmente qui sotto.</div>
   </div>
 </div>
 {% elif ai_result %}
 <div style="background:#f5f3ff;border:1px solid #c4b5fd;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:flex-start;gap:12px">
   <i class="fa fa-wand-magic-sparkles" style="color:#7c3aed;font-size:20px;margin-top:2px;flex-shrink:0"></i>
   <div>
-    <div style="font-weight:700;color:#5b21b6;margin-bottom:6px">Dati estratti dall'AI Ã¢Å“Â¨</div>
+    <div style="font-weight:700;color:#5b21b6;margin-bottom:6px">Dati estratti dall'AI ÃƒÂ¢Ã…â€œÃ‚Â¨</div>
     {% if ai_result.get('sommario') %}<div style="font-size:13px;color:#6b7280;margin-bottom:8px">{{ ai_result.get('sommario') }}</div>{% endif %}
     <div style="display:flex;flex-wrap:wrap;gap:6px">
       {% for k,v in ai_result.items() %}{% if v and k not in ('sommario','_error') %}
@@ -22109,7 +22212,7 @@ DOCS_AZ_FORM_TMPL = """
       <i class="fa fa-file-pdf" style="color:#16a34a;font-size:18px"></i>
       <div style="flex:1">
         <div style="font-weight:600;color:#15803d;font-size:13px">File caricato: {{ file_nome_esistente }}</div>
-        <div style="font-size:11px;color:#64748b">Il file verrÃƒÂ  salvato insieme al documento</div>
+        <div style="font-size:11px;color:#64748b">Il file verrÃƒÆ’Ã‚Â  salvato insieme al documento</div>
       </div>
       <a href="{{ form_action }}?rimuovi_file=1" style="color:#94a3b8;font-size:12px;text-decoration:none" title="Rimuovi file"><i class="fa fa-xmark"></i> rimuovi</a>
     </div>
@@ -22120,7 +22223,7 @@ DOCS_AZ_FORM_TMPL = """
           <label>{{ 'Sostituisci PDF' if file_nome_esistente else 'Carica PDF' }}</label>
           <input type="file" name="file_doc" accept=".pdf" style="padding:8px" onchange="this.form.submit()">
         </div>
-        <div style="font-size:12px;color:#94a3b8;padding-bottom:8px"><i class="fa fa-robot"></i> L'AI proverÃƒÂ  a leggere titolo, categoria e scadenza</div>
+        <div style="font-size:12px;color:#94a3b8;padding-bottom:8px"><i class="fa fa-robot"></i> L'AI proverÃƒÆ’Ã‚Â  a leggere titolo, categoria e scadenza</div>
       </div>
     </form>
   </div>
@@ -22459,7 +22562,7 @@ def documenti_azienda_zip():
                      mimetype='application/zip')
 
 
-# Ã¢â€â‚¬Ã¢â€â‚¬ Template lista fatture Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Template lista fatture ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 EFATT_SETUP_TMPL = """
 <style>
 .ef-wrap{max-width:1160px;margin:0 auto}
@@ -22653,7 +22756,7 @@ EFATT_SETUP_TMPL = """
       <div class="ef-muted">Collega il provider per permettere al gestionale di creare, inviare allo SDI e controllare le fatture emesse.</div>
       <div style="margin-top:14px">
         {% if cfg.efatt_oauth_status == 'connected' %}
-          <span class="ef-status ef-ok"><i class="fa fa-check-circle"></i> Provider collegato{% if cfg.efatt_provider %} Ã‚Â· {{ cfg.efatt_provider }}{% endif %}</span>
+          <span class="ef-status ef-ok"><i class="fa fa-check-circle"></i> Provider collegato{% if cfg.efatt_provider %} Ãƒâ€šÃ‚Â· {{ cfg.efatt_provider }}{% endif %}</span>
         {% else %}
           <span class="ef-status ef-bad"><i class="fa fa-link-slash"></i> Provider non collegato</span>
         {% endif %}
@@ -22681,7 +22784,7 @@ EFATT_SETUP_TMPL = """
       <div class="ef-muted">Per ricevere le fatture passive devi registrare il mandato/codice destinatario su Agenzia Entrate, sezione Fatture e Corrispettivi.</div>
       <div style="margin-top:14px">
         {% if cfg.efatt_delega_stato == 'attiva' %}
-          <span class="ef-status ef-ok"><i class="fa fa-check-circle"></i> Mandato attivo{% if cfg.efatt_delega_provider %} Ã‚Â· {{ cfg.efatt_delega_provider }}{% endif %}</span>
+          <span class="ef-status ef-ok"><i class="fa fa-check-circle"></i> Mandato attivo{% if cfg.efatt_delega_provider %} Ãƒâ€šÃ‚Â· {{ cfg.efatt_delega_provider }}{% endif %}</span>
         {% elif cfg.efatt_delega_stato == 'in_corso' %}
           <span class="ef-status ef-warn"><i class="fa fa-clock"></i> Mandato in corso</span>
         {% else %}
@@ -22705,7 +22808,7 @@ EFATT_SETUP_TMPL = """
     </div>
   </div>
 
-  {# Ã¢â€â‚¬Ã¢â€â‚¬ Card stato salute fatturazione elettronica Ã¢â€â‚¬Ã¢â€â‚¬ #}
+  {# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Card stato salute fatturazione elettronica ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ #}
   <div class="ef-card">
     <h3 style="margin-top:0"><i class="fa fa-heart-pulse" style="color:#dc2626"></i> Stato del collegamento</h3>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px">
@@ -22713,20 +22816,20 @@ EFATT_SETUP_TMPL = """
         <div style="font-size:11px;color:var(--text-light);font-weight:700;text-transform:uppercase;margin-bottom:4px">Provider</div>
         <div style="font-weight:800">
           {% if health.collegato %}
-          <span style="color:#16a34a">Ã¢â€”Â Collegato</span>
+          <span style="color:#16a34a">ÃƒÂ¢Ã¢â‚¬â€Ã‚Â Collegato</span>
           {% else %}
-          <span style="color:#dc2626">Ã¢â€”Â Non collegato</span>
+          <span style="color:#dc2626">ÃƒÂ¢Ã¢â‚¬â€Ã‚Â Non collegato</span>
           {% endif %}
-          <span style="color:var(--text-light);font-weight:600;font-size:12px"> Ã‚Â· {{ health.provider }}</span>
+          <span style="color:var(--text-light);font-weight:600;font-size:12px"> Ãƒâ€šÃ‚Â· {{ health.provider }}</span>
         </div>
       </div>
       <div style="padding:12px;background:#f8fafc;border-radius:10px;border:1px solid var(--border)">
         <div style="font-size:11px;color:var(--text-light);font-weight:700;text-transform:uppercase;margin-bottom:4px">Codice destinatario</div>
         <div style="font-weight:800">
           {% if health.codice_destinatario_set %}
-          <span style="color:#16a34a">Ã¢â€”Â Configurato</span>
+          <span style="color:#16a34a">ÃƒÂ¢Ã¢â‚¬â€Ã‚Â Configurato</span>
           {% else %}
-          <span style="color:#d97706">Ã¢â€”Â Non configurato</span>
+          <span style="color:#d97706">ÃƒÂ¢Ã¢â‚¬â€Ã‚Â Non configurato</span>
           {% endif %}
         </div>
       </div>
@@ -22734,9 +22837,9 @@ EFATT_SETUP_TMPL = """
         <div style="font-size:11px;color:var(--text-light);font-weight:700;text-transform:uppercase;margin-bottom:4px">Webhook secret</div>
         <div style="font-weight:800">
           {% if health.webhook_secret_set %}
-          <span style="color:#16a34a">Ã¢â€”Â Generato</span>
+          <span style="color:#16a34a">ÃƒÂ¢Ã¢â‚¬â€Ã‚Â Generato</span>
           {% else %}
-          <span style="color:#d97706">Ã¢â€”Â Da generare</span>
+          <span style="color:#d97706">ÃƒÂ¢Ã¢â‚¬â€Ã‚Â Da generare</span>
           {% endif %}
         </div>
       </div>
@@ -22765,7 +22868,7 @@ EFATT_SETUP_TMPL = """
     </div>
   </div>
 
-  {# Ã¢â€â‚¬Ã¢â€â‚¬ Card configurazione Webhook su Fatture in Cloud Ã¢â€â‚¬Ã¢â€â‚¬ #}
+  {# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Card configurazione Webhook su Fatture in Cloud ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ #}
   <div class="ef-card" style="border-left:4px solid #0ea5e9">
     <h3 style="margin-top:0"><i class="fa fa-rss" style="color:#0ea5e9"></i> Webhook Fatture in Cloud</h3>
     <p class="ef-muted">
@@ -22787,7 +22890,7 @@ EFATT_SETUP_TMPL = """
         <button type="button" class="btn btn-secondary" onclick="var i=document.getElementById('wh-secret');i.type=i.type=='password'?'text':'password';this.innerHTML=i.type=='text'?'<i class=fa fa-eye-slash></i> Nascondi':'<i class=fa fa-eye></i> Mostra'"><i class="fa fa-eye"></i> Mostra</button>
         <button type="button" class="btn btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('wh-secret').value).then(()=>this.innerHTML='<i class=fa fa-check></i> Copiato')"><i class="fa fa-copy"></i> Copia</button>
       </div>
-      <form method="POST" action="/fatturazione/elettronica/genera-secret" style="margin-top:10px" onsubmit="return confirm('Rigenerare il secret invaliderÃƒÂ  la firma attuale: ricordati di aggiornarlo anche nel pannello Fatture in Cloud. Procedere?')">
+      <form method="POST" action="/fatturazione/elettronica/genera-secret" style="margin-top:10px" onsubmit="return confirm('Rigenerare il secret invaliderÃƒÆ’Ã‚Â  la firma attuale: ricordati di aggiornarlo anche nel pannello Fatture in Cloud. Procedere?')">
         <button type="submit" class="btn btn-sm" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a"><i class="fa fa-rotate"></i> Rigenera secret</button>
       </form>
       <form method="POST" action="/fatturazione/elettronica/registra-webhook" style="margin-top:10px;display:inline-block">
@@ -22795,7 +22898,7 @@ EFATT_SETUP_TMPL = """
       </form>
       {% else %}
       <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:12px;color:#92400e;font-size:13px;margin-bottom:10px">
-        Ã¢Å¡Â Ã¯Â¸Â Nessun secret configurato. Senza secret, il webhook accetterÃƒÂ  eventi non firmati. Per sicurezza, genera un secret e configuralo anche sul pannello Fatture in Cloud.
+        ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Nessun secret configurato. Senza secret, il webhook accetterÃƒÆ’Ã‚Â  eventi non firmati. Per sicurezza, genera un secret e configuralo anche sul pannello Fatture in Cloud.
       </div>
       <form method="POST" action="/fatturazione/elettronica/genera-secret">
         <button type="submit" class="btn btn-primary"><i class="fa fa-key"></i> Genera secret sicuro</button>
@@ -22832,7 +22935,7 @@ EFATT_ATTIVE_TMPL = """
   </div>
   <div class="act-card">
     {% if cfg.efatt_oauth_status == 'connected' %}
-      <span class="act-status act-ok"><i class="fa fa-check-circle"></i> Provider collegato{% if cfg.efatt_oauth_connected_at %} Ã‚Â· {{ cfg.efatt_oauth_connected_at[:16] }}{% endif %}</span>
+      <span class="act-status act-ok"><i class="fa fa-check-circle"></i> Provider collegato{% if cfg.efatt_oauth_connected_at %} Ãƒâ€šÃ‚Â· {{ cfg.efatt_oauth_connected_at[:16] }}{% endif %}</span>
     {% else %}
       <span class="act-status act-bad"><i class="fa fa-triangle-exclamation"></i> Provider non collegato</span>
     {% endif %}
@@ -22872,13 +22975,13 @@ EFATT_DELEGA_TMPL = """
 
   <div class="deleg-card">
     {% if cfg.efatt_delega_stato == 'attiva' %}
-      <span class="deleg-status deleg-ok"><i class="fa fa-check-circle"></i> Delega attiva{% if cfg.efatt_delega_provider %} Ã‚Â· {{ cfg.efatt_delega_provider }}{% endif %}</span>
+      <span class="deleg-status deleg-ok"><i class="fa fa-check-circle"></i> Delega attiva{% if cfg.efatt_delega_provider %} Ãƒâ€šÃ‚Â· {{ cfg.efatt_delega_provider }}{% endif %}</span>
     {% elif cfg.efatt_delega_stato == 'in_corso' %}
-      <span class="deleg-status deleg-warn"><i class="fa fa-clock"></i> Delega in corso{% if cfg.efatt_delega_provider %} Ã‚Â· {{ cfg.efatt_delega_provider }}{% endif %}</span>
+      <span class="deleg-status deleg-warn"><i class="fa fa-clock"></i> Delega in corso{% if cfg.efatt_delega_provider %} Ãƒâ€šÃ‚Â· {{ cfg.efatt_delega_provider }}{% endif %}</span>
     {% else %}
       <span class="deleg-status deleg-bad"><i class="fa fa-triangle-exclamation"></i> Delega non attiva</span>
     {% endif %}
-    <p class="deleg-muted" style="margin:12px 0 0">Il gestionale apre il provider scelto. Se il provider supporta il rientro automatico, tornerai qui da solo; altrimenti dopo aver finito premi Ã¢â‚¬Å“Ho completato la delegaÃ¢â‚¬Â.</p>
+    <p class="deleg-muted" style="margin:12px 0 0">Il gestionale apre il provider scelto. Se il provider supporta il rientro automatico, tornerai qui da solo; altrimenti dopo aver finito premi ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œHo completato la delegaÃƒÂ¢Ã¢â€šÂ¬Ã‚Â.</p>
   </div>
 
   <form method="POST" action="/fatturazione/elettronica/delega/avvia" class="deleg-card">
@@ -22901,7 +23004,7 @@ EFATT_DELEGA_TMPL = """
   {% if cfg.efatt_delega_stato == 'in_corso' %}
   <form method="POST" action="/fatturazione/elettronica/delega/completa" class="deleg-card">
     <h3 style="margin:0 0 8px">Hai completato la procedura sul provider?</h3>
-    <div class="deleg-muted">Usa questo pulsante se il provider non ti ha riportato automaticamente nel gestionale. Lo stato passa ad Ã¢â‚¬Å“attivaÃ¢â‚¬Â e poi lÃ¢â‚¬â„¢import automatico verrÃƒÂ  confermato dai webhook/API.</div>
+    <div class="deleg-muted">Usa questo pulsante se il provider non ti ha riportato automaticamente nel gestionale. Lo stato passa ad ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œattivaÃƒÂ¢Ã¢â€šÂ¬Ã‚Â e poi lÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢import automatico verrÃƒÆ’Ã‚Â  confermato dai webhook/API.</div>
     <div class="deleg-actions">
       <button class="btn btn-success" type="submit"><i class="fa fa-check"></i> Ho completato la delega</button>
     </div>
@@ -22917,7 +23020,7 @@ EFATT_DELEGA_AVVIO_TMPL = """
 <div class="go-wrap">
   <div class="go-card">
     <h2 style="margin:0 0 6px">Delega fatture passive - {{ provider.nome }}</h2>
-    <div class="go-muted">La registrazione dell'indirizzo telematico si fa sul portale Agenzia Entrate Ã¢â‚¬Å“Fatture e CorrispettiviÃ¢â‚¬Â, non nella dashboard generica del provider.</div>
+    <div class="go-muted">La registrazione dell'indirizzo telematico si fa sul portale Agenzia Entrate ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œFatture e CorrispettiviÃƒÂ¢Ã¢â€šÂ¬Ã‚Â, non nella dashboard generica del provider.</div>
     <div class="go-code">
       <div>
         <div class="go-muted">Codice destinatario da registrare</div>
@@ -22927,9 +23030,9 @@ EFATT_DELEGA_AVVIO_TMPL = """
     </div>
     <ul class="go-steps">
       <li><span class="go-num">1</span><div>Accedi con SPID/CIE al portale Fatture e Corrispettivi.</div></li>
-      <li><span class="go-num">2</span><div>Vai su <b>Fatturazione elettronica</b> Ã¢â€ â€™ <b>Registrazione dell'indirizzo telematico</b>.</div></li>
+      <li><span class="go-num">2</span><div>Vai su <b>Fatturazione elettronica</b> ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ <b>Registrazione dell'indirizzo telematico</b>.</div></li>
       <li><span class="go-num">3</span><div>Inserisci il codice destinatario sopra e conferma la registrazione.</div></li>
-      <li><span class="go-num">4</span><div>Quando hai finito, torna qui e premi Ã¢â‚¬Å“Ho completato la delegaÃ¢â‚¬Â.</div></li>
+      <li><span class="go-num">4</span><div>Quando hai finito, torna qui e premi ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œHo completato la delegaÃƒÂ¢Ã¢â€šÂ¬Ã‚Â.</div></li>
     </ul>
     <div class="go-actions">
       <a class="btn btn-secondary" href="/fatturazione/elettronica/delega"><i class="fa fa-arrow-left"></i> Indietro</a>
@@ -22938,7 +23041,7 @@ EFATT_DELEGA_AVVIO_TMPL = """
   </div>
   <form method="POST" action="/fatturazione/elettronica/delega/completa" class="go-card">
     <h3 style="margin:0 0 8px">Dopo aver confermato sul portale Agenzia Entrate</h3>
-    <div class="go-muted">Questo salva la delega come attiva nel gestionale. L'import automatico delle fatture passive partirÃƒÂ  quando il provider invierÃƒÂ  i documenti via API/webhook.</div>
+    <div class="go-muted">Questo salva la delega come attiva nel gestionale. L'import automatico delle fatture passive partirÃƒÆ’Ã‚Â  quando il provider invierÃƒÆ’Ã‚Â  i documenti via API/webhook.</div>
     <div class="go-actions"><button class="btn btn-success" type="submit"><i class="fa fa-check"></i> Ho completato la delega</button></div>
   </form>
 </div>
@@ -22972,7 +23075,7 @@ def fatturazione_elettronica_genera_secret():
     import secrets as _secrets
     new_secret = _secrets.token_urlsafe(32)
     set_setting('efatt_webhook_secret', new_secret)
-    flash('Ã°Å¸â€â€˜ Nuovo webhook secret generato. Copialo e incollalo nelle impostazioni webhook di Fatture in Cloud.', 'success')
+    flash('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Ëœ Nuovo webhook secret generato. Copialo e incollalo nelle impostazioni webhook di Fatture in Cloud.', 'success')
     return redirect(url_for('fatturazione_elettronica_setup'))
 
 @app.route('/fatturazione/elettronica/salva', methods=['POST'])
@@ -23278,8 +23381,8 @@ def _efatt_verify_signed_state(state):
 
 @app.route('/fatturazione/elettronica/callback')
 def fatturazione_elettronica_callback():
-    # NOTA: rimosso @admin_required perchÃƒÂ© la sessione potrebbe essere persa dal redirect
-    # cross-site (cookie SameSite). La sicurezza ÃƒÂ¨ garantita dalla firma HMAC dello state.
+    # NOTA: rimosso @admin_required perchÃƒÆ’Ã‚Â© la sessione potrebbe essere persa dal redirect
+    # cross-site (cookie SameSite). La sicurezza ÃƒÆ’Ã‚Â¨ garantita dalla firma HMAC dello state.
     error = request.args.get('error')
     if error:
         error_description = request.args.get('error_description', '')
@@ -23297,7 +23400,7 @@ def fatturazione_elettronica_callback():
     # Verifica firma HMAC (preferita, sopravvive a perdita di sessione)
     verified = _efatt_verify_signed_state(state)
     if not verified:
-        # Fallback: prova match con session (per retrocompatibilitÃƒÂ  durante deploy)
+        # Fallback: prova match con session (per retrocompatibilitÃƒÆ’Ã‚Â  durante deploy)
         if not state or state != session.get('efatt_oauth_state'):
             flash('Sessione di collegamento non valida o scaduta. Riprova dal pulsante "Collega provider".', 'error')
             return redirect(url_for('fatturazione_elettronica_setup'))
@@ -23306,8 +23409,8 @@ def fatturazione_elettronica_callback():
 
     state_azienda_id, state_provider = verified
 
-    # Se la sessione ÃƒÂ¨ persa, ripristino il contesto tenant dallo state firmato.
-    # Questo ÃƒÂ¨ SICURO perchÃƒÂ© lo state ÃƒÂ¨ firmato con SECRET_KEY del server.
+    # Se la sessione ÃƒÆ’Ã‚Â¨ persa, ripristino il contesto tenant dallo state firmato.
+    # Questo ÃƒÆ’Ã‚Â¨ SICURO perchÃƒÆ’Ã‚Â© lo state ÃƒÆ’Ã‚Â¨ firmato con SECRET_KEY del server.
     if not session.get('azienda_id') and state_azienda_id:
         session['azienda_id'] = state_azienda_id
         # Recupera info azienda
@@ -23373,13 +23476,13 @@ def fatturazione_elettronica_callback():
         flash('Il provider ha risposto ma non ha restituito access_token. Verifica app OAuth e scope.', 'error')
         return redirect(url_for('fatturazione_elettronica_setup'))
 
-    # Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+    # ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
     # AUTO-CONFIGURAZIONE post-OAuth: setta tutto in automatico
-    # Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+    # ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
     autosetup_steps = _efatt_post_oauth_autosetup(provider)
     setup_summary = []
     for step_name, ok, detail in autosetup_steps:
-        emoji = 'Ã¢Å“â€¦' if ok else 'Ã¢Å¡Â Ã¯Â¸Â'
+        emoji = 'ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦' if ok else 'ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â'
         setup_summary.append(f'{emoji} {step_name}: {detail}')
     flash('Provider <strong>' + provider + '</strong> collegato. ' + '<br>'.join(setup_summary), 'success')
     return redirect(url_for('fatturazione_elettronica_setup'))
@@ -23422,7 +23525,7 @@ def _efatt_post_oauth_autosetup(provider):
             safe_commit(db)
             steps.append(('Codice destinatario', True, f'Impostato {codice_fic_standard} (standard Fatture in Cloud)'))
         else:
-            steps.append(('Codice destinatario', True, f'GiÃƒÂ  configurato ({codice_attuale})'))
+            steps.append(('Codice destinatario', True, f'GiÃƒÆ’Ã‚Â  configurato ({codice_attuale})'))
 
         # === STEP 3: Webhook secret ===
         secret_row = db.execute("SELECT valore FROM impostazioni WHERE chiave='efatt_webhook_secret'").fetchone()
@@ -23434,7 +23537,7 @@ def _efatt_post_oauth_autosetup(provider):
             safe_commit(db)
             steps.append(('Webhook secret', True, 'Generato nuovo secret sicuro'))
         else:
-            steps.append(('Webhook secret', True, 'GiÃƒÂ  configurato'))
+            steps.append(('Webhook secret', True, 'GiÃƒÆ’Ã‚Â  configurato'))
 
         # === STEP 4: Registra webhook su Fatture in Cloud ===
         webhook_url = get_public_base_url() + '/webhooks/fattureincloud'
@@ -23447,9 +23550,9 @@ def _efatt_post_oauth_autosetup(provider):
             else:
                 steps.append(('Webhook su provider', True, registered.get('note', 'OK')))
         except EFattAPIError as e:
-            # Non bloccare il login: il webhook si puÃƒÂ² configurare a mano
+            # Non bloccare il login: il webhook si puÃƒÆ’Ã‚Â² configurare a mano
             steps.append(('Webhook su provider', False,
-                          f'Registrazione automatica fallita ({str(e)[:80]}). Configura manualmente da Setup Ã¢â€ â€™ Webhook.'))
+                          f'Registrazione automatica fallita ({str(e)[:80]}). Configura manualmente da Setup ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Webhook.'))
         except Exception as e:
             steps.append(('Webhook su provider', False, f'Errore: {str(e)[:120]}'))
 
@@ -23477,7 +23580,7 @@ def _efatt_register_webhook_remote(db, company_id, webhook_url, secret):
     FiC espone /c/{company_id}/subscriptions per gestire le subscription webhook.
     Logica:
       1. GET lista esistenti
-      2. Se ce n'ÃƒÂ¨ una con lo stesso URL, PUT per aggiornarla
+      2. Se ce n'ÃƒÆ’Ã‚Â¨ una con lo stesso URL, PUT per aggiornarla
       3. Altrimenti POST per crearla nuova
     Eventi sottoscritti: i 3 fondamentali per il nostro flusso.
     """
@@ -23507,7 +23610,7 @@ def _efatt_register_webhook_remote(db, company_id, webhook_url, secret):
                 existing = item
                 break
     except EFattAPIError as e:
-        # Se l'endpoint non esiste o non ÃƒÂ¨ autorizzato, segnaliamo ma non blocchiamo
+        # Se l'endpoint non esiste o non ÃƒÆ’Ã‚Â¨ autorizzato, segnaliamo ma non blocchiamo
         if e.status in (404, 403):
             return {'note': f'Lista webhook non accessibile (HTTP {e.status}). Configura manualmente.'}
         raise
@@ -23563,15 +23666,15 @@ def fatturazione_elettronica_registra_webhook():
         webhook_url = get_public_base_url() + '/webhooks/fattureincloud'
         result = _efatt_register_webhook_remote(db, company_id, webhook_url, secret)
         if result.get('updated'):
-            flash(f'Ã¢Å“â€¦ Webhook aggiornato su Fatture in Cloud (ID {result.get("id")}).', 'success')
+            flash(f'ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Webhook aggiornato su Fatture in Cloud (ID {result.get("id")}).', 'success')
         elif result.get('created'):
-            flash(f'Ã¢Å“â€¦ Webhook registrato su Fatture in Cloud (ID {result.get("id")}).', 'success')
+            flash(f'ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Webhook registrato su Fatture in Cloud (ID {result.get("id")}).', 'success')
         else:
-            flash('Ã¢Å¡Â Ã¯Â¸Â ' + result.get('note', 'Operazione completata senza modifiche.'), 'info')
+            flash('ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â ' + result.get('note', 'Operazione completata senza modifiche.'), 'info')
     except EFattAPIError as e:
-        flash(f'Ã¢ÂÅ’ Errore registrazione webhook: {str(e)[:250]}', 'error')
+        flash(f'ÃƒÂ¢Ã‚ÂÃ…â€™ Errore registrazione webhook: {str(e)[:250]}', 'error')
     except Exception as e:
-        flash(f'Ã¢ÂÅ’ Errore imprevisto: {str(e)[:200]}', 'error')
+        flash(f'ÃƒÂ¢Ã‚ÂÃ…â€™ Errore imprevisto: {str(e)[:200]}', 'error')
     finally:
         db.close()
     return redirect(url_for('fatturazione_elettronica_setup'))
@@ -23687,9 +23790,9 @@ def aruba_webhook(azienda_id):
         return jsonify({'ok': False, 'error': str(e)[:160]}), 500
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-#  SYNC FATTURE PASSIVE Ã¢â‚¬â€ pull da Fatture in Cloud
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
+#  SYNC FATTURE PASSIVE ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â pull da Fatture in Cloud
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 @app.route('/fatturazione/sync-passive', methods=['POST', 'GET'])
 @admin_required
 def fatturazione_sync_passive():
@@ -23723,12 +23826,12 @@ def fatturazione_sync_passive():
     redirect_args = {'tipo': next_tipo, 'anno': anno, 'sync_year': sync_year}
     return redirect(url_for('fatturazione', **redirect_args))
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 @app.route('/fatturazione/<int:fid>/invia-sdi', methods=['POST'])
 @admin_required
 def fatturazione_invia_sdi(fid):
-    """Crea la fattura su Fatture in Cloud (se non giÃƒÂ  esistente) e la invia allo SDI.
-    Lo stato locale viene aggiornato a 'creata_provider' Ã¢â€ â€™ 'inviata_sdi' Ã¢â€ â€™ 'errore_sdi'.
+    """Crea la fattura su Fatture in Cloud (se non giÃƒÆ’Ã‚Â  esistente) e la invia allo SDI.
+    Lo stato locale viene aggiornato a 'creata_provider' ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ 'inviata_sdi' ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ 'errore_sdi'.
     """
     db = get_db()
     f = db.execute("SELECT * FROM fatture WHERE id=?", (fid,)).fetchone()
@@ -23741,16 +23844,16 @@ def fatturazione_invia_sdi(fid):
         return redirect(url_for('fatturazione_dettaglio', fid=fid))
     try:
         _efatt_push_active_invoice(fid, send_to_sdi=True)
-        flash(f'Ã¢Å“â€¦ Fattura {f["numero"]} inviata correttamente allo SDI tramite Fatture in Cloud.', 'success')
+        flash(f'ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Fattura {f["numero"]} inviata correttamente allo SDI tramite Fatture in Cloud.', 'success')
     except EFattAPIError as e:
         msg = str(e)
         if 'non collegato' in msg.lower():
-            flash('Provider non collegato. Vai in Fatturazione Elettronica Ã¢â€ â€™ Connetti.', 'error')
+            flash('Provider non collegato. Vai in Fatturazione Elettronica ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Connetti.', 'error')
         else:
-            flash(f'Ã¢ÂÅ’ Errore invio SDI: {msg[:400]}', 'error')
+            flash(f'ÃƒÂ¢Ã‚ÂÃ…â€™ Errore invio SDI: {msg[:400]}', 'error')
     except Exception as e:
         print(f'[invia sdi] errore fattura {fid}: {e}')
-        flash(f'Ã¢ÂÅ’ Errore imprevisto: {str(e)[:200]}', 'error')
+        flash(f'ÃƒÂ¢Ã‚ÂÃ…â€™ Errore imprevisto: {str(e)[:200]}', 'error')
     return redirect(url_for('fatturazione_dettaglio', fid=fid))
 
 
@@ -23768,12 +23871,12 @@ def fatturazione_push_provider(fid):
         return redirect(url_for('fatturazione'))
     try:
         _efatt_push_active_invoice(fid, send_to_sdi=False)
-        flash(f'Ã¢Å“â€¦ Fattura {f["numero"]} creata su Fatture in Cloud (non ancora inviata allo SDI).', 'success')
+        flash(f'ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Fattura {f["numero"]} creata su Fatture in Cloud (non ancora inviata allo SDI).', 'success')
     except EFattAPIError as e:
-        flash(f'Ã¢ÂÅ’ Errore: {str(e)[:400]}', 'error')
+        flash(f'ÃƒÂ¢Ã‚ÂÃ…â€™ Errore: {str(e)[:400]}', 'error')
     except Exception as e:
         print(f'[push provider] errore fattura {fid}: {e}')
-        flash(f'Ã¢ÂÅ’ Errore imprevisto: {str(e)[:200]}', 'error')
+        flash(f'ÃƒÂ¢Ã‚ÂÃ…â€™ Errore imprevisto: {str(e)[:200]}', 'error')
     return redirect(url_for('fatturazione_dettaglio', fid=fid))
 
 
@@ -23789,7 +23892,7 @@ def fatturazione_aggiorna_stato_sdi(fid):
             flash('Fattura non trovata.', 'error')
             return redirect(url_for('fatturazione'))
         if not (f['provider_doc_id'] or '').strip():
-            flash('Questa fattura non ÃƒÂ¨ ancora stata sincronizzata su Fatture in Cloud.', 'error')
+            flash('Questa fattura non ÃƒÆ’Ã‚Â¨ ancora stata sincronizzata su Fatture in Cloud.', 'error')
             return redirect(url_for('fatturazione_dettaglio', fid=fid))
         company_id = _efatt_pick_company_id(db)
         try:
@@ -23841,15 +23944,15 @@ def fatturazione_aggiorna_stato_sdi(fid):
     return redirect(url_for('fatturazione_dettaglio', fid=fid))
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-#  NOTE DI CREDITO Ã¢â‚¬â€ stornano fatture attive giÃƒÂ  inviate
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
+#  NOTE DI CREDITO ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â stornano fatture attive giÃƒÆ’Ã‚Â  inviate
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 @app.route('/fatturazione/<int:fid>/nota-credito/nuova', methods=['GET', 'POST'])
 @admin_required
 def fatturazione_nota_credito_nuova(fid):
     """Crea una nota di credito che storna la fattura `fid`.
     La nota di credito eredita cliente, importi, descrizione e linka la fattura originale.
-    Si puÃƒÂ² poi inviare allo SDI con la stessa route di una fattura.
+    Si puÃƒÆ’Ã‚Â² poi inviare allo SDI con la stessa route di una fattura.
     """
     db = get_db()
     f_orig = db.execute("SELECT * FROM fatture WHERE id=?", (fid,)).fetchone()
@@ -23900,7 +24003,7 @@ def fatturazione_nota_credito_nuova(fid):
             new_fid = cur.lastrowid
             safe_commit(db)
             db.close()
-            flash(f'Ã¢Å“â€¦ Nota di credito {numero_nc} creata. Ora puoi inviarla allo SDI.', 'success')
+            flash(f'ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Nota di credito {numero_nc} creata. Ora puoi inviarla allo SDI.', 'success')
             return redirect(url_for('fatturazione_dettaglio', fid=new_fid))
         except Exception as e:
             db.close()
@@ -23922,14 +24025,14 @@ NOTA_CREDITO_NUOVA_TMPL = """
     <div class="card-header"><h3><i class="fa fa-rotate-left" style="color:#dc2626"></i> Nuova nota di credito</h3></div>
     <div class="card-body">
       <div style="background:#fef3c7;border-left:3px solid #d97706;padding:12px 14px;border-radius:8px;margin-bottom:18px;font-size:13px">
-        <strong>Stai stornando la fattura {{ f.numero }}</strong> del {{ f.data_emissione }} a <strong>{{ f.cliente_nome }}</strong> (Ã¢â€šÂ¬ {{ "%.2f"|format(f.importo_totale or 0) }}).<br>
-        La nota di credito verrÃƒÂ  creata in stato <em>"Da emettere"</em>. Potrai poi inviarla allo SDI con il pulsante dedicato.
+        <strong>Stai stornando la fattura {{ f.numero }}</strong> del {{ f.data_emissione }} a <strong>{{ f.cliente_nome }}</strong> (ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(f.importo_totale or 0) }}).<br>
+        La nota di credito verrÃƒÆ’Ã‚Â  creata in stato <em>"Da emettere"</em>. Potrai poi inviarla allo SDI con il pulsante dedicato.
       </div>
       <form method="POST" action="/fatturazione/{{ f.id }}/nota-credito/nuova">
         <div style="margin-bottom:14px">
-          <label style="display:block;font-size:13px;font-weight:700;margin-bottom:6px">Importo da stornare (Ã¢â€šÂ¬, IVA inclusa)</label>
+          <label style="display:block;font-size:13px;font-weight:700;margin-bottom:6px">Importo da stornare (ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬, IVA inclusa)</label>
           <input type="number" name="importo" step="0.01" min="0.01" max="{{ '%.2f'|format(f.importo_totale or 0) }}" value="{{ '%.2f'|format(f.importo_totale or 0) }}" required style="padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;width:100%">
-          <div style="font-size:11px;color:var(--text-light);margin-top:4px">Massimo: Ã¢â€šÂ¬ {{ "%.2f"|format(f.importo_totale or 0) }} (storno totale)</div>
+          <div style="font-size:11px;color:var(--text-light);margin-top:4px">Massimo: ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(f.importo_totale or 0) }} (storno totale)</div>
         </div>
         <div style="margin-bottom:18px">
           <label style="display:block;font-size:13px;font-weight:700;margin-bottom:6px">Motivo dello storno</label>
@@ -23946,9 +24049,9 @@ NOTA_CREDITO_NUOVA_TMPL = """
 """
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-#  WEBHOOK FATTURE IN CLOUD Ã¢â‚¬â€ eventi push da provider
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
+#  WEBHOOK FATTURE IN CLOUD ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â eventi push da provider
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 def _fic_webhook_company_id(payload):
     subject = request.headers.get('ce-subject') or payload.get('subject') or ''
     if subject.startswith('company:'):
@@ -23985,7 +24088,7 @@ def fattureincloud_webhook():
                    it.fattureincloud.webhooks.issued_documents.e_invoices.status_update, ...
     Il provider invia eventi CloudEvents e una verifica iniziale via GET.
 
-    IMPORTANTE: Fatture in Cloud ÃƒÂ¨ multi-tenant, quindi nel payload c'ÃƒÂ¨
+    IMPORTANTE: Fatture in Cloud ÃƒÆ’Ã‚Â¨ multi-tenant, quindi nel payload c'ÃƒÆ’Ã‚Â¨
     `company_id`. Dobbiamo trovare a quale azienda (tenant) di Accesso Fiere
     corrisponde, basandoci su `efatt_company_id` salvato per ogni tenant.
     """
@@ -24050,7 +24153,7 @@ def fattureincloud_webhook():
         print(f'[FIC webhook] company_id={company_id} non corrisponde a nessun tenant. Evento={event_type}')
         return jsonify({'ok': True, 'note': 'tenant_not_found'}), 200
 
-    # Verifica firma HMAC se il secret ÃƒÂ¨ configurato
+    # Verifica firma HMAC se il secret ÃƒÆ’Ã‚Â¨ configurato
     if webhook_secret and signature_received:
         expected_sig = hmac.new(
             webhook_secret.encode('utf-8'),
@@ -24077,7 +24180,7 @@ def fattureincloud_webhook():
             pend_sdi = payload.get('_pending_admin_notification')
             if pend_sdi:
                 try:
-                    icone = {'consegnata_sdi': 'Ã¢Å“â€¦', 'errore_sdi': 'Ã¢ÂÅ’', 'mancata_consegna_sdi': 'Ã¢Å¡Â Ã¯Â¸Â'}
+                    icone = {'consegnata_sdi': 'ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦', 'errore_sdi': 'ÃƒÂ¢Ã‚ÂÃ…â€™', 'mancata_consegna_sdi': 'ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â'}
                     titoli = {
                         'consegnata_sdi': 'Fattura consegnata',
                         'errore_sdi': 'Fattura scartata dallo SDI',
@@ -24085,7 +24188,7 @@ def fattureincloud_webhook():
                     }
                     sl = pend_sdi['stato_locale']
                     notifica_admins(
-                        f'{icone.get(sl, "Ã°Å¸â€œÂ¨")} {titoli.get(sl, "Aggiornamento SDI")}',
+                        f'{icone.get(sl, "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¨")} {titoli.get(sl, "Aggiornamento SDI")}',
                         f'Fattura {pend_sdi["numero"]} a {pend_sdi["cliente_nome"] or "cliente"}: {pend_sdi["sdi_msg"][:120]}',
                         f'/fatturazione/{pend_sdi["fattura_id"]}',
                         'fattura_sdi'
@@ -24096,7 +24199,7 @@ def fattureincloud_webhook():
             if pend_pass:
                 try:
                     notifica_admins(
-                        'Ã°Å¸â€œÂ¥ Nuova fattura passiva',
+                        'ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¥ Nuova fattura passiva',
                         f'Ricevuta nuova fattura da {pend_pass["entity_name"]}: {pend_pass["numero"]}',
                         '/fatturazione?tipo=passiva',
                         'fattura_passiva'
@@ -24248,9 +24351,9 @@ SDI_STATO_LABELS = {
 }
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-#  SYNC FALLBACK AUTOMATICO Ã¢â‚¬â€ recupera passive perdute dai webhook
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
+#  SYNC FALLBACK AUTOMATICO ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â recupera passive perdute dai webhook
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 # Cache in memoria: ultima volta che abbiamo lanciato un auto-sync per ogni tenant.
 # Il throttle vero viene salvato anche nel DB tenant, cosi piu worker gunicorn
 # non chiamano il provider in continuazione.
@@ -24296,8 +24399,8 @@ def _efatt_auto_sync_claim(db, min_interval=None):
 def _efatt_maybe_auto_sync_async(azienda_id):
     """Se sono passate >6h dall'ultima sincronizzazione passive per questo tenant,
     lancia un thread in background che fa la sync. Throttle in memoria.
-    Idempotente: il fallback ÃƒÂ¨ solo un safety net, l'aggiornamento principale
-    arriva via webhook quando il provider ÃƒÂ¨ correttamente configurato.
+    Idempotente: il fallback ÃƒÆ’Ã‚Â¨ solo un safety net, l'aggiornamento principale
+    arriva via webhook quando il provider ÃƒÆ’Ã‚Â¨ correttamente configurato.
     """
     import time as _t
     if not azienda_id:
@@ -24792,7 +24895,7 @@ FATT_LIST_TMPL = """
 </div>
 
 
-<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â MACRO RIGA FATTURA Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+<!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â MACRO RIGA FATTURA ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
 <form id="bulk-delete-form" method="POST" action="/fatturazione/elimina-selezionate" onsubmit="return confermaEliminaSelezionate()">
   <input type="hidden" name="tipo" value="{{ tipo }}">
   <input type="hidden" name="anno" value="{{ anno }}">
@@ -24920,7 +25023,7 @@ FATT_LIST_TMPL = """
 {% endif %}
 {% endmacro %}
 
-<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â THEAD COMUNE Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+<!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â THEAD COMUNE ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
 {% macro thead() %}
 <thead><tr style="background:#0f172a;color:#fff">
   <th style="width:42px;padding:10px 8px"></th>
@@ -24936,7 +25039,7 @@ FATT_LIST_TMPL = """
 </tr></thead>
 {% endmacro %}
 
-<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â SEZIONE 1: Da pagare con rate Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+<!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â SEZIONE 1: Da pagare con rate ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
 {% set con_rate = fatture | selectattr('rate') | selectattr('stato_display', 'ne', 'pagata') | list %}
 {% set con_rate = con_rate | selectattr('rate') | list %}
 {% set con_rate_attive = [] %}
@@ -24961,7 +25064,7 @@ FATT_LIST_TMPL = """
 </div>
 {% endif %}
 
-<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â SEZIONE 2: Da pagare / Da emettere senza rate Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+<!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â SEZIONE 2: Da pagare / Da emettere senza rate ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
 {% set senza_rate_attive = [] %}
 {% for f in fatture %}
   {% if f.rate|length == 0 and f.stato_display not in ['pagata','annullata'] %}
@@ -24984,7 +25087,7 @@ FATT_LIST_TMPL = """
 </div>
 {% endif %}
 
-<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â SEZIONE 3: Pagate Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+<!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â SEZIONE 3: Pagate ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
 {% set pagate = [] %}
 {% for f in fatture %}
   {% if f.stato_display in ['pagata','annullata'] %}
@@ -25112,7 +25215,7 @@ new Chart(ctx2, {
 </script>
 """
 
-# Ã¢â€â‚¬Ã¢â€â‚¬ Template dettaglio fattura Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Template dettaglio fattura ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 FATT_DETAIL_TMPL = """
 <style>
 .fatt-detail-payment{background:#0b1726!important;border-color:rgba(148,163,184,.22)!important;box-shadow:none!important}
@@ -25155,7 +25258,7 @@ FATT_DETAIL_TMPL = """
         <tr><td style="color:var(--text-light);padding:5px 0">Data emissione</td><td>{{ f.data_emissione }}</td></tr>
         <tr><td style="color:var(--text-light);padding:5px 0">Scadenza</td><td>{{ f.data_scadenza }}</td></tr>
         <tr><td style="color:var(--text-light);padding:5px 0">Condizioni</td><td>{{ f.condizioni_pagamento }}</td></tr>
-        <tr><td style="color:var(--text-light);padding:5px 0">Descrizione</td><td>{{ f.descrizione or 'Ã¢â‚¬â€œ' }}</td></tr>
+        <tr><td style="color:var(--text-light);padding:5px 0">Descrizione</td><td>{{ f.descrizione or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td></tr>
       </tbody></table>
     </div>
   </div>
@@ -25163,17 +25266,17 @@ FATT_DETAIL_TMPL = """
     <div class="card-header"><h3><i class="fa fa-euro-sign" style="color:var(--accent2)"></i> Importi</h3></div>
     <div class="card-body">
       <table style="width:100%;font-size:14px"><tbody>
-        <tr><td style="color:var(--text-light);padding:5px 0;width:45%">Imponibile</td><td>Ã¢â€šÂ¬ {{ "%.2f"|format(f.imponibile or 0) }}</td></tr>
-        <tr><td style="color:var(--text-light);padding:5px 0">IVA ({{ f.iva_perc }}%)</td><td>Ã¢â€šÂ¬ {{ "%.2f"|format(f.iva_importo or 0) }}</td></tr>
-        <tr><td style="color:var(--text-light);padding:5px 0"><strong>Totale</strong></td><td><strong style="font-size:20px">Ã¢â€šÂ¬ {{ "%.2f"|format(f.importo_totale) }}</strong></td></tr>
-        <tr><td style="color:var(--text-light);padding:5px 0">Pagato</td><td style="color:#16a34a;font-weight:700">Ã¢â€šÂ¬ {{ "%.2f"|format(pagato_tot) }}</td></tr>
-        <tr><td style="color:var(--text-light);padding:5px 0">Residuo</td><td style="color:{{ '#dc2626' if residuo > 0 else '#16a34a' }};font-weight:700">Ã¢â€šÂ¬ {{ "%.2f"|format(residuo) }}</td></tr>
+        <tr><td style="color:var(--text-light);padding:5px 0;width:45%">Imponibile</td><td>ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(f.imponibile or 0) }}</td></tr>
+        <tr><td style="color:var(--text-light);padding:5px 0">IVA ({{ f.iva_perc }}%)</td><td>ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(f.iva_importo or 0) }}</td></tr>
+        <tr><td style="color:var(--text-light);padding:5px 0"><strong>Totale</strong></td><td><strong style="font-size:20px">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(f.importo_totale) }}</strong></td></tr>
+        <tr><td style="color:var(--text-light);padding:5px 0">Pagato</td><td style="color:#16a34a;font-weight:700">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(pagato_tot) }}</td></tr>
+        <tr><td style="color:var(--text-light);padding:5px 0">Residuo</td><td style="color:{{ '#dc2626' if residuo > 0 else '#16a34a' }};font-weight:700">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(residuo) }}</td></tr>
       </tbody></table>
     </div>
   </div>
 </div>
 
-{# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â STATO SDI / FATTURAZIONE ELETTRONICA Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â #}
+{# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â STATO SDI / FATTURAZIONE ELETTRONICA ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â #}
 {% if f.tipo != 'passiva' %}
 <div class="card" style="margin-bottom:20px;border-left:4px solid {{ sdi_color }}">
   <div class="card-header">
@@ -25182,7 +25285,7 @@ FATT_DETAIL_TMPL = """
   </div>
   <div class="card-body">
     <table style="width:100%;font-size:14px;margin-bottom:14px"><tbody>
-      <tr><td style="color:var(--text-light);padding:5px 0;width:45%">Provider</td><td>{{ f.provider or 'Ã¢â‚¬â€' }}</td></tr>
+      <tr><td style="color:var(--text-light);padding:5px 0;width:45%">Provider</td><td>{{ f.provider or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â' }}</td></tr>
       {% if f.provider_doc_id %}
       <tr><td style="color:var(--text-light);padding:5px 0">ID documento provider</td><td style="font-family:monospace">{{ f.provider_doc_id }}</td></tr>
       {% endif %}
@@ -25195,7 +25298,7 @@ FATT_DETAIL_TMPL = """
     </tbody></table>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       {% if f.sdi_stato in (None, '', 'non_inviata') %}
-      <form method="POST" action="/fatturazione/{{ f.id }}/invia-sdi" style="display:inline" onsubmit="return confirm('Confermi l invio della fattura {{ f.numero }} allo SDI tramite Fatture in Cloud? L operazione non ÃƒÂ¨ reversibile.')">
+      <form method="POST" action="/fatturazione/{{ f.id }}/invia-sdi" style="display:inline" onsubmit="return confirm('Confermi l invio della fattura {{ f.numero }} allo SDI tramite Fatture in Cloud? L operazione non ÃƒÆ’Ã‚Â¨ reversibile.')">
         <button type="submit" class="btn btn-primary"><i class="fa fa-paper-plane"></i> Invia allo SDI</button>
       </form>
       <form method="POST" action="/fatturazione/{{ f.id }}/push-provider" style="display:inline">
@@ -25213,7 +25316,7 @@ FATT_DETAIL_TMPL = """
         <button type="submit" class="btn btn-secondary"><i class="fa fa-sync"></i> Aggiorna stato da SDI</button>
       </form>
       {% if f.sdi_stato == 'errore_sdi' %}
-      <form method="POST" action="/fatturazione/{{ f.id }}/invia-sdi" style="display:inline" onsubmit="return confirm('La fattura precedente ÃƒÂ¨ stata scartata. Confermi un nuovo invio?')">
+      <form method="POST" action="/fatturazione/{{ f.id }}/invia-sdi" style="display:inline" onsubmit="return confirm('La fattura precedente ÃƒÆ’Ã‚Â¨ stata scartata. Confermi un nuovo invio?')">
         <button type="submit" class="btn btn-primary"><i class="fa fa-redo"></i> Reinvia allo SDI</button>
       </form>
       {% endif %}
@@ -25240,15 +25343,15 @@ FATT_DETAIL_TMPL = """
     {% for r in rate %}
     <tr style="{{ 'background:#f0fdf4' if r.stato=='pagata' else ('background:#fef2f2' if r.scaduta else '') }}">
       <td><strong>Rata {{ r.numero_rata }}</strong></td>
-      <td><strong>Ã¢â€šÂ¬ {{ "%.2f"|format(r.importo) }}</strong></td>
-      <td style="font-family:monospace">{{ r.data_scadenza or 'Ã¢â‚¬â€œ' }}</td>
-      <td style="font-family:monospace;color:#16a34a">{{ r.data_pagamento or 'Ã¢â‚¬â€œ' }}</td>
+      <td><strong>ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(r.importo) }}</strong></td>
+      <td style="font-family:monospace">{{ r.data_scadenza or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
+      <td style="font-family:monospace;color:#16a34a">{{ r.data_pagamento or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
       <td>
-        {% if r.stato == 'pagata' %}<span class="badge badge-green">Ã¢Å“â€¦ Pagata</span>
-        {% elif r.stato == 'scaduta' or r.scaduta %}<span class="badge badge-red">Ã¢Å¡Â Ã¯Â¸Â Scaduta</span>
-        {% else %}<span class="badge badge-amber">Ã¢ÂÂ³ Da pagare</span>{% endif %}
+        {% if r.stato == 'pagata' %}<span class="badge badge-green">ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Pagata</span>
+        {% elif r.stato == 'scaduta' or r.scaduta %}<span class="badge badge-red">ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Scaduta</span>
+        {% else %}<span class="badge badge-amber">ÃƒÂ¢Ã‚ÂÃ‚Â³ Da pagare</span>{% endif %}
       </td>
-      <td style="font-size:12px;color:var(--text-light)">{{ r.note or 'Ã¢â‚¬â€œ' }}</td>
+      <td style="font-size:12px;color:var(--text-light)">{{ r.note or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
       <td style="display:flex;gap:6px">
         {% if r.stato != 'pagata' %}
         <form method="POST" action="/fatturazione/rata/{{ r.id }}/paga">
@@ -25278,7 +25381,7 @@ FATT_DETAIL_TMPL = """
 <div class="card" style="margin-top:20px;border:2px solid #7c3aed">
   <div class="card-header" style="background:linear-gradient(135deg,#f5f3ff,#ede9fe)">
     <h3 style="color:#7c3aed"><i class="fa fa-file-arrow-up"></i> Allega fattura emessa</h3>
-    <div style="font-size:13px;color:#6b7280;margin-top:4px">Carica il PDF della fattura reale: l'AI aggiornerÃƒÂ  automaticamente i dati su questa riga</div>
+    <div style="font-size:13px;color:#6b7280;margin-top:4px">Carica il PDF della fattura reale: l'AI aggiornerÃƒÆ’Ã‚Â  automaticamente i dati su questa riga</div>
   </div>
   <div class="card-body">
     {% if ai_allegato %}
@@ -25300,7 +25403,7 @@ FATT_DETAIL_TMPL = """
         </div>
       </div>
       <div style="margin-top:10px;font-size:12px;color:#9ca3af">
-        <i class="fa fa-info-circle"></i> L'AI leggerÃƒÂ  il PDF e aggiornerÃƒÂ : numero, date, importi, cliente. La riga esistente verrÃƒÂ  sovrascritta, non duplicata.
+        <i class="fa fa-info-circle"></i> L'AI leggerÃƒÆ’Ã‚Â  il PDF e aggiornerÃƒÆ’Ã‚Â : numero, date, importi, cliente. La riga esistente verrÃƒÆ’Ã‚Â  sovrascritta, non duplicata.
       </div>
     </form>
   </div>
@@ -25308,14 +25411,14 @@ FATT_DETAIL_TMPL = """
 {% endif %}
 """
 
-# Ã¢â€â‚¬Ã¢â€â‚¬ Template form fattura Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Template form fattura ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 FATT_FORM_TMPL = """
 <div style="margin-bottom:16px"><a href="/fatturazione" class="btn btn-secondary btn-sm"><i class="fa fa-arrow-left"></i> Torna alle fatture</a></div>
 
 {% if ai_result %}
 <div class="card" style="margin-bottom:20px;border-left:4px solid #7c3aed">
   <div class="card-header" style="background:linear-gradient(135deg,#f5f3ff,#ede9fe)">
-    <h3 style="color:#7c3aed"><i class="fa fa-wand-magic-sparkles"></i> Dati estratti dall'AI Ã¢Å“Â¨</h3>
+    <h3 style="color:#7c3aed"><i class="fa fa-wand-magic-sparkles"></i> Dati estratti dall'AI ÃƒÂ¢Ã…â€œÃ‚Â¨</h3>
   </div>
   <div class="card-body">
     <p style="font-size:13px;color:#6b7280;margin-bottom:10px">{{ ai_result.sommario }}</p>
@@ -25371,7 +25474,7 @@ FATT_FORM_TMPL = """
       <div class="form-group">
         <label>Cliente</label>
         <select name="cliente_id" id="cliente-sel" onchange="onClienteChange()">
-          <option value="">Ã¢â‚¬â€ Seleziona o scrivi sotto Ã¢â‚¬â€</option>
+          <option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Seleziona o scrivi sotto ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
           {% for c in clienti %}
           <option value="{{ c.id }}" {{ 'selected' if fattura.cliente_id == c.id }}>{{ c.nome }}</option>
           {% endfor %}
@@ -25390,7 +25493,7 @@ FATT_FORM_TMPL = """
       <div class="form-group">
         <label>Fornitore</label>
         <select name="fornitore_id" id="fornitore-sel">
-          <option value="">Ã¢â‚¬â€ Nessuno Ã¢â‚¬â€</option>
+          <option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Nessuno ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
           {% for fr in fornitori %}
           <option value="{{ fr.id }}" {{ 'selected' if fattura.fornitore_id == fr.id }}>{{ fr.nome }}</option>
           {% endfor %}
@@ -25402,13 +25505,13 @@ FATT_FORM_TMPL = """
       </div>
     </div>
     <div style="margin:-6px 0 12px;font-size:12px;color:var(--text-light)">
-      <strong>oppure</strong>, se ÃƒÂ¨ un cliente (nota di credito, rimborso, ecc.):
+      <strong>oppure</strong>, se ÃƒÆ’Ã‚Â¨ un cliente (nota di credito, rimborso, ecc.):
     </div>
     <div class="form-row">
       <div class="form-group">
         <label>Cliente</label>
         <select name="cliente_id" id="cliente-sel" onchange="onClienteChange()">
-          <option value="">Ã¢â‚¬â€ Nessuno Ã¢â‚¬â€</option>
+          <option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Nessuno ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
           {% for c in clienti %}
           <option value="{{ c.id }}" {{ 'selected' if fattura.cliente_id == c.id }}>{{ c.nome }}</option>
           {% endfor %}
@@ -25427,12 +25530,12 @@ FATT_FORM_TMPL = """
     <div class="form-group">
       <label>Collega a fiera / evento</label>
       <select name="cantiere_id">
-        <option value="">Ã¢â‚¬â€ Nessuna fiera collegata Ã¢â‚¬â€</option>
+        <option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Nessuna fiera collegata ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
         {% for ca in cantieri %}
-        <option value="{{ ca.id }}" {{ 'selected' if fattura.cantiere_id and fattura.cantiere_id == ca.id }}>{{ ca.nome }}{% if ca.citta %} Ã‚Â· {{ ca.citta }}{% endif %}</option>
+        <option value="{{ ca.id }}" {{ 'selected' if fattura.cantiere_id and fattura.cantiere_id == ca.id }}>{{ ca.nome }}{% if ca.citta %} Ãƒâ€šÃ‚Â· {{ ca.citta }}{% endif %}</option>
         {% endfor %}
       </select>
-      <div style="font-size:11px;color:var(--text-light);margin-top:4px">Serve per calcolare automaticamente redditivitÃƒÂ  e marginalitÃƒÂ  dell'evento.</div>
+      <div style="font-size:11px;color:var(--text-light);margin-top:4px">Serve per calcolare automaticamente redditivitÃƒÆ’Ã‚Â  e marginalitÃƒÆ’Ã‚Â  dell'evento.</div>
     </div>
   </div>
 </div>
@@ -25443,17 +25546,17 @@ FATT_FORM_TMPL = """
   <div class="card-body">
     <div class="form-row">
       <div class="form-group">
-        <label>Imponibile lordo (Ã¢â€šÂ¬) <span style="font-size:11px;color:var(--text-light)">Ã¢â‚¬â€ prima dello sconto</span></label>
+        <label>Imponibile lordo (ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬) <span style="font-size:11px;color:var(--text-light)">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â prima dello sconto</span></label>
         <input type="number" name="imponibile_lordo" id="imponibile-lordo" value="{{ fattura.imponibile_lordo or fattura.imponibile or '' }}" step="0.01" min="0" placeholder="1000.00" oninput="calcolaImporti()">
       </div>
       <div class="form-group">
-        <label>Sconto (Ã¢â€šÂ¬) <span style="font-size:11px;color:var(--text-light)">Ã¢â‚¬â€ opzionale</span></label>
+        <label>Sconto (ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬) <span style="font-size:11px;color:var(--text-light)">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â opzionale</span></label>
         <input type="number" name="sconto_importo" id="sconto-importo" value="{{ fattura.sconto_importo or '' }}" step="0.01" min="0" placeholder="0.00" oninput="calcolaImporti()" style="border-color:#f59e0b">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>Imponibile netto (Ã¢â€šÂ¬) <span style="font-size:11px;color:#16a34a;font-weight:700">Ã¢â‚¬â€ base per IVA</span></label>
+        <label>Imponibile netto (ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬) <span style="font-size:11px;color:#16a34a;font-weight:700">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â base per IVA</span></label>
         <input type="number" name="imponibile" id="imponibile" value="{{ fattura.imponibile or '' }}" step="0.01" min="0" placeholder="1000.00" oninput="calcolaImporti()" style="font-weight:700;color:#16a34a;border-color:#16a34a">
       </div>
       <div class="form-group">
@@ -25466,7 +25569,7 @@ FATT_FORM_TMPL = """
         </select>
       </div>
       <div class="form-group">
-        <label>Totale fattura (Ã¢â€šÂ¬)</label>
+        <label>Totale fattura (ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬)</label>
         <input type="number" name="importo_totale" id="importo-totale" value="{{ fattura.importo_totale or '' }}" step="0.01" min="0" placeholder="1220.00" style="font-weight:700;font-size:16px">
       </div>
     </div>
@@ -25482,7 +25585,7 @@ FATT_FORM_TMPL = """
   <div class="card-body">
     <div class="form-row">
       <div class="form-group">
-        <label>ModalitÃƒÂ </label>
+        <label>ModalitÃƒÆ’Ã‚Â </label>
         <select name="condizioni_pagamento" id="cond-pag" onchange="onCondizioniChange()">
           <option value="immediato" {{ 'selected' if fattura.condizioni_pagamento=='immediato' }}>Immediato</option>
           <option value="30gg" {{ 'selected' if (not fattura.condizioni_pagamento) or fattura.condizioni_pagamento=='30gg' }}>30 giorni</option>
@@ -25529,7 +25632,7 @@ function calcolaImporti() {
   const sconto = parseFloat(document.getElementById('sconto-importo').value)   || 0;
   const iva    = parseFloat(document.getElementById('iva-perc').value)          || 0;
 
-  // Se cambia il lordo o lo sconto Ã¢â€ â€™ aggiorna il netto
+  // Se cambia il lordo o lo sconto ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ aggiorna il netto
   const netto = Math.max(0, lordo - sconto);
   if (lordo > 0) {
     document.getElementById('imponibile').value = netto.toFixed(2);
@@ -25544,7 +25647,7 @@ function calcolaImporti() {
   const txt = document.getElementById('riepilogo-testo');
   if (lordo > 0 && sconto > 0) {
     ris.style.display = 'block';
-    txt.innerHTML = `<strong>Lordo:</strong> Ã¢â€šÂ¬ ${lordo.toFixed(2)} &nbsp;Ã¢Ë†â€™&nbsp; <strong>Sconto:</strong> Ã¢â€šÂ¬ ${sconto.toFixed(2)} &nbsp;=&nbsp; <strong style="color:#16a34a">Imponibile netto: Ã¢â€šÂ¬ ${netto.toFixed(2)}</strong> &nbsp;+&nbsp; IVA ${iva}% &nbsp;=&nbsp; <strong>Totale: Ã¢â€šÂ¬ ${tot.toFixed(2)}</strong>`;
+    txt.innerHTML = `<strong>Lordo:</strong> ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ ${lordo.toFixed(2)} &nbsp;ÃƒÂ¢Ã‹â€ Ã¢â‚¬â„¢&nbsp; <strong>Sconto:</strong> ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ ${sconto.toFixed(2)} &nbsp;=&nbsp; <strong style="color:#16a34a">Imponibile netto: ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ ${netto.toFixed(2)}</strong> &nbsp;+&nbsp; IVA ${iva}% &nbsp;=&nbsp; <strong>Totale: ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ ${tot.toFixed(2)}</strong>`;
   } else {
     ris.style.display = 'none';
   }
@@ -25555,9 +25658,9 @@ function onCondizioniChange() {
   const info = document.getElementById('info-cond');
   const scadManual = document.getElementById('scad-manual');
   const msgs = {
-    '30gg': 'La scadenza sarÃƒÂ  calcolata automaticamente a 30 giorni dalla data di emissione.',
-    '60gg': 'La scadenza sarÃƒÂ  calcolata automaticamente a 60 giorni.',
-    '90gg': 'La scadenza sarÃƒÂ  calcolata automaticamente a 90 giorni.',
+    '30gg': 'La scadenza sarÃƒÆ’Ã‚Â  calcolata automaticamente a 30 giorni dalla data di emissione.',
+    '60gg': 'La scadenza sarÃƒÆ’Ã‚Â  calcolata automaticamente a 60 giorni.',
+    '90gg': 'La scadenza sarÃƒÆ’Ã‚Â  calcolata automaticamente a 90 giorni.',
     'immediato': 'Pagamento immediato alla data di emissione.',
     '50_50': 'Rata 1: 50% subito. Rata 2: 50% a fine lavori (da definire).',
     '50_30_20': 'Rata 1: 50% a 30 giorni. Rata 2: 50% a 60 giorni.',
@@ -25577,11 +25680,11 @@ onCondizioniChange();
 </script>
 """
 
-# Ã¢â€â‚¬Ã¢â€â‚¬ Template aggiungi rata Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Template aggiungi rata ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 FATT_RATA_TMPL = """
 <div style="margin-bottom:16px"><a href="/fatturazione/{{ fid }}" class="btn btn-secondary btn-sm"><i class="fa fa-arrow-left"></i> Torna alla fattura</a></div>
 <div class="card" style="max-width:600px">
-  <div class="card-header"><h3><i class="fa fa-plus-circle" style="color:var(--accent2)"></i> Aggiungi rata Ã¢â‚¬â€ Fattura {{ f_numero }}</h3></div>
+  <div class="card-header"><h3><i class="fa fa-plus-circle" style="color:var(--accent2)"></i> Aggiungi rata ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Fattura {{ f_numero }}</h3></div>
   <div class="card-body">
     <form method="POST" action="/fatturazione/{{ fid }}/aggiungi-rata">
       <div class="form-row">
@@ -25590,7 +25693,7 @@ FATT_RATA_TMPL = """
           <input type="number" name="numero_rata" value="{{ next_num }}" min="1" required>
         </div>
         <div class="form-group">
-          <label>Importo (Ã¢â€šÂ¬) *</label>
+          <label>Importo (ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬) *</label>
           <input type="number" name="importo" step="0.01" min="0" required placeholder="Es. 610.00">
         </div>
       </div>
@@ -25603,12 +25706,12 @@ FATT_RATA_TMPL = """
           <label>Stato</label>
           <select name="stato">
             <option value="da_pagare">Da pagare</option>
-            <option value="pagata">GiÃƒÂ  pagata</option>
+            <option value="pagata">GiÃƒÆ’Ã‚Â  pagata</option>
           </select>
         </div>
       </div>
       <div class="form-group">
-        <label>Data pagamento (se giÃƒÂ  pagata)</label>
+        <label>Data pagamento (se giÃƒÆ’Ã‚Â  pagata)</label>
         <input type="date" name="data_pagamento" value="{{ today }}">
       </div>
       <div class="form-group"><label>Note</label><input name="note" placeholder="Es. acconto iniziale"></div>
@@ -25621,7 +25724,7 @@ FATT_RATA_TMPL = """
 </div>
 """
 
-# Ã¢â€â‚¬Ã¢â€â‚¬ Template clienti Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Template clienti ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 CLIENTI_TMPL = """
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
   <a href="/fatturazione" class="btn btn-secondary btn-sm"><i class="fa fa-arrow-left"></i> Fatture</a>
@@ -25633,11 +25736,11 @@ CLIENTI_TMPL = """
     <tbody>{% for c in clienti %}
     <tr>
       <td><strong>{{ c.nome }}</strong></td>
-      <td style="font-family:monospace;font-size:12px">{{ c.partita_iva or 'Ã¢â‚¬â€œ' }}</td>
-      <td style="font-size:13px">{{ c.email or 'Ã¢â‚¬â€œ' }}</td>
-      <td style="font-size:13px">{{ c.telefono or 'Ã¢â‚¬â€œ' }}</td>
+      <td style="font-family:monospace;font-size:12px">{{ c.partita_iva or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
+      <td style="font-size:13px">{{ c.email or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
+      <td style="font-size:13px">{{ c.telefono or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
       <td><span class="badge badge-blue">{{ c.n_fatture }}</span></td>
-      <td><strong>Ã¢â€šÂ¬ {{ "%.0f"|format(c.tot_fatturato) }}</strong></td>
+      <td><strong>ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.0f"|format(c.tot_fatturato) }}</strong></td>
       <td style="display:flex;gap:6px">
         <a href="/fatturazione/clienti/{{ c.id }}/modifica" class="btn btn-sm btn-secondary"><i class="fa fa-pen"></i></a>
         <a href="/fatturazione/clienti/{{ c.id }}/elimina" class="btn btn-sm btn-danger" onclick="return confirm('Eliminare cliente?')"><i class="fa fa-trash"></i></a>
@@ -25679,7 +25782,7 @@ CLIENTI_TMPL = """
 """
 
 
-# Ã¢â€â‚¬Ã¢â€â‚¬ Helper: calcola scadenza automatica Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Helper: calcola scadenza automatica ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 def _calc_scadenza(data_emissione, condizioni):
     from datetime import datetime as _dt, timedelta as _td
     try:
@@ -25770,9 +25873,9 @@ Se un campo non esiste metti "". Date in formato YYYY-MM-DD."""
         return {'_error': str(e)}
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 #  ROUTES FATTURAZIONE
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
 @app.route('/fatturazione')
 @admin_required
@@ -25836,7 +25939,7 @@ def fatturazione():
                 stato_pagamento = 'parziale'
 
         # Scaduta = solo se ci sono RATE non pagate con scadenza passata
-        # (non usare data_scadenza della fattura che puÃƒÂ² essere la data di emissione)
+        # (non usare data_scadenza della fattura che puÃƒÆ’Ã‚Â² essere la data di emissione)
         rate_scadute = db.execute("""
             SELECT COUNT(*) as n FROM rate_fattura
             WHERE fattura_id=? AND stato != 'pagata'
@@ -25845,7 +25948,7 @@ def fatturazione():
         ha_rate = db.execute("SELECT COUNT(*) as n FROM rate_fattura WHERE fattura_id=?", (fd['id'],)).fetchone()
 
         if ha_rate and ha_rate['n'] > 0:
-            # Se ha rate: scaduta solo se almeno una rata non pagata ÃƒÂ¨ scaduta
+            # Se ha rate: scaduta solo se almeno una rata non pagata ÃƒÆ’Ã‚Â¨ scaduta
             fd['scaduta'] = bool(rate_scadute and rate_scadute['n'] > 0 and stato_pagamento != 'pagata')
         else:
             # Senza rate: usa data_scadenza della fattura
@@ -25871,7 +25974,7 @@ def fatturazione():
         fd['scadenza_display'] = prima_da_pagare['data_scadenza'] if prima_da_pagare else fd.get('data_scadenza')
         fd['scadenza_scaduta'] = prima_da_pagare['scaduta'] if prima_da_pagare else fd['scaduta']
 
-        # Rate espanse: solo se almeno una rata non ÃƒÂ¨ pagata
+        # Rate espanse: solo se almeno una rata non ÃƒÆ’Ã‚Â¨ pagata
         fd['rate_espanse'] = any(r['stato'] != 'pagata' for r in fd['rate'])
 
         fatture.append(fd)
@@ -26027,11 +26130,11 @@ def _salva_fattura(fid):
     cantiere_id = request.form.get('cantiere_id') or None
     genera_rate = request.form.get('genera_rate') == '1'
 
-    # Se condizioni non ÃƒÂ¨ manuale, calcola scadenza
+    # Se condizioni non ÃƒÆ’Ã‚Â¨ manuale, calcola scadenza
     if cond != 'manuale' and cond not in ('50_50', '50_30_20'):
         data_scad = _calc_scadenza(data_em, cond)
 
-    # Se cliente_id Ã¢â€ â€™ recupera nome
+    # Se cliente_id ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ recupera nome
     db = get_db()
     if cliente_id:
         c = db.execute("SELECT nome FROM clienti WHERE id=?", (cliente_id,)).fetchone()
@@ -26075,7 +26178,7 @@ def _salva_fattura(fid):
                     'condizioni_pagamento': ai_data.get('condizioni_pagamento', '30gg'),
                 }
                 db.close()
-                flash('Ã¢Å“Â¨ AI ha analizzato la fattura. Verifica i dati pre-compilati.', 'success')
+                flash('ÃƒÂ¢Ã…â€œÃ‚Â¨ AI ha analizzato la fattura. Verifica i dati pre-compilati.', 'success')
                 return redirect(url_for('fatturazione_nuova'))
 
     if fid:
@@ -26176,7 +26279,7 @@ def fatturazione_allega_emessa(fid):
     msg_parts = []
 
     if ai_data and '_error' not in ai_data:
-        # Aggiorna campi dalla AI, mantieni quelli giÃƒÂ  validi se l'AI non li trova
+        # Aggiorna campi dalla AI, mantieni quelli giÃƒÆ’Ã‚Â  validi se l'AI non li trova
         numero       = ai_data.get('numero_fattura') or f['numero']
         data_em      = ai_data.get('data_emissione') or f['data_emissione']
         data_scad    = ai_data.get('data_scadenza')  or f['data_scadenza']
@@ -26210,9 +26313,9 @@ def fatturazione_allega_emessa(fid):
         msg_parts.append(f"Numero: {numero}")
         if data_em: msg_parts.append(f"Data: {data_em}")
         if cliente_nome: msg_parts.append(f"Cliente: {cliente_nome}")
-        msg_parts.append(f"Totale: Ã¢â€šÂ¬{importo_tot:.2f}")
-        msg_parts.append("Stato Ã¢â€ â€™ Da pagare")
-        session['fatt_allegato_msg'] = " Ã‚Â· ".join(msg_parts)
+        msg_parts.append(f"Totale: ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬{importo_tot:.2f}")
+        msg_parts.append("Stato ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Da pagare")
+        session['fatt_allegato_msg'] = " Ãƒâ€šÃ‚Â· ".join(msg_parts)
     else:
         # AI non disponibile: salva solo il file e cambia stato
         db.execute("UPDATE fatture SET file_nome=?, file_path=?, stato='da_pagare' WHERE id=?",
@@ -26305,7 +26408,7 @@ def fatturazione_paga_rata(rid):
         db.execute("UPDATE rate_fattura SET stato='pagata', data_pagamento=? WHERE id=?", (data_pag, rid))
         _aggiorna_stato_fattura(r['fattura_id'], db)
         safe_commit(db)
-        flash('Ã¢Å“â€¦ Rata segnata come pagata!', 'success')
+        flash('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Rata segnata come pagata!', 'success')
         fid = r['fattura_id']
     db.close()
     return redirect(url_for('fatturazione_dettaglio', fid=fid))
@@ -26351,15 +26454,15 @@ def fatturazione_file(fid):
     # Controlla se il file esiste fisicamente
     fp = f['file_path']
     if not fp or not os.path.exists(fp):
-        # File perso (es. dopo deploy Railway) Ã¢â‚¬â€ mostra messaggio con link per riallegare
-        flash(f'Ã¢Å¡Â Ã¯Â¸Â Il file "{f["file_nome"]}" non ÃƒÂ¨ piÃƒÂ¹ disponibile sul server (potrebbe essere andato perso dopo un aggiornamento). Riallega il PDF dalla pagina di modifica.', 'error')
+        # File perso (es. dopo deploy Railway) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â mostra messaggio con link per riallegare
+        flash(f'ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Il file "{f["file_nome"]}" non ÃƒÆ’Ã‚Â¨ piÃƒÆ’Ã‚Â¹ disponibile sul server (potrebbe essere andato perso dopo un aggiornamento). Riallega il PDF dalla pagina di modifica.', 'error')
         return redirect(url_for('fatturazione_dettaglio', fid=fid))
     from flask import send_file
     nome = f['file_nome'] if f['file_nome'] else f"Fattura_{f['numero'] or fid}.pdf"
     return send_file(fp, as_attachment=True, download_name=nome)
 
 
-# Ã¢â€â‚¬Ã¢â€â‚¬ CLIENTI Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ CLIENTI ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 
 @app.route('/fatturazione/clienti')
 @admin_required
@@ -26401,9 +26504,9 @@ def fatturazione_elimina_cliente(cid):
     return redirect(url_for('fatturazione_clienti'))
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-#  MOBILE Ã¢â‚¬â€ TIMBRATURA DIPENDENTI
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
+#  MOBILE ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â TIMBRATURA DIPENDENTI
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
 MOBILE_TMPL = """<!DOCTYPE html>
 <html lang="{{ lang }}" dir="{{ t.dir }}">
@@ -26516,7 +26619,7 @@ select option{background:#1e293b}
                 data-gf="{{ c.geofence_modalita or 'disattivato' }}"
                 data-lat="{{ c.lat or '' }}"
                 data-lng="{{ c.lng or '' }}"
-                data-raggio="{{ c.raggio_geofence_metri or 200 }}">{{ c.nome }}{% if c.geofence_modalita == 'obbligatorio' %} Ã°Å¸â€â€™{% elif c.geofence_modalita == 'avviso' %} Ã¢Å¡Â Ã¯Â¸Â{% endif %}</option>
+                data-raggio="{{ c.raggio_geofence_metri or 200 }}">{{ c.nome }}{% if c.geofence_modalita == 'obbligatorio' %} ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬â„¢{% elif c.geofence_modalita == 'avviso' %} ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â{% endif %}</option>
         {% endfor %}
       </select>
       <div class="gps-status" id="mob-gps-status"></div>
@@ -26525,7 +26628,7 @@ select option{background:#1e293b}
     <div class="card">
       <div class="card-title"><i class="fa fa-clock"></i> {{ t.work_hours }}</div>
 
-      <!-- ModalitÃƒÂ  fissa: ENTRATA / USCITA (i dipendenti devono inserire orari precisi) -->
+      <!-- ModalitÃƒÆ’Ã‚Â  fissa: ENTRATA / USCITA (i dipendenti devono inserire orari precisi) -->
       <input type="hidden" name="modalita" value="orari">
 
       <div id="mob-grp-orari">
@@ -26582,7 +26685,7 @@ select option{background:#1e293b}
           {% if p.pausa_ore %}<div class="storico-pausa">Pausa: {{ p.pausa_ore }}h</div>{% endif %}
         </div>
         <div style="text-align:right">
-          <div class="storico-ore">{{ p.ore_totali or 'Ã¢â‚¬â€œ' }}h</div>
+          <div class="storico-ore">{{ p.ore_totali or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}h</div>
           {% if p.ore_nette %}<div style="font-size:11px;color:rgba(255,255,255,.3)">{{ t.net_hours_lbl }}: {{ p.ore_nette }}{{ t.hours_suffix }}</div>{% endif %}
         </div>
       </div>
@@ -26671,10 +26774,10 @@ function aggiornaGeofenceInfo() {
   if (!opt || !opt.value) { status.textContent = ''; status.className = 'gps-status'; return; }
   var gf = opt.dataset.gf;
   if (gf === 'obbligatorio') {
-    status.innerHTML = 'Ã°Å¸â€â€™ Geolocalizzazione <strong>obbligatoria</strong> per questa fiera';
+    status.innerHTML = 'ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬â„¢ Geolocalizzazione <strong>obbligatoria</strong> per questa fiera';
     status.className = 'gps-status';
   } else if (gf === 'avviso') {
-    status.innerHTML = 'Ã¢Å¡Â Ã¯Â¸Â Posizione GPS richiesta (modalitÃƒÂ  avviso)';
+    status.innerHTML = 'ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Posizione GPS richiesta (modalitÃƒÆ’Ã‚Â  avviso)';
     status.className = 'gps-status';
   } else {
     status.textContent = '';
@@ -26683,7 +26786,7 @@ function aggiornaGeofenceInfo() {
 }
 
 // Submit "intelligente": se la fiera scelta richiede GPS, chiediamo la posizione
-// PRIMA di fare submit. ÃƒË† la chiave del blocco geofencing lato client.
+// PRIMA di fare submit. ÃƒÆ’Ã‹â€  la chiave del blocco geofencing lato client.
 var _submitInProgress = false;
 function prepareSubmitMobile(ev) {
   if (_submitInProgress) return false;
@@ -26705,10 +26808,10 @@ function prepareSubmitMobile(ev) {
   ev.preventDefault();
   if (!navigator.geolocation) {
     if (gf === 'obbligatorio') {
-      alert('Il tuo browser non supporta la geolocalizzazione. Per questa fiera ÃƒÂ¨ obbligatoria.');
+      alert('Il tuo browser non supporta la geolocalizzazione. Per questa fiera ÃƒÆ’Ã‚Â¨ obbligatoria.');
       return false;
     }
-    // ModalitÃƒÂ  avviso: submit senza GPS
+    // ModalitÃƒÆ’Ã‚Â  avviso: submit senza GPS
     _submitInProgress = true;
     btn.disabled = true;
     btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Invio...';
@@ -26718,29 +26821,29 @@ function prepareSubmitMobile(ev) {
 
   btn.disabled = true;
   btn.innerHTML = '<i class="fa fa-location-crosshairs"></i> Acquisizione GPS...';
-  status.innerHTML = 'Ã°Å¸â€œÂ Rilevamento posizione in corso...';
+  status.innerHTML = 'ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â Rilevamento posizione in corso...';
   status.className = 'gps-status';
 
   navigator.geolocation.getCurrentPosition(
     function(pos) {
       document.getElementById('mob-lat').value = pos.coords.latitude.toFixed(6);
       document.getElementById('mob-lng').value = pos.coords.longitude.toFixed(6);
-      status.innerHTML = 'Ã¢Å“â€œ Posizione rilevata (~' + Math.round(pos.coords.accuracy) + 'm precisione)';
+      status.innerHTML = 'ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Posizione rilevata (~' + Math.round(pos.coords.accuracy) + 'm precisione)';
       status.className = 'gps-status gps-ok';
       btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Invio...';
       _submitInProgress = true;
       document.getElementById('form-ore').submit();
     },
     function(err) {
-      status.innerHTML = 'Ã¢Å¡Â Ã¯Â¸Â GPS non disponibile: ' + err.message;
+      status.innerHTML = 'ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â GPS non disponibile: ' + err.message;
       status.className = 'gps-status gps-error';
       btn.disabled = false;
       btn.innerHTML = '<i class="fa fa-check-circle"></i> {{ t.submit_hours }}';
       if (gf === 'obbligatorio') {
-        alert('Per questa fiera la posizione GPS ÃƒÂ¨ obbligatoria. Abilita la geolocalizzazione del browser e riprova.');
+        alert('Per questa fiera la posizione GPS ÃƒÆ’Ã‚Â¨ obbligatoria. Abilita la geolocalizzazione del browser e riprova.');
         return;
       }
-      // ModalitÃƒÂ  avviso: chiedi conferma e submit senza GPS
+      // ModalitÃƒÆ’Ã‚Â  avviso: chiedi conferma e submit senza GPS
       if (confirm('GPS non disponibile. Vuoi inviare comunque la richiesta?')) {
         _submitInProgress = true;
         btn.disabled = true;
@@ -26765,11 +26868,11 @@ function prepareSubmitMobile(ev) {
     if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true) return;
     if (document.getElementById('pwa-ib')) return;
     var b=document.createElement('div'); b.id='pwa-ib';
-    b.innerHTML=`<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(15,23,42,.35);max-width:480px;margin:0 auto"><div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px">Ã°Å¸â€œÂ²</div><div style="flex:1"><div style="font-weight:800;font-size:14px">Installa l'app</div><div style="font-size:11.5px;color:rgba(255,255,255,.75)">Apri piÃƒÂ¹ velocemente, usa offline</div></div><button id="pwy" style="background:#fff;color:#0f4c81;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:12.5px">Installa</button><button id="pwn" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;padding:4px 8px">Ãƒâ€”</button></div>`;
+    b.innerHTML=`<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(15,23,42,.35);max-width:480px;margin:0 auto"><div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â²</div><div style="flex:1"><div style="font-weight:800;font-size:14px">Installa l'app</div><div style="font-size:11.5px;color:rgba(255,255,255,.75)">Apri piÃƒÆ’Ã‚Â¹ velocemente, usa offline</div></div><button id="pwy" style="background:#fff;color:#0f4c81;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:12.5px">Installa</button><button id="pwn" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;padding:4px 8px">ÃƒÆ’Ã¢â‚¬â€</button></div>`;
     document.body.appendChild(b);
     document.getElementById('pwy').onclick=function(){
       if(dp){dp.prompt();dp.userChoice.then(function(c){if(c.outcome==='accepted')b.remove();dp=null;});return;}
-      alert('Per installare su Chrome mobile: apri il menu Ã¢â€¹Â® e scegli "Installa app" o "Aggiungi a schermata Home".');
+      alert('Per installare su Chrome mobile: apri il menu ÃƒÂ¢Ã¢â‚¬Â¹Ã‚Â® e scegli "Installa app" o "Aggiungi a schermata Home".');
     };
     document.getElementById('pwn').onclick=function(){b.remove();};
   }
@@ -26784,14 +26887,14 @@ function prepareSubmitMobile(ev) {
       setTimeout(function(){
         if(document.getElementById('pwa-ib'))return;
         var b=document.createElement('div'); b.id='pwa-ib';
-        b.innerHTML=`<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border-radius:14px;padding:13px 14px;box-shadow:0 8px 24px rgba(15,23,42,.35);max-width:480px;margin:0 auto"><div style="display:flex;align-items:center;gap:12px;margin-bottom:7px"><div style="width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:18px">Ã°Å¸â€œÂ²</div><div style="flex:1;font-weight:800;font-size:14px">Installa Accesso Fiere</div><button id="iosno" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;padding:4px 8px">Ãƒâ€”</button></div><div style="font-size:12px;color:rgba(255,255,255,.85);line-height:1.45">Tocca <strong>Condividi</strong> Ã¢Â¬â€  in basso, poi <strong>"Aggiungi a Home"</strong></div></div>`;
+        b.innerHTML=`<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border-radius:14px;padding:13px 14px;box-shadow:0 8px 24px rgba(15,23,42,.35);max-width:480px;margin:0 auto"><div style="display:flex;align-items:center;gap:12px;margin-bottom:7px"><div style="width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:18px">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â²</div><div style="flex:1;font-weight:800;font-size:14px">Installa Accesso Fiere</div><button id="iosno" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;padding:4px 8px">ÃƒÆ’Ã¢â‚¬â€</button></div><div style="font-size:12px;color:rgba(255,255,255,.85);line-height:1.45">Tocca <strong>Condividi</strong> ÃƒÂ¢Ã‚Â¬Ã¢â‚¬Â  in basso, poi <strong>"Aggiungi a Home"</strong></div></div>`;
         document.body.appendChild(b);
         document.getElementById('iosno').onclick=function(){localStorage.setItem('pwa_ios_seen','1');b.remove();};
       },2500);
     }
   }
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Push Notifications Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Push Notifications ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
   function isStandalone(){return window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;}
   function showPushBanner(){
     if(!('Notification' in window)||!('serviceWorker' in navigator)||!('PushManager' in window))return;
@@ -26801,7 +26904,7 @@ function prepareSubmitMobile(ev) {
     if(document.getElementById('pn-banner'))return;
     setTimeout(function(){
       var b=document.createElement('div'); b.id='pn-banner';
-      b.innerHTML=`<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(22,163,74,.35);max-width:480px;margin:0 auto"><div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px">Ã°Å¸â€â€</div><div style="flex:1"><div style="font-weight:800;font-size:14px">Attiva notifiche</div><div style="font-size:11.5px;color:rgba(255,255,255,.85)">Ricevi aggiornamenti su ferie e turni</div></div><button id="pny" style="background:#fff;color:#16a34a;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:12.5px">Attiva</button><button id="pnn" style="background:transparent;color:rgba(255,255,255,.7);border:none;font-size:18px;padding:4px 8px">Ãƒâ€”</button></div>`;
+      b.innerHTML=`<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(22,163,74,.35);max-width:480px;margin:0 auto"><div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px">ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Â</div><div style="flex:1"><div style="font-weight:800;font-size:14px">Attiva notifiche</div><div style="font-size:11.5px;color:rgba(255,255,255,.85)">Ricevi aggiornamenti su ferie e turni</div></div><button id="pny" style="background:#fff;color:#16a34a;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:12.5px">Attiva</button><button id="pnn" style="background:transparent;color:rgba(255,255,255,.7);border:none;font-size:18px;padding:4px 8px">ÃƒÆ’Ã¢â‚¬â€</button></div>`;
       document.body.appendChild(b);
       document.getElementById('pny').onclick=function(){b.remove();subscribePush();};
       document.getElementById('pnn').onclick=function(){sessionStorage.setItem('pwa_push_dismissed','1');b.remove();};
@@ -27075,7 +27178,7 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/sw.js").then(function(reg){
     // Forza aggiornamento del Service Worker ad ogni accesso
     reg.update().catch(function(){});
-    // Se c'ÃƒÂ¨ un nuovo SW in attesa, ricarica
+    // Se c'ÃƒÆ’Ã‚Â¨ un nuovo SW in attesa, ricarica
     reg.addEventListener("updatefound", function(){
       var nw = reg.installing;
       if (nw) {
@@ -27303,7 +27406,7 @@ async function togglePush(){
       }
     }
 
-    // STEP 2: Chiedi permesso (se non giÃƒÂ  granted)
+    // STEP 2: Chiedi permesso (se non giÃƒÆ’Ã‚Â  granted)
     var perm = Notification.permission;
     if (perm !== "granted") {
       perm = await Notification.requestPermission();
@@ -27355,7 +27458,7 @@ async function togglePush(){
   refreshDiag();
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Install App logic Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Install App logic ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 var deferredInstallPrompt = null;
 
 window.addEventListener("beforeinstallprompt", function(e){
@@ -27377,7 +27480,7 @@ function refreshInstallStatus(){
   if (!card) return;
 
   if (isStandalone()) {
-    // App giÃƒÂ  installata
+    // App giÃƒÆ’Ã‚Â  installata
     card.style.display = "block";
     status.className = "push-status on";
     status.innerHTML = '<i class="fa fa-check-circle"></i> <span>App installata correttamente</span>';
@@ -27414,17 +27517,17 @@ function refreshInstallStatus(){
                      '3. Tocca <strong>Aggiungi</strong> in alto a destra';
     } else if (isAndroid && isChrome) {
       instructions = '<div style="font-weight:700;color:#86efac;margin-bottom:8px"><i class="fa fa-android"></i> Su Android Chrome</div>' +
-                     '1. Tocca il menu <strong>Ã¢â€¹Â®</strong> in alto a destra<br>' +
+                     '1. Tocca il menu <strong>ÃƒÂ¢Ã¢â‚¬Â¹Ã‚Â®</strong> in alto a destra<br>' +
                      '2. Tocca <strong>"Installa app"</strong> oppure <strong>"Aggiungi a schermata Home"</strong><br>' +
                      '3. Conferma installazione';
     } else if (isFirefox) {
       instructions = '<div style="font-weight:700;color:#fb923c;margin-bottom:8px"><i class="fa fa-firefox-browser"></i> Su Firefox</div>' +
-                     '1. Tocca il menu <strong>Ã¢â€¹Â®</strong><br>' +
+                     '1. Tocca il menu <strong>ÃƒÂ¢Ã¢â‚¬Â¹Ã‚Â®</strong><br>' +
                      '2. Tocca <strong>"Installa"</strong> o <strong>"Aggiungi a schermata Home"</strong>';
     } else if (isChrome) {
       instructions = '<div style="font-weight:700;color:#86efac;margin-bottom:8px"><i class="fa fa-chrome"></i> Su Chrome desktop</div>' +
                      '1. Cerca l icona <strong>Installa</strong> nella barra degli indirizzi<br>' +
-                     '2. Oppure menu <strong>Ã¢â€¹Â®</strong> > <strong>"Installa Accesso Fiere"</strong>';
+                     '2. Oppure menu <strong>ÃƒÂ¢Ã¢â‚¬Â¹Ã‚Â®</strong> > <strong>"Installa Accesso Fiere"</strong>';
     } else {
       instructions = '<div style="font-weight:700;margin-bottom:8px">Installazione manuale</div>' +
                      'Cerca nel menu del browser una voce come <strong>"Installa app"</strong>, ' +
@@ -27503,7 +27606,7 @@ def mobile_cambia_email():
         return redirect(url_for('mobile_profilo'))
     existing = db.execute("SELECT id FROM utenti WHERE email=? AND id!=?", (nuova, session['user_id'])).fetchone()
     if existing:
-        db.close(); flash('Email giÃƒÂ  in uso da un altro account.', 'error')
+        db.close(); flash('Email giÃƒÆ’Ã‚Â  in uso da un altro account.', 'error')
         return redirect(url_for('mobile_profilo'))
     db.execute("UPDATE utenti SET email=? WHERE id=?", (nuova, session['user_id']))
     safe_commit(db); db.close()
@@ -27530,13 +27633,13 @@ def mobile_cambia_password():
         return redirect(url_for('mobile_profilo'))
     db.execute("UPDATE utenti SET password=? WHERE id=?", (hash_pw(nuova_pwd), session['user_id']))
     safe_commit(db); db.close()
-    flash('Ã¢Å“â€¦ Password cambiata con successo!', 'success')
+    flash('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Password cambiata con successo!', 'success')
     return redirect(url_for('mobile_profilo'))
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-#  MOBILE CAPOSQUADRA Ã¢â‚¬â€ versione potenziata per chi gestisce squadre
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
+#  MOBILE CAPOSQUADRA ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â versione potenziata per chi gestisce squadre
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
 MOBILE_CS_TMPL = """<!DOCTYPE html>
 <html lang="it">
@@ -27552,7 +27655,7 @@ MOBILE_CS_TMPL = """<!DOCTYPE html>
 <link rel="apple-touch-icon" sizes="180x180" href="/static/pwa/icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/static/pwa/icon-192.png">
 <meta name="theme-color" content="#0f172a">
-<title>Caposquadra Ã‚Â· {{ azienda }}</title>
+<title>Caposquadra Ãƒâ€šÃ‚Â· {{ azienda }}</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -27620,7 +27723,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#7c3aed;backgr
 .submit-btn:disabled{opacity:.5}
 .submit-btn:active{transform:scale(.98)}
 
-/* Toggle modalitÃƒÂ  ore/orari */
+/* Toggle modalitÃƒÆ’Ã‚Â  ore/orari */
 .mod-toggle{display:flex;gap:6px;margin-bottom:12px}
 .mod-pill{flex:1;text-align:center;padding:9px;border-radius:8px;border:2px solid rgba(124,58,237,.3);color:rgba(255,255,255,.6);font-size:12px;font-weight:600;cursor:pointer;background:transparent}
 .mod-pill input{display:none}
@@ -27685,7 +27788,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#7c3aed;backgr
     </div>
   </div>
   <div class="user-name">{{ nome }} {{ cognome }}</div>
-  <div class="user-sub">{{ azienda }} Ã‚Â· {{ n_membri }} membri Ã‚Â· {{ n_fiere }} fiere assegnate</div>
+  <div class="user-sub">{{ azienda }} Ãƒâ€šÃ‚Â· {{ n_membri }} membri Ãƒâ€šÃ‚Â· {{ n_fiere }} fiere assegnate</div>
 </div>
 
 {% if flash_msg %}
@@ -27701,7 +27804,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#7c3aed;backgr
 
 <div class="content">
 
-<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â TAB HOME Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+<!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â TAB HOME ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
 <div id="tab-home" class="tab-pane active">
   <div class="card">
     <div class="card-title"><i class="fa fa-chart-simple"></i> Riepilogo del mese</div>
@@ -27729,11 +27832,11 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#7c3aed;backgr
       <div class="fiera-card fiera-{{ f.fase or 'live' }}">
         <div class="fiera-name"><i class="fa fa-store"></i> {{ f.nome }}</div>
         <div class="fiera-meta">
-          {% if f.padiglione %}<i class="fa fa-map-marker-alt"></i> {{ f.padiglione }}{% if f.numero_stand %} Ã‚Â· Stand {{ f.numero_stand }}{% endif %}<br>{% endif %}
+          {% if f.padiglione %}<i class="fa fa-map-marker-alt"></i> {{ f.padiglione }}{% if f.numero_stand %} Ãƒâ€šÃ‚Â· Stand {{ f.numero_stand }}{% endif %}<br>{% endif %}
           {% if f.committente %}<i class="fa fa-handshake"></i> {{ f.committente }}{% endif %}
         </div>
         <span class="fiera-status fs-{{ f.fase }}">
-          {% if f.fase=='setup' %}Ã°Å¸â€œÂ¦ Setup{% elif f.fase=='live' %}Ã°Å¸â€Â´ Live{% elif f.fase=='dismantling' %}Ã°Å¸â€œÂ¤ Smontaggio{% endif %}
+          {% if f.fase=='setup' %}ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¦ Setup{% elif f.fase=='live' %}ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â´ Live{% elif f.fase=='dismantling' %}ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¤ Smontaggio{% endif %}
         </span>
       </div>
       {% endfor %}
@@ -27750,7 +27853,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#7c3aed;backgr
       <div class="timb-row">
         <div class="timb-info">
           <strong>{{ t.dipendente }}</strong>
-          <span>{{ t.data }} Ã‚Â· {{ t.cantiere or 'Ã¢â‚¬â€' }} Ã‚Â· {{ "%.1f"|format(t.ore_totali or 0) }}h</span>
+          <span>{{ t.data }} Ãƒâ€šÃ‚Â· {{ t.cantiere or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â' }} Ãƒâ€šÃ‚Â· {{ "%.1f"|format(t.ore_totali or 0) }}h</span>
         </div>
         <span class="timb-stato ts-{{ t.stato }}">{{ t.stato_label }}</span>
       </div>
@@ -27762,11 +27865,11 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#7c3aed;backgr
   </div>
 </div>
 
-<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â TAB SQUADRA Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+<!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â TAB SQUADRA ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
 <div id="tab-squadra" class="tab-pane">
   {% for sq in squadre %}
   <div class="card">
-    <div class="card-title"><i class="fa fa-users"></i> {{ sq.nome }} Ã‚Â· {{ sq.membri|length }} membri</div>
+    <div class="card-title"><i class="fa fa-users"></i> {{ sq.nome }} Ãƒâ€šÃ‚Â· {{ sq.membri|length }} membri</div>
     {% if sq.note %}<div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:10px;font-style:italic">{{ sq.note }}</div>{% endif %}
     {% if sq.membri %}
     <div class="member-list">
@@ -27775,7 +27878,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#7c3aed;backgr
         <div class="member-avatar">{{ m.nome[0] }}{{ m.cognome[0] }}</div>
         <div class="member-info">
           <div class="member-name">{{ m.nome }} {{ m.cognome }}</div>
-          <div class="member-meta">{{ m.mansione or 'Operatore' }}{% if m.email %} Ã‚Â· {{ m.email }}{% endif %}</div>
+          <div class="member-meta">{{ m.mansione or 'Operatore' }}{% if m.email %} Ãƒâ€šÃ‚Â· {{ m.email }}{% endif %}</div>
         </div>
         <div class="member-actions">
           {% if m.telefono %}
@@ -27793,12 +27896,12 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#7c3aed;backgr
   </div>
   {% else %}
   <div class="card">
-    <div class="empty"><i class="fa fa-users-slash"></i><p>Non ti ÃƒÂ¨ ancora stata assegnata nessuna squadra.<br>Chiedi all'amministratore.</p></div>
+    <div class="empty"><i class="fa fa-users-slash"></i><p>Non ti ÃƒÆ’Ã‚Â¨ ancora stata assegnata nessuna squadra.<br>Chiedi all'amministratore.</p></div>
   </div>
   {% endfor %}
 </div>
 
-<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â TAB TIMBRA Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+<!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â TAB TIMBRA ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
 <div id="tab-timbra" class="tab-pane">
   <div class="card">
     <div class="card-title"><i class="fa fa-clock"></i> Inserisci timbratura</div>
@@ -27812,9 +27915,9 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#7c3aed;backgr
       <div style="margin-bottom:10px">
         <label class="field-label">Per chi</label>
         <select name="utente_id" id="cs-utente" required>
-          <option value="{{ uid }}" data-name="{{ nome }} {{ cognome }} (me)">Ã°Å¸â€˜Â¤ Me stesso ({{ nome }} {{ cognome }})</option>
+          <option value="{{ uid }}" data-name="{{ nome }} {{ cognome }} (me)">ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â¤ Me stesso ({{ nome }} {{ cognome }})</option>
           {% for sq in squadre %}{% for m in sq.membri %}
-          <option value="{{ m.id }}" data-name="{{ m.nome }} {{ m.cognome }}">Ã°Å¸â€˜Â¥ {{ m.nome }} {{ m.cognome }}{% if m.mansione %} Ã‚Â· {{ m.mansione }}{% endif %}</option>
+          <option value="{{ m.id }}" data-name="{{ m.nome }} {{ m.cognome }}">ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â¥ {{ m.nome }} {{ m.cognome }}{% if m.mansione %} Ãƒâ€šÃ‚Â· {{ m.mansione }}{% endif %}</option>
           {% endfor %}{% endfor %}
         </select>
       </div>
@@ -27827,25 +27930,25 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#7c3aed;backgr
         <div>
           <label class="field-label">Fiera</label>
           <select name="cantiere_id" id="cs-cantiere" required onchange="aggiornaGfCs()">
-            <option value="">Ã¢â‚¬â€ Seleziona Ã¢â‚¬â€</option>
+            <option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Seleziona ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
             {% for c in cantieri %}
-            <option value="{{ c.id }}" data-gf="{{ c.geofence_modalita or 'disattivato' }}" data-name="{{ c.nome }}">{{ c.nome }}{% if c.geofence_modalita == 'obbligatorio' %} Ã°Å¸â€â€™{% elif c.geofence_modalita == 'avviso' %} Ã¢Å¡Â Ã¯Â¸Â{% endif %}</option>
+            <option value="{{ c.id }}" data-gf="{{ c.geofence_modalita or 'disattivato' }}" data-name="{{ c.nome }}">{{ c.nome }}{% if c.geofence_modalita == 'obbligatorio' %} ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬â„¢{% elif c.geofence_modalita == 'avviso' %} ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â{% endif %}</option>
             {% endfor %}
           </select>
         </div>
       </div>
 
-      <!-- Toggle modalitÃƒÂ  -->
+      <!-- Toggle modalitÃƒÆ’Ã‚Â  -->
       <div class="mod-toggle">
         <label class="mod-pill active" id="cs-pill-ore">
-          <input type="radio" name="modalita" value="ore" checked onchange="toggleModCs()"> Ã¢ÂÂ± Ore totali
+          <input type="radio" name="modalita" value="ore" checked onchange="toggleModCs()"> ÃƒÂ¢Ã‚ÂÃ‚Â± Ore totali
         </label>
         <label class="mod-pill" id="cs-pill-orari">
-          <input type="radio" name="modalita" value="orari" onchange="toggleModCs()"> Ã°Å¸â€¢Â Entrata/Uscita
+          <input type="radio" name="modalita" value="orari" onchange="toggleModCs()"> ÃƒÂ°Ã…Â¸Ã¢â‚¬Â¢Ã‚Â Entrata/Uscita
         </label>
       </div>
 
-      <!-- ModalitÃƒÂ  ore -->
+      <!-- ModalitÃƒÆ’Ã‚Â  ore -->
       <div id="cs-grp-ore">
         <div class="form-row">
           <div>
@@ -27865,7 +27968,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#7c3aed;backgr
         </div>
       </div>
 
-      <!-- ModalitÃƒÂ  orari -->
+      <!-- ModalitÃƒÆ’Ã‚Â  orari -->
       <div id="cs-grp-orari" style="display:none">
         <div class="form-row">
           <div>
@@ -27900,7 +28003,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#7c3aed;backgr
   </div>
 </div>
 
-<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â TAB FIERE Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+<!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â TAB FIERE ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
 <div id="tab-fiere" class="tab-pane">
   <div class="card">
     <div class="card-title"><i class="fa fa-store"></i> Fiere assegnate</div>
@@ -27910,7 +28013,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#7c3aed;backgr
         <div class="fiera-name">{{ f.nome }}</div>
         <div class="fiera-meta">
           {% if f.committente %}<i class="fa fa-handshake"></i> {{ f.committente }}<br>{% endif %}
-          {% if f.padiglione %}<i class="fa fa-map-marker-alt"></i> {{ f.padiglione }}{% if f.numero_stand %} Ã‚Â· Stand {{ f.numero_stand }}{% endif %}<br>{% endif %}
+          {% if f.padiglione %}<i class="fa fa-map-marker-alt"></i> {{ f.padiglione }}{% if f.numero_stand %} Ãƒâ€šÃ‚Â· Stand {{ f.numero_stand }}{% endif %}<br>{% endif %}
           {% if f.citta %}<i class="fa fa-city"></i> {{ f.citta }}<br>{% endif %}
           {% if f.data_setup %}<i class="fa fa-truck-ramp-box" style="color:#60a5fa"></i> Setup: {{ f.data_setup }}<br>{% endif %}
           {% if f.data_live %}<i class="fa fa-bullhorn" style="color:#4ade80"></i> Live: {{ f.data_live }}<br>{% endif %}
@@ -27918,7 +28021,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#7c3aed;backgr
         </div>
         {% if f.fase %}
         <span class="fiera-status fs-{{ f.fase }}">
-          {% if f.fase=='setup' %}Ã°Å¸â€œÂ¦ In setup{% elif f.fase=='live' %}Ã°Å¸â€Â´ Live oggi{% elif f.fase=='dismantling' %}Ã°Å¸â€œÂ¤ Smontaggio{% elif f.fase=='future' %}Ã°Å¸â€œâ€¦ Futura{% else %}Ã¢Å“â€œ Conclusa{% endif %}
+          {% if f.fase=='setup' %}ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¦ In setup{% elif f.fase=='live' %}ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â´ Live oggi{% elif f.fase=='dismantling' %}ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¤ Smontaggio{% elif f.fase=='future' %}ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¦ Futura{% else %}ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Conclusa{% endif %}
         </span>
         {% endif %}
         {% if f.note_tecniche or f.note_logistica %}
@@ -27931,7 +28034,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#7c3aed;backgr
       </div>
       {% endfor %}
     {% else %}
-      <div class="empty"><i class="fa fa-store-slash"></i><p>Nessuna fiera assegnata.<br>L'admin ti assegnerÃƒÂ  a una fiera tramite incarichi.</p></div>
+      <div class="empty"><i class="fa fa-store-slash"></i><p>Nessuna fiera assegnata.<br>L'admin ti assegnerÃƒÆ’Ã‚Â  a una fiera tramite incarichi.</p></div>
     {% endif %}
   </div>
 </div>
@@ -27975,9 +28078,9 @@ function aggiornaGfCs() {
   if (!opt || !opt.value) { status.textContent = ''; status.className = 'gps-status'; return; }
   var gf = opt.dataset.gf;
   if (gf === 'obbligatorio') {
-    status.innerHTML = 'Ã°Å¸â€â€™ GPS <strong>obbligatorio</strong> per questa fiera';
+    status.innerHTML = 'ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬â„¢ GPS <strong>obbligatorio</strong> per questa fiera';
   } else if (gf === 'avviso') {
-    status.innerHTML = 'Ã¢Å¡Â Ã¯Â¸Â GPS richiesto (modalitÃƒÂ  avviso)';
+    status.innerHTML = 'ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â GPS richiesto (modalitÃƒÆ’Ã‚Â  avviso)';
   } else {
     status.textContent = '';
   }
@@ -28014,21 +28117,21 @@ function submitTimbCs(ev) {
 
   btn.disabled = true;
   btn.innerHTML = '<i class="fa fa-location-crosshairs"></i> GPS...';
-  status.innerHTML = 'Ã°Å¸â€œÂ Acquisizione posizione...';
+  status.innerHTML = 'ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â Acquisizione posizione...';
   status.className = 'gps-status';
 
   navigator.geolocation.getCurrentPosition(
     function(pos) {
       document.getElementById('cs-lat').value = pos.coords.latitude.toFixed(6);
       document.getElementById('cs-lng').value = pos.coords.longitude.toFixed(6);
-      status.innerHTML = 'Ã¢Å“â€œ Posizione rilevata';
+      status.innerHTML = 'ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Posizione rilevata';
       status.className = 'gps-status ok';
       _csSubmitting = true;
       btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Invio...';
       document.getElementById('form-timb-cs').submit();
     },
     function(err) {
-      status.innerHTML = 'Ã¢Å¡Â Ã¯Â¸Â GPS non disponibile';
+      status.innerHTML = 'ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â GPS non disponibile';
       status.className = 'gps-status err';
       btn.disabled = false;
       btn.innerHTML = '<i class="fa fa-paper-plane"></i> Invia richiesta';
@@ -28164,7 +28267,7 @@ def mobile_cs():
         ore_squadra = 0.0
         n_timb_squadra = 0
 
-    # Ultime timbrature della squadra (e mie) Ã¢â‚¬â€ ultime 8
+    # Ultime timbrature della squadra (e mie) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â ultime 8
     member_ids_with_self = list(membri_ids) + [uid]
     placeholders = ','.join('?' * len(member_ids_with_self))
     timb_recenti_raw = db.execute(f"""
@@ -28191,7 +28294,7 @@ def mobile_cs():
     timbrature_recenti = []
     for t in timb_recenti_raw:
         td = dict(t)
-        # Mappa stato Ã¢â€ â€™ ts_attesa/ts_approvata/ts_rifiutata
+        # Mappa stato ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ ts_attesa/ts_approvata/ts_rifiutata
         st = td['stato']
         if st == 'in_attesa': td['stato'] = 'attesa'
         elif st == 'approvata': td['stato'] = 'approvata'
@@ -28232,7 +28335,7 @@ def mobile_cs():
 @app.route('/mobile/cs/timbra', methods=['POST'])
 @login_required
 def mobile_cs_timbra():
-    """Caposquadra inserisce una richiesta presenza per sÃƒÂ© o per un membro della sua squadra."""
+    """Caposquadra inserisce una richiesta presenza per sÃƒÆ’Ã‚Â© o per un membro della sua squadra."""
     if session.get('ruolo') != 'caposquadra':
         flash('Operazione non consentita.', 'error')
         return redirect(url_for('login'))
@@ -28246,7 +28349,7 @@ def mobile_cs_timbra():
 
     db = get_db()
     membri_ids = get_squadra_membri_ids(db, cs_id)
-    # Il cs puÃƒÂ² timbrare per se stesso O per un membro della sua squadra
+    # Il cs puÃƒÆ’Ã‚Â² timbrare per se stesso O per un membro della sua squadra
     if target_uid != cs_id and target_uid not in membri_ids:
         db.close()
         flash('Puoi timbrare solo per te o per un membro della tua squadra.', 'error')
@@ -28267,7 +28370,7 @@ def mobile_cs_timbra():
         flash('Seleziona la fiera.', 'error')
         return redirect(url_for('mobile_cs'))
 
-    # Geofencing check (solo se sta timbrando per se stesso Ã¢â‚¬â€ per i membri non ha senso)
+    # Geofencing check (solo se sta timbrando per se stesso ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â per i membri non ha senso)
     if target_uid == cs_id:
         cant = db.execute("""SELECT lat, lng, raggio_geofence_metri, geofence_modalita, nome
                              FROM cantieri WHERE id=?""", (int(cantiere_id),)).fetchone()
@@ -28275,14 +28378,14 @@ def mobile_cs_timbra():
             if lat is None or lng is None:
                 if cant['geofence_modalita'] == 'obbligatorio':
                     db.close()
-                    flash(f'Ã¢â€ºâ€ GPS richiesto per "{cant["nome"]}". Abilita la geolocalizzazione.', 'error')
+                    flash(f'ÃƒÂ¢Ã¢â‚¬ÂºÃ¢â‚¬Â GPS richiesto per "{cant["nome"]}". Abilita la geolocalizzazione.', 'error')
                     return redirect(url_for('mobile_cs'))
             else:
                 distanza = _haversine_metri(lat, lng, cant['lat'], cant['lng'])
                 raggio = cant['raggio_geofence_metri'] or 200
                 if distanza is not None and distanza > raggio and cant['geofence_modalita'] == 'obbligatorio':
                     db.close()
-                    flash(f'Ã¢â€ºâ€ Sei a {distanza}m da "{cant["nome"]}" (max {raggio}m). Rifiutata.', 'error')
+                    flash(f'ÃƒÂ¢Ã¢â‚¬ÂºÃ¢â‚¬Â Sei a {distanza}m da "{cant["nome"]}" (max {raggio}m). Rifiutata.', 'error')
                     return redirect(url_for('mobile_cs'))
 
     ora_e = ora_u = None
@@ -28336,7 +28439,7 @@ def mobile_cs_timbra():
                      (target_uid, data, int(cantiere_id))).fetchone()
     if gia:
         db.close()
-        flash('Esiste giÃƒÂ  una richiesta in attesa per questo giorno e fiera.', 'error')
+        flash('Esiste giÃƒÆ’Ã‚Â  una richiesta in attesa per questo giorno e fiera.', 'error')
         return redirect(url_for('mobile_cs'))
 
     cur_req = db.execute("""INSERT INTO richieste_presenze
@@ -28362,9 +28465,9 @@ def mobile_cs_timbra():
         print(f'[notifica admin presenza cs] {e}')
 
     if target_uid == cs_id:
-        flash(f'Ã¢Å“â€¦ Richiesta inviata ({ore_nette}h) Ã¢â‚¬â€ in attesa di approvazione.', 'success')
+        flash(f'ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Richiesta inviata ({ore_nette}h) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â in attesa di approvazione.', 'success')
     else:
-        flash(f'Ã¢Å“â€¦ Richiesta per {targ_nome} inviata ({ore_nette}h).', 'success')
+        flash(f'ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Richiesta per {targ_nome} inviata ({ore_nette}h).', 'success')
     return redirect(url_for('mobile_cs'))
 
 
@@ -28414,7 +28517,7 @@ def mobile():
 
     from datetime import date
     oggi = date.today()
-    giorni_it = ['LunedÃƒÂ¬','MartedÃƒÂ¬','MercoledÃƒÂ¬','GiovedÃƒÂ¬','VenerdÃƒÂ¬','Sabato','Domenica']
+    giorni_it = ['LunedÃƒÆ’Ã‚Â¬','MartedÃƒÆ’Ã‚Â¬','MercoledÃƒÆ’Ã‚Â¬','GiovedÃƒÆ’Ã‚Â¬','VenerdÃƒÆ’Ã‚Â¬','Sabato','Domenica']
     mesi_it = ['gennaio','febbraio','marzo','aprile','maggio','giugno',
                'luglio','agosto','settembre','ottobre','novembre','dicembre']
 
@@ -28472,20 +28575,20 @@ def mobile_inserisci():
         if lat is None or lng is None:
             if cant['geofence_modalita'] == 'obbligatorio':
                 db.close()
-                flash(f'Ã¢â€ºâ€ Per registrare le ore in "{cant["nome"]}" ÃƒÂ¨ richiesta la posizione GPS. Abilita la geolocalizzazione del browser e riprova.', 'error')
+                flash(f'ÃƒÂ¢Ã¢â‚¬ÂºÃ¢â‚¬Â Per registrare le ore in "{cant["nome"]}" ÃƒÆ’Ã‚Â¨ richiesta la posizione GPS. Abilita la geolocalizzazione del browser e riprova.', 'error')
                 return redirect(url_for('mobile'))
             else:
-                geofence_warning = 'Ã¢Å¡Â Ã¯Â¸Â GPS non disponibile (modalitÃƒÂ  avviso)'
+                geofence_warning = 'ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â GPS non disponibile (modalitÃƒÆ’Ã‚Â  avviso)'
         else:
             distanza = _haversine_metri(lat, lng, cant['lat'], cant['lng'])
             raggio = cant['raggio_geofence_metri'] or 200
             if distanza is not None and distanza > raggio:
                 if cant['geofence_modalita'] == 'obbligatorio':
                     db.close()
-                    flash(f'Ã¢â€ºâ€ Sei a {distanza}m dalla fiera "{cant["nome"]}" (raggio massimo {raggio}m). Registrazione rifiutata.', 'error')
+                    flash(f'ÃƒÂ¢Ã¢â‚¬ÂºÃ¢â‚¬Â Sei a {distanza}m dalla fiera "{cant["nome"]}" (raggio massimo {raggio}m). Registrazione rifiutata.', 'error')
                     return redirect(url_for('mobile'))
                 else:
-                    geofence_warning = f'Ã¢Å¡Â Ã¯Â¸Â Sei a {distanza}m dalla fiera (raggio {raggio}m)'
+                    geofence_warning = f'ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Sei a {distanza}m dalla fiera (raggio {raggio}m)'
 
     ora_e = ora_u = None
     ore_nette = 0
@@ -28511,7 +28614,7 @@ def mobile_inserisci():
             return redirect(url_for('mobile'))
         nota_completa = f"Entrata {ora_e} - Uscita {ora_u} | Pausa: {pausa}h - Ore nette: {ore_nette}h"
     else:
-        # ModalitÃƒÂ  "ore totali"
+        # ModalitÃƒÆ’Ã‚Â  "ore totali"
         ore_str = request.form.get('ore', '').strip()
         pausa_str = request.form.get('pausa', '0')
         try:
@@ -28526,17 +28629,17 @@ def mobile_inserisci():
             db.close()
             flash('Inserisci le ore lavorate.', 'error')
             return redirect(url_for('mobile'))
-        nota_completa = f"Pausa: {pausa}h Ã¢â‚¬â€ Ore nette: {ore_nette}h"
+        nota_completa = f"Pausa: {pausa}h ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Ore nette: {ore_nette}h"
 
     if note:
         nota_completa += f" | {note}"
 
-    # Tutti i dipendenti (anche supervisori) mandano la richiesta Ã¢â‚¬â€ l'admin approva sempre
+    # Tutti i dipendenti (anche supervisori) mandano la richiesta ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â l'admin approva sempre
     gia_pendente = db.execute(
         "SELECT id FROM richieste_presenze WHERE utente_id=? AND data=? AND cantiere_id=? AND stato='in_attesa'",
         (uid, data, int(cantiere_id))).fetchone()
     if gia_pendente:
-        flash('Hai giÃƒÂ  una richiesta in attesa per questo giorno e cantiere.', 'error')
+        flash('Hai giÃƒÆ’Ã‚Â  una richiesta in attesa per questo giorno e cantiere.', 'error')
         db.close(); return redirect(url_for('mobile'))
 
     cur_req = db.execute(
@@ -28545,7 +28648,7 @@ def mobile_inserisci():
     rid_new = cur_req.lastrowid
     safe_commit(db)
     db.close()
-    # Notifica email admin Ã¢â‚¬â€ in background per non bloccare la risposta
+    # Notifica email admin ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â in background per non bloccare la risposta
     email_admin = get_setting('email_notifiche', '')
     nome_dip = f"{session.get('nome','')} {session.get('cognome','')}".strip()
     try:
@@ -28565,20 +28668,20 @@ def mobile_inserisci():
                 send_email(email_admin,
                     f'[ACCESSO FIERE] Richiesta ore da {nome_dip}',
                     f'<p><b>{nome_dip}</b> ha inviato una richiesta ore per il <b>{data}</b>.<br>'
-                    f'Ore nette: {ore_nette}h Ã¢â‚¬â€ Pausa: {pausa}h<br>Note: {note or "Ã¢â‚¬â€œ"}</p>'
-                    f'<p><a href="{_base}/admin/richieste" style="background:#2563eb;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:700">Approva o rifiuta Ã¢â€ â€™</a></p>')
+                    f'Ore nette: {ore_nette}h ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Pausa: {pausa}h<br>Note: {note or "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“"}</p>'
+                    f'<p><a href="{_base}/admin/richieste" style="background:#2563eb;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:700">Approva o rifiuta ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</a></p>')
             except: pass
         threading.Thread(target=_send, daemon=True).start()
-    success_msg = f'Ã¢Å“â€¦ Richiesta inviata per {data} ({ore_nette}h) Ã¢â‚¬â€ in attesa di approvazione.'
+    success_msg = f'ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Richiesta inviata per {data} ({ore_nette}h) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â in attesa di approvazione.'
     if geofence_warning:
         success_msg += f' {geofence_warning}'
     flash(success_msg, 'success')
     return redirect(url_for('mobile'))
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-#  MOBILE Ã¢â‚¬â€ LE MIE ORE
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
+#  MOBILE ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â LE MIE ORE
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
 MIE_ORE_TMPL = """<!DOCTYPE html>
 <html lang="{{ lang }}" dir="{{ t.dir }}">
@@ -28654,8 +28757,8 @@ select option{background:#1e293b}
   {% if righe %}
   <div class="totale-box">
     <div class="totale-num">{{ totale_ore }}h</div>
-    <div class="totale-label">{{ t.approved_total }}{% if mese_sel %} Ã¢â‚¬â€ {{ mese_label }}{% endif %}</div>
-    <div class="totale-sub">{{ n_approvate }} {{ t.days_worked_lbl }} Ã‚Â· {{ n_attesa }} {{ t.pending_lbl }}</div>
+    <div class="totale-label">{{ t.approved_total }}{% if mese_sel %} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {{ mese_label }}{% endif %}</div>
+    <div class="totale-sub">{{ n_approvate }} {{ t.days_worked_lbl }} Ãƒâ€šÃ‚Â· {{ n_attesa }} {{ t.pending_lbl }}</div>
   </div>
 
   <!-- Download PDF -->
@@ -28671,12 +28774,12 @@ select option{background:#1e293b}
       <div>
         <div class="row-data">{{ r.data }}</div>
         <div class="row-cantiere">{{ r.cantiere_nome or t.no_site }}</div>
-        {% if r.stato == 'in_attesa' %}<span class="badge badge-wait">Ã¢ÂÂ³ {{ t.status_waiting }}</span>
-        {% elif r.stato == 'approvata' %}<span class="badge badge-ok">Ã¢Å“â€œ {{ t.status_approved }}</span>
-        {% elif r.stato == 'rifiutata' %}<span class="badge badge-no">Ã¢Å“â€” {{ t.status_rejected }}</span>{% endif %}
+        {% if r.stato == 'in_attesa' %}<span class="badge badge-wait">ÃƒÂ¢Ã‚ÂÃ‚Â³ {{ t.status_waiting }}</span>
+        {% elif r.stato == 'approvata' %}<span class="badge badge-ok">ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ {{ t.status_approved }}</span>
+        {% elif r.stato == 'rifiutata' %}<span class="badge badge-no">ÃƒÂ¢Ã…â€œÃ¢â‚¬â€ {{ t.status_rejected }}</span>{% endif %}
       </div>
       <div style="text-align:right">
-        <div class="row-ore">{{ r.ore_totali or 'Ã¢â‚¬â€œ' }}h</div>
+        <div class="row-ore">{{ r.ore_totali or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}h</div>
       </div>
     </div>
     {% endfor %}
@@ -28685,7 +28788,7 @@ select option{background:#1e293b}
   {% else %}
   <div class="empty">
     <i class="fa fa-clock"></i>
-    <div>{{ t.no_entries }}{% if mese_sel %} Ã¢â‚¬â€ {{ mese_label }}{% endif %}</div>
+    <div>{{ t.no_entries }}{% if mese_sel %} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {{ mese_label }}{% endif %}</div>
   </div>
   {% endif %}
 </div>
@@ -28700,7 +28803,7 @@ def mobile_mie_ore():
     mese_sel = request.args.get('mese', '')
     db = get_db()
 
-    # Mesi disponibili Ã¢â‚¬â€ leggiamo da ENTRAMBE le tabelle
+    # Mesi disponibili ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â leggiamo da ENTRAMBE le tabelle
     tutti = db.execute(
         """SELECT DISTINCT substr(data,1,7) as m FROM presenze WHERE utente_id=?
            UNION
@@ -28716,7 +28819,7 @@ def mobile_mie_ore():
         label = f"{mesi_nomi[int(mese)]} {anno}"
         mesi_disponibili.append({'val': val, 'label': label})
 
-    # Righe approvate = presenze reali (fonte di veritÃƒÂ )
+    # Righe approvate = presenze reali (fonte di veritÃƒÆ’Ã‚Â )
     if mese_sel:
         pres = db.execute(
             """SELECT p.id, p.data, p.ora_entrata, p.ora_uscita, p.ore_totali, p.note,
@@ -28860,7 +28963,7 @@ def mobile_mie_ore_pdf():
         'spese_amount': t.get('report_spese_amount', 'Importo'),
         'spese_total': t.get('report_spese_total', 'TOTALE RIMBORSI'),
         'footer': t.get('report_footer', 'Report generato automaticamente da'),
-        'employee': 'Dipendente' if lang=='it' else ('EmployÃƒÂ©' if lang=='fr' else ('Employee' if lang=='en' else 'Ã˜Â§Ã™â€žÃ™â€¦Ã™Ë†Ã˜Â¸Ã™Â')),
+        'employee': 'Dipendente' if lang=='it' else ('EmployÃƒÆ’Ã‚Â©' if lang=='fr' else ('Employee' if lang=='en' else 'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¸Ãƒâ„¢Ã‚Â')),
     }
     rtl = 'rtl' if lang == 'ar' else 'ltr'
 
@@ -28887,7 +28990,7 @@ tbody td{{padding:9px 12px;border-bottom:1px solid #e2e8f0;font-size:12px}}
 </style></head>
 <body>
 <h1>{lbl['title']}</h1>
-<div class="sub">{azienda} Ã¢â‚¬â€ {oggi}</div>
+<div class="sub">{azienda} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {oggi}</div>
 <div class="info-grid">
   <div class="info-item"><label>{lbl['employee']}</label><span>{nome_completo}</span></div>
   <div class="info-item"><label>{lbl['period']}</label><span>{mese_label}</span></div>
@@ -28904,23 +29007,23 @@ tbody td{{padding:9px 12px;border-bottom:1px solid #e2e8f0;font-size:12px}}
             note = note.split(' | ', 1)[1]
         elif note.startswith('Pausa:'):
             note = ''
-        html += f"<tr><td>{r['data']}</td><td>{r['cantiere_nome'] or 'Ã¢â‚¬â€œ'}</td><td><strong>{r['ore_totali'] or 0}h</strong></td><td>{note}</td></tr>"
+        html += f"<tr><td>{r['data']}</td><td>{r['cantiere_nome'] or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“'}</td><td><strong>{r['ore_totali'] or 0}h</strong></td><td>{note}</td></tr>"
 
     html += f"""<tr class="total-row"><td colspan="2">{lbl['total_row']}</td><td>{totale_ore}h</td><td>{len(righe)} {t.get('days_worked_lbl','giorni lavorati')}</td></tr>
 </tbody></table>"""
 
     # Sezione spese se presenti
     if spese_rows:
-        html += f"""<h2><i>Ã°Å¸â€™Â¶</i> {lbl['spese_title']}</h2>
+        html += f"""<h2><i>ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¶</i> {lbl['spese_title']}</h2>
 <table class="spese-table">
 <thead><tr><th>{lbl['col_date']}</th><th>{lbl['spese_cat']}</th><th>{lbl['spese_desc']}</th><th>{lbl['spese_vehicle']}</th><th style="text-align:right">{lbl['spese_amount']}</th></tr></thead>
 <tbody>"""
         for s in spese_rows:
-            html += f"<tr><td>{s['data']}</td><td>{s['categoria']}</td><td>{s['descrizione'] or 'Ã¢â‚¬â€œ'}</td><td>{s['veicolo_targa'] or 'Ã¢â‚¬â€œ'}</td><td style='text-align:right;font-weight:700'>Ã¢â€šÂ¬ {s['importo']:.2f}</td></tr>"
-        html += f"""<tr class="spese-total-row"><td colspan="4">{lbl['spese_total']}</td><td style="text-align:right">Ã¢â€šÂ¬ {totale_spese:.2f}</td></tr>
+            html += f"<tr><td>{s['data']}</td><td>{s['categoria']}</td><td>{s['descrizione'] or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“'}</td><td>{s['veicolo_targa'] or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“'}</td><td style='text-align:right;font-weight:700'>ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {s['importo']:.2f}</td></tr>"
+        html += f"""<tr class="spese-total-row"><td colspan="4">{lbl['spese_total']}</td><td style="text-align:right">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {totale_spese:.2f}</td></tr>
 </tbody></table>"""
 
-    html += f"""<div class="footer">{lbl['footer']} {azienda} Ã¢â‚¬â€ {oggi}</div>
+    html += f"""<div class="footer">{lbl['footer']} {azienda} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {oggi}</div>
 </body></html>"""
 
     try:
@@ -28934,9 +29037,9 @@ tbody td{{padding:9px 12px;border-bottom:1px solid #e2e8f0;font-size:12px}}
         return Response(html_print, mimetype='text/html')
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-#  POS Ã¢â‚¬â€ PIANO OPERATIVO DI SICUREZZA
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
+#  POS ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â PIANO OPERATIVO DI SICUREZZA
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
 POS_LIST_TMPL = """
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
@@ -28951,10 +29054,10 @@ POS_LIST_TMPL = """
     <tbody>{% for p in pos_list %}
     <tr>
       <td><strong>{{ p.titolo }}</strong></td>
-      <td>{{ p.cantiere_nome or 'Ã¢â‚¬â€œ' }}<br><small style="color:var(--text-light)">{{ p.cantiere_indirizzo or '' }}</small></td>
-      <td>{{ p.committente or 'Ã¢â‚¬â€œ' }}</td>
-      <td style="font-family:monospace">{{ p.data_inizio or 'Ã¢â‚¬â€œ' }}</td>
-      <td style="font-family:monospace">{{ p.data_fine or 'Ã¢â‚¬â€œ' }}</td>
+      <td>{{ p.cantiere_nome or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}<br><small style="color:var(--text-light)">{{ p.cantiere_indirizzo or '' }}</small></td>
+      <td>{{ p.committente or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
+      <td style="font-family:monospace">{{ p.data_inizio or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
+      <td style="font-family:monospace">{{ p.data_fine or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
       <td><span class="badge badge-purple">{{ p.num_lavoratori }} pers.</span></td>
       <td style="font-size:12px;color:var(--text-light)">{{ p.creato_il[:10] }}</td>
       <td style="display:flex;gap:6px">
@@ -29086,7 +29189,7 @@ def _pos_pdf_html(pos_data, azienda_data, personale):
     # Formatta date in italiano
     def fmt_date(d):
         if not d:
-            return 'Ã¢â‚¬â€œ'
+            return 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“'
         try:
             from datetime import datetime as _dt
             return _dt.strptime(d, '%Y-%m-%d').strftime('%d/%m/%Y')
@@ -29156,9 +29259,9 @@ def _pos_pdf_html(pos_data, azienda_data, personale):
 </head>
 <body>
 
-<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+<!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
      COPERTINA
-Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
 <div class="cover">
   <div class="cover-logo">{nome_az}</div>
   <div class="cover-subtitle">PIANO OPERATIVO DI SICUREZZA</div>
@@ -29176,26 +29279,26 @@ def _pos_pdf_html(pos_data, azienda_data, personale):
   <div class="cover-date">DATA {fmt_date(data_doc)}</div>
 </div>
 
-<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+<!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
      INTESTAZIONE RIPETUTA
-Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
 <div class="page-header">
   <div class="az">{nome_az}</div>
   <div class="doc-title">PIANO OPERATIVO DI SICUREZZA</div>
   <div class="cantiere-short">Cantiere {cantiere_ind}<br>presso {cantiere_nome}<br>Rev. 00</div>
 </div>
 
-<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-     1. GENERALITÃƒâ‚¬
-Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+<!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
+     1. GENERALITÃƒÆ’Ã¢â€šÂ¬
+ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
 <div class="section">
-<h3>1.0 GENERALITÃƒâ‚¬</h3>
+<h3>1.0 GENERALITÃƒÆ’Ã¢â€šÂ¬</h3>
 <h4>1.1 PRESENTAZIONE DEL PIANO</h4>
-<p>Il presente Piano di Sicurezza Allestimento Fieristico ÃƒÂ¨ stato redatto ai sensi del D.Lgs 81/08 e rappresenta il documento di pianificazione delle misure di sicurezza della fiera dalla Ditta. Il presente Piano ÃƒÂ¨ da considerarsi come Piano di dettaglio e da includersi nel piÃƒÂ¹ generale Piano di Sicurezza e Coordinamento. Il Piano contiene quanto richiesto dal D.Lgs 81/08 e precisamente:</p>
+<p>Il presente Piano di Sicurezza Allestimento Fieristico ÃƒÆ’Ã‚Â¨ stato redatto ai sensi del D.Lgs 81/08 e rappresenta il documento di pianificazione delle misure di sicurezza della fiera dalla Ditta. Il presente Piano ÃƒÆ’Ã‚Â¨ da considerarsi come Piano di dettaglio e da includersi nel piÃƒÆ’Ã‚Â¹ generale Piano di Sicurezza e Coordinamento. Il Piano contiene quanto richiesto dal D.Lgs 81/08 e precisamente:</p>
 <ul>
   <li>I dati identificativi dell'impresa esecutrice, che comprendono: il nominativo del datore di lavoro, gli indirizzi ed i riferimenti telefonici della sede legale e degli uffici di cantiere; i nominativi degli addetti al pronto soccorso, antincendio ed evacuazione dei lavoratori.</li>
   <li>Le specifiche mansioni, inerenti la sicurezza, svolte in cantiere da ogni figura nominata allo scopo dall'impresa esecutrice.</li>
-  <li>La descrizione dell'attivitÃƒÂ  di cantiere, delle modalitÃƒÂ  organizzative e dei turni di lavoro.</li>
+  <li>La descrizione dell'attivitÃƒÆ’Ã‚Â  di cantiere, delle modalitÃƒÆ’Ã‚Â  organizzative e dei turni di lavoro.</li>
   <li>L'elenco dei ponteggi, dei ponti su ruote a torre e di altre opere provvisionali di notevole importanza, delle macchine e degli impianti utilizzati nel cantiere.</li>
   <li>L'elenco delle sostanze e preparati pericolosi utilizzati nel cantiere con le relative schede di sicurezza.</li>
   <li>L'esito del rapporto di valutazione del rumore.</li>
@@ -29206,9 +29309,9 @@ def _pos_pdf_html(pos_data, azienda_data, personale):
 </ul>
 </div>
 
-<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+<!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
      1.3 ANAGRAFICA
-Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
 <div class="section chapter">
 <div class="page-header">
   <div class="az">{nome_az}</div>
@@ -29219,7 +29322,7 @@ def _pos_pdf_html(pos_data, azienda_data, personale):
 <table class="table-2col">
   <tbody>
     <tr><td>Nome e sede legale</td><td><strong>{nome_az}</strong> {sede_legale}</td></tr>
-    <tr><td>AttivitÃƒÂ </td><td>{attivita}</td></tr>
+    <tr><td>AttivitÃƒÆ’Ã‚Â </td><td>{attivita}</td></tr>
     <tr><td>Posizione INAIL</td><td>Codice ditta n. {inail}</td></tr>
     <tr><td>Posizione INPS</td><td>n. {inps}</td></tr>
     <tr><td>Iscrizione C.C.I.A.A.</td><td>{cciaa}</td></tr>
@@ -29260,9 +29363,9 @@ def _pos_pdf_html(pos_data, azienda_data, personale):
 {"<div class='alert-box'><strong>Note cantiere:</strong> " + note_cantiere + "</div>" if note_cantiere else ""}
 </div>
 
-<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+<!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
      2. RELAZIONE TECNICA
-Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
 <div class="section chapter">
 <div class="page-header">
   <div class="az">{nome_az}</div>
@@ -29271,13 +29374,13 @@ def _pos_pdf_html(pos_data, azienda_data, personale):
 </div>
 <h3>2.0 RELAZIONE TECNICA</h3>
 <h4>2.1 DESCRIZIONE DEI LAVORI</h4>
-<p>Nel Cantiere oggetto del presente Piano di Sicurezza Allestimento Fieristico, {nome_az} eseguirÃƒÂ  i seguenti lavori:</p>
+<p>Nel Cantiere oggetto del presente Piano di Sicurezza Allestimento Fieristico, {nome_az} eseguirÃƒÆ’Ã‚Â  i seguenti lavori:</p>
 <ul><li>{opere}</li></ul>
-<p>Durante le lavorazioni il personale dovrÃƒÂ  obbligatoriamente indossare i Dispositivi di Protezione Individuale (DPI) quali: scarpe antinfortunistiche, guanti da lavoro, elmetto, dispositivi per la protezione degli occhi ove necessario.</p>
+<p>Durante le lavorazioni il personale dovrÃƒÆ’Ã‚Â  obbligatoriamente indossare i Dispositivi di Protezione Individuale (DPI) quali: scarpe antinfortunistiche, guanti da lavoro, elmetto, dispositivi per la protezione degli occhi ove necessario.</p>
 
 <h4>2.2 PROGRAMMA TEMPORALE DEI LAVORI</h4>
 <p>Le lavorazioni avranno presumibilmente inizio il giorno <strong>{fmt_date(data_inizio)}</strong> e fine il giorno <strong>{fmt_date(data_fine)}</strong>. Le lavorazioni verranno eseguite da {nome_az}.</p>
-<p>Il piano di esecuzione dei lavori prevede una ripartizione programmata delle attivitÃƒÂ  nel periodo di validitÃƒÂ  contrattuale, con l'obiettivo di completare le lavorazioni entro i tempi indicati dalla Committente.</p>
+<p>Il piano di esecuzione dei lavori prevede una ripartizione programmata delle attivitÃƒÆ’Ã‚Â  nel periodo di validitÃƒÆ’Ã‚Â  contrattuale, con l'obiettivo di completare le lavorazioni entro i tempi indicati dalla Committente.</p>
 
 <h4>2.3 MANSIONI INERENTI ALLA SICUREZZA</h4>
 <p>Il Datore di lavoro deve assolvere ai seguenti obblighi:</p>
@@ -29287,27 +29390,27 @@ def _pos_pdf_html(pos_data, azienda_data, personale):
   <li>Designare i lavoratori incaricati di attuare le misure di Pronto Soccorso, Salvataggio, Prevenzione Incendi e gestione dell'Emergenza.</li>
   <li>Designare il Responsabile del Servizio di Prevenzione e Protezione.</li>
   <li>Provvedere alla sorveglianza sanitaria del personale dipendente.</li>
-  <li>Disporre affinchÃƒÂ© venga assicurato il pieno rispetto di tutte le norme di Legge e di buona tecnica in materia di igiene e sicurezza.</li>
+  <li>Disporre affinchÃƒÆ’Ã‚Â© venga assicurato il pieno rispetto di tutte le norme di Legge e di buona tecnica in materia di igiene e sicurezza.</li>
   <li>Fornire ai lavoratori attrezzature di lavoro e dispositivi di protezione individuale rispondenti alle norme in materia di tutela della sicurezza e della salute dei lavoratori.</li>
   <li>Garantire ai lavoratori la necessaria informazione sui rischi generali e particolari e sulle procedure da osservare in caso di emergenza e pronto soccorso.</li>
 </ul>
 
 <h4>2.4 ORGANIZZAZIONE DI CANTIERE E TURNI DI LAVORO</h4>
-<p>{nome_az} non eseguirÃƒÂ , per conto di questa opera, turni di lavoro particolari. Il personale opererÃƒÂ  negli orari concordati con la Committente. Deve conservare in cantiere copia del Piano di Sicurezza e Coordinamento, copia del POS e copia della Notifica Preliminare inviata agli Organi di Vigilanza.</p>
+<p>{nome_az} non eseguirÃƒÆ’Ã‚Â , per conto di questa opera, turni di lavoro particolari. Il personale opererÃƒÆ’Ã‚Â  negli orari concordati con la Committente. Deve conservare in cantiere copia del Piano di Sicurezza e Coordinamento, copia del POS e copia della Notifica Preliminare inviata agli Organi di Vigilanza.</p>
 
 <h4>2.5 ATTREZZATURE E SOSTANZE UTILIZZATE</h4>
 <table>
   <thead><tr><th>Macchine / Attrezzature</th><th>Presenti in cantiere</th><th>Libretto istruzioni</th><th>Verifiche periodiche</th></tr></thead>
   <tbody>
-    <tr><td>Attrezzatura manuale</td><td>&#10003;</td><td>Ã¢â‚¬â€œ</td><td>Ã¢â‚¬â€œ</td></tr>
+    <tr><td>Attrezzatura manuale</td><td>&#10003;</td><td>ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“</td><td>ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“</td></tr>
     <tr><td>Utensili vari</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
   </tbody>
 </table>
 </div>
 
-<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+<!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
      3. VALUTAZIONE DEI RISCHI
-Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
 <div class="section chapter">
 <div class="page-header">
   <div class="az">{nome_az}</div>
@@ -29325,13 +29428,13 @@ def _pos_pdf_html(pos_data, azienda_data, personale):
   <li>Danno all'apparato uditivo da rumore provocato da macchinari ed utensili utilizzati in cantiere.</li>
   <li>Folgorazione per contatti diretti ed indiretti in conseguenza dell'utilizzo di macchine ed apparecchiature elettriche.</li>
   <li>Danno per contatto o per inalazione di sostanze pericolose o nocive alla salute dei lavoratori.</li>
-  <li>Rischi vari per lavorazioni disagevoli dovuti a motivi vari (presenza di acqua, umiditÃƒÂ , spazi ristretti, posizioni scomode ecc.).</li>
+  <li>Rischi vari per lavorazioni disagevoli dovuti a motivi vari (presenza di acqua, umiditÃƒÆ’Ã‚Â , spazi ristretti, posizioni scomode ecc.).</li>
   <li>Rischi derivanti dalle avverse condizioni meteorologiche (vento, pioggia, gelo, fulmini ecc.).</li>
   <li>Rischi derivanti dalla postura e da fattori microclimatici.</li>
 </ul>
 
 <h4>3.2 ESPOSIZIONE AL RUMORE</h4>
-<p>Nel cantiere sono presenti attrezzature che producono un livello sonoro tale che un lavoratore risulta esposto ad una esposizione quotidiana personale pari a LEP &gt; 80 dB(A). ÃƒË† obbligatorio che i lavoratori indossino gli otoprotettori se il livello di rumore emesso risulta superiore agli 80 dB(A).</p>
+<p>Nel cantiere sono presenti attrezzature che producono un livello sonoro tale che un lavoratore risulta esposto ad una esposizione quotidiana personale pari a LEP &gt; 80 dB(A). ÃƒÆ’Ã‹â€  obbligatorio che i lavoratori indossino gli otoprotettori se il livello di rumore emesso risulta superiore agli 80 dB(A).</p>
 
 <h4>3.3 DISPOSITIVI DI PROTEZIONE INDIVIDUALE (D.P.I.)</h4>
 <p>I lavoratori devono utilizzare sempre ed in modo appropriato i dispositivi di protezione individuale che gli sono messi a disposizione. I D.P.I. forniti sono:</p>
@@ -29348,9 +29451,9 @@ def _pos_pdf_html(pos_data, azienda_data, personale):
 </table>
 </div>
 
-<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+<!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
      FIRME
-Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
 <div class="section" style="margin-top:40px">
   <div class="firma-box">
     <div class="firma-item">
@@ -29361,7 +29464,7 @@ def _pos_pdf_html(pos_data, azienda_data, personale):
     </div>
   </div>
   <p style="text-align:center;margin-top:30px;font-size:10px;color:#94a3b8">
-    Documento generato il {fmt_date(data_doc)} Ã¢â‚¬â€ {nome_az} Ã¢â‚¬â€ D.Lgs. 81/08
+    Documento generato il {fmt_date(data_doc)} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {nome_az} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â D.Lgs. 81/08
   </p>
 </div>
 
@@ -29370,9 +29473,9 @@ def _pos_pdf_html(pos_data, azienda_data, personale):
     return html
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-#  SPESE RIMBORSABILI Ã¢â‚¬â€ Mobile + Admin
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
+#  SPESE RIMBORSABILI ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Mobile + Admin
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
 CATEGORIE_SPESA = ['Carburante', 'Pranzo / Cena', 'Pedaggi / Autostrada',
                    'Parcheggio', 'Trasporto / Taxi', 'Materiali', 'Altro']
@@ -29383,9 +29486,9 @@ def get_spese_upload_path():
     return p
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-#  ADMIN Ã¢â‚¬â€ GESTIONE SPESE / RIMBORSI
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
+#  ADMIN ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â GESTIONE SPESE / RIMBORSI
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
 SPESE_ADMIN_TMPL = """
 <style>
@@ -29415,18 +29518,18 @@ SPESE_ADMIN_TMPL = """
 <div class="sp-stats">
   <div class="sp-stat amber">
     <div class="val">{{ n_attesa }}</div>
-    <div class="lbl">Ã¢ÂÂ³ In attesa</div>
+    <div class="lbl">ÃƒÂ¢Ã‚ÂÃ‚Â³ In attesa</div>
   </div>
   <div class="sp-stat verde">
-    <div class="val">Ã¢â€šÂ¬ {{ "%.0f"|format(tot_approvate) }}</div>
-    <div class="lbl">Ã¢Å“â€œ Approvate {{ "(" + mese_corrente + ")" if mese_corrente }}</div>
+    <div class="val">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.0f"|format(tot_approvate) }}</div>
+    <div class="lbl">ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Approvate {{ "(" + mese_corrente + ")" if mese_corrente }}</div>
   </div>
   <div class="sp-stat rosso">
     <div class="val">{{ n_rifiutate }}</div>
-    <div class="lbl">Ã¢Å“â€” Rifiutate</div>
+    <div class="lbl">ÃƒÂ¢Ã…â€œÃ¢â‚¬â€ Rifiutate</div>
   </div>
   <div class="sp-stat blu">
-    <div class="val">Ã¢â€šÂ¬ {{ "%.0f"|format(tot_attesa) }}</div>
+    <div class="val">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.0f"|format(tot_attesa) }}</div>
     <div class="lbl">Importo da valutare</div>
   </div>
 </div>
@@ -29453,7 +29556,7 @@ SPESE_ADMIN_TMPL = """
   <div class="form-group" style="margin:0;min-width:220px">
     <label style="font-size:11px">Dipendente</label>
     <select name="uid" onchange="this.form.submit()">
-      <option value="">Ã¢â‚¬â€ Tutti Ã¢â‚¬â€</option>
+      <option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Tutti ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
       {% for u in tutti_dipendenti %}
       <option value="{{ u.id }}" {{ 'selected' if filtro_uid == u.id|string }}>{{ u.nome }} {{ u.cognome }}</option>
       {% endfor %}
@@ -29503,7 +29606,7 @@ SPESE_ADMIN_TMPL = """
     <a href="/admin/spese/foto/{{ s.foto_nome }}" target="_blank" title="Apri scontrino">
       <img src="/admin/spese/foto/{{ s.foto_nome }}" class="foto-prev" alt="scontrino">
     </a>
-    {% else %}<span style="color:var(--text-light)">Ã¢â‚¬â€</span>{% endif %}
+    {% else %}<span style="color:var(--text-light)">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</span>{% endif %}
   </td>
   <td style="padding:10px 12px;font-family:monospace;font-size:12px">{{ s.data }}</td>
   <td style="padding:10px 12px">
@@ -29513,17 +29616,17 @@ SPESE_ADMIN_TMPL = """
     <span style="background:#eef2ff;color:#3730a3;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700">{{ s.categoria }}</span>
   </td>
   <td style="padding:10px 12px;font-size:13px;max-width:280px">
-    {{ s.descrizione or 'Ã¢â‚¬â€' }}
+    {{ s.descrizione or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â' }}
     {% if s.note_admin %}
     <div style="font-size:11px;color:var(--text-light);margin-top:4px;font-style:italic"><i class="fa fa-note-sticky"></i> Nota admin: {{ s.note_admin }}</div>
     {% endif %}
   </td>
-  <td style="padding:10px 12px;font-size:12px">{{ s.veicolo_targa or 'Ã¢â‚¬â€' }}</td>
-  <td style="padding:10px 12px;text-align:right;font-weight:800;color:#059669;font-size:15px">Ã¢â€šÂ¬ {{ "%.2f"|format(s.importo) }}</td>
+  <td style="padding:10px 12px;font-size:12px">{{ s.veicolo_targa or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â' }}</td>
+  <td style="padding:10px 12px;text-align:right;font-weight:800;color:#059669;font-size:15px">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(s.importo) }}</td>
   <td style="padding:10px 12px;text-align:center">
-    {% if s.stato == 'in_attesa' %}<span class="badge-sp bsp-att">Ã¢ÂÂ³ In attesa</span>
-    {% elif s.stato == 'approvata' %}<span class="badge-sp bsp-app">Ã¢Å“â€œ Approvata</span>
-    {% elif s.stato == 'rifiutata' %}<span class="badge-sp bsp-rif">Ã¢Å“â€” Rifiutata</span>
+    {% if s.stato == 'in_attesa' %}<span class="badge-sp bsp-att">ÃƒÂ¢Ã‚ÂÃ‚Â³ In attesa</span>
+    {% elif s.stato == 'approvata' %}<span class="badge-sp bsp-app">ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Approvata</span>
+    {% elif s.stato == 'rifiutata' %}<span class="badge-sp bsp-rif">ÃƒÂ¢Ã…â€œÃ¢â‚¬â€ Rifiutata</span>
     {% endif %}
   </td>
   <td style="padding:10px 12px;text-align:right;white-space:nowrap">
@@ -29538,14 +29641,14 @@ SPESE_ADMIN_TMPL = """
     </button>
     {% endif %}
     <a href="/admin/spese/{{ s.id }}/elimina"
-       onclick="return confirm('Eliminare questa spesa (Ã¢â€šÂ¬ {{ \"%.2f\"|format(s.importo) }})?')"
+       onclick="return confirm('Eliminare questa spesa (ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ \"%.2f\"|format(s.importo) }})?')"
        class="btn btn-sm btn-danger" title="Elimina"><i class="fa fa-trash"></i></a>
   </td>
 </tr>
 {% endfor %}
 <tr style="background:#f8fafc;font-weight:700">
   <td colspan="6" style="padding:12px;text-align:right;font-size:13px">TOTALE {{ filtro_stato|upper }}</td>
-  <td style="padding:12px;text-align:right;font-size:15px;color:#059669">Ã¢â€šÂ¬ {{ "%.2f"|format(spese|sum(attribute='importo')) }}</td>
+  <td style="padding:12px;text-align:right;font-size:15px;color:#059669">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(spese|sum(attribute='importo')) }}</td>
   <td colspan="2"></td>
 </tr>
 </tbody>
@@ -29582,12 +29685,12 @@ function apriGestione(sid, azione, nome, importo) {
   form.action = '/admin/spese/' + sid + '/gestisci?azione=' + azione;
   if (azione === 'approva') {
     titolo.innerHTML = '<i class="fa fa-check" style="color:#16a34a"></i> Approva rimborso';
-    info.textContent = 'Approvare la spesa di ' + nome + ' da Ã¢â€šÂ¬ ' + importo.toFixed(2) + '?';
+    info.textContent = 'Approvare la spesa di ' + nome + ' da ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ ' + importo.toFixed(2) + '?';
     btn.style.background = '#16a34a';
     btn.innerHTML = '<i class="fa fa-check"></i> Approva';
   } else {
     titolo.innerHTML = '<i class="fa fa-xmark" style="color:#dc2626"></i> Rifiuta rimborso';
-    info.textContent = 'Rifiutare la spesa di ' + nome + ' da Ã¢â€šÂ¬ ' + importo.toFixed(2) + '? Consigliato aggiungere una nota per spiegare il motivo.';
+    info.textContent = 'Rifiutare la spesa di ' + nome + ' da ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ ' + importo.toFixed(2) + '? Consigliato aggiungere una nota per spiegare il motivo.';
     btn.style.background = '#dc2626';
     btn.innerHTML = '<i class="fa fa-xmark"></i> Rifiuta';
   }
@@ -29682,10 +29785,10 @@ def admin_spesa_gestisci(sid):
         data_spesa = spesa['data'] or ''
         if nuovo_stato == 'approvata':
             title = 'Rimborso spesa accettato'
-            body = f"La tua richiesta di rimborso spesa da Ã¢â€šÂ¬ {importo:.2f} del {data_spesa} ÃƒÂ¨ stata accettata."
+            body = f"La tua richiesta di rimborso spesa da ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {importo:.2f} del {data_spesa} ÃƒÆ’Ã‚Â¨ stata accettata."
         else:
             title = 'Rimborso spesa rifiutato'
-            body = f"La tua richiesta di rimborso spesa da Ã¢â€šÂ¬ {importo:.2f} del {data_spesa} ÃƒÂ¨ stata rifiutata."
+            body = f"La tua richiesta di rimborso spesa da ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {importo:.2f} del {data_spesa} ÃƒÆ’Ã‚Â¨ stata rifiutata."
             if nota:
                 body += f" Nota: {nota}"
         notifica_utente(spesa['utente_id'], title, body, '/mobile/notifiche', f'rimborso_{nuovo_stato}')
@@ -29695,7 +29798,7 @@ def admin_spesa_gestisci(sid):
     # Notifica email al dipendente
     if spesa['email']:
         import threading
-        stato_txt = 'approvata Ã¢Å“â€¦' if nuovo_stato == 'approvata' else 'rifiutata Ã¢ÂÅ’'
+        stato_txt = 'approvata ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦' if nuovo_stato == 'approvata' else 'rifiutata ÃƒÂ¢Ã‚ÂÃ…â€™'
         colore = '#16a34a' if nuovo_stato == 'approvata' else '#dc2626'
         _email = spesa['email']
         _nome_dip = f"{spesa['u_nome']} {spesa['u_cognome']}".strip()
@@ -29707,14 +29810,14 @@ def admin_spesa_gestisci(sid):
         def _send():
             try:
                 send_email(_email,
-                    f'[ACCESSO FIERE] La tua richiesta di rimborso ÃƒÂ¨ stata {stato_txt}',
+                    f'[ACCESSO FIERE] La tua richiesta di rimborso ÃƒÆ’Ã‚Â¨ stata {stato_txt}',
                     f'<p>Ciao {_nome_dip},</p>'
-                    f'<p>la tua richiesta di rimborso ÃƒÂ¨ stata <b style="color:{colore}">{stato_txt}</b>.</p>'
+                    f'<p>la tua richiesta di rimborso ÃƒÆ’Ã‚Â¨ stata <b style="color:{colore}">{stato_txt}</b>.</p>'
                     f'<table style="border-collapse:collapse;font-family:sans-serif;margin:14px 0">'
                     f'<tr><td style="padding:6px 12px;color:#64748b">Data</td><td style="padding:6px 12px"><b>{_data}</b></td></tr>'
                     f'<tr><td style="padding:6px 12px;color:#64748b">Categoria</td><td style="padding:6px 12px"><b>{_cat}</b></td></tr>'
-                    f'<tr><td style="padding:6px 12px;color:#64748b">Importo</td><td style="padding:6px 12px;font-size:18px;color:{colore}"><b>Ã¢â€šÂ¬ {_imp:.2f}</b></td></tr>'
-                    f'<tr><td style="padding:6px 12px;color:#64748b">Descrizione</td><td style="padding:6px 12px">{_desc or "Ã¢â‚¬â€œ"}</td></tr>'
+                    f'<tr><td style="padding:6px 12px;color:#64748b">Importo</td><td style="padding:6px 12px;font-size:18px;color:{colore}"><b>ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {_imp:.2f}</b></td></tr>'
+                    f'<tr><td style="padding:6px 12px;color:#64748b">Descrizione</td><td style="padding:6px 12px">{_desc or "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“"}</td></tr>'
                     f'</table>'
                     + (f'<div style="background:#f8fafc;border-left:4px solid {colore};padding:12px;margin:12px 0"><b>Nota dell\'amministratore:</b><br>{_nota}</div>' if _nota else '')
                 )
@@ -30030,7 +30133,7 @@ select option{background:#1e293b}
       <label>Fiera / evento</label>
       <select name="cantiere_id">
         <option value="">Nessuna fiera</option>
-        {% for c in cantieri %}<option value="{{ c.id }}">{{ c.nome }}{% if c.citta %} Ã‚Â· {{ c.citta }}{% endif %}</option>{% endfor %}
+        {% for c in cantieri %}<option value="{{ c.id }}">{{ c.nome }}{% if c.citta %} Ãƒâ€šÃ‚Â· {{ c.citta }}{% endif %}</option>{% endfor %}
       </select>
       {% endif %}
 
@@ -30038,7 +30141,7 @@ select option{background:#1e293b}
       <label>{{ t.spese_vehicle }}</label>
       <select name="veicolo_id">
         <option value="">{{ t.spese_no_vehicle }}</option>
-        {% for v in veicoli %}<option value="{{ v.id }}">{{ v.targa }} Ã¢â‚¬â€œ {{ v.marca or '' }} {{ v.modello or '' }}</option>{% endfor %}
+        {% for v in veicoli %}<option value="{{ v.id }}">{{ v.targa }} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“ {{ v.marca or '' }} {{ v.modello or '' }}</option>{% endfor %}
       </select>
       {% endif %}
 
@@ -30069,7 +30172,7 @@ select option{background:#1e293b}
           <div class="spesa-data">{{ s.data }}</div>
         </div>
         <div style="text-align:right">
-          <div class="spesa-importo">Ã¢â€šÂ¬ {{ "%.2f"|format(s.importo) }}</div>
+          <div class="spesa-importo">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(s.importo) }}</div>
           <span class="stato-badge stato-{{ s.stato }}">
             {% if s.stato=='approvata' %}{{ t.spese_approved }}{% elif s.stato=='rifiutata' %}{{ t.spese_rejected }}{% else %}{{ t.spese_waiting }}{% endif %}
           </span>
@@ -30148,7 +30251,7 @@ def mobile_spese_inserisci():
 
     if not foto or not foto.filename:
         t = get_lang()
-        flash(t.get('spese_error_photo', 'La foto dello scontrino ÃƒÂ¨ obbligatoria.'), 'error')
+        flash(t.get('spese_error_photo', 'La foto dello scontrino ÃƒÆ’Ã‚Â¨ obbligatoria.'), 'error')
         return redirect(url_for('mobile_spese'))
 
     # Salva foto
@@ -30181,7 +30284,7 @@ def mobile_spese_inserisci():
     try:
         notifica_admins(
             'Nuova richiesta rimborso spesa',
-            f'{nome_dip} ha richiesto un rimborso spesa da Ã¢â€šÂ¬ {importo:.2f} ({cat}) del {data_spesa}.',
+            f'{nome_dip} ha richiesto un rimborso spesa da ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {importo:.2f} ({cat}) del {data_spesa}.',
             '/admin/spese?stato=in_attesa',
             'richiesta_spesa'
         )
@@ -30204,12 +30307,12 @@ def mobile_spese_inserisci():
                     f'<table style="border-collapse:collapse;font-family:sans-serif">'
                     f'<tr><td style="padding:6px 12px;color:#64748b">Data</td><td style="padding:6px 12px"><b>{data_spesa}</b></td></tr>'
                     f'<tr><td style="padding:6px 12px;color:#64748b">Categoria</td><td style="padding:6px 12px"><b>{cat}</b></td></tr>'
-                    f'<tr><td style="padding:6px 12px;color:#64748b">Importo</td><td style="padding:6px 12px;font-size:18px;color:#059669"><b>Ã¢â€šÂ¬ {importo:.2f}</b></td></tr>'
-                    f'<tr><td style="padding:6px 12px;color:#64748b">Descrizione</td><td style="padding:6px 12px">{f.get("descrizione","Ã¢â‚¬â€œ")}</td></tr>'
+                    f'<tr><td style="padding:6px 12px;color:#64748b">Importo</td><td style="padding:6px 12px;font-size:18px;color:#059669"><b>ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {importo:.2f}</b></td></tr>'
+                    f'<tr><td style="padding:6px 12px;color:#64748b">Descrizione</td><td style="padding:6px 12px">{f.get("descrizione","ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“")}</td></tr>'
                     f'</table>'
                     f'<p style="margin-top:16px"><a href="{_base}/admin/spese?stato=in_attesa" '
                     f'style="background:#059669;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:700">'
-                    f'Approva o rifiuta Ã¢â€ â€™</a></p>')
+                    f'Approva o rifiuta ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</a></p>')
             except: pass
         threading.Thread(target=_send_spesa, daemon=True).start()
 
@@ -30221,7 +30324,7 @@ def mobile_spese_inserisci():
 @app.route('/mobile/spese/foto/<fn>')
 @login_required
 def mobile_spese_foto(fn):
-    """Serve foto scontrino Ã¢â‚¬â€ solo se appartiene all'utente o admin."""
+    """Serve foto scontrino ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â solo se appartiene all'utente o admin."""
     db = get_db()
     spesa = db.execute("SELECT * FROM spese_rimborso WHERE foto_nome=?", (fn,)).fetchone()
     db.close()
@@ -30418,19 +30521,19 @@ def test_email():
         return redirect(url_for('impostazioni'))
     result = send_email(
         to,
-        'Test SMTP Ã¢â‚¬â€ Gestionale',
-        '<p>Se ricevi questa mail, la configurazione SMTP funziona correttamente! Ã¢Å“â€¦</p>'
+        'Test SMTP ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Gestionale',
+        '<p>Se ricevi questa mail, la configurazione SMTP funziona correttamente! ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦</p>'
     )
     if result:
         flash(f'Email di test inviata a {to}!', 'success')
     else:
-        flash('Invio fallito Ã¢â‚¬â€ controlla i log del server per i dettagli.', 'error')
+        flash('Invio fallito ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â controlla i log del server per i dettagli.', 'error')
     return redirect(url_for('impostazioni'))
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 #  IMPOSTAZIONI
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
 IMP_TMPL = """
 <div class="grid-2">
@@ -30441,7 +30544,7 @@ IMP_TMPL = """
         <div class="form-group"><label>Nome azienda</label><input name="azienda" value="{{ cfg.azienda }}"></div>
         <div class="form-group"><label>Sede legale</label><input name="sede_legale" value="{{ cfg.sede_legale }}"></div>
         <div class="form-group"><label>Partita IVA</label><input name="partita_iva" value="{{ cfg.partita_iva }}"></div>
-        <div class="form-group"><label>AttivitÃƒÂ  aziendale</label><input name="attivita_azienda" value="{{ cfg.attivita_azienda }}"></div>
+        <div class="form-group"><label>AttivitÃƒÆ’Ã‚Â  aziendale</label><input name="attivita_azienda" value="{{ cfg.attivita_azienda }}"></div>
         <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Salva</button>
       </form>
     </div>
@@ -30479,11 +30582,11 @@ IMP_TMPL = """
   <div class="card-header"><h3><i class="fa fa-envelope"></i> Email notifiche</h3></div>
   <div class="card-body">
     <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#1e40af">
-      <strong>Ã¢Å¡Â¡ Railway blocca SMTP Ã¢â‚¬â€ usa Brevo (gratuito, 300 mail/giorno):</strong><br>
-      1. Registrati su <strong>brevo.com</strong> Ã¢â€ â€™ <em>SMTP &amp; API Ã¢â€ â€™ API Keys</em> Ã¢â€ â€™ crea e copia la chiave<br>
+      <strong>ÃƒÂ¢Ã…Â¡Ã‚Â¡ Railway blocca SMTP ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â usa Brevo (gratuito, 300 mail/giorno):</strong><br>
+      1. Registrati su <strong>brevo.com</strong> ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ <em>SMTP &amp; API ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ API Keys</em> ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ crea e copia la chiave<br>
       2. Nel campo <em>Metodo</em> scrivi esattamente: <strong>brevo</strong><br>
       3. In <em>Email mittente</em> metti la tua email verificata su Brevo<br>
-      4. In <em>API Key</em> incolla la chiave copiata Ã¢â€ â€™ Salva Ã¢â€ â€™ Test
+      4. In <em>API Key</em> incolla la chiave copiata ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Salva ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Test
     </div>
     <form method="POST" action="/admin/impostazioni/email">
       <div class="form-row">
@@ -30503,7 +30606,7 @@ IMP_TMPL = """
       <div class="form-group" style="background:#fefce8;border:1px solid #fde047;border-radius:8px;padding:14px">
         <label style="color:#92400e;font-weight:700"><i class="fa fa-bell"></i> Email destinatario notifiche <span style="font-weight:400;font-size:12px">(dove ricevi le notifiche)</span></label>
         <input name="email_notifiche" value="{{ cfg.email_notifiche }}" placeholder="admin@tuaazienda.it" style="margin-top:6px">
-        <div style="font-size:12px;color:#92400e;margin-top:6px">Ã¢Å¡Â Ã¯Â¸Â Senza questo campo non arrivano notifiche di timbrature, rimborsi spese e scadenze.</div>
+        <div style="font-size:12px;color:#92400e;margin-top:6px">ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Senza questo campo non arrivano notifiche di timbrature, rimborsi spese e scadenze.</div>
       </div>
       <div class="form-group">
         <label>URL pubblico del sito <span style="font-weight:400;font-size:12px;color:var(--text-light)">(usato nei link delle email, es: https://web-production-xxxx.up.railway.app)</span></label>
@@ -30537,7 +30640,7 @@ IMP_TMPL = """
   <div class="card-header"><h3><i class="fa fa-image"></i> Logo Aziendale</h3></div>
   <div class="card-body">
     <p style="font-size:13px;color:var(--text-light);margin-bottom:16px">
-      Il tuo logo apparirÃƒÂ  nella sidebar del gestionale e nell'intestazione dei preventivi PDF.
+      Il tuo logo apparirÃƒÆ’Ã‚Â  nella sidebar del gestionale e nell'intestazione dei preventivi PDF.
     </p>
     {% if ha_logo_az %}
     <div style="margin-bottom:16px;display:flex;align-items:center;gap:16px">
@@ -30554,7 +30657,7 @@ IMP_TMPL = """
     {% endif %}
     <form method="POST" action="/admin/logo/upload" enctype="multipart/form-data">
       <div class="form-group">
-        <label>{% if ha_logo_az %}Cambia logo{% else %}Carica logo{% endif %} <span style="font-weight:400;font-size:12px;color:var(--text-light)">(PNG, JPG, SVG Ã¢â‚¬â€ max 2MB consigliato)</span></label>
+        <label>{% if ha_logo_az %}Cambia logo{% else %}Carica logo{% endif %} <span style="font-weight:400;font-size:12px;color:var(--text-light)">(PNG, JPG, SVG ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â max 2MB consigliato)</span></label>
         <input type="file" name="logo" accept="image/*" required style="margin-top:6px">
       </div>
       <button type="submit" class="btn btn-primary"><i class="fa fa-upload"></i> Carica</button>
@@ -30575,7 +30678,7 @@ IMP_TMPL = """
       <div style="background:#f8fafc;border-radius:8px;padding:12px;margin-bottom:12px;font-size:12px;color:var(--text-light);line-height:1.7">
         <strong>Come ottenere le credenziali:</strong><br>
         1. Vai su <a href="https://console.cloud.google.com" target="_blank" style="color:var(--accent2)">console.cloud.google.com</a><br>
-        2. Crea progetto Ã¢â€ â€™ <em>API & Servizi Ã¢â€ â€™ Credenziali Ã¢â€ â€™ Crea credenziali Ã¢â€ â€™ ID client OAuth 2.0</em><br>
+        2. Crea progetto ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ <em>API & Servizi ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Credenziali ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Crea credenziali ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ ID client OAuth 2.0</em><br>
         3. Tipo applicazione: <strong>Applicazione web</strong><br>
         4. URI di reindirizzamento autorizzato: <code style="background:#e2e8f0;padding:2px 6px;border-radius:4px">{{ request.host_url }}auth/google/callback</code><br>
         5. Copia Client ID e Client Secret qui sopra
@@ -30587,9 +30690,9 @@ IMP_TMPL = """
 """
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-#  LOGO AZIENDALE Ã¢â‚¬â€ upload / serve / delete
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
+#  LOGO AZIENDALE ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â upload / serve / delete
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
 @app.route('/admin/logo/upload', methods=['POST'])
 @admin_required
@@ -30613,7 +30716,7 @@ def logo_upload():
             try: os.remove(os.path.join(UPLOAD_DIR_LOGHI, old_f))
             except: pass
     f.save(dest)
-    flash('Logo caricato con successo! Ã¢Å“â€¦', 'success')
+    flash('Logo caricato con successo! ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦', 'success')
     return redirect(url_for('impostazioni'))
 
 
@@ -30748,9 +30851,9 @@ def impostazioni_google():
     return redirect(url_for('impostazioni'))
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-#  DIPENDENTI Ã¢â‚¬â€ DOCUMENTI
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
+#  DIPENDENTI ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â DOCUMENTI
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
 DOC_DIP_TMPL = """
 <div style="margin-bottom:16px">
@@ -30758,7 +30861,7 @@ DOC_DIP_TMPL = """
 </div>
 <div class="card">
   <div class="card-header">
-    <h3><i class="fa fa-file-alt" style="color:var(--accent2)"></i> Documenti Ã¢â‚¬â€ {{ dip.nome }} {{ dip.cognome }}</h3>
+    <h3><i class="fa fa-file-alt" style="color:var(--accent2)"></i> Documenti ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {{ dip.nome }} {{ dip.cognome }}</h3>
   </div>
   <div class="card-body">
     <form method="POST" action="/dipendenti/{{ dip.id }}/documenti/upload" enctype="multipart/form-data"
@@ -30772,9 +30875,9 @@ DOC_DIP_TMPL = """
         <div class="form-group">
           <label>Tipo documento</label>
           <select name="tipo_doc" id="doc-tipo-input">
-            <option>Carta identitÃƒÂ </option><option>Passaporto</option><option>Patente</option>
+            <option>Carta identitÃƒÆ’Ã‚Â </option><option>Passaporto</option><option>Patente</option>
             <option>Contratto</option><option>UNILAV</option><option>Corso/Attestato</option>
-            <option>Altro</option><option value="Auto">Ã°Å¸Â¤â€“ Analisi AI automatica</option>
+            <option>Altro</option><option value="Auto">ÃƒÂ°Ã…Â¸Ã‚Â¤Ã¢â‚¬â€œ Analisi AI automatica</option>
           </select>
         </div>
         <div class="form-group">
@@ -30783,7 +30886,7 @@ DOC_DIP_TMPL = """
             <option value="Contratto">Contratto</option>
             <option value="Patente">Patente</option>
             <option value="Visita medica">Visita medica</option>
-            <option value="IdoneitÃƒÂ  sanitaria">IdoneitÃƒÂ  sanitaria</option>
+            <option value="IdoneitÃƒÆ’Ã‚Â  sanitaria">IdoneitÃƒÆ’Ã‚Â  sanitaria</option>
             <option value="Formazione PSC">Formazione PSC</option>
             <option value="Lavori in altezza">Lavori in altezza</option>
             <option value="Abilitazione muletto">Abilitazione muletto</option>
@@ -30791,7 +30894,7 @@ DOC_DIP_TMPL = """
             <option value="Primo soccorso">Primo soccorso</option>
             <option value="DPI consegnati">DPI consegnati</option>
             <option value="UNILAV">UNILAV</option>
-            <option value="Documento identitÃƒÂ ">Documento identitÃƒÂ </option>
+            <option value="Documento identitÃƒÆ’Ã‚Â ">Documento identitÃƒÆ’Ã‚Â </option>
             <option value="Corso/Attestato">Corso/Attestato</option>
             <option value="Altro" selected>Altro</option>
           </select>
@@ -30821,7 +30924,7 @@ DOC_DIP_TMPL = """
         <button type="button" id="btn-analizza-ai" class="btn btn-sm" style="background:linear-gradient(135deg,#7c3aed 0%,#3b82f6 100%);color:#fff" onclick="analizzaConAi()">
           <i class="fa fa-robot"></i> Analizza con AI
         </button>
-        <span style="font-size:11px;color:var(--text-light)">Ã¢â‚¬â€ riempie automaticamente i campi leggendo il file</span>
+        <span style="font-size:11px;color:var(--text-light)">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â riempie automaticamente i campi leggendo il file</span>
         <span style="flex:1"></span>
         <button type="submit" class="btn btn-primary"><i class="fa fa-upload"></i> Carica documento</button>
       </div>
@@ -30925,7 +31028,7 @@ function applicaDatiAi() {
   if (aiResultData.ente_rilascio) noteParts.push('Ente: ' + aiResultData.ente_rilascio);
   if (aiResultData.note) noteParts.push(aiResultData.note);
   if (noteParts.length) {
-    document.getElementById('doc-note-input').value = noteParts.join(' Ã‚Â· ');
+    document.getElementById('doc-note-input').value = noteParts.join(' Ãƒâ€šÃ‚Â· ');
   }
   chiudiPreviewAi();
   // Feedback visivo
@@ -30952,8 +31055,8 @@ function escapeHtml(s) {
       <tr>
         <td><span class="badge badge-purple">{{ d.tipo_doc }}</span></td>
         <td>{{ d.nome_originale }}</td>
-        <td>{{ d.note or 'Ã¢â‚¬â€' }}</td>
-        <td>{{ d.data_scadenza or 'Ã¢â‚¬â€' }}</td>
+        <td>{{ d.note or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â' }}</td>
+        <td>{{ d.data_scadenza or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â' }}</td>
         <td>{{ d.caricato_il[:10] }}</td>
         <td style="display:flex;gap:4px">
           <a href="/dipendenti/{{ dip.id }}/documenti/{{ d.id }}/anteprima" class="btn btn-sm btn-secondary" target="_blank"><i class="fa fa-eye"></i></a>
@@ -30966,7 +31069,7 @@ function escapeHtml(s) {
     </table>
     {% if ai_result %}
     <div class="alert alert-success" style="margin-top:16px">
-      <strong>AI ha rilevato:</strong> {{ ai_result.tipo_doc }} Ã¢â‚¬â€ {{ ai_result.testo }}
+      <strong>AI ha rilevato:</strong> {{ ai_result.tipo_doc }} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {{ ai_result.testo }}
     </div>
     {% endif %}
     {% else %}
@@ -30986,7 +31089,7 @@ def dip_documenti(uid):
     docs = db.execute("SELECT * FROM documenti_dipendente WHERE utente_id=? ORDER BY caricato_il DESC", (uid,)).fetchall()
     db.close()
     ai_result = session.pop('ai_result_dip', None)
-    return render_page(DOC_DIP_TMPL, page_title=f'Documenti Ã¢â‚¬â€œ {dip["nome"]}',
+    return render_page(DOC_DIP_TMPL, page_title=f'Documenti ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“ {dip["nome"]}',
                        active='dipendenti', dip=dip, docs=docs, ai_result=ai_result, AI_OK=AI_OK)
 
 
@@ -31027,7 +31130,7 @@ def dip_doc_upload(uid):
                         list(updates.values()) + [doc_id])
             db2.commit(); db2.close()
             msg = f'AI: {ai_result.get("tipo_doc","")}'
-            if ai_result.get('data_scadenza'): msg += f' Ã‚Â· scadenza {ai_result["data_scadenza"]}'
+            if ai_result.get('data_scadenza'): msg += f' Ãƒâ€šÃ‚Â· scadenza {ai_result["data_scadenza"]}'
             flash(msg, 'success')
         elif '_error' not in ai_result:
             flash('AI analizzata, nessun dato aggiuntivo rilevato.', 'info')
@@ -31073,7 +31176,7 @@ def dip_doc_elimina(uid, did):
     return redirect(url_for('dip_documenti', uid=uid))
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 # ==========================================================
 #  PREVENTIVI
 # ==========================================================
@@ -31170,7 +31273,7 @@ def genera_pdf_preventivo(dati):
 
     def hf(canvas, doc):
         canvas.saveState()
-        # Ã¢â€â‚¬Ã¢â€â‚¬ HEADER Ã¢â€â‚¬Ã¢â€â‚¬
+        # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ HEADER ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
         canvas.setFillColor(BLU)
         canvas.rect(0, H - HEADER_H, W, HEADER_H, fill=1, stroke=0)
         canvas.setFillColor(ACC)
@@ -31179,7 +31282,7 @@ def genera_pdf_preventivo(dati):
         try:
             if cliente_logo_path:
                 img = ImageReader(cliente_logo_path)
-                # Sfondo bianco dietro al logo per leggibilitÃƒÂ  su qualsiasi logo
+                # Sfondo bianco dietro al logo per leggibilitÃƒÆ’Ã‚Â  su qualsiasi logo
                 lw, lh = 42*mm, 18*mm
                 bg_pad = 1.5*mm
                 canvas.setFillColor(WHITE)
@@ -31203,7 +31306,7 @@ def genera_pdf_preventivo(dati):
         canvas.drawString(18*mm, H - 24*mm,
             'P.IVA: ' + dati.get('az_piva', '') + '   |   ' + dati.get('az_email', ''))
 
-        # Ã¢â€â‚¬Ã¢â€â‚¬ FOOTER Ã¢â€â‚¬Ã¢â€â‚¬
+        # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ FOOTER ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
         canvas.setFillColor(colors.HexColor('#f1f5f9'))
         canvas.rect(0, 0, W, FOOTER_H, fill=1, stroke=0)
         canvas.setFillColor(colors.HexColor('#1e3a5f'))
@@ -31212,7 +31315,7 @@ def genera_pdf_preventivo(dati):
         canvas.setFillColor(TEXTL)
         canvas.setFont('Helvetica', 7)
         canvas.drawString(18*mm, 8*mm,
-            dati.get('az_nome', '') + '  Ã‚Â·  ' + dati.get('az_indirizzo', ''))
+            dati.get('az_nome', '') + '  Ãƒâ€šÃ‚Â·  ' + dati.get('az_indirizzo', ''))
         canvas.drawString(18*mm, 4*mm, 'P.IVA ' + dati.get('az_piva', ''))
         # "Powered by Accesso Fiere" al centro con piccolo logo
         try:
@@ -31243,7 +31346,7 @@ def genera_pdf_preventivo(dati):
     story = []
 
     story.append(Table([
-        [P('NÃ‚Â° ' + dati.get('numero', '---'), 'Helvetica-Bold', 26, BLU)],
+        [P('NÃƒâ€šÃ‚Â° ' + dati.get('numero', '---'), 'Helvetica-Bold', 26, BLU)],
         [P(dati.get('oggetto', ''), 'Helvetica', 10, TEXTL)],
     ], colWidths=[W - 36*mm], style=TableStyle([
         ('BOTTOMPADDING', (0,0), (-1,-1), 3),
@@ -31331,10 +31434,10 @@ def genera_pdf_preventivo(dati):
             desc_cell = _Par(desc_txt, desc_style)
         tdata.append([
             desc_cell,
-            P('{:g}'.format(qty) if qty else 'Ã¢â‚¬â€', 'Helvetica', 8.5, TEXTL, TA_CENTER),
+            P('{:g}'.format(qty) if qty else 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â', 'Helvetica', 8.5, TEXTL, TA_CENTER),
             P(v.get('um', ''), 'Helvetica', 8.5, TEXTL, TA_CENTER),
-            P('Ã¢â€šÂ¬ {:,.2f}'.format(pu) if pu else 'Ã¢â‚¬â€', 'Helvetica', 8.5, TEXTC, TA_RIGHT),
-            P('Ã¢â€šÂ¬ {:,.2f}'.format(tot) if (qty and pu) else 'Ã¢â‚¬â€',
+            P('ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {:,.2f}'.format(pu) if pu else 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â', 'Helvetica', 8.5, TEXTC, TA_RIGHT),
+            P('ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {:,.2f}'.format(tot) if (qty and pu) else 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â',
               'Helvetica-Bold', 8.5, TEXTC, TA_RIGHT),
         ])
 
@@ -31362,13 +31465,13 @@ def genera_pdf_preventivo(dati):
     if iva_pct > 0:
         tot_rows += [
             [P('Imponibile', 'Helvetica', 9, TEXTL, TA_RIGHT),
-             P('Ã¢â€šÂ¬ {:,.2f}'.format(totale_imp), 'Helvetica', 10, TEXTC, TA_RIGHT)],
+             P('ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {:,.2f}'.format(totale_imp), 'Helvetica', 10, TEXTC, TA_RIGHT)],
             [P('IVA {:.0f}%'.format(iva_pct), 'Helvetica', 9, TEXTL, TA_RIGHT),
-             P('Ã¢â€šÂ¬ {:,.2f}'.format(iva_val), 'Helvetica', 10, TEXTC, TA_RIGHT)],
+             P('ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {:,.2f}'.format(iva_val), 'Helvetica', 10, TEXTC, TA_RIGHT)],
         ]
     tot_rows.append([
         P('TOTALE PREVENTIVO', 'Helvetica-Bold', 10.5, WHITE, TA_RIGHT),
-        P('Ã¢â€šÂ¬ {:,.2f}'.format(tot_fin), 'Helvetica-Bold', 14, WHITE, TA_RIGHT),
+        P('ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {:,.2f}'.format(tot_fin), 'Helvetica-Bold', 14, WHITE, TA_RIGHT),
     ])
     tt = Table(tot_rows, colWidths=[78*mm, 46*mm], hAlign='RIGHT')
     last = len(tot_rows) - 1
@@ -31400,7 +31503,7 @@ def genera_pdf_preventivo(dati):
     note_pag.append(Spacer(1, 3*mm))
     for linea in dati.get('pagamento_lista', []):
         if linea.strip():
-            note_pag.append(P('Ã¢â‚¬Â¢  ' + linea.strip(), 'Helvetica', 9, TEXTC))
+            note_pag.append(P('ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢  ' + linea.strip(), 'Helvetica', 9, TEXTC))
             note_pag.append(Spacer(1, 2*mm))
     story.extend(note_pag)
     story.append(Spacer(1, 12*mm))
@@ -31531,26 +31634,26 @@ PREV_FORM_TMPL = """
         <div style="margin-top:16px;padding:14px 16px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px">
           <div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">
             <i class="fa fa-calendar-days"></i> Date Evento / Fiera
-            <span style="font-weight:400;color:#64748b;text-transform:none;letter-spacing:0;margin-left:6px">Ã¢â€ â€™ appariranno sul PDF e serviranno per creare l'evento sul calendario</span>
+            <span style="font-weight:400;color:#64748b;text-transform:none;letter-spacing:0;margin-left:6px">ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ appariranno sul PDF e serviranno per creare l'evento sul calendario</span>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label style="color:#16a34a;font-weight:600">Ã°Å¸â€œâ€¦ Data inizio evento</label>
+              <label style="color:#16a34a;font-weight:600">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¦ Data inizio evento</label>
               <input type="date" name="data_inizio_lavoro" value="{{ prev.data_inizio_lavoro if prev else '' }}" style="border-color:#86efac">
             </div>
             <div class="form-group">
-              <label style="color:#16a34a;font-weight:600">Ã°Å¸â€œâ€¦ Data fine evento</label>
+              <label style="color:#16a34a;font-weight:600">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¦ Data fine evento</label>
               <input type="date" name="data_fine_lavoro" value="{{ prev.data_fine_lavoro if prev else '' }}" style="border-color:#86efac">
             </div>
           </div>
           <div class="form-group" style="margin-bottom:0">
-            <label>Ã°Å¸â€œÂ Sede / Luogo evento</label>
-            <input name="luogo_lavoro" value="{{ prev.luogo_lavoro if prev else '' }}" placeholder="Es. Fiera di Bologna Ã¢â‚¬â€ Padiglione 36">
+            <label>ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â Sede / Luogo evento</label>
+            <input name="luogo_lavoro" value="{{ prev.luogo_lavoro if prev else '' }}" placeholder="Es. Fiera di Bologna ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Padiglione 36">
           </div>
           {% if prev and prev.stato == 'accettato' %}
           <div style="margin-top:10px;padding:8px 12px;background:#dcfce7;border-radius:8px;font-size:13px;color:#15803d">
             <i class="fa fa-calendar-plus"></i> <strong>Preventivo accettato!</strong>
-            <a href="/preventivi/{{ prev.id }}/crea-evento" style="color:#15803d;font-weight:700;margin-left:8px;text-decoration:underline">Crea evento sul calendario Ã¢â€ â€™</a>
+            <a href="/preventivi/{{ prev.id }}/crea-evento" style="color:#15803d;font-weight:700;margin-left:8px;text-decoration:underline">Crea evento sul calendario ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</a>
           </div>
           {% endif %}
         </div>
@@ -31694,7 +31797,7 @@ PREV_FORM_TMPL = """
             <td style="padding:4px"><input name="pu[]" type="number" value="{{ v.prezzo_unitario }}" step="0.001" min="0" class="ti tr" oninput="rc(this)"></td>
             <td style="padding:4px"><input name="importo_mod[]" type="number" value="{{ '%.2f'|format(imp_mod) }}" step="0.01" min="0" class="ti tr td-imp" oninput="rcImp(this)" style="font-weight:700;color:#1e3a5f;background:#eff6ff;border-color:#93c5fd"></td>
             <td style="padding:8px;text-align:right;font-size:13px;font-weight:600" class="td-sc" style="color:{% if sconto_r > 0 %}#dc2626{% else %}#94a3b8{% endif %}">
-              {% if sconto_r > 0 %}<span style="color:#dc2626">-{{ '%.2f'|format(sconto_r) }}</span>{% else %}<span style="color:#94a3b8">Ã¢â‚¬â€</span>{% endif %}
+              {% if sconto_r > 0 %}<span style="color:#dc2626">-{{ '%.2f'|format(sconto_r) }}</span>{% else %}<span style="color:#94a3b8">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</span>{% endif %}
             </td>
             <td style="padding:4px;text-align:center"><button type="button" onclick="delRow(this)" style="background:#fee2e2;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;color:#dc2626"><i class="fa fa-times"></i></button></td>
           </tr>
@@ -31742,7 +31845,7 @@ function mkRow(desc,qty,um,pu,di,df){
     '<td style="padding:4px"><input name="um[]" value="'+um+'" class="ti tc" placeholder="MQ"></td>'+
     '<td style="padding:4px"><input name="pu[]" type="number" value="'+pu+'" step="0.001" min="0" class="ti tr" oninput="rc(this)" placeholder="0.00"></td>'+
     '<td style="padding:4px"><input name="importo_mod[]" type="number" value="0.00" step="0.01" min="0" class="ti tr td-imp" oninput="rcImp(this)" style="font-weight:700;color:#1e3a5f;background:#eff6ff;border-color:#93c5fd"></td>'+
-    '<td style="padding:8px;text-align:right;font-size:13px;font-weight:600" class="td-sc"><span style="color:#94a3b8">Ã¢â‚¬â€</span></td>'+
+    '<td style="padding:8px;text-align:right;font-size:13px;font-weight:600" class="td-sc"><span style="color:#94a3b8">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</span></td>'+
     '<td style="padding:4px;text-align:center"><button type="button" onclick="delRow(this)" style="background:#fee2e2;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;color:#dc2626"><i class="fa fa-times"></i></button></td>';
   b.appendChild(tr);document.getElementById('empty-voci').style.display='none';
   rc(tr.querySelector('[name="qty[]"]'));tr.querySelector('input[name="desc[]"]').focus();
@@ -31763,7 +31866,7 @@ function rc(inp){
   const p=parseFloat(tr.querySelector('input[name="pu[]"]').value)||0;
   const lordo=q*p;
   const impInp=tr.querySelector('.td-imp');
-  // Aggiorna importo modificato solo se non era giÃƒÂ  cambiato manualmente
+  // Aggiorna importo modificato solo se non era giÃƒÆ’Ã‚Â  cambiato manualmente
   if(!impInp.dataset.manuale) impInp.value=lordo.toFixed(2);
   aggiornaSconto(tr, lordo);
   ricalcola();
@@ -31787,7 +31890,7 @@ function aggiornaSconto(tr, lordo){
   } else if(sc<-0.005){
     td.innerHTML='<span style="color:#16a34a;font-weight:700">+'+Math.abs(sc).toFixed(2)+'</span>';
   } else {
-    td.innerHTML='<span style="color:#94a3b8">Ã¢â‚¬â€</span>';
+    td.innerHTML='<span style="color:#94a3b8">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</span>';
   }
 }
 function ricalcola(){
@@ -31809,7 +31912,7 @@ function ricalcola(){
   document.getElementById('inp-imp').value=imp.toFixed(2);
   // Mostra sconto totale se presente
   const scEl=document.getElementById('tot-sconto');
-  if(scEl){scEl.textContent=scTot>0.01?'Sconto totale: -Ã¢â€šÂ¬'+scTot.toFixed(2):'';}
+  if(scEl){scEl.textContent=scTot>0.01?'Sconto totale: -ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬'+scTot.toFixed(2):'';}
 }
 document.addEventListener('DOMContentLoaded',()=>{
   {% if prev and prev.iva is not none %}document.getElementById('sel-iva').value='{{ prev.iva|int }}';{% endif %}
@@ -31965,7 +32068,7 @@ def preventivo_crea_evento(pid):
         (pid,)).fetchall()
     db.close()
 
-    # Raggruppa voci per tipo Ã¢â‚¬â€ una card per tipo con date min/max
+    # Raggruppa voci per tipo ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â una card per tipo con date min/max
     from collections import defaultdict
     gruppi = defaultdict(lambda: {'voci': [], 'date_inizio': [], 'date_fine': []})
     for v in voci_raw:
@@ -31979,12 +32082,12 @@ def preventivo_crea_evento(pid):
         gruppi['altro']['voci'].append(prev['oggetto'] or '')
 
     eventi_suggeriti = []
-    tipo_labels = {'montaggio':'Ã°Å¸â€Â§ Montaggio','smontaggio':'Ã°Å¸â€Â© Smontaggio','fiera':'Ã°Å¸Ââ€ºÃ¯Â¸Â Fiera/Assistenza','altro':'Ã°Å¸â€œÅ’ Servizio'}
+    tipo_labels = {'montaggio':'ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â§ Montaggio','smontaggio':'ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â© Smontaggio','fiera':'ÃƒÂ°Ã…Â¸Ã‚ÂÃ¢â‚¬ÂºÃƒÂ¯Ã‚Â¸Ã‚Â Fiera/Assistenza','altro':'ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…â€™ Servizio'}
     tipo_colori  = {'montaggio':'#16a34a','smontaggio':'#e63946','fiera':'#2196F3','altro':'#8b5cf6'}
     for tipo, g in gruppi.items():
         d_inizio = min(g['date_inizio']) if g['date_inizio'] else (prev['data_inizio_lavoro'] or '')
         d_fine   = max(g['date_fine'])   if g['date_fine']   else (prev['data_fine_lavoro'] or d_inizio)
-        titolo_sug = f"{tipo_labels.get(tipo,'Servizio')} Ã¢â‚¬â€ {prev['oggetto'] or prev['numero']}"
+        titolo_sug = f"{tipo_labels.get(tipo,'Servizio')} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {prev['oggetto'] or prev['numero']}"
         eventi_suggeriti.append({
             'tipo':     tipo,
             'label':    tipo_labels.get(tipo,'Servizio'),
@@ -31994,21 +32097,21 @@ def preventivo_crea_evento(pid):
             'd_fine':   d_fine,
             'voci':     g['voci'],
         })
-    # Ordine: montaggio Ã¢â€ â€™ fiera Ã¢â€ â€™ smontaggio Ã¢â€ â€™ altro
+    # Ordine: montaggio ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ fiera ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ smontaggio ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ altro
     _ord = {'montaggio':0,'fiera':1,'smontaggio':2,'altro':3}
     eventi_suggeriti.sort(key=lambda x: _ord.get(x['tipo'],9))
 
     # Se il preventivo ha date evento/fiera, assicurati che ci sia sempre un evento Fiera
-    # con quelle date (ha prioritÃƒÂ  sulle voci)
+    # con quelle date (ha prioritÃƒÆ’Ã‚Â  sulle voci)
     d_inizio_fiera = prev['data_inizio_lavoro'] or ''
     d_fine_fiera   = prev['data_fine_lavoro']   or d_inizio_fiera
     luogo_fiera    = prev['luogo_lavoro']        or ''
     if d_inizio_fiera:
         # Aggiorna o inserisci evento fiera con le date del preventivo
         fiera_esistente = next((e for e in eventi_suggeriti if e['tipo'] == 'fiera'), None)
-        titolo_fiera = f"Ã°Å¸Ââ€ºÃ¯Â¸Â Fiera Ã¢â‚¬â€ {prev['oggetto'] or prev['numero']}"
+        titolo_fiera = f"ÃƒÂ°Ã…Â¸Ã‚ÂÃ¢â‚¬ÂºÃƒÂ¯Ã‚Â¸Ã‚Â Fiera ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {prev['oggetto'] or prev['numero']}"
         if luogo_fiera:
-            titolo_fiera = f"Ã°Å¸Ââ€ºÃ¯Â¸Â {luogo_fiera}"
+            titolo_fiera = f"ÃƒÂ°Ã…Â¸Ã‚ÂÃ¢â‚¬ÂºÃƒÂ¯Ã‚Â¸Ã‚Â {luogo_fiera}"
         if fiera_esistente:
             fiera_esistente['d_inizio'] = d_inizio_fiera
             fiera_esistente['d_fine']   = d_fine_fiera
@@ -32016,7 +32119,7 @@ def preventivo_crea_evento(pid):
         else:
             eventi_suggeriti.insert(0, {
                 'tipo':     'fiera',
-                'label':    'Ã°Å¸Ââ€ºÃ¯Â¸Â Fiera/Evento',
+                'label':    'ÃƒÂ°Ã…Â¸Ã‚ÂÃ¢â‚¬ÂºÃƒÂ¯Ã‚Â¸Ã‚Â Fiera/Evento',
                 'colore':   '#2196F3',
                 'titolo':   titolo_fiera,
                 'd_inizio': d_inizio_fiera,
@@ -32034,10 +32137,10 @@ def preventivo_crea_evento(pid):
   <div class="card">
     <div class="card-header">
       <h3><i class="fa fa-calendar-plus" style="color:var(--accent2)"></i> Crea eventi dal preventivo {{ prev.numero }}</h3>
-      <div style="color:var(--text-light);font-size:13px;margin-top:4px">{{ prev.cliente_nome }} Ã¢â‚¬â€ {{ prev.oggetto }}</div>
+      <div style="color:var(--text-light);font-size:13px;margin-top:4px">{{ prev.cliente_nome }} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {{ prev.oggetto }}</div>
     </div>
     <div class="card-body">
-      <p style="color:var(--text-light);margin-bottom:20px">Abbiamo rilevato <strong>{{ eventi|length }} tipo/i di servizio</strong> nelle voci del preventivo. Clicca su un pulsante per creare il relativo evento sul calendario, con le date giÃƒÂ  compilate.</p>
+      <p style="color:var(--text-light);margin-bottom:20px">Abbiamo rilevato <strong>{{ eventi|length }} tipo/i di servizio</strong> nelle voci del preventivo. Clicca su un pulsante per creare il relativo evento sul calendario, con le date giÃƒÆ’Ã‚Â  compilate.</p>
       {% for e in eventi %}
       <div style="background:#fff;border:2px solid {{ e.colore }};border-radius:12px;padding:18px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
         <div>
@@ -32045,7 +32148,7 @@ def preventivo_crea_evento(pid):
           <div style="font-size:13px;color:var(--text);margin-bottom:6px">{{ e.titolo }}</div>
           {% if e.d_inizio %}
           <div style="font-size:12px;color:var(--text-light)"><i class="fa fa-calendar" style="margin-right:4px"></i>
-            {{ e.d_inizio }}{% if e.d_fine and e.d_fine != e.d_inizio %} Ã¢â€ â€™ {{ e.d_fine }}{% endif %}
+            {{ e.d_inizio }}{% if e.d_fine and e.d_fine != e.d_inizio %} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ {{ e.d_fine }}{% endif %}
           </div>
           {% endif %}
           <div style="margin-top:6px;font-size:11px;color:#94a3b8">
@@ -32139,7 +32242,7 @@ def _next_numero_fattura(db):
 def _parse_condizioni_pagamento(pagamento_text, totale, iva_perc, data_inizio):
     """
     Analizza il testo delle condizioni di pagamento.
-    Gestisce: testo su una riga con piÃƒÂ¹ % separate da virgola/punto,
+    Gestisce: testo su una riga con piÃƒÆ’Ã‚Â¹ % separate da virgola/punto,
     testo su righe separate, o testo senza percentuali.
     """
     import re as _re
@@ -32206,7 +32309,7 @@ def _crea_fatture_da_preventivo(db, preventivo_id):
 
         rate = _parse_condizioni_pagamento(pagamento, totale, iva_perc, data_fine)
 
-        # Ã¢â€â‚¬Ã¢â€â‚¬ Protezione anti-duplicazione Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+        # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Protezione anti-duplicazione ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
         # 1) Trova TUTTE le fatture collegate a questo preventivo
         #    (sia via preventivo_id che via nota legacy)
         esistenti = db.execute("""
@@ -32214,12 +32317,12 @@ def _crea_fatture_da_preventivo(db, preventivo_id):
             WHERE preventivo_id=? OR note LIKE ?
         """, (preventivo_id, f'%preventivo:{preventivo_id}%')).fetchall()
 
-        # 2) Conta le fatture "reali" (giÃƒÂ  emesse = hanno file o stato != da_emettere)
-        #    Ã¢â€ â€™ vanno preservate sempre
+        # 2) Conta le fatture "reali" (giÃƒÆ’Ã‚Â  emesse = hanno file o stato != da_emettere)
+        #    ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ vanno preservate sempre
         reali = [r for r in esistenti
                  if r['stato'] != 'da_emettere' or (r['file_nome'] and r['file_nome'].strip())]
 
-        # 3) Se le fatture reali coprono giÃƒÂ  tutte le rate Ã¢â€ â€™ non fare nulla
+        # 3) Se le fatture reali coprono giÃƒÆ’Ã‚Â  tutte le rate ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ non fare nulla
         if len(reali) >= len(rate):
             return
 
@@ -32230,7 +32333,7 @@ def _crea_fatture_da_preventivo(db, preventivo_id):
                 db.execute("DELETE FROM fatture WHERE id=?", (r['id'],))
         safe_commit(db)
 
-        # 5) Crea solo le rate mancanti (totale rate - reali giÃƒÂ  presenti)
+        # 5) Crea solo le rate mancanti (totale rate - reali giÃƒÆ’Ã‚Â  presenti)
         n_da_creare = len(rate) - len(reali)
         for i, rata in enumerate(rate[:n_da_creare], len(reali) + 1):
             imp_rata = round(rata['importo'] / (1 + iva_perc/100), 2)
@@ -32238,9 +32341,9 @@ def _crea_fatture_da_preventivo(db, preventivo_id):
             numero   = _next_numero_fattura(db)
             desc     = f"{prev['oggetto'] or 'Lavoro'}"
             if len(rate) > 1:
-                desc += f" Ã¢â‚¬â€ Rata {i}/{len(rate)}: {rata['descrizione']}"
+                desc += f" ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Rata {i}/{len(rate)}: {rata['descrizione']}"
             else:
-                desc += f" Ã¢â‚¬â€ {rata['descrizione']}"
+                desc += f" ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {rata['descrizione']}"
 
             db.execute("""INSERT INTO fatture
                 (numero, cliente_id, cliente_nome, data_emissione, data_scadenza,
@@ -32257,7 +32360,7 @@ def _crea_fatture_da_preventivo(db, preventivo_id):
                 iva_perc,
                 iva_imp,
                 desc,
-                f"Generata automaticamente da preventivo:{preventivo_id} Ã¢â‚¬â€ N.{prev['numero']}",
+                f"Generata automaticamente da preventivo:{preventivo_id} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â N.{prev['numero']}",
                 rata['descrizione'],
                 'da_emettere',
                 preventivo_id,
@@ -32422,7 +32525,7 @@ def cliente_ai_estrai():
         }
         azienda = get_setting('azienda_nome', 'Accesso Fiere')
         prompt = f"""Analizza questo documento e estrai i dati dell'AZIENDA CLIENTE.
-Il cliente ÃƒÂ¨ l'azienda che NON ÃƒÂ¨ "{azienda}" (la nostra azienda).
+Il cliente ÃƒÆ’Ã‚Â¨ l'azienda che NON ÃƒÆ’Ã‚Â¨ "{azienda}" (la nostra azienda).
 Cerca nella sezione "cedente/prestatore", "cliente", "destinatario" o "cessionario/committente".
 Rispondi SOLO con JSON valido, zero testo aggiuntivo:
 {{"nome":"ragione sociale","partita_iva":"solo numeri o null","codice_fiscale":"o null","indirizzo":"via + civico o null","citta":"o null","cap":"o null","paese":"default Italia","email":"o null","telefono":"o null","referente":"nome contatto se presente o null","sito_web":"o null"}}"""
@@ -32526,9 +32629,9 @@ def cliente_elimina(cid):
 
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 #  FORNITORI
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
 FORNITORI_TMPL = """
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
@@ -32549,7 +32652,7 @@ FORNITORI_TMPL = """
   <thead><tr style="background:#0f172a;color:#fff">
     <th style="padding:10px 12px;text-align:left">NOME</th>
     <th style="padding:10px 12px;text-align:left">P.IVA</th>
-    <th style="padding:10px 12px;text-align:left">CITTÃƒâ‚¬</th>
+    <th style="padding:10px 12px;text-align:left">CITTÃƒÆ’Ã¢â€šÂ¬</th>
     <th style="padding:10px 12px;text-align:left">EMAIL / TEL</th>
     <th style="padding:10px 12px;text-align:center">FATTURE</th>
     <th style="padding:10px 12px;text-align:right">TOT. PAGATO</th>
@@ -32559,14 +32662,14 @@ FORNITORI_TMPL = """
   {% for f in fornitori %}
   <tr style="border-bottom:1px solid var(--border)">
     <td style="padding:10px 12px"><strong>{{ f.nome }}</strong>{% if f.referente %}<div style="font-size:12px;color:var(--text-light)">{{ f.referente }}</div>{% endif %}</td>
-    <td style="padding:10px 12px;font-family:monospace;font-size:12px">{{ f.piva or 'Ã¢â‚¬â€œ' }}</td>
-    <td style="padding:10px 12px">{{ f.citta or 'Ã¢â‚¬â€œ' }}</td>
+    <td style="padding:10px 12px;font-family:monospace;font-size:12px">{{ f.piva or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
+    <td style="padding:10px 12px">{{ f.citta or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
     <td style="padding:10px 12px;font-size:12px">
       {% if f.email %}<div>{{ f.email }}</div>{% endif %}
       {% if f.telefono %}<div style="color:var(--text-light)">{{ f.telefono }}</div>{% endif %}
     </td>
     <td style="padding:10px 12px;text-align:center">{{ f.n_fatture }}</td>
-    <td style="padding:10px 12px;text-align:right;font-weight:700;color:#16a34a">Ã¢â€šÂ¬ {{ "%.2f"|format(f.tot_fatturato) }}</td>
+    <td style="padding:10px 12px;text-align:right;font-weight:700;color:#16a34a">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(f.tot_fatturato) }}</td>
     <td style="padding:10px 12px;text-align:right;white-space:nowrap">
       <a href="/fornitori/{{ f.id }}/modifica" class="btn btn-sm btn-secondary"><i class="fa fa-pen"></i></a>
       <a href="/fornitori/{{ f.id }}/elimina" class="btn btn-sm btn-danger" onclick="return confirm('Eliminare {{ f.nome }}?')"><i class="fa fa-trash"></i></a>
@@ -32602,7 +32705,7 @@ FORNITORE_FORM_TMPL = """
     <div class="form-group" style="grid-column:span 2"><label>Indirizzo</label><input name="indirizzo" value="{{ fr.indirizzo if fr else '' }}"></div>
   </div>
   <div class="form-row-3">
-    <div class="form-group"><label>CittÃƒÂ </label><input name="citta" value="{{ fr.citta if fr else '' }}"></div>
+    <div class="form-group"><label>CittÃƒÆ’Ã‚Â </label><input name="citta" value="{{ fr.citta if fr else '' }}"></div>
     <div class="form-group"><label>CAP</label><input name="cap" value="{{ fr.cap if fr else '' }}"></div>
     <div class="form-group"><label>Paese</label><input name="paese" value="{{ fr.paese if fr else 'Italia' }}"></div>
   </div>
@@ -32712,9 +32815,9 @@ def fornitore_elimina(fid):
     return redirect(url_for('fornitori_lista'))
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 #  BANCA ORE
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
 def _banca_ore_saldo(db, utente_id):
     """Saldo LIVE banca ore: somma di tutti i delta mensili (live) + rettifiche manuali.
@@ -32723,7 +32826,7 @@ def _banca_ore_saldo(db, utente_id):
     return info['saldo']
 
 
-# FestivitÃƒÂ  italiane fisse + Pasqua/Pasquetta calcolate
+# FestivitÃƒÆ’Ã‚Â  italiane fisse + Pasqua/Pasquetta calcolate
 def _festivita_italiane(year):
     """Restituisce set di date festive italiane per l'anno."""
     from datetime import date as _d, timedelta as _td
@@ -32760,8 +32863,8 @@ def _festivita_italiane(year):
 
 def _giorni_lavorativi_nel_mese(anno, mese, fino_a=None):
     """Conta i giorni lavorativi (lun-ven, esclusi festivi) del mese.
-    Se fino_a (date) ÃƒÂ¨ fornito, conta solo fino a quella data inclusa.
-    Se il mese ÃƒÂ¨ futuro rispetto a fino_a, ritorna 0."""
+    Se fino_a (date) ÃƒÆ’Ã‚Â¨ fornito, conta solo fino a quella data inclusa.
+    Se il mese ÃƒÆ’Ã‚Â¨ futuro rispetto a fino_a, ritorna 0."""
     from datetime import date as _d
     from calendar import monthrange
     festivi = _festivita_italiane(anno)
@@ -32802,7 +32905,7 @@ def _banca_ore_info_completa(db, utente_id):
 
     oggi = _d.today()
 
-    # Trova il mese piÃƒÂ¹ antico tra: monte ore manuale, presenze, rettifiche
+    # Trova il mese piÃƒÆ’Ã‚Â¹ antico tra: monte ore manuale, presenze, rettifiche
     rows = []
     try:
         r1 = db.execute("SELECT MIN(mese) FROM banca_ore_monte WHERE utente_id=?", (utente_id,)).fetchone()
@@ -32820,7 +32923,7 @@ def _banca_ore_info_completa(db, utente_id):
     except Exception: pass
 
     if not rows:
-        # Nessun dato Ã¢â€ â€™ mostra solo il mese corrente
+        # Nessun dato ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ mostra solo il mese corrente
         primo_mese_str = oggi.strftime('%Y-%m')
     else:
         primo_mese_str = min(rows)
@@ -32866,7 +32969,7 @@ def _banca_ore_info_completa(db, utente_id):
             rett = 0.0
 
         delta_mese = round(ore_lav - monte, 2)
-        # Saldo del mese = delta lavorate-monte + rettifiche; il riporto ÃƒÂ¨ il saldo_progressivo prima dell'aggiornamento
+        # Saldo del mese = delta lavorate-monte + rettifiche; il riporto ÃƒÆ’Ã‚Â¨ il saldo_progressivo prima dell'aggiornamento
         riporto = round(saldo_progressivo, 2)
         saldo_mese = round(delta_mese + rett + riporto, 2)
 
@@ -32898,9 +33001,9 @@ def _banca_ore_info_completa(db, utente_id):
     }
 
 
-# Funzioni legacy mantenute per retrocompatibilitÃƒÂ  ma DEPRECATE (no-op):
+# Funzioni legacy mantenute per retrocompatibilitÃƒÆ’Ã‚Â  ma DEPRECATE (no-op):
 def _banca_ore_mese_gia_chiuso(db, utente_id, mese):
-    """DEPRECATA: nel nuovo sistema non ci sono piÃƒÂ¹ chiusure (saldo ÃƒÂ¨ live)."""
+    """DEPRECATA: nel nuovo sistema non ci sono piÃƒÆ’Ã‚Â¹ chiusure (saldo ÃƒÆ’Ã‚Â¨ live)."""
     return False
 
 
@@ -32914,7 +33017,7 @@ def _banca_ore_chiudi_mese_auto():
     pass
 
 
-# (Rimosso hook chiusura automatica: nel nuovo sistema il saldo ÃƒÂ¨ LIVE,
+# (Rimosso hook chiusura automatica: nel nuovo sistema il saldo ÃƒÆ’Ã‚Â¨ LIVE,
 # calcolato al volo dalle presenze. Nessuna scrittura periodica necessaria.)
 
 
@@ -33013,7 +33116,7 @@ BANCA_ORE_TMPL = """
         <input type="hidden" name="redirect_mese" value="{{ mese_sel }}">
         <input type="number" name="monte_ore" value="{{ '%.1f'|format(m.monte_ore) if m.monte_ore else '' }}"
                step="0.5" min="0" max="744"
-               placeholder="Ã¢â‚¬â€"
+               placeholder="ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â"
                onblur="this.form.submit()"
                class="bo-monte-input {% if not m.monte_ore %}bo-empty{% endif %}"
                title="Inserisci il monte ore per questo mese">
@@ -33024,10 +33127,10 @@ BANCA_ORE_TMPL = """
       {% if m.delta_mese > 0 %}+{% endif %}{{ "%.1f"|format(m.delta_mese) }} h
     </td>
     <td style="text-align:right;font-family:monospace;font-size:13px" class="{% if m.rettifiche > 0 %}bo-pos{% elif m.rettifiche < 0 %}bo-neg{% else %}bo-zero{% endif %}">
-      {% if m.rettifiche %}{% if m.rettifiche > 0 %}+{% endif %}{{ "%.1f"|format(m.rettifiche) }}{% else %}Ã¢â‚¬â€{% endif %}
+      {% if m.rettifiche %}{% if m.rettifiche > 0 %}+{% endif %}{{ "%.1f"|format(m.rettifiche) }}{% else %}ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â{% endif %}
     </td>
     <td style="text-align:right;font-family:monospace;font-size:13px;color:var(--text-light)">
-      {% if m.riporto %}{% if m.riporto > 0 %}+{% endif %}{{ "%.1f"|format(m.riporto) }}{% else %}Ã¢â‚¬â€{% endif %}
+      {% if m.riporto %}{% if m.riporto > 0 %}+{% endif %}{{ "%.1f"|format(m.riporto) }}{% else %}ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â{% endif %}
     </td>
     <td style="text-align:right;font-weight:800;font-size:14px" class="{% if m.saldo_finale > 0 %}bo-pos{% elif m.saldo_finale < 0 %}bo-neg{% else %}bo-zero{% endif %}">
       {% if m.saldo_finale > 0 %}+{% endif %}{{ "%.1f"|format(m.saldo_finale) }} h
@@ -33060,7 +33163,7 @@ BANCA_ORE_TMPL = """
           <input type="month" name="mese" value="{{ m.mese }}" required style="padding:5px 8px;border:1px solid #fcd34d;border-radius:5px;font-size:12px">
         </div>
         <div class="form-group" style="margin:0;min-width:120px">
-          <label style="font-size:11px">Delta ore (Ã‚Â±)</label>
+          <label style="font-size:11px">Delta ore (Ãƒâ€šÃ‚Â±)</label>
           <input type="number" name="delta" step="0.25" required placeholder="es. -4 o 8" style="text-align:right;font-weight:700;padding:5px 8px;border:1px solid #fcd34d;border-radius:5px;font-size:12px">
         </div>
         <div class="form-group" style="margin:0;flex:1;min-width:200px">
@@ -33076,7 +33179,7 @@ BANCA_ORE_TMPL = """
   <tr id="chart-row-{{ u.id }}" class="bo-chart-row">
     <td colspan="9">
       <div class="bo-chart-wrap">
-        <div style="font-size:12px;color:var(--text-light);margin-bottom:6px">Ã°Å¸â€œÅ  Andamento ultimi 12 mesi: <strong>{{ u.nome }} {{ u.cognome }}</strong></div>
+        <div style="font-size:12px;color:var(--text-light);margin-bottom:6px">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…Â  Andamento ultimi 12 mesi: <strong>{{ u.nome }} {{ u.cognome }}</strong></div>
         <canvas id="chart-{{ u.id }}" class="bo-chart-canvas"></canvas>
       </div>
     </td>
@@ -33089,9 +33192,9 @@ BANCA_ORE_TMPL = """
 
 <div class="bo-info">
   <strong><i class="fa fa-circle-info"></i> Come funziona:</strong>
-  Le <strong>ore lavorate</strong> e i <strong>riporti</strong> sono automatici. Il <strong>monte ore</strong> di ogni mese lo inserisci tu cliccando direttamente nella cella (Ã°Å¸â€˜Ë† prova!).
-  Per rettifiche manuali (es. pagamento straordinari) usa "Azioni Ã¢â€ â€™ Rettifica". Per il grafico storico usa "Azioni Ã¢â€ â€™ Grafico 12 mesi".
-  Il <strong>SALDO BANCA</strong> ÃƒÂ¨ il saldo cumulativo aggiornato a oggi (riporto fino al mese corrente).
+  Le <strong>ore lavorate</strong> e i <strong>riporti</strong> sono automatici. Il <strong>monte ore</strong> di ogni mese lo inserisci tu cliccando direttamente nella cella (ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‹â€  prova!).
+  Per rettifiche manuali (es. pagamento straordinari) usa "Azioni ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Rettifica". Per il grafico storico usa "Azioni ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Grafico 12 mesi".
+  Il <strong>SALDO BANCA</strong> ÃƒÆ’Ã‚Â¨ il saldo cumulativo aggiornato a oggi (riporto fino al mese corrente).
 </div>
 
 <!-- Dati grafici (JSON, letti da JS) -->
@@ -33145,7 +33248,7 @@ function toggleGrafico(id) {
     return;
   }
   row.classList.add('open');
-  if (charts[id]) return;  // giÃƒÂ  renderizzato
+  if (charts[id]) return;  // giÃƒÆ’Ã‚Â  renderizzato
 
   var data = JSON.parse(document.getElementById('bo-chart-data').textContent);
   var d = data.dipendenti[id];
@@ -33230,7 +33333,7 @@ BANCA_ORE_DETTAGLIO_TMPL = """
   <div class="bo-card">
     <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700">Dipendente</div>
     <div style="font-size:20px;font-weight:800;margin-top:4px">{{ u.nome }} {{ u.cognome }}</div>
-    <div style="font-size:12px;color:var(--text-light)">{{ u.titolo or u.mansione or 'Ã¢â‚¬â€' }}</div>
+    <div style="font-size:12px;color:var(--text-light)">{{ u.titolo or u.mansione or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â' }}</div>
   </div>
   <div class="bo-card">
     <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700">Ore lavorate (auto)</div>
@@ -33257,7 +33360,7 @@ BANCA_ORE_DETTAGLIO_TMPL = """
   <h3 style="margin:0 0 8px;font-size:16px"><i class="fa fa-calendar"></i> Andamento mese per mese</h3>
   <p style="font-size:12px;color:var(--text-light);margin:0 0 12px">
     <strong>Ore lavorate</strong> sono calcolate automaticamente dalle presenze.
-    <strong>Monte ore</strong> e <strong>Rettifiche</strong> li gestisci tu manualmente Ã¢â‚¬â€ clicca su una cella per modificarla.
+    <strong>Monte ore</strong> e <strong>Rettifiche</strong> li gestisci tu manualmente ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â clicca su una cella per modificarla.
   </p>
   {% if not info.mesi %}
   <div style="padding:24px;text-align:center;color:var(--text-light)">Nessuno storico disponibile.</div>
@@ -33328,7 +33431,7 @@ BANCA_ORE_DETTAGLIO_TMPL = """
       <input type="month" name="mese" id="rettifica-mese" required value="{{ mese_corrente }}">
     </div>
     <div class="form-group" style="margin:0">
-      <label>Delta ore (Ã‚Â±)</label>
+      <label>Delta ore (Ãƒâ€šÃ‚Â±)</label>
       <input type="number" name="delta" step="0.25" required placeholder="es. -4 o 8" style="font-weight:700;text-align:right">
     </div>
     <div class="form-group" style="margin:0">
@@ -33353,9 +33456,9 @@ BANCA_ORE_DETTAGLIO_TMPL = """
     <tbody>
     {% for r in rettifiche %}
     <tr>
-      <td style="font-family:monospace;font-size:11px">{{ r.creato_il[:10] if r.creato_il else 'Ã¢â‚¬â€' }}</td>
-      <td style="font-family:monospace;font-size:11px">{{ r.mese or 'Ã¢â‚¬â€' }}</td>
-      <td style="font-size:13px">{{ r.descrizione or 'Ã¢â‚¬â€' }}</td>
+      <td style="font-family:monospace;font-size:11px">{{ r.creato_il[:10] if r.creato_il else 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â' }}</td>
+      <td style="font-family:monospace;font-size:11px">{{ r.mese or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â' }}</td>
+      <td style="font-size:13px">{{ r.descrizione or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â' }}</td>
       <td style="text-align:right;font-weight:800" class="{% if r.delta > 0 %}bo-pos{% elif r.delta < 0 %}bo-neg{% else %}bo-zero{% endif %}">
         {% if r.delta > 0 %}+{% endif %}{{ "%.2f"|format(r.delta) }} h
       </td>
@@ -33398,7 +33501,7 @@ def banca_ore():
         mesi_grafico.append(f"{y:04d}-{m:02d}")
         m -= 1
         if m < 1: m = 12; y -= 1
-    mesi_grafico.reverse()  # dal piÃƒÂ¹ vecchio al piÃƒÂ¹ recente
+    mesi_grafico.reverse()  # dal piÃƒÆ’Ã‚Â¹ vecchio al piÃƒÆ’Ã‚Â¹ recente
 
     db = get_db()
     dip_raw = db.execute("""SELECT id, nome, cognome, mansione as titolo
@@ -33461,13 +33564,13 @@ def banca_ore_dettaglio(uid):
     if not u:
         db.close(); flash('Dipendente non trovato.','error'); return redirect(url_for('banca_ore'))
     info = _banca_ore_info_completa(db, uid)
-    # Solo rettifiche manuali (i mesi sono giÃƒÂ  nel breakdown live)
+    # Solo rettifiche manuali (i mesi sono giÃƒÆ’Ã‚Â  nel breakdown live)
     rettifiche = db.execute("""SELECT * FROM banca_ore_movimenti
                                WHERE utente_id=? AND tipo IN ('rettifica','manuale')
                                ORDER BY id DESC""", (uid,)).fetchall()
     db.close()
     return render_page(BANCA_ORE_DETTAGLIO_TMPL,
-                       page_title=f"Banca Ore Ã¢â‚¬â€ {u['nome']} {u['cognome']}",
+                       page_title=f"Banca Ore ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {u['nome']} {u['cognome']}",
                        active='banca_ore', u=dict(u),
                        info=info, rettifiche=[dict(r) for r in rettifiche],
                        mese_corrente=date.today().strftime('%Y-%m'))
@@ -33503,7 +33606,7 @@ def banca_ore_monte_set(uid):
                    (uid, mese, monte_ore))
     safe_commit(db); db.close()
     flash(f"Monte ore {mese}: {monte_ore:.1f}h salvato.", 'success')
-    # Se chiamato dall'elenco con filtro mese, torna lÃƒÂ¬; altrimenti vai al dettaglio
+    # Se chiamato dall'elenco con filtro mese, torna lÃƒÆ’Ã‚Â¬; altrimenti vai al dettaglio
     if redirect_mese:
         return redirect(url_for('banca_ore', mese=redirect_mese))
     return redirect(url_for('banca_ore_dettaglio', uid=uid))
@@ -33522,7 +33625,7 @@ def banca_ore_rettifica(uid):
     if not descrizione:
         flash('Descrizione obbligatoria.','error')
         return redirect(url_for('banca_ore', mese=redirect_mese) if redirect_mese else url_for('banca_ore_dettaglio', uid=uid))
-    # Mese specificato dal form (default mese corrente per retrocompatibilitÃƒÂ )
+    # Mese specificato dal form (default mese corrente per retrocompatibilitÃƒÆ’Ã‚Â )
     mese = (request.form.get('mese') or date.today().strftime('%Y-%m')).strip()
     if len(mese) != 7 or mese[4] != '-':
         mese = date.today().strftime('%Y-%m')
@@ -33541,9 +33644,9 @@ def banca_ore_rettifica(uid):
 @app.route('/banca-ore/chiudi-mese', methods=['POST', 'GET'])
 @admin_required
 def banca_ore_chiudi_mese():
-    """Mantenuta per retrocompatibilitÃƒÂ  ma ora ÃƒÂ¨ no-op: nel nuovo sistema il saldo ÃƒÂ¨
+    """Mantenuta per retrocompatibilitÃƒÆ’Ã‚Â  ma ora ÃƒÆ’Ã‚Â¨ no-op: nel nuovo sistema il saldo ÃƒÆ’Ã‚Â¨
     calcolato in tempo reale, non servono chiusure mensili."""
-    flash('Il saldo banca ore ÃƒÂ¨ ora calcolato in tempo reale: non serve piÃƒÂ¹ chiudere il mese manualmente. Ã¢Å“â€¦', 'success')
+    flash('Il saldo banca ore ÃƒÆ’Ã‚Â¨ ora calcolato in tempo reale: non serve piÃƒÆ’Ã‚Â¹ chiudere il mese manualmente. ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦', 'success')
     return redirect(url_for('banca_ore'))
 
 
@@ -33559,11 +33662,11 @@ def banca_ore_movimento_elimina(mid):
     return redirect(url_for('banca_ore_dettaglio', uid=uid) if uid else url_for('banca_ore'))
 
 
-# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ REPORT BANCA ORE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ REPORT BANCA ORE ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 
 def _banca_ore_report_data(db, dipendente_id, mese_da, mese_a):
     """Ritorna lista di dipendenti con breakdown mensile nell'intervallo [mese_da, mese_a].
-    Usa la NUOVA logica live: monte = ore_giornaliere Ãƒâ€” giorni_lavorativi (lun-ven, no festivi).
+    Usa la NUOVA logica live: monte = ore_giornaliere ÃƒÆ’Ã¢â‚¬â€ giorni_lavorativi (lun-ven, no festivi).
     Ogni dipendente: {id, nome, cognome, ore_giornaliere, saldo_iniziale, saldo_finale,
                      mesi: [{mese, giorni_lavorativi, ore_lavorate, monte_dovuto,
                              rettifiche: [...], delta_mese, saldo_progressivo}]}
@@ -33748,7 +33851,7 @@ BANCA_ORE_REPORT_TMPL = """
     <div class="form-group" style="margin:0">
       <label>Dipendente</label>
       <select name="dipendente_id">
-        <option value="tutti" {{ 'selected' if dipendente_id == 'tutti' }}>Ã¢â‚¬â€ Tutti i dipendenti con contratto Ã¢â‚¬â€</option>
+        <option value="tutti" {{ 'selected' if dipendente_id == 'tutti' }}>ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Tutti i dipendenti con contratto ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
         {% for u in tutti_dipendenti %}
         <option value="{{ u.id }}" {{ 'selected' if dipendente_id == u.id|string }}>{{ u.nome }} {{ u.cognome }}{% if u.titolo %} ({{ u.titolo }}){% endif %}</option>
         {% endfor %}
@@ -33783,7 +33886,7 @@ BANCA_ORE_REPORT_TMPL = """
       <div style="font-size:18px;font-weight:800">{{ u.nome }} {{ u.cognome }}</div>
       <div style="font-size:12px;opacity:.8">
         Contratto: <strong>{{ "%.1f"|format(u.ore_giornaliere or 0) }}h/giorno</strong>
-        &nbsp;Ã‚Â·&nbsp; Periodo: {{ mese_da }} Ã¢â€ â€™ {{ mese_a }}
+        &nbsp;Ãƒâ€šÃ‚Â·&nbsp; Periodo: {{ mese_da }} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ {{ mese_a }}
       </div>
     </div>
     <div style="text-align:right">
@@ -33822,9 +33925,9 @@ BANCA_ORE_REPORT_TMPL = """
         </td>
         <td style="font-size:12px;color:var(--text-light)">
           {% if m.is_corrente %}
-            <span style="color:#f59e0b"><i class="fa fa-clock"></i> Mese in corso Ã¢â‚¬â€ dati fino a oggi</span>
+            <span style="color:#f59e0b"><i class="fa fa-clock"></i> Mese in corso ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â dati fino a oggi</span>
           {% elif m.ore_lavorate == 0 %}
-            <span style="opacity:.5">Ã¢â‚¬â€</span>
+            <span style="opacity:.5">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</span>
           {% else %}
             <span style="color:#16a34a"><i class="fa fa-check"></i> Calcolato in tempo reale</span>
           {% endif %}
@@ -33843,8 +33946,8 @@ BANCA_ORE_REPORT_TMPL = """
           {% if r.delta > 0 %}+{% endif %}{{ "%.2f"|format(r.delta) }} h
         </td>
         <td>
-          <strong>{% if r.tipo=='rettifica' %}Ã¢â€ Â» Rettifica{% elif r.tipo=='manuale' %}Ã¢Å“Å½ Manuale{% else %}{{ r.tipo }}{% endif %}:</strong>
-          {{ r.descrizione or 'Ã¢â‚¬â€' }}
+          <strong>{% if r.tipo=='rettifica' %}ÃƒÂ¢Ã¢â‚¬Â Ã‚Â» Rettifica{% elif r.tipo=='manuale' %}ÃƒÂ¢Ã…â€œÃ…Â½ Manuale{% else %}{{ r.tipo }}{% endif %}:</strong>
+          {{ r.descrizione or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â' }}
           {% if r.delta < 0 %}<span style="background:#fca5a5;color:#7f1d1d;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:6px;font-weight:700">PRELIEVO</span>{% endif %}
         </td>
         <td></td>
@@ -33862,7 +33965,7 @@ BANCA_ORE_REPORT_TMPL = """
   <div style="display:flex;justify-content:space-between;align-items:center">
     <div>
       <strong style="color:#15803d;font-size:14px"><i class="fa fa-chart-simple"></i> Totale dipendenti nel report</strong>
-      <div style="font-size:12px;color:#16a34a;margin-top:2px">{{ report|length }} dipendenti Ã‚Â· periodo {{ mese_da }} Ã¢â€ â€™ {{ mese_a }}</div>
+      <div style="font-size:12px;color:#16a34a;margin-top:2px">{{ report|length }} dipendenti Ãƒâ€šÃ‚Â· periodo {{ mese_da }} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ {{ mese_a }}</div>
     </div>
     <div style="text-align:right">
       <div style="font-size:11px;color:#16a34a;text-transform:uppercase;font-weight:700">Saldo totale</div>
@@ -33949,7 +34052,7 @@ def banca_ore_report_export():
     rett_fill    = PatternFill("solid", fgColor="FEF3C7")
 
     # Titolo
-    ws.cell(1, 1, f"Report Banca Ore Ã‚Â· Periodo {mese_da} Ã¢â€ â€™ {mese_a}").font = Font(bold=True, size=14, color="0F4C81")
+    ws.cell(1, 1, f"Report Banca Ore Ãƒâ€šÃ‚Â· Periodo {mese_da} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ {mese_a}").font = Font(bold=True, size=14, color="0F4C81")
     ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=7)
     ws.cell(2, 1, f"Generato il {date.today().isoformat()}").font = Font(italic=True, size=10, color="64748B")
     ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=8)
@@ -33957,7 +34060,7 @@ def banca_ore_report_export():
     row_i = 4
     for u in report:
         # Intestazione dipendente
-        c = ws.cell(row_i, 1, f"{u['nome']} {u['cognome']} Ã‚Â· Contratto: {u['ore_giornaliere']:.1f}h/giorno Ã‚Â· Saldo iniziale: {u['saldo_iniziale']:+.2f}h Ã‚Â· Saldo finale: {u['saldo_finale']:+.2f}h")
+        c = ws.cell(row_i, 1, f"{u['nome']} {u['cognome']} Ãƒâ€šÃ‚Â· Contratto: {u['ore_giornaliere']:.1f}h/giorno Ãƒâ€šÃ‚Â· Saldo iniziale: {u['saldo_iniziale']:+.2f}h Ãƒâ€šÃ‚Â· Saldo finale: {u['saldo_finale']:+.2f}h")
         c.font = dip_font; c.fill = dip_fill; c.alignment = left
         ws.merge_cells(start_row=row_i, start_column=1, end_row=row_i, end_column=8)
         row_i += 1
@@ -33991,7 +34094,7 @@ def banca_ore_report_export():
                 ws.cell(row_i, 7, 'Dati fino a oggi').alignment = left
             elif ore_lav == 0:
                 ws.cell(row_i, 6, '').alignment = left
-                ws.cell(row_i, 7, 'Ã¢â‚¬â€').alignment = left
+                ws.cell(row_i, 7, 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â').alignment = left
             else:
                 ws.cell(row_i, 6, 'Calcolo LIVE').font = Font(italic=True, color="16A34A")
                 ws.cell(row_i, 7, 'Saldo calcolato in tempo reale').alignment = left
@@ -34002,7 +34105,7 @@ def banca_ore_report_export():
 
             # Righe rettifiche/prelievi dettagliate
             for r in m['rettifiche']:
-                ws.cell(row_i, 1, f"  Ã¢â€ Â³ {mese_str}").font = Font(italic=True, size=10, color="64748B")
+                ws.cell(row_i, 1, f"  ÃƒÂ¢Ã¢â‚¬Â Ã‚Â³ {mese_str}").font = Font(italic=True, size=10, color="64748B")
                 ws.cell(row_i, 2, '').alignment = right
                 ws.cell(row_i, 3, '').alignment = right
                 ws.cell(row_i, 4, '').alignment = right
@@ -34043,11 +34146,11 @@ def banca_ore_report_export():
 
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-#  CALENDARIO FIERE Ã¢â‚¬â€ vista mensile/annuale visuale
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
+#  CALENDARIO FIERE ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â vista mensile/annuale visuale
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
 CALENDARIO_FIERE_TMPL = """
 <style>
@@ -34087,9 +34190,9 @@ CALENDARIO_FIERE_TMPL = """
     <a href="/calendario-fiere" class="btn btn-secondary btn-sm" style="margin-left:8px">Oggi</a>
   </div>
   <div class="cal-legend">
-    <span><span class="cal-legend-dot" style="background:#3b82f6"></span>Ã°Å¸â€œÂ¦ Setup</span>
-    <span><span class="cal-legend-dot" style="background:#16a34a"></span>Ã°Å¸â€Â´ Live</span>
-    <span><span class="cal-legend-dot" style="background:#dc2626"></span>Ã°Å¸â€œÂ¤ Smontaggio</span>
+    <span><span class="cal-legend-dot" style="background:#3b82f6"></span>ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¦ Setup</span>
+    <span><span class="cal-legend-dot" style="background:#16a34a"></span>ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â´ Live</span>
+    <span><span class="cal-legend-dot" style="background:#dc2626"></span>ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¤ Smontaggio</span>
   </div>
 </div>
 
@@ -34121,9 +34224,9 @@ CALENDARIO_FIERE_TMPL = """
       <span class="tipo-badge tipo-{{ 'fiera' if f.tipo_evento=='Fiera' else 'evento' if f.tipo_evento=='Evento aziendale' else 'congresso' if f.tipo_evento=='Congresso' else 'altro' }}" style="padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700">{{ f.tipo_evento or 'Fiera' }}</span>
       <div class="cal-event-name"><a href="/cantieri/{{ f.id }}">{{ f.nome }}</a></div>
       <div style="font-size:11px;color:var(--text-light);font-family:monospace">
-        {% if f.data_setup %}Ã°Å¸â€œÂ¦{{ f.data_setup }}{% endif %}
-        {% if f.data_live %} Ã¢â‚¬Â¢ Ã°Å¸â€Â´{{ f.data_live }}{% endif %}
-        {% if f.data_dismantling %} Ã¢â‚¬Â¢ Ã°Å¸â€œÂ¤{{ f.data_dismantling }}{% endif %}
+        {% if f.data_setup %}ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¦{{ f.data_setup }}{% endif %}
+        {% if f.data_live %} ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â´{{ f.data_live }}{% endif %}
+        {% if f.data_dismantling %} ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¤{{ f.data_dismantling }}{% endif %}
       </div>
       {% if f.committente_nome %}<div style="font-size:11px;color:var(--text-light)">{{ f.committente_nome }}</div>{% endif %}
     </div>
@@ -34171,8 +34274,8 @@ def calendario_fiere():
     """, (fine_mese, inizio_mese, fine_mese, inizio_mese)).fetchall()
     db.close()
 
-    # Costruzione griglia settimane: parto dal lunedÃƒÂ¬ che contiene il 1Ã‚Â° del mese
-    primo_weekday = primo_giorno.weekday()  # lunedÃƒÂ¬=0
+    # Costruzione griglia settimane: parto dal lunedÃƒÆ’Ã‚Â¬ che contiene il 1Ãƒâ€šÃ‚Â° del mese
+    primo_weekday = primo_giorno.weekday()  # lunedÃƒÆ’Ã‚Â¬=0
     primo_giorno_grid = primo_giorno - _td(days=primo_weekday)
     # Genero 6 settimane (max possibili in un mese)
     settimane = []
@@ -34196,26 +34299,26 @@ def calendario_fiere():
                 # Se le 3 date sono definite uso quelle, altrimenti fallback su legacy
                 if ds and dl and dd:
                     if ds <= cur_iso < dl:
-                        fase = 'setup'; titolo = f"Ã°Å¸â€œÂ¦ {f['nome']}"
+                        fase = 'setup'; titolo = f"ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¦ {f['nome']}"
                     elif dl <= cur_iso <= dd:
                         # da dl a dd-1 = live, dd = dismantling
                         if cur_iso < dd:
-                            fase = 'live'; titolo = f"Ã°Å¸â€Â´ {f['nome']}"
+                            fase = 'live'; titolo = f"ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â´ {f['nome']}"
                         else:
-                            fase = 'dismantling'; titolo = f"Ã°Å¸â€œÂ¤ {f['nome']}"
+                            fase = 'dismantling'; titolo = f"ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¤ {f['nome']}"
                 elif ds and dl:
                     if ds <= cur_iso < dl:
-                        fase = 'setup'; titolo = f"Ã°Å¸â€œÂ¦ {f['nome']}"
+                        fase = 'setup'; titolo = f"ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¦ {f['nome']}"
                     elif cur_iso == dl:
-                        fase = 'live'; titolo = f"Ã°Å¸â€Â´ {f['nome']}"
+                        fase = 'live'; titolo = f"ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â´ {f['nome']}"
                 elif ds and dd:
                     if ds <= cur_iso <= dd:
                         if cur_iso == ds:
-                            fase = 'setup'; titolo = f"Ã°Å¸â€œÂ¦ {f['nome']}"
+                            fase = 'setup'; titolo = f"ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¦ {f['nome']}"
                         elif cur_iso == dd:
-                            fase = 'dismantling'; titolo = f"Ã°Å¸â€œÂ¤ {f['nome']}"
+                            fase = 'dismantling'; titolo = f"ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¤ {f['nome']}"
                         else:
-                            fase = 'live'; titolo = f"Ã°Å¸â€Â´ {f['nome']}"
+                            fase = 'live'; titolo = f"ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â´ {f['nome']}"
                 elif di and df_ and di <= cur_iso <= df_:
                     fase = 'legacy'; titolo = f['nome']
                 elif di and not df_ and di == cur_iso:
@@ -34234,7 +34337,7 @@ def calendario_fiere():
                 'events': events,
             })
         settimane.append(week)
-        # Stop se siamo giÃƒÂ  usciti dal mese
+        # Stop se siamo giÃƒÆ’Ã‚Â  usciti dal mese
         if w*7 + 6 >= 27 and (primo_giorno_grid + _td(days=(w+1)*7)).month != mese:
             break
 
@@ -34253,9 +34356,9 @@ def calendario_fiere():
                        fiere_mese=[dict(f) for f in fiere])
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 #  SQUADRE (Caposquadra)
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
 SQUADRE_TMPL = """
 <style>
@@ -34290,7 +34393,7 @@ SQUADRE_TMPL = """
   <div class="sq-head">
     <div>
       <div class="sq-name"><i class="fa fa-users"></i> {{ s.nome }}</div>
-      <div class="sq-cs"><i class="fa fa-user-tie"></i> Caposquadra: <strong>{{ s.caposquadra_nome or 'Ã¢â‚¬â€œ' }}</strong></div>
+      <div class="sq-cs"><i class="fa fa-user-tie"></i> Caposquadra: <strong>{{ s.caposquadra_nome or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</strong></div>
       {% if s.note %}<div style="font-size:12px;color:var(--text-light);margin-top:4px;font-style:italic">{{ s.note }}</div>{% endif %}
     </div>
     {% if not s.attiva %}<span class="badge badge-gray">Archiviata</span>{% endif %}
@@ -34324,13 +34427,13 @@ SQUADRE_TMPL = """
 
 <script>
 function confermaEliminaSquadra(nome, nMembri) {
-  var msg1 = 'Ã¢Å¡Â Ã¯Â¸Â Stai per eliminare DEFINITIVAMENTE la squadra "' + nome + '".\n\n';
+  var msg1 = 'ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Stai per eliminare DEFINITIVAMENTE la squadra "' + nome + '".\n\n';
   if (nMembri > 0) {
-    msg1 += 'Ã¢Å“â€œ I ' + nMembri + ' membri NON verranno eliminati (restano nei dipendenti)\n';
+    msg1 += 'ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ I ' + nMembri + ' membri NON verranno eliminati (restano nei dipendenti)\n';
   }
-  msg1 += 'Ã¢Å“â€œ Presenze e incarichi assegnati ai membri restano intatti\n';
-  msg1 += 'Ã¢Å“â€” La squadra verrÃƒÂ  rimossa permanentemente\n';
-  msg1 += 'Ã¢Å“â€” L\\'operazione NON ÃƒÂ¨ reversibile\n\n';
+  msg1 += 'ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Presenze e incarichi assegnati ai membri restano intatti\n';
+  msg1 += 'ÃƒÂ¢Ã…â€œÃ¢â‚¬â€ La squadra verrÃƒÆ’Ã‚Â  rimossa permanentemente\n';
+  msg1 += 'ÃƒÂ¢Ã…â€œÃ¢â‚¬â€ L\\'operazione NON ÃƒÆ’Ã‚Â¨ reversibile\n\n';
   msg1 += 'Procedere?';
   if (!confirm(msg1)) return false;
   return confirm('Conferma definitiva: eliminare la squadra "' + nome + '"?');
@@ -34353,10 +34456,10 @@ SQUADRA_FORM_TMPL = """
       <label>Caposquadra *</label>
       <select name="caposquadra_id" required>
         {% if not capisquadra %}
-        <option value="">Ã¢â‚¬â€ Nessun caposquadra disponibile, prima imposta il ruolo a un dipendente Ã¢â‚¬â€</option>
+        <option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Nessun caposquadra disponibile, prima imposta il ruolo a un dipendente ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
         {% endif %}
         {% for cs in capisquadra %}
-        <option value="{{ cs.id }}" {{ 'selected' if s and s.caposquadra_id == cs.id }}>{{ cs.cognome }} {{ cs.nome }}{% if cs.mansione %} Ã‚Â· {{ cs.mansione }}{% endif %}</option>
+        <option value="{{ cs.id }}" {{ 'selected' if s and s.caposquadra_id == cs.id }}>{{ cs.cognome }} {{ cs.nome }}{% if cs.mansione %} Ãƒâ€šÃ‚Â· {{ cs.mansione }}{% endif %}</option>
         {% endfor %}
       </select>
       <small style="font-size:11px;color:var(--text-light)">Solo dipendenti con ruolo "Caposquadra" possono guidare una squadra.</small>
@@ -34369,7 +34472,7 @@ SQUADRA_FORM_TMPL = """
         <label style="display:flex;align-items:center;gap:10px;padding:6px 8px;cursor:pointer;border-radius:6px;font-size:13px" onmouseover="this.style.background='#fff'" onmouseout="this.style.background='transparent'">
           <input type="checkbox" name="membri" value="{{ d.id }}" {{ 'checked' if d.id in membri_ids }}>
           <strong>{{ d.cognome }} {{ d.nome }}</strong>
-          {% if d.mansione %}<span style="color:var(--text-light);font-size:12px">Ã‚Â· {{ d.mansione }}</span>{% endif %}
+          {% if d.mansione %}<span style="color:var(--text-light);font-size:12px">Ãƒâ€šÃ‚Â· {{ d.mansione }}</span>{% endif %}
         </label>
         {% else %}
         <p style="color:var(--text-light);font-size:13px;text-align:center;padding:14px">Nessun dipendente disponibile.</p>
@@ -34524,9 +34627,9 @@ def squadra_elimina(sid):
     return redirect(url_for('squadre_lista'))
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-#  REPORT GENERALE (Excel) Ã¢â‚¬â€ ore, presenze, rimborsi, banca
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
+#  REPORT GENERALE (Excel) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â ore, presenze, rimborsi, banca
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
 REPORT_TMPL = """
 <style>
@@ -34555,10 +34658,10 @@ REPORT_TMPL = """
     Scarica in un unico file Excel tutto lo storico di un dipendente (o di tutti) nel periodo selezionato:
   </p>
   <ul>
-    <li><strong>Presenze</strong> Ã¢â‚¬â€ date, orari, cantiere/fiera, note di ogni timbratura</li>
-    <li><strong>Rimborsi spese</strong> Ã¢â‚¬â€ date, categorie, importi, descrizioni, stato (approvato/rifiutato/in attesa) con nota admin</li>
-    <li><strong>Banca ore</strong> Ã¢â‚¬â€ rettifiche manuali del periodo (detrazioni/straordinari) e saldo LIVE attuale</li>
-    <li><strong>Riepilogo</strong> Ã¢â‚¬â€ un foglio con totali di periodo per tutti i dipendenti selezionati</li>
+    <li><strong>Presenze</strong> ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â date, orari, cantiere/fiera, note di ogni timbratura</li>
+    <li><strong>Rimborsi spese</strong> ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â date, categorie, importi, descrizioni, stato (approvato/rifiutato/in attesa) con nota admin</li>
+    <li><strong>Banca ore</strong> ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â rettifiche manuali del periodo (detrazioni/straordinari) e saldo LIVE attuale</li>
+    <li><strong>Riepilogo</strong> ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â un foglio con totali di periodo per tutti i dipendenti selezionati</li>
   </ul>
 </div>
 
@@ -34568,9 +34671,9 @@ REPORT_TMPL = """
     <div class="form-group" style="margin:0">
       <label>Dipendente</label>
       <select name="dipendente_id">
-        <option value="tutti">Ã¢â‚¬â€ Tutti i dipendenti attivi Ã¢â‚¬â€</option>
+        <option value="tutti">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Tutti i dipendenti attivi ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
         {% for d in dipendenti %}
-        <option value="{{ d.id }}">{{ d.cognome }} {{ d.nome }}{% if d.mansione %} Ã‚Â· {{ d.mansione }}{% endif %}</option>
+        <option value="{{ d.id }}">{{ d.cognome }} {{ d.nome }}{% if d.mansione %} Ãƒâ€šÃ‚Â· {{ d.mansione }}{% endif %}</option>
         {% endfor %}
       </select>
     </div>
@@ -34599,7 +34702,7 @@ REPORT_TMPL = """
     <div class="form-group" style="margin:0">
       <label style="font-size:11px">Dipendente</label>
       <select name="dipendente_id" style="width:100%">
-        <option value="">Ã¢â‚¬â€ Tutti Ã¢â‚¬â€</option>
+        <option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Tutti ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
         {% for d in dipendenti %}
         <option value="{{ d.id }}" {{ 'selected' if filtro_dip == d.id|string }}>{{ d.cognome }} {{ d.nome }}</option>
         {% endfor %}
@@ -34608,7 +34711,7 @@ REPORT_TMPL = """
     <div class="form-group" style="margin:0">
       <label style="font-size:11px">Cantiere / Fiera</label>
       <select name="cantiere_id" style="width:100%">
-        <option value="">Ã¢â‚¬â€ Tutti Ã¢â‚¬â€</option>
+        <option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Tutti ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
         {% for c in cantieri %}
         <option value="{{ c.id }}" {{ 'selected' if filtro_can == c.id|string }}>{{ c.nome }}</option>
         {% endfor %}
@@ -34651,10 +34754,10 @@ REPORT_TMPL = """
     {% for t in timbrature %}
     <tr {% if t.dip_eliminato %}class="dip-eliminato"{% endif %}>
       <td style="font-family:monospace">{{ t.data }}</td>
-      <td><strong>{{ t.nome or 'Ã¢â‚¬â€' }} {{ t.cognome or '' }}</strong></td>
-      <td>{% if t.cantiere_nome %}<span style="background:#e0e7ff;color:#3730a3;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">{{ t.cantiere_nome }}</span>{% else %}<span style="color:var(--text-light)">Ã¢â‚¬â€</span>{% endif %}</td>
-      <td style="font-family:monospace;font-size:12px">{{ t.ora_entrata or 'Ã¢â‚¬â€' }}</td>
-      <td style="font-family:monospace;font-size:12px">{{ t.ora_uscita or 'Ã¢â‚¬â€' }}</td>
+      <td><strong>{{ t.nome or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â' }} {{ t.cognome or '' }}</strong></td>
+      <td>{% if t.cantiere_nome %}<span style="background:#e0e7ff;color:#3730a3;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">{{ t.cantiere_nome }}</span>{% else %}<span style="color:var(--text-light)">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</span>{% endif %}</td>
+      <td style="font-family:monospace;font-size:12px">{{ t.ora_entrata or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â' }}</td>
+      <td style="font-family:monospace;font-size:12px">{{ t.ora_uscita or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â' }}</td>
       <td style="text-align:right;font-weight:700;font-family:monospace">{{ "%.1f"|format(t.ore_totali or 0) }}</td>
       <td style="font-size:12px;color:var(--text-light)">{{ t.note or '' }}</td>
     </tr>
@@ -34694,7 +34797,7 @@ def report_pagina():
                               ORDER BY s.cognome, s.nome""").fetchall()
     dipendenti_list = [dict(d) for d in dipendenti] + [dict(e) for e in eliminati]
 
-    # Elenco cantieri (tutti, anche archiviati, perchÃƒÂ© potrei voler filtrare storico)
+    # Elenco cantieri (tutti, anche archiviati, perchÃƒÆ’Ã‚Â© potrei voler filtrare storico)
     cantieri = db.execute("SELECT id, nome FROM cantieri ORDER BY nome").fetchall()
 
     # Filtri dall'URL
@@ -34704,7 +34807,7 @@ def report_pagina():
     filtro_da   = (request.args.get('data_da') or '').strip()
     filtro_a    = (request.args.get('data_a') or '').strip()
 
-    # Default mese corrente se nessun filtro date/mese ÃƒÂ¨ stato impostato
+    # Default mese corrente se nessun filtro date/mese ÃƒÆ’Ã‚Â¨ stato impostato
     oggi = date.today()
     primo_mese_corr = oggi.replace(day=1)
     if not filtro_mese and not filtro_da and not filtro_a:
@@ -34714,7 +34817,7 @@ def report_pagina():
     date_da_eff = filtro_da or None
     date_a_eff  = filtro_a  or None
     if filtro_mese and not date_da_eff and not date_a_eff:
-        # mese YYYY-MM Ã¢â€ â€™ primo e ultimo giorno
+        # mese YYYY-MM ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ primo e ultimo giorno
         try:
             from datetime import datetime as _dt
             y, m = filtro_mese.split('-')
@@ -34793,7 +34896,7 @@ def report_export():
 
     db = get_db()
     if dipendente_id == 'tutti':
-        # Dipendenti attivi + dipendenti eliminati che hanno attivitÃƒÂ  nel periodo
+        # Dipendenti attivi + dipendenti eliminati che hanno attivitÃƒÆ’Ã‚Â  nel periodo
         dips_attivi = db.execute("""SELECT id, nome, cognome, mansione, email,
                                     ore_contratto_giornaliere, ore_contratto_mensili,
                                     0 AS eliminato
@@ -34853,11 +34956,11 @@ def report_export():
     thin = Side(border_style='thin', color='CBD5E1')
     border_all = Border(top=thin, left=thin, right=thin, bottom=thin)
 
-    ws_sum['A1'] = f'REPORT COMPLESSIVO Ã¢â‚¬â€ Periodo {data_da} Ã¢â€ â€™ {data_a}'
+    ws_sum['A1'] = f'REPORT COMPLESSIVO ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Periodo {data_da} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ {data_a}'
     ws_sum['A1'].font = Font(bold=True, size=14, color="0F4C81")
     ws_sum.merge_cells('A1:G1')
     headers_sum = ['DIPENDENTE', 'RUOLO', 'PRESENZE', 'ORE LAVORATE',
-                   'RIMBORSI APPROVATI (Ã¢â€šÂ¬)', 'RETTIFICHE BANCA (h)', 'SALDO BANCA (h)']
+                   'RIMBORSI APPROVATI (ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬)', 'RETTIFICHE BANCA (h)', 'SALDO BANCA (h)']
     for j, h in enumerate(headers_sum, 1):
         c = ws_sum.cell(3, j, h)
         c.font = header_font; c.fill = header_fill
@@ -34882,13 +34985,13 @@ def report_export():
         ws['A1'] = nome_full + (' [ELIMINATO]' if is_eliminato else '')
         ws['A1'].font = Font(bold=True, size=16, color=("DC2626" if is_eliminato else "0F4C81"))
         ws.merge_cells('A1:G1')
-        ws['A2'] = f"{u['mansione'] or 'Ã¢â‚¬â€'} Ã‚Â· {u['email'] or ''} Ã‚Â· Periodo: {data_da} Ã¢â€ â€™ {data_a}" + (
-                     ' Ã‚Â· Dipendente eliminato (dati storici)' if is_eliminato else '')
+        ws['A2'] = f"{u['mansione'] or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â'} Ãƒâ€šÃ‚Â· {u['email'] or ''} Ãƒâ€šÃ‚Â· Periodo: {data_da} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ {data_a}" + (
+                     ' Ãƒâ€šÃ‚Â· Dipendente eliminato (dati storici)' if is_eliminato else '')
         ws['A2'].font = Font(italic=True, size=10, color="64748B")
         ws.merge_cells('A2:G2')
         row = 4
 
-        # Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â PRESENZE Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+        # ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â PRESENZE ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
         c = ws.cell(row, 1, 'PRESENZE')
         c.font = section_font; c.fill = section_fill; c.alignment = left
         ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=7)
@@ -34922,7 +35025,7 @@ def report_export():
             ws.cell(row, 4, p['ora_uscita'] or '').alignment = center
             cell_ore = ws.cell(row, 5, p['ore_totali'] or 0)
             cell_ore.number_format = '0.00'; cell_ore.alignment = right
-            ws.cell(row, 6, p['cantiere'] or 'Ã¢â‚¬â€').alignment = left
+            ws.cell(row, 6, p['cantiere'] or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â').alignment = left
             ws.cell(row, 7, p['note'] or '').alignment = left
             tot_ore += float(p['ore_totali'] or 0)
             row += 1
@@ -34940,12 +35043,12 @@ def report_export():
             row += 1
         row += 1
 
-        # Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â RIMBORSI SPESE Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+        # ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â RIMBORSI SPESE ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
         c = ws.cell(row, 1, 'RIMBORSI SPESE')
         c.font = section_font; c.fill = section_fill; c.alignment = left
         ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=7)
         row += 1
-        headers_sp = ['DATA', 'CATEGORIA', 'DESCRIZIONE', 'IMPORTO (Ã¢â€šÂ¬)', 'STATO', 'NOTA ADMIN', '']
+        headers_sp = ['DATA', 'CATEGORIA', 'DESCRIZIONE', 'IMPORTO (ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬)', 'STATO', 'NOTA ADMIN', '']
         for j, h in enumerate(headers_sp, 1):
             cl = ws.cell(row, j, h)
             cl.font = header_font; cl.fill = header_fill
@@ -34963,9 +35066,9 @@ def report_export():
             ws.cell(row, 2, s['categoria'] or '').alignment = left
             ws.cell(row, 3, s['descrizione'] or '').alignment = left
             cimp = ws.cell(row, 4, float(s['importo'] or 0))
-            cimp.number_format = '#,##0.00" Ã¢â€šÂ¬"'; cimp.alignment = right
+            cimp.number_format = '#,##0.00" ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬"'; cimp.alignment = right
             stato = s['stato'] or 'in_attesa'
-            stato_lbl = {'approvata':'Ã¢Å“â€œ Approvata','rifiutata':'Ã¢Å“â€” Rifiutata','in_attesa':'Ã¢ÂÂ³ In attesa'}.get(stato, stato)
+            stato_lbl = {'approvata':'ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Approvata','rifiutata':'ÃƒÂ¢Ã…â€œÃ¢â‚¬â€ Rifiutata','in_attesa':'ÃƒÂ¢Ã‚ÂÃ‚Â³ In attesa'}.get(stato, stato)
             cs = ws.cell(row, 5, stato_lbl); cs.alignment = center
             if stato == 'approvata': cs.fill = pos_fill
             elif stato == 'rifiutata': cs.fill = neg_fill
@@ -34979,7 +35082,7 @@ def report_export():
             c = ws.cell(row, 1, 'TOTALE APPROVATI')
             c.font = tot_font; c.fill = tot_fill; c.alignment = right
             ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=3)
-            cc = ws.cell(row, 4, tot_approvati); cc.number_format = '#,##0.00" Ã¢â€šÂ¬"'; cc.font = tot_font; cc.fill = pos_fill; cc.alignment = right
+            cc = ws.cell(row, 4, tot_approvati); cc.number_format = '#,##0.00" ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬"'; cc.font = tot_font; cc.fill = pos_fill; cc.alignment = right
             n_appr = sum(1 for s in spese if (s['stato'] or 'in_attesa') == 'approvata')
             ws.cell(row, 5, f'{n_appr} rimborsi').fill = tot_fill
             ws.cell(row, 6, '').fill = tot_fill; row += 1
@@ -34987,13 +35090,13 @@ def report_export():
                 c = ws.cell(row, 1, 'Di cui ancora in attesa')
                 c.font = Font(italic=True, size=10); c.alignment = right
                 ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=3)
-                ca = ws.cell(row, 4, tot_attesa); ca.number_format = '#,##0.00" Ã¢â€šÂ¬"'; ca.alignment = right
+                ca = ws.cell(row, 4, tot_attesa); ca.number_format = '#,##0.00" ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬"'; ca.alignment = right
                 row += 1
             if tot_rifiutati > 0:
                 c = ws.cell(row, 1, 'Di cui rifiutati')
                 c.font = Font(italic=True, size=10, color="94A3B8"); c.alignment = right
                 ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=3)
-                cx = ws.cell(row, 4, tot_rifiutati); cx.number_format = '#,##0.00" Ã¢â€šÂ¬"'
+                cx = ws.cell(row, 4, tot_rifiutati); cx.number_format = '#,##0.00" ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬"'
                 cx.alignment = right; cx.font = Font(italic=True, color="94A3B8"); row += 1
         else:
             c = ws.cell(row, 1, 'Nessun rimborso nel periodo.')
@@ -35002,8 +35105,8 @@ def report_export():
             row += 1
         row += 1
 
-        # Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â BANCA ORE Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-        c = ws.cell(row, 1, 'BANCA ORE Ã¢â‚¬â€ Rettifiche manuali / Detrazioni / Straordinari')
+        # ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â BANCA ORE ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
+        c = ws.cell(row, 1, 'BANCA ORE ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Rettifiche manuali / Detrazioni / Straordinari')
         c.font = section_font; c.fill = section_fill; c.alignment = left
         ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=7)
         row += 1
@@ -35070,10 +35173,10 @@ def report_export():
 
         # Riga riepilogo
         ws_sum.cell(riga_sum, 1, nome_full).alignment = left
-        ws_sum.cell(riga_sum, 2, u['mansione'] or 'Ã¢â‚¬â€').alignment = left
+        ws_sum.cell(riga_sum, 2, u['mansione'] or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â').alignment = left
         ws_sum.cell(riga_sum, 3, len(presenze)).alignment = center
         c_ore = ws_sum.cell(riga_sum, 4, tot_ore); c_ore.number_format = '0.00'; c_ore.alignment = right
-        c_rim = ws_sum.cell(riga_sum, 5, tot_approvati); c_rim.number_format = '#,##0.00" Ã¢â€šÂ¬"'; c_rim.alignment = right
+        c_rim = ws_sum.cell(riga_sum, 5, tot_approvati); c_rim.number_format = '#,##0.00" ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬"'; c_rim.alignment = right
         c_ret = ws_sum.cell(riga_sum, 6, tot_rettifiche); c_ret.number_format = '+0.00;-0.00;0.00'; c_ret.alignment = right
         if tot_rettifiche > 0: c_ret.fill = pos_fill
         elif tot_rettifiche < 0: c_ret.fill = neg_fill
@@ -35096,7 +35199,7 @@ def report_export():
         ws_sum.merge_cells(start_row=riga_sum, start_column=1, end_row=riga_sum, end_column=2)
         cp = ws_sum.cell(riga_sum, 3, totali['presenze']); cp.font = Font(bold=True); cp.fill = tot_fill; cp.alignment = center
         co = ws_sum.cell(riga_sum, 4, totali['ore']); co.number_format = '0.00'; co.font = Font(bold=True); co.fill = tot_fill; co.alignment = right
-        cr = ws_sum.cell(riga_sum, 5, totali['rimborsi']); cr.number_format = '#,##0.00" Ã¢â€šÂ¬"'; cr.font = Font(bold=True); cr.fill = tot_fill; cr.alignment = right
+        cr = ws_sum.cell(riga_sum, 5, totali['rimborsi']); cr.number_format = '#,##0.00" ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬"'; cr.font = Font(bold=True); cr.fill = tot_fill; cr.alignment = right
         ct = ws_sum.cell(riga_sum, 6, totali['rettifiche']); ct.number_format = '+0.00;-0.00;0.00'; ct.font = Font(bold=True); ct.fill = tot_fill; ct.alignment = right
         ws_sum.cell(riga_sum, 7, '').fill = tot_fill
 
@@ -35113,12 +35216,12 @@ def report_export():
                     headers={'Content-Disposition': f'attachment; filename={fname}'})
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-#  AI ASSISTANT Ã¢â‚¬â€ Chat con accesso ai dati del tenant via tool use
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
+#  AI ASSISTANT ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Chat con accesso ai dati del tenant via tool use
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
-# Tool functions: ognuna ÃƒÂ¨ una query SQL sicura predefinita.
-# Claude (l'AI) potrÃƒÂ  chiamarle ma NON puÃƒÂ² scrivere SQL libero.
+# Tool functions: ognuna ÃƒÆ’Ã‚Â¨ una query SQL sicura predefinita.
+# Claude (l'AI) potrÃƒÆ’Ã‚Â  chiamarle ma NON puÃƒÆ’Ã‚Â² scrivere SQL libero.
 
 def _ai_tool_query_presenze_periodo(db, args):
     """Restituisce somma ore lavorate per dipendente in un periodo."""
@@ -35264,7 +35367,7 @@ def _ai_tool_fiere_attive(db, args):
 
 
 def _ai_tool_banca_ore(db, args):
-    """Saldo banca ore per dipendente Ã¢â‚¬â€ usa la nuova logica: ore lavorate vs monte ore manuale + rettifiche + riporto."""
+    """Saldo banca ore per dipendente ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â usa la nuova logica: ore lavorate vs monte ore manuale + rettifiche + riporto."""
     nome_dip = (args.get('nome_dipendente') or '').strip().lower()
     sql = """SELECT id, nome, cognome FROM utenti WHERE COALESCE(attivo,1)=1 AND ruolo != 'admin'"""
     params = []
@@ -35286,7 +35389,7 @@ def _ai_tool_banca_ore(db, args):
     return out
 
 
-# Mappa nome tool Ã¢â€ â€™ funzione (ordine usato anche nella schema definita per Claude)
+# Mappa nome tool ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ funzione (ordine usato anche nella schema definita per Claude)
 AI_TOOLS = {
     'query_presenze_periodo': _ai_tool_query_presenze_periodo,
     'margine_fiera': _ai_tool_margine_fiera,
@@ -35383,7 +35486,7 @@ def ai_analyze_document():
 
     api_key = get_setting('anthropic_api_key', '').strip()
     if not api_key:
-        return jsonify({'error': "Chiave API Anthropic non configurata. Impostazioni Ã¢â€ â€™ AI."}), 400
+        return jsonify({'error': "Chiave API Anthropic non configurata. Impostazioni ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ AI."}), 400
 
     if 'file' not in request.files:
         return jsonify({'error': 'Nessun file inviato'}), 400
@@ -35434,24 +35537,24 @@ def ai_chat():
 
     api_key = get_setting('anthropic_api_key', '').strip()
     if not api_key:
-        return jsonify({'error': "Chiave API Anthropic non configurata. Impostazioni Ã¢â€ â€™ AI."}), 400
+        return jsonify({'error': "Chiave API Anthropic non configurata. Impostazioni ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ AI."}), 400
 
     nome_azienda = get_setting('nome_azienda', 'Accesso Fiere')
     oggi = date.today().isoformat()
 
     system_prompt = f"""Sei un assistente AI integrato nel gestionale "{nome_azienda}" per allestitori fieristici.
-Il tuo compito ÃƒÂ¨ rispondere alle domande dell'amministratore usando i dati reali dell'azienda.
+Il tuo compito ÃƒÆ’Ã‚Â¨ rispondere alle domande dell'amministratore usando i dati reali dell'azienda.
 
 REGOLE:
 - Rispondi sempre in italiano
-- Usa i tool disponibili per recuperare dati reali Ã¢â‚¬â€ non inventare numeri
+- Usa i tool disponibili per recuperare dati reali ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â non inventare numeri
 - Sii conciso: vai al dunque, evita preamboli
-- Per importi usa il formato Ã¢â€šÂ¬ 1.234,56
+- Per importi usa il formato ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ 1.234,56
 - Per ore usa formato come "8.5h" o "8 ore e 30 minuti"
 - Se la domanda riguarda un periodo non specificato, usa l'ultimo mese (da {oggi})
 - Se non hai dati sufficienti per rispondere, dillo chiaramente
-- Quando mostri liste di piÃƒÂ¹ di 5 elementi, riassumi (es. "I primi 5 sono...")
-- Oggi ÃƒÂ¨ {oggi}"""
+- Quando mostri liste di piÃƒÆ’Ã‚Â¹ di 5 elementi, riassumi (es. "I primi 5 sono...")
+- Oggi ÃƒÆ’Ã‚Â¨ {oggi}"""
 
     # Costruisci la conversazione per Claude
     messages = []
@@ -35525,15 +35628,15 @@ REGOLE:
 
         # Se siamo qui, abbiamo superato i 5 round
         db.close()
-        return jsonify({'reply': 'Mi spiace, la richiesta ÃƒÂ¨ troppo complessa. Prova a riformulare.'})
+        return jsonify({'reply': 'Mi spiace, la richiesta ÃƒÆ’Ã‚Â¨ troppo complessa. Prova a riformulare.'})
     except Exception as e:
         db.close()
         return jsonify({'error': f'Errore inatteso: {e}'}), 500
 
 
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 #  CONTRATTI CLIENTI
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
 CONTRATTI_CLIENTI_TMPL = """
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
@@ -35565,25 +35668,25 @@ CONTRATTI_CLIENTI_TMPL = """
         <strong>{{ c.cliente_nome }}</strong>
         {% if c.cliente_piva %}<div style="font-size:11px;color:var(--text-light)">P.IVA {{ c.cliente_piva }}</div>{% endif %}
       </td>
-      <td style="font-size:13px">{{ c.oggetto or 'Ã¢â‚¬â€œ' }}</td>
-      <td style="font-size:12px;font-family:monospace">{{ c.data_firma or 'Ã¢â‚¬â€œ' }}</td>
+      <td style="font-size:13px">{{ c.oggetto or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
+      <td style="font-size:12px;font-family:monospace">{{ c.data_firma or 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“' }}</td>
       <td>
         {% if c.data_scadenza %}
           {% set today = today_str %}
           {% if c.data_scadenza < today %}
-            <span class="badge badge-red">Ã¢Å¡Â  Scaduto {{ c.data_scadenza }}</span>
+            <span class="badge badge-red">ÃƒÂ¢Ã…Â¡Ã‚Â  Scaduto {{ c.data_scadenza }}</span>
           {% elif c.giorni_scadenza <= 30 %}
-            <span class="badge badge-amber">Ã¢ÂÂ³ {{ c.data_scadenza }} ({{ c.giorni_scadenza }}gg)</span>
+            <span class="badge badge-amber">ÃƒÂ¢Ã‚ÂÃ‚Â³ {{ c.data_scadenza }} ({{ c.giorni_scadenza }}gg)</span>
           {% else %}
             <span style="font-size:12px;font-family:monospace;color:var(--text-light)">{{ c.data_scadenza }}</span>
           {% endif %}
-        {% else %}Ã¢â‚¬â€œ{% endif %}
+        {% else %}ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“{% endif %}
       </td>
       <td style="font-family:monospace;font-size:13px">
-        {% if c.valore %}Ã¢â€šÂ¬ {{ "%.2f"|format(c.valore) }}{% else %}Ã¢â‚¬â€œ{% endif %}
+        {% if c.valore %}ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ {{ "%.2f"|format(c.valore) }}{% else %}ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“{% endif %}
       </td>
       <td>
-        {% if c.stato == 'attivo' %}<span class="badge badge-green">Ã¢â€”Â Attivo</span>
+        {% if c.stato == 'attivo' %}<span class="badge badge-green">ÃƒÂ¢Ã¢â‚¬â€Ã‚Â Attivo</span>
         {% elif c.stato == 'scaduto' %}<span class="badge badge-red">Scaduto</span>
         {% elif c.stato == 'rescisso' %}<span class="badge badge-gray">Rescisso</span>
         {% elif c.stato == 'bozza' %}<span class="badge badge-blue">Bozza</span>
@@ -35622,7 +35725,7 @@ CONTRATTO_FORM_TMPL = """
       <div class="form-group">
         <label>Cliente *</label>
         <select name="cliente_id" required onchange="this.form.submit()">
-          <option value="">Ã¢â‚¬â€ Seleziona cliente Ã¢â‚¬â€</option>
+          <option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Seleziona cliente ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
           {% for cl in clienti %}
           <option value="{{ cl.id }}" {{ 'selected' if contratto and contratto.cliente_id==cl.id }}>{{ cl.nome }}</option>
           {% endfor %}
@@ -35640,7 +35743,7 @@ CONTRATTO_FORM_TMPL = """
     </div>
     <div class="form-group">
       <label>Oggetto / descrizione contratto *</label>
-      <input name="oggetto" value="{{ contratto.oggetto if contratto else '' }}" required placeholder="es. Contratto allestimento stand EICMA 2025 Ã¢â‚¬â€ Pad. 18 Stand A12">
+      <input name="oggetto" value="{{ contratto.oggetto if contratto else '' }}" required placeholder="es. Contratto allestimento stand EICMA 2025 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Pad. 18 Stand A12">
     </div>
     <div class="form-row">
       <div class="form-group">
@@ -35654,13 +35757,13 @@ CONTRATTO_FORM_TMPL = """
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>Valore contratto (Ã¢â€šÂ¬)</label>
+        <label>Valore contratto (ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬)</label>
         <input name="valore" type="number" step="0.01" min="0" value="{{ contratto.valore if contratto else '' }}" placeholder="es. 15000.00">
       </div>
       <div class="form-group">
         <label>Fiera / Stand collegato</label>
         <select name="cantiere_id">
-          <option value="">Ã¢â‚¬â€ Nessuno Ã¢â‚¬â€</option>
+          <option value="">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Nessuno ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</option>
           {% for f in fiere %}
           <option value="{{ f.id }}" {{ 'selected' if contratto and contratto.cantiere_id==f.id }}>{{ f.nome }}</option>
           {% endfor %}
@@ -35681,7 +35784,7 @@ CONTRATTO_FORM_TMPL = """
       </div>
       {% endif %}
       <input type="file" name="file_contratto" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp" style="padding:6px">
-      <div style="font-size:11px;color:var(--text-light);margin-top:4px">Max 20MB Ã¢â‚¬â€ PDF, PNG, JPG, WEBP</div>
+      <div style="font-size:11px;color:var(--text-light);margin-top:4px">Max 20MB ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â PDF, PNG, JPG, WEBP</div>
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
       <a href="/contratti-clienti" class="btn btn-secondary">Annulla</a>
@@ -35814,8 +35917,8 @@ def contratto_cliente_elimina(cid):
     flash('Contratto eliminato.', 'success')
     return redirect(url_for('contratti_clienti'))
 
-#  SAAS Ã¢â‚¬â€ LANDING Ã‚Â· REGISTRAZIONE Ã‚Â· ABBONAMENTI Ã‚Â· SUPERADMIN
-# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+#  SAAS ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â LANDING Ãƒâ€šÃ‚Â· REGISTRAZIONE Ãƒâ€šÃ‚Â· ABBONAMENTI Ãƒâ€šÃ‚Â· SUPERADMIN
+# ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
 STRIPE_SECRET      = os.environ.get('STRIPE_SECRET_KEY', '')
 STRIPE_WEBHOOK_SEC = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
@@ -35826,7 +35929,7 @@ STRIPE_PRICE_ENT   = os.environ.get('STRIPE_PRICE_ENT', '')
 SUPERADMIN_EMAIL = os.environ.get('SUPERADMIN_EMAIL', 'superadmin@gestionale.app')
 SUPERADMIN_PW    = os.environ.get('SUPERADMIN_PASSWORD', '')
 
-# Ã¢â€â‚¬Ã¢â€â‚¬ Landing page Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Landing page ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 @app.route('/landing')
 def landing():
     mdb = get_master_db()
@@ -35834,7 +35937,7 @@ def landing():
     mdb.close()
     return render_template_string(LANDING_TMPL, piani=piani)
 
-# Ã¢â€â‚¬Ã¢â€â‚¬ Registrazione nuova azienda Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Registrazione nuova azienda ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 @app.route('/registrati', methods=['GET','POST'])
 def registrati():
     if request.method == 'POST':
@@ -35852,7 +35955,7 @@ def registrati():
         existing = mdb.execute("SELECT id FROM aziende WHERE email_admin=?", (email,)).fetchone()
         if existing:
             mdb.close()
-            return render_template_string(REGISTRATI_TMPL, error='Email giÃƒÂ  registrata.', piano_sel=piano)
+            return render_template_string(REGISTRATI_TMPL, error='Email giÃƒÆ’Ã‚Â  registrata.', piano_sel=piano)
         import re, time as _t
         slug = re.sub(r'[^a-z0-9]', '', nome_az.lower())[:20] + str(int(_t.time()))[-4:]
         pw_hash = hash_pw(password)
@@ -35885,12 +35988,12 @@ def registrati():
             'azienda_id': azienda_id, 'azienda_nome': nome_az,
             'is_saas': True,
         })
-        flash(f'Ã°Å¸Å½â€° Benvenuto! Hai 14 giorni di prova gratuita. Buon lavoro con {nome_az}!', 'success')
+        flash(f'ÃƒÂ°Ã…Â¸Ã…Â½Ã¢â‚¬Â° Benvenuto! Hai 14 giorni di prova gratuita. Buon lavoro con {nome_az}!', 'success')
         return redirect(url_for('dashboard'))
     piano_sel = request.args.get('piano', 'base')
     return render_template_string(REGISTRATI_TMPL, error=None, piano_sel=piano_sel)
 
-# Ã¢â€â‚¬Ã¢â€â‚¬ Stripe: crea sessione checkout Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Stripe: crea sessione checkout ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 @app.route('/abbonamento/checkout', methods=['POST'])
 @login_required
 def abbonamento_checkout():
@@ -35926,7 +36029,7 @@ def abbonamento_checkout():
 @app.route('/abbonamento/successo')
 @login_required
 def abbonamento_successo():
-    flash('Ã¢Å“â€¦ Abbonamento attivato! Grazie.', 'success')
+    flash('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Abbonamento attivato! Grazie.', 'success')
     return redirect(url_for('abbonamento_gestisci'))
 
 @app.route('/abbonamento/gestisci')
@@ -35942,7 +36045,7 @@ def abbonamento_gestisci():
     return render_template_string(ABBONAMENTO_TMPL, az=az, piani=piani,
                                   stripe_ok=bool(STRIPE_SECRET))
 
-# Ã¢â€â‚¬Ã¢â€â‚¬ Stripe webhook Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Stripe webhook ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 @app.route('/stripe/webhook', methods=['POST'])
 def stripe_webhook():
     if not STRIPE_SECRET: return 'ok', 200
@@ -35969,7 +36072,7 @@ def stripe_webhook():
         print(f'[Stripe webhook] {e}')
     return 'ok', 200
 
-# Ã¢â€â‚¬Ã¢â€â‚¬ Super-Admin Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Super-Admin ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 def superadmin_required(f):
     @wraps(f)
     def d(*a, **k):
@@ -36059,14 +36162,14 @@ def superadmin_entra_azienda(aid):
     flash(f'Ora stai operando come admin di {az["nome"]}.', 'info')
     return redirect(url_for('dashboard'))
 
-# Ã¢â€â‚¬Ã¢â€â‚¬ Templates SaaS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Templates SaaS ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 
 LANDING_TMPL = """<!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GestionaleHR Ã¢â‚¬â€ Il Accesso Fiere per le PMI italiane</title>
+<title>GestionaleHR ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Il Accesso Fiere per le PMI italiane</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -36114,7 +36217,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <nav class="nav">
   <a href="/landing" class="nav-logo"><i class="fa fa-chart-line" style="color:#f59e0b"></i> GestionaleHR</a>
   <div class="nav-links">
-    <a href="#features">FunzionalitÃƒÂ </a>
+    <a href="#features">FunzionalitÃƒÆ’Ã‚Â </a>
     <a href="#pricing">Prezzi</a>
     <a href="/area-clienti">Accedi</a>
     <a href="/registrati" class="cta">Prova gratis</a>
@@ -36124,7 +36227,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div class="hero">
   <h1>Il Accesso Fiere per le<br><span>PMI italiane</span></h1>
   <p>Presenze, cedolini, fatture, cantieri, veicoli e molto altro.<br>Tutto in un'unica piattaforma semplice e potente.</p>
-  <a href="/registrati" class="btn-hero">Inizia gratis Ã¢â‚¬â€ 14 giorni</a>
+  <a href="/registrati" class="btn-hero">Inizia gratis ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â 14 giorni</a>
   <a href="/area-clienti" class="btn-sec">Accedi</a>
 </div>
 
@@ -36166,13 +36269,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 <div class="pricing" id="pricing">
   <h2>Prezzi trasparenti, senza sorprese</h2>
-  <p class="sub">14 giorni di prova gratuita Ã¢â‚¬â€ Nessuna carta di credito richiesta</p>
+  <p class="sub">14 giorni di prova gratuita ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Nessuna carta di credito richiesta</p>
   <div class="price-grid">
     {% for p in piani %}
     <div class="price-card {{ 'popular' if p.nome=='Professional' }}">
-      {% if p.nome=='Professional' %}<div class="popular-badge">Ã¢Â­Â PIÃƒâ„¢ SCELTO</div>{% endif %}
+      {% if p.nome=='Professional' %}<div class="popular-badge">ÃƒÂ¢Ã‚Â­Ã‚Â PIÃƒÆ’Ã¢â€žÂ¢ SCELTO</div>{% endif %}
       <h3>{{ p.nome }}</h3>
-      <div class="price">Ã¢â€šÂ¬{{ p.prezzo_mensile|int }}<span>/mese</span></div>
+      <div class="price">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬{{ p.prezzo_mensile|int }}<span>/mese</span></div>
       <ul>
         <li><i class="fa fa-check"></i> {% if p.max_dipendenti < 999 %}Fino a {{ p.max_dipendenti }} dipendenti{% else %}Dipendenti illimitati{% endif %}</li>
         <li><i class="fa fa-check"></i> Presenze e timbrature GPS</li>
@@ -36183,14 +36286,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         {% if p.nome == 'Enterprise' %}<li><i class="fa fa-check"></i> Supporto prioritario</li>{% endif %}
       </ul>
       <a href="/registrati?piano={{ p.nome|lower }}" class="btn-price">Inizia gratis</a>
-      <div class="trial-badge">Ã¢Å“â€œ 14 giorni gratuiti</div>
+      <div class="trial-badge">ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ 14 giorni gratuiti</div>
     </div>
     {% endfor %}
   </div>
 </div>
 
 <div class="footer">
-  <p>Ã‚Â© 2025 GestionaleHR Ã¢â‚¬â€ Made in Italy Ã°Å¸â€¡Â®Ã°Å¸â€¡Â¹ Ã‚Â· <a href="/privacy" style="color:rgba(255,255,255,.4)">Privacy</a> Ã‚Â· <a href="/termini" style="color:rgba(255,255,255,.4)">Termini</a> Ã‚Â· <a href="/cookies" style="color:rgba(255,255,255,.4)">Cookie</a></p>
+  <p>Ãƒâ€šÃ‚Â© 2025 GestionaleHR ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Made in Italy ÃƒÂ°Ã…Â¸Ã¢â‚¬Â¡Ã‚Â®ÃƒÂ°Ã…Â¸Ã¢â‚¬Â¡Ã‚Â¹ Ãƒâ€šÃ‚Â· <a href="/privacy" style="color:rgba(255,255,255,.4)">Privacy</a> Ãƒâ€šÃ‚Â· <a href="/termini" style="color:rgba(255,255,255,.4)">Termini</a> Ãƒâ€šÃ‚Â· <a href="/cookies" style="color:rgba(255,255,255,.4)">Cookie</a></p>
 </div>
 </body>
 </html>"""
@@ -36200,7 +36303,7 @@ REGISTRATI_TMPL = """<!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Registrati Ã¢â‚¬â€ Accesso Fiere</title>
+<title>Registrati ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Accesso Fiere</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
@@ -36268,7 +36371,7 @@ input:focus,select:focus{outline:none;border-color:#0f4c81;box-shadow:0 0 0 3px 
     </div>
   </div>
   <div class="hero-title">Il gestionale pensato<br>per chi <span>allestisce le fiere</span></div>
-  <div class="hero-sub">Gestisci personale, fiere, veicoli, documenti e preventivi Ã¢â‚¬â€ tutto in un unico strumento, isolato per la tua azienda.</div>
+  <div class="hero-sub">Gestisci personale, fiere, veicoli, documenti e preventivi ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â tutto in un unico strumento, isolato per la tua azienda.</div>
   <div class="features">
     <div class="feature">
       <div class="feat-icon"><i class="fa fa-store" style="color:#f59e0b"></i></div>
@@ -36294,7 +36397,7 @@ input:focus,select:focus{outline:none;border-color:#0f4c81;box-shadow:0 0 0 3px 
 </div>
 <div class="right">
   <div class="form-card">
-    <div class="trial-pill"><i class="fa fa-gift"></i> 14 giorni gratuiti Ã¢â‚¬â€ nessuna carta richiesta</div>
+    <div class="trial-pill"><i class="fa fa-gift"></i> 14 giorni gratuiti ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â nessuna carta richiesta</div>
     <h2>Crea il tuo account</h2>
     <p class="sub">Inizia subito, sei operativo in 30 secondi.</p>
     {% if error %}<div class="error"><i class="fa fa-exclamation-circle"></i> {{ error }}</div>{% endif %}
@@ -36319,20 +36422,20 @@ input:focus,select:focus{outline:none;border-color:#0f4c81;box-shadow:0 0 0 3px 
           <label class="piano-card {{ 'checked' if piano_sel=='base' }}">
             <input type="radio" name="piano" value="base" {{ 'checked' if piano_sel=='base' }} onchange="document.querySelectorAll('.piano-card').forEach(c=>c.classList.remove('checked'));this.closest('.piano-card').classList.add('checked')">
             <div class="pnome">Base</div>
-            <div class="pprezzo">Ã¢â€šÂ¬29</div>
-            <div class="psub">/mese Ã‚Â· 5 op.</div>
+            <div class="pprezzo">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬29</div>
+            <div class="psub">/mese Ãƒâ€šÃ‚Â· 5 op.</div>
           </label>
           <label class="piano-card {{ 'checked' if piano_sel=='professional' }}">
             <input type="radio" name="piano" value="professional" {{ 'checked' if piano_sel=='professional' }} onchange="document.querySelectorAll('.piano-card').forEach(c=>c.classList.remove('checked'));this.closest('.piano-card').classList.add('checked')">
             <div class="pnome" style="color:#0f4c81">Pro</div>
-            <div class="pprezzo">Ã¢â€šÂ¬59</div>
-            <div class="psub">/mese Ã‚Â· 20 op.</div>
+            <div class="pprezzo">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬59</div>
+            <div class="psub">/mese Ãƒâ€šÃ‚Â· 20 op.</div>
           </label>
           <label class="piano-card {{ 'checked' if piano_sel=='enterprise' }}">
             <input type="radio" name="piano" value="enterprise" {{ 'checked' if piano_sel=='enterprise' }} onchange="document.querySelectorAll('.piano-card').forEach(c=>c.classList.remove('checked'));this.closest('.piano-card').classList.add('checked')">
             <div class="pnome">Enterprise</div>
-            <div class="pprezzo">Ã¢â€šÂ¬99</div>
-            <div class="psub">/mese Ã‚Â· Ã¢Ë†Å¾ op.</div>
+            <div class="pprezzo">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬99</div>
+            <div class="psub">/mese Ãƒâ€šÃ‚Â· ÃƒÂ¢Ã‹â€ Ã…Â¾ op.</div>
           </label>
         </div>
       </div>
@@ -36348,7 +36451,7 @@ input:focus,select:focus{outline:none;border-color:#0f4c81;box-shadow:0 0 0 3px 
       </div>
       <button type="submit" class="btn-register"><i class="fa fa-rocket"></i> Crea account e inizia gratis</button>
     </form>
-    <div class="login-link">Hai giÃƒÂ  un account? <a href="/area-clienti">Accedi Ã¢â€ â€™</a></div>
+    <div class="login-link">Hai giÃƒÆ’Ã‚Â  un account? <a href="/area-clienti">Accedi ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</a></div>
   </div>
 </div>
 </body>
@@ -36368,9 +36471,9 @@ ABBONAMENTO_TMPL = """
       </div>
       <div style="text-align:right">
         <div style="font-size:12px;color:#64748b">Stato</div>
-        {% if az.stato=='attivo' %}<span class="badge badge-green">Ã¢Å“â€œ Attivo</span>
-        {% elif az.stato=='trial' %}<span class="badge badge-amber">Ã¢ÂÂ³ Trial fino al {{ az.trial_fino_al }}</span>
-        {% else %}<span class="badge badge-red">Ã¢Å“â€” Sospeso</span>{% endif %}
+        {% if az.stato=='attivo' %}<span class="badge badge-green">ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Attivo</span>
+        {% elif az.stato=='trial' %}<span class="badge badge-amber">ÃƒÂ¢Ã‚ÂÃ‚Â³ Trial fino al {{ az.trial_fino_al }}</span>
+        {% else %}<span class="badge badge-red">ÃƒÂ¢Ã…â€œÃ¢â‚¬â€ Sospeso</span>{% endif %}
       </div>
     </div>
     <div style="font-weight:700;margin-bottom:12px">Piano attuale: <span style="color:#f59e0b;text-transform:capitalize">{{ az.piano }}</span></div>
@@ -36378,7 +36481,7 @@ ABBONAMENTO_TMPL = """
     <div style="background:#fef3c7;border-radius:8px;padding:12px;margin-bottom:20px;font-size:13px;color:#92400e">
       <i class="fa fa-info-circle"></i>
       {% if az.stato=='trial' %}Attiva un abbonamento per continuare a usare il gestionale dopo il trial.
-      {% else %}Il tuo abbonamento ÃƒÂ¨ sospeso. Rinnova per riaccedere.{% endif %}
+      {% else %}Il tuo abbonamento ÃƒÆ’Ã‚Â¨ sospeso. Rinnova per riaccedere.{% endif %}
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px">
     {% for p in piani %}
@@ -36386,7 +36489,7 @@ ABBONAMENTO_TMPL = """
       <input type="hidden" name="piano" value="{{ p.nome|lower }}">
       <div style="border:2px solid {{ '#f59e0b' if p.nome|lower==az.piano else '#e2e8f0' }};border-radius:12px;padding:16px;text-align:center">
         <div style="font-weight:700">{{ p.nome }}</div>
-        <div style="font-size:24px;font-weight:800;color:#f59e0b">Ã¢â€šÂ¬{{ p.prezzo_mensile|int }}</div>
+        <div style="font-size:24px;font-weight:800;color:#f59e0b">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬{{ p.prezzo_mensile|int }}</div>
         <div style="font-size:11px;color:#64748b;margin-bottom:12px">/mese</div>
         <button type="submit" class="btn btn-primary" style="width:100%;font-size:13px">
           {{ 'Piano attuale' if p.nome|lower==az.piano else 'Attiva' }}
@@ -36397,7 +36500,7 @@ ABBONAMENTO_TMPL = """
     </div>
     {% else %}
     <div style="background:#f0fdf4;border-radius:8px;padding:12px;color:#16a34a;font-size:13px">
-      <i class="fa fa-check-circle"></i> Il tuo abbonamento ÃƒÂ¨ attivo. Gestiscilo dal portale Stripe.
+      <i class="fa fa-check-circle"></i> Il tuo abbonamento ÃƒÆ’Ã‚Â¨ attivo. Gestiscilo dal portale Stripe.
     </div>
     {% endif %}
   </div>
@@ -36413,7 +36516,7 @@ input{width:100%;padding:10px;margin-bottom:12px;border:1px solid #334155;border
 button{width:100%;padding:12px;background:#f59e0b;color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer}
 .err{color:#ef4444;font-size:13px;margin-bottom:12px}</style>
 </head><body><div class="card">
-<h2>Ã°Å¸â€Â SuperAdmin</h2>
+<h2>ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â SuperAdmin</h2>
 {% if error %}<div class="err">{{ error }}</div>{% endif %}
 <form method="POST">
   <input type="email" name="email" placeholder="Email" required>
@@ -36425,7 +36528,7 @@ button{width:100%;padding:12px;background:#f59e0b;color:#000;border:none;border-
 
 _SA_DASHBOARD_TMPL = """
 <div style="margin-bottom:24px;display:flex;justify-content:space-between;align-items:center">
-  <h2><i class="fa fa-globe" style="color:#f59e0b"></i> SuperAdmin Ã¢â‚¬â€ Aziende clienti</h2>
+  <h2><i class="fa fa-globe" style="color:#f59e0b"></i> SuperAdmin ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Aziende clienti</h2>
   <a href="/superadmin/logout" class="btn btn-secondary btn-sm"><i class="fa fa-sign-out"></i> Esci</a>
 </div>
 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
@@ -36486,7 +36589,7 @@ _SA_DASHBOARD_TMPL = """
   </table>
 </div>"""
 
-# Ã¢â€â‚¬Ã¢â€â‚¬ Init master DB all'avvio Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Init master DB all'avvio ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 try:
     init_master_db()
 except Exception as e:
@@ -36499,7 +36602,7 @@ with app.app_context():
         init_db()
     except Exception as _e:
         print(f'[INIT_DB] Warning: {_e}')
-    # Garantisce le colonne critiche anche se init_db ÃƒÂ¨ parzialmente fallita
+    # Garantisce le colonne critiche anche se init_db ÃƒÆ’Ã‚Â¨ parzialmente fallita
     try:
         ensure_columns()
     except Exception as _e:
@@ -36515,3 +36618,5 @@ except Exception as _e:
 if __name__ == '__main__':
     debug = os.environ.get('RAILWAY_ENVIRONMENT') is None
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=debug)
+
+
