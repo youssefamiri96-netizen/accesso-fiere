@@ -4534,10 +4534,6 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
   <link rel="privacy-policy" href="/privacy-policy">
   <link rel="terms-of-service" href="/terms-and-conditions">
   <link rel="help" href="/cookie-policy">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <script type="application/ld+json">
   {
     "@context":"https://schema.org",
@@ -4606,6 +4602,23 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
       z-index:-1;
     }
     a{color:inherit}
+    .fa,.fa-solid,.fa-brands{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:1em;
+      height:1em;
+      font-style:normal;
+      vertical-align:-.1em;
+    }
+    .fa:before,.fa-solid:before,.fa-brands:before{
+      content:"";
+      width:.48em;
+      height:.48em;
+      border-radius:999px;
+      background:currentColor;
+      box-shadow:0 0 0 3px rgba(71,199,232,.08);
+    }
     .public-shell{min-height:100vh}
     .container{width:min(1180px,calc(100% - 44px));margin:0 auto}
     .nav{
@@ -6067,7 +6080,7 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
             <a href="mailto:info@accessofiere.com?subject=Demo%20Accesso%20Fiere">Demo</a>
             <a href="/privacy-policy">Privacy Policy</a>
             <a href="/cookie-policy">Cookie Policy</a>
-            <a href="/terms-and-conditions">Termini e condizioni</a>
+            <a href="/terms-and-conditions">Termini e Condizioni</a>
           </div>
         </div>
       </div>
@@ -6076,7 +6089,7 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
         <span class="legal-inline">
           <a href="/privacy-policy">Privacy Policy</a>
           <a href="/cookie-policy">Cookie Policy</a>
-          <a href="/terms-and-conditions">Termini e condizioni</a>
+          <a href="/terms-and-conditions">Termini e Condizioni</a>
         </span>
         <span>Accesso Fiere - software per allestitori fieristici.</span>
       </div>
@@ -6084,7 +6097,7 @@ PREMIUM_LOGIN_TMPL = """<!DOCTYPE html>
     <div class="cookie-banner" id="cookieBanner" role="dialog" aria-live="polite" aria-label="Informativa cookie" hidden>
       <div>
         <strong>Privacy e cookie</strong>
-        <p>Usiamo cookie tecnici e servizi necessari al funzionamento del sito. Puoi leggere <a href="/privacy-policy">Privacy Policy</a>, <a href="/cookie-policy">Cookie Policy</a> e <a href="/terms-and-conditions">Termini e condizioni</a>.</p>
+        <p>Usiamo cookie tecnici e servizi necessari al funzionamento del sito. Puoi leggere <a href="/privacy-policy">Privacy Policy</a>, <a href="/cookie-policy">Cookie Policy</a> e <a href="/terms-and-conditions">Termini e Condizioni</a>.</p>
       </div>
       <div class="cookie-actions">
         <button type="button" data-cookie-choice="necessary">Solo necessari</button>
@@ -6375,10 +6388,9 @@ LEGAL_PAGE_TMPL = """<!DOCTYPE html>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>{{ title }} | Accesso Fiere</title>
   <meta name="robots" content="index,follow">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     *{box-sizing:border-box}
-    body{margin:0;background:#f5f7fb;color:#102033;font-family:'DM Sans',Arial,sans-serif;line-height:1.6}
+    body{margin:0;background:#f5f7fb;color:#102033;font-family:Inter,Arial,sans-serif;line-height:1.6}
     .top{background:#08111f;color:#fff;padding:18px 22px}
     .top-inner{max-width:980px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px}
     .brand{font-size:19px;font-weight:800;text-decoration:none;color:#fff}
@@ -6403,15 +6415,21 @@ LEGAL_PAGE_TMPL = """<!DOCTYPE html>
       <nav class="nav">
         <a href="/home">Home</a>
         <a href="/area-clienti">Area clienti</a>
-        <a href="/privacy">Privacy</a>
-        <a href="/termini">Termini</a>
-        <a href="/cookies">Cookie</a>
+        <a href="/privacy-policy">Privacy Policy</a>
+        <a href="/cookie-policy">Cookie Policy</a>
+        <a href="/terms-and-conditions">Termini e Condizioni</a>
       </nav>
     </div>
   </header>
   <main class="wrap">
     <section class="card">
       {{ body|safe }}
+      <div class="box" style="margin-top:28px">
+        <strong>Link legali</strong><br>
+        <a href="/privacy-policy">Privacy Policy</a> ·
+        <a href="/cookie-policy">Cookie Policy</a> ·
+        <a href="/terms-and-conditions">Termini e Condizioni</a>
+      </div>
     </section>
   </main>
 </body>
@@ -6472,7 +6490,7 @@ PRIVACY_BODY = """
 """
 
 TERMS_BODY = """
-<h1>Termini e condizioni</h1>
+<h1>Termini e Condizioni</h1>
 <p class="muted">Ultimo aggiornamento: 9 maggio 2026</p>
 
 <h2>1. Servizio</h2>
@@ -6551,6 +6569,8 @@ LEGAL_CONSENT_SNIPPET = """
 
 @app.route('/privacy')
 @app.route('/privacy-policy')
+@app.route('/privacy-policy.html')
+@app.route('/privacy.html')
 def privacy():
     return render_template_string(LEGAL_PAGE_TMPL, title='Privacy Policy', body=PRIVACY_BODY)
 
@@ -6558,11 +6578,19 @@ def privacy():
 @app.route('/terms')
 @app.route('/termini-e-condizioni')
 @app.route('/terms-and-conditions')
+@app.route('/termini-e-condizioni.html')
+@app.route('/terms-and-conditions.html')
+@app.route('/terms.html')
+@app.route('/condizioni-generali')
 def termini():
-    return render_template_string(LEGAL_PAGE_TMPL, title='Termini e condizioni', body=TERMS_BODY)
+    return render_template_string(LEGAL_PAGE_TMPL, title='Termini e Condizioni', body=TERMS_BODY)
 
 @app.route('/cookies')
 @app.route('/cookie-policy')
+@app.route('/cookie-policy.html')
+@app.route('/cookies-policy')
+@app.route('/cookie')
+@app.route('/cookie.html')
 def cookie_policy():
     return render_template_string(LEGAL_PAGE_TMPL, title='Cookie Policy', body=COOKIE_BODY)
 
@@ -6590,11 +6618,27 @@ def area_clienti():
 @app.route('/')
 def index():
     if request.args.get('public') == '1':
-        return redirect(url_for('public_home'))
+        return render_template_string(
+            LOGIN_TMPL,
+            error=None,
+            t=get_lang(),
+            langs=LANGS,
+            current_lang=session.get('lang','it'),
+            is_mobile=False,
+            public_home=True,
+            show_landing=True
+        )
     if 'user_id' not in session:
-        if is_mobile_request():
-            return redirect(url_for('login'))
-        return redirect(url_for('public_home'))
+        return render_template_string(
+            LOGIN_TMPL,
+            error=None,
+            t=get_lang(),
+            langs=LANGS,
+            current_lang=session.get('lang','it'),
+            is_mobile=False,
+            public_home=True,
+            show_landing=True
+        )
     if session.get('ruolo') == 'admin':
         return redirect(url_for('admin_mobile') if is_mobile_request() else url_for('dashboard'))
     if session.get('ruolo') == 'amministrazione':
@@ -20960,29 +21004,51 @@ VEICOLI_TMPL = """
 .veh-tab{width:100%;border-collapse:collapse;font-size:13px}
 .veh-tab thead th{background:#0f172a;color:#fff;padding:10px 12px;text-align:left;font-size:12px;font-weight:700}
 .veh-row{cursor:pointer;transition:background .15s;border-bottom:1px solid var(--border)}
-.veh-row:hover{background:#f8fafc}
-.veh-row.expanded{background:#eff6ff}
+.veh-row:hover{background:rgba(56,169,189,.075)}
+.veh-row.expanded{background:rgba(56,169,189,.10)}
 .veh-row td{padding:12px}
 .veh-chev{transition:transform .2s;color:var(--text-light);width:14px;display:inline-block}
 .veh-row.expanded .veh-chev{transform:rotate(90deg);color:var(--accent)}
-.veh-detail-row{background:#f8fafc}
+.veh-detail-row{background:rgba(8,22,38,.92)}
 .veh-detail-row td{padding:0 !important;border:none}
-.veh-detail-box{padding:18px 24px;border-bottom:2px solid var(--accent);animation:slidein .2s ease-out}
+.veh-detail-box{padding:18px 24px;border-bottom:2px solid var(--accent);animation:slidein .2s ease-out;background:linear-gradient(180deg,rgba(15,31,51,.95),rgba(8,22,38,.98));color:var(--text)}
 @keyframes slidein{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
 .scad-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
-.scad-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px;border-left:4px solid #cbd5e1}
-.scad-card.ok{border-left-color:#16a34a}
-.scad-card.warn{border-left-color:#f59e0b;background:#fffbeb}
-.scad-card.expired{border-left-color:#dc2626;background:#fef2f2}
-.scad-card.none{border-left-color:#cbd5e1;background:#f8fafc}
+.scad-card{background:rgba(7,17,31,.74);border:1px solid rgba(148,163,184,.18);border-radius:10px;padding:12px 14px;border-left:4px solid rgba(148,163,184,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
+.scad-card.ok{border-left-color:#16a34a;background:rgba(22,163,74,.08)}
+.scad-card.warn{border-left-color:#f59e0b;background:rgba(245,158,11,.10)}
+.scad-card.expired{border-left-color:#dc2626;background:rgba(220,38,38,.11)}
+.scad-card.none{border-left-color:#64748b;background:rgba(15,23,42,.50)}
 .scad-card .lbl{font-size:10px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px}
 .scad-card .dt{font-size:15px;font-weight:700;margin-top:2px;font-family:monospace}
-.scad-card.expired .dt{color:#dc2626}
-.scad-card.warn .dt{color:#b45309}
-.scad-card.ok .dt{color:#15803d}
+.scad-card.expired .dt{color:#ff8a96}
+.scad-card.warn .dt{color:#fbbf24}
+.scad-card.ok .dt{color:#41e093}
 .scad-card .sub{font-size:11px;color:var(--text-light);margin-top:3px}
-.scad-card .note{font-size:11px;color:var(--text);margin-top:6px;padding-top:6px;border-top:1px dashed #e2e8f0;font-style:italic}
-.veh-row-actions{display:flex;gap:6px;margin-top:14px;padding-top:12px;border-top:1px dashed var(--border);flex-wrap:wrap}
+.scad-card .note{font-size:11px;color:var(--text);margin-top:6px;padding-top:6px;border-top:1px dashed rgba(148,163,184,.22);font-style:italic}
+.veh-row-actions{display:flex;gap:6px;margin-top:14px;padding-top:12px;border-top:1px dashed rgba(148,163,184,.22);flex-wrap:wrap}
+body.theme-light .veh-row:hover{background:#f8fafc}
+body.theme-light .veh-row.expanded{background:#eff6ff}
+body.theme-light .veh-detail-row{background:#f8fafc}
+body.theme-light .veh-detail-box{background:#f8fafc;color:var(--text)}
+body.theme-light .scad-card{background:#fff;border-color:var(--border);border-left-color:#cbd5e1}
+body.theme-light .scad-card.ok{border-left-color:#16a34a;background:#fff}
+body.theme-light .scad-card.warn{border-left-color:#f59e0b;background:#fffbeb}
+body.theme-light .scad-card.expired{border-left-color:#dc2626;background:#fef2f2}
+body.theme-light .scad-card.none{border-left-color:#cbd5e1;background:#f8fafc}
+body.theme-light .scad-card.expired .dt{color:#dc2626}
+body.theme-light .scad-card.warn .dt{color:#b45309}
+body.theme-light .scad-card.ok .dt{color:#15803d}
+body:not(.theme-light) .veh-detail-row,
+body:not(.theme-light) .veh-detail-row td,
+body:not(.theme-light) .veh-detail-box{background:linear-gradient(180deg,rgba(15,31,51,.95),rgba(8,22,38,.98))!important;color:var(--text)!important}
+body:not(.theme-light) .veh-row.expanded td{background:rgba(56,169,189,.10)!important;color:var(--text)!important}
+body:not(.theme-light) .veh-row:hover td{background:rgba(56,169,189,.075)!important;color:var(--text)!important}
+body:not(.theme-light) .scad-card{background:rgba(7,17,31,.74)!important;border-color:rgba(148,163,184,.18)!important}
+body:not(.theme-light) .scad-card.ok{background:rgba(22,163,74,.08)!important}
+body:not(.theme-light) .scad-card.warn{background:rgba(245,158,11,.10)!important}
+body:not(.theme-light) .scad-card.expired{background:rgba(220,38,38,.11)!important}
+body:not(.theme-light) .scad-card.none{background:rgba(15,23,42,.50)!important}
 </style>
 
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
