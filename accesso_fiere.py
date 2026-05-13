@@ -23868,7 +23868,27 @@ def _fatt_overview_data(db, anno):
 
 FATT_OVERVIEW_TMPL = """
 <style>
-.fatt-home{display:grid;gap:18px}.fh-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:2px}.fh-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.fh-select{height:36px;padding:0 34px 0 12px;border:1px solid rgba(148,163,184,.35);border-radius:8px;background:#102238;color:#e5f0ff;font-size:13px;font-weight:800}.fh-card{background:#122238;border:1px solid rgba(148,163,184,.22);border-radius:10px;box-shadow:var(--shadow)}.fh-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}.fh-kpi{background:#102238;border-radius:10px;padding:16px;border:1px solid rgba(148,163,184,.25)}.fh-kpi .lbl{font-size:12px;color:#8fa3bd;font-weight:800;margin-bottom:7px}.fh-kpi .val{font-size:25px;font-weight:900;color:#f8fafc}.fh-kpi .hint{font-size:12px;color:#8fa3bd;margin-top:5px}.fh-split{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}.fh-flow{padding:18px;background:#0f1f33;border:1px solid rgba(148,163,184,.25);border-radius:10px}.fh-flow-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:12px}.fh-flow-title{font-size:17px;font-weight:900;color:#f8fafc}.fh-flow-total{font-size:28px;font-weight:900;margin:4px 0}.fh-flow.attiva .fh-flow-total{color:#22c55e}.fh-flow.passiva .fh-flow-total{color:#f97316}.fh-progress{height:9px;background:#26364a;border-radius:99px;overflow:hidden;margin:12px 0}.fh-progress span{display:block;height:100%;border-radius:99px}.fh-flow.attiva .fh-progress span{background:linear-gradient(90deg,#22c55e,#38bdf8)}.fh-flow.passiva .fh-progress span{background:linear-gradient(90deg,#f97316,#facc15)}.fh-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.fh-metric{background:#0b1726;border:1px solid rgba(148,163,184,.18);border-radius:8px;padding:9px}.fh-metric b{display:block;color:#e5f0ff}.fh-metric span{font-size:11px;color:#8fa3bd}.fh-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:14px}.fh-table{width:100%;border-collapse:collapse}.fh-table th,.fh-table td{padding:10px;border-bottom:1px solid rgba(148,163,184,.16);font-size:13px}.fh-table th{text-align:left;color:#8fa3bd;font-size:11px}.fh-empty{padding:24px;text-align:center;color:#8fa3bd}.fh-pill{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:4px 9px;font-size:11px;font-weight:800}.fh-pill.green{background:#dcfce7;color:#15803d}.fh-pill.orange{background:#ffedd5;color:#c2410c}@media(max-width:900px){.fh-grid{grid-template-columns:1fr}.fh-metrics{grid-template-columns:1fr}.fh-actions{width:100%}.fh-actions>*{flex:1}}
+.fatt-home{display:grid;gap:18px}.fh-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:2px}.fh-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.fh-select{height:36px;padding:0 34px 0 12px;border:1px solid rgba(148,163,184,.35);border-radius:8px;background:#102238;color:#e5f0ff;font-size:13px;font-weight:800}.fh-card{background:#122238;border:1px solid rgba(148,163,184,.22);border-radius:10px;box-shadow:var(--shadow)}.fh-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}.fh-kpi{background:#102238;border-radius:10px;padding:16px;border:1px solid rgba(148,163,184,.25)}.fh-kpi .lbl{font-size:12px;color:#8fa3bd;font-weight:800;margin-bottom:7px}.fh-kpi .val{font-size:25px;font-weight:900;color:#f8fafc}.fh-kpi .hint{font-size:12px;color:#8fa3bd;margin-top:5px}.fh-split{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}.fh-flow{padding:18px;background:#0f1f33;border:1px solid rgba(148,163,184,.25);border-radius:10px}.fh-flow-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:12px}.fh-flow-title{font-size:17px;font-weight:900;color:#f8fafc}.fh-flow-total{font-size:28px;font-weight:900;margin:4px 0}.fh-flow.attiva .fh-flow-total{color:#22c55e}.fh-flow.passiva .fh-flow-total{color:#f97316}.fh-progress{height:9px;background:#26364a;border-radius:99px;overflow:hidden;margin:12px 0}.fh-progress span{display:block;height:100%;border-radius:99px}.fh-flow.attiva .fh-progress span{background:linear-gradient(90deg,#22c55e,#38bdf8)}.fh-flow.passiva .fh-progress span{background:linear-gradient(90deg,#f97316,#facc15)}.fh-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.fh-metric{background:#0b1726;border:1px solid rgba(148,163,184,.18);border-radius:8px;padding:9px}.fh-metric b{display:block;color:#e5f0ff}.fh-metric span{font-size:11px;color:#8fa3bd}.fh-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:14px}.fh-table{width:100%;border-collapse:collapse}.fh-table th,.fh-table td{padding:10px;border-bottom:1px solid rgba(148,163,184,.16);font-size:13px}.fh-table th{text-align:left;color:#8fa3bd;font-size:11px}.fh-empty{padding:24px;text-align:center;color:#8fa3bd}
+.fh-primary-actions .btn-primary{height:40px;padding:0 16px;border-radius:12px;font-weight:900}
+.fh-zero-title{font-size:18px;font-weight:950;color:#f8fafc;letter-spacing:-.035em;line-height:1.15}
+.fh-zero-copy{font-size:12px;color:#8fa3bd;margin-top:5px;line-height:1.45}
+.fh-system-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;background:rgba(15,31,51,.72);border:1px solid rgba(148,163,184,.22);border-radius:12px;padding:10px}
+.fh-system-strip div{background:#0b1726;border:1px solid rgba(148,163,184,.14);border-radius:10px;padding:11px 12px}
+.fh-system-strip b{display:block;color:#e5f0ff;font-size:13px}.fh-system-strip span{display:block;color:#8fa3bd;font-size:11px;margin-top:3px}
+.fh-ops-card{background:#0f1f33;border:1px solid rgba(148,163,184,.22);border-radius:12px;padding:16px}
+.fh-ops-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.fh-ops-head h3{margin:0;color:#f8fafc;font-size:16px}.fh-ops-head p{margin:4px 0 0;color:#8fa3bd;font-size:12px;line-height:1.4}
+.fh-commesse-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.fh-commessa{background:#0b1726;border:1px solid rgba(148,163,184,.16);border-radius:10px;padding:13px}
+.fh-commessa b{display:block;color:#f8fafc;font-size:18px;letter-spacing:-.035em}.fh-commessa span{display:block;color:#8fa3bd;font-size:11px;margin-top:4px}
+.fh-space.featured{grid-column:span 2;min-height:190px;background:linear-gradient(135deg,#102238,#0b1726)}
+.fh-space.compact{opacity:.92}
+.fh-space-empty{margin-top:13px;border:1px dashed rgba(148,163,184,.23);border-radius:10px;padding:12px;background:rgba(11,23,38,.45)}
+body.theme-light .fh-zero-title,body.theme-light .fh-system-strip b,body.theme-light .fh-ops-head h3,body.theme-light .fh-commessa b{color:#0f172a}
+body.theme-light .fh-system-strip,body.theme-light .fh-ops-card{background:#fff;border-color:#d8e2ef}
+body.theme-light .fh-system-strip div,body.theme-light .fh-commessa,body.theme-light .fh-space-empty{background:#f8fafc;border-color:#d8e2ef}
+@media(max-width:900px){.fh-space.featured{grid-column:auto}.fh-primary-actions>*{flex:1 1 100%}}
+.fh-pill{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:4px 9px;font-size:11px;font-weight:800}.fh-pill.green{background:#dcfce7;color:#15803d}.fh-pill.orange{background:#ffedd5;color:#c2410c}@media(max-width:900px){.fh-grid{grid-template-columns:1fr}.fh-metrics{grid-template-columns:1fr}.fh-actions{width:100%}.fh-actions>*{flex:1}}
 </style>
 <style>
 .fh-doc-spaces{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
@@ -23886,26 +23906,57 @@ body.theme-light .fh-space-meta div,body.theme-light .fh-metric{background:#f8fa
 body.theme-light .fh-space-meta b,body.theme-light .fh-metric b{color:#0f172a}
 </style>
 <div class="fatt-home">
-  <div class="fh-toolbar"><div><h2 style="margin:0;color:#f8fafc;font-size:22px">Cruscotto fatturazione</h2><div style="color:#8fa3bd;font-size:13px;margin-top:3px">Attive, passive, pagamenti e scadenze in un unico punto.</div></div>
-    <div class="fh-actions"><form method="GET" action="/fatturazione" style="margin:0"><select name="anno" class="fh-select" onchange="this.form.submit()">{% for y in available_years %}<option value="{{ y }}" {{ 'selected' if y|string == anno|string }}>{{ y }}</option>{% endfor %}</select></form>
-      <form method="POST" action="/fatturazione/sync-passive" style="margin:0"><input type="hidden" name="next_tipo" value="overview"><input type="hidden" name="anno" value="{{ anno }}"><input type="hidden" name="sync_year" value="{{ anno }}"><button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-cloud-arrow-down"></i> Sincronizza {{ anno }}</button></form>
-      <a href="/fatturazione/elettronica" class="btn btn-secondary btn-sm"><i class="fa fa-plug"></i> Provider</a></div></div>
-  <div class="fh-kpis"><div class="fh-kpi"><div class="lbl">Saldo emesso</div><div class="val">&euro; {{ "%.0f"|format(totals.saldo_emesso) }}</div><div class="hint">Attive meno passive nell'anno</div></div><div class="fh-kpi"><div class="lbl">Saldo cassa</div><div class="val">&euro; {{ "%.0f"|format(totals.saldo_cassa) }}</div><div class="hint">Incassato meno pagato</div></div><div class="fh-kpi"><div class="lbl">Da incassare</div><div class="val">&euro; {{ "%.0f"|format(summary.attiva.residual) }}</div><div class="hint">Residuo fatture attive</div></div><div class="fh-kpi"><div class="lbl">Da pagare</div><div class="val">&euro; {{ "%.0f"|format(summary.passiva.residual) }}</div><div class="hint">Residuo fatture passive</div></div><div class="fh-kpi"><div class="lbl">Scadute aperte</div><div class="val">{{ totals.totale_scadute }}</div><div class="hint">Attive e passive non chiuse</div></div></div>
+  <div class="fh-toolbar"><div><h2 style="margin:0;color:var(--text);font-size:24px">Centro fatturazione</h2><div style="color:#8fa3bd;font-size:13px;margin-top:3px">Fatturazione, pagamenti, SDI e impatto sulle commesse fieristiche.</div></div>
+    <div class="fh-actions fh-primary-actions">
+      <a href="/fatturazione/nuova?tipo=attiva" class="btn btn-primary"><i class="fa fa-plus"></i> Nuova fattura</a>
+      <form method="POST" action="/fatturazione/sync-passive" style="margin:0"><input type="hidden" name="next_tipo" value="overview"><input type="hidden" name="anno" value="{{ anno }}"><input type="hidden" name="sync_year" value="{{ anno }}"><button type="submit" class="btn btn-secondary btn-sm"><i class="fa fa-cloud-arrow-down"></i> Sincronizza SDI</button></form>
+      <a href="/fatturazione/elettronica" class="btn btn-secondary btn-sm"><i class="fa fa-plug"></i> Configura provider</a>
+      <form method="GET" action="/fatturazione" style="margin:0"><select name="anno" class="fh-select" onchange="this.form.submit()">{% for y in available_years %}<option value="{{ y }}" {{ 'selected' if y|string == anno|string }}>{{ y }}</option>{% endfor %}</select></form>
+    </div></div>
+  {% set has_any_docs = (summary.attiva.count + summary.passiva.count) > 0 %}
+  {% set live_parts = live_version.split('|') if live_version else [] %}
+  {% set last_sync = live_parts[2] if live_parts|length > 2 else '' %}
+  <div class="fh-kpis">
+    <div class="fh-kpi"><div class="lbl">Saldo emesso</div>{% if has_any_docs %}<div class="val">&euro; {{ "%.0f"|format(totals.saldo_emesso) }}</div><div class="hint">Attive meno passive nell'anno</div>{% else %}<div class="fh-zero-title">Nessuna fattura nel {{ anno }}</div><div class="hint">Emetti o importa il primo documento</div>{% endif %}</div>
+    <div class="fh-kpi"><div class="lbl">Saldo cassa</div>{% if summary.attiva.paid or summary.passiva.paid %}<div class="val">&euro; {{ "%.0f"|format(totals.saldo_cassa) }}</div><div class="hint">Incassato meno pagato</div>{% else %}<div class="fh-zero-title">In attesa di pagamenti</div><div class="hint">La cassa si aggiorna con incassi e pagamenti</div>{% endif %}</div>
+    <div class="fh-kpi"><div class="lbl">Da incassare</div>{% if summary.attiva.residual %}<div class="val">&euro; {{ "%.0f"|format(summary.attiva.residual) }}</div><div class="hint">Residuo fatture attive</div>{% else %}<div class="fh-zero-title">Nessun residuo attivo</div><div class="hint">Nessuna fattura cliente aperta</div>{% endif %}</div>
+    <div class="fh-kpi"><div class="lbl">Da pagare</div>{% if summary.passiva.residual %}<div class="val">&euro; {{ "%.0f"|format(summary.passiva.residual) }}</div><div class="hint">Residuo fatture passive</div>{% else %}<div class="fh-zero-title">Nessun debito aperto</div><div class="hint">Nessuna fattura fornitore da chiudere</div>{% endif %}</div>
+    <div class="fh-kpi"><div class="lbl">Scadenze aperte</div>{% if totals.totale_scadute %}<div class="val">{{ totals.totale_scadute }}</div><div class="hint">Fatture attive e passive oltre scadenza</div>{% else %}<div class="fh-zero-title">Tutto in ordine</div><div class="hint">Nessun documento oltre scadenza</div>{% endif %}</div>
+  </div>
+  <div class="fh-system-strip">
+    <div><b>SDI monitorato</b><span>Refresh live attivo</span></div>
+    <div><b>{% if has_any_docs %}{{ summary.attiva.count + summary.passiva.count }} documenti{% else %}Nessun documento{% endif %}</b><span>Archivio fatturazione {{ anno }}</span></div>
+    <div><b>{% if last_sync %}{{ last_sync.replace('T',' ') }}{% else %}In attesa{% endif %}</b><span>Ultima sincronizzazione</span></div>
+    <div><b>{% if totals.totale_scadute %}{{ totals.totale_scadute }} da verificare{% else %}Nessun errore visibile{% endif %}</b><span>Controllo SDI e scadenze</span></div>
+  </div>
   <div class="fh-split">
-    <div class="fh-flow attiva"><div class="fh-flow-head"><div><div class="fh-flow-title"><i class="fa fa-arrow-up-long"></i> Fatturazione attiva</div><div style="color:#8fa3bd;font-size:12px">Clienti pagano noi</div></div><a class="btn btn-primary btn-sm" href="/fatturazione?tipo=attiva&anno={{ anno }}">Apri attive</a></div><div class="fh-flow-total">&euro; {{ "%.0f"|format(summary.attiva.total) }}</div><div style="color:#8fa3bd;font-size:12px">Incassato {{ summary.attiva.payment_pct }}%</div><div class="fh-progress"><span style="width:{{ summary.attiva.payment_pct }}%"></span></div><div class="fh-metrics"><div class="fh-metric"><b>&euro; {{ "%.0f"|format(summary.attiva.paid) }}</b><span>Incassato</span></div><div class="fh-metric"><b>&euro; {{ "%.0f"|format(summary.attiva.residual) }}</b><span>Residuo</span></div><div class="fh-metric"><b>{{ summary.attiva.overdue_count }}</b><span>Scadute</span></div></div><div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><a class="btn btn-secondary btn-sm" href="/fatturazione/nuova?tipo=attiva"><i class="fa fa-plus"></i> Nuova attiva</a><a class="btn btn-secondary btn-sm" href="/fatturazione/clienti"><i class="fa fa-users"></i> Clienti</a></div></div>
-    <div class="fh-flow passiva"><div class="fh-flow-head"><div><div class="fh-flow-title"><i class="fa fa-arrow-down-long"></i> Fatturazione passiva</div><div style="color:#8fa3bd;font-size:12px">Noi paghiamo fornitori</div></div><a class="btn btn-primary btn-sm" href="/fatturazione?tipo=passiva&anno={{ anno }}">Apri passive</a></div><div class="fh-flow-total">&euro; {{ "%.0f"|format(summary.passiva.total) }}</div><div style="color:#8fa3bd;font-size:12px">Pagato {{ summary.passiva.payment_pct }}%</div><div class="fh-progress"><span style="width:{{ summary.passiva.payment_pct }}%"></span></div><div class="fh-metrics"><div class="fh-metric"><b>&euro; {{ "%.0f"|format(summary.passiva.paid) }}</b><span>Pagato</span></div><div class="fh-metric"><b>&euro; {{ "%.0f"|format(summary.passiva.residual) }}</b><span>Residuo</span></div><div class="fh-metric"><b>{{ summary.passiva.overdue_count }}</b><span>Scadute</span></div></div><div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><a class="btn btn-secondary btn-sm" href="/fatturazione/nuova?tipo=passiva"><i class="fa fa-plus"></i> Nuova passiva</a><a class="btn btn-secondary btn-sm" href="/fornitori"><i class="fa fa-truck-fast"></i> Fornitori</a></div></div>
+    <div class="fh-flow attiva"><div class="fh-flow-head"><div><div class="fh-flow-title"><i class="fa fa-arrow-up-long"></i> Fatture attive</div><div style="color:#8fa3bd;font-size:12px">Clienti pagano noi</div></div><a class="btn btn-primary btn-sm" href="/fatturazione?tipo=attiva&anno={{ anno }}">Apri attive</a></div>{% if summary.attiva.count %}<div class="fh-flow-total">&euro; {{ "%.0f"|format(summary.attiva.total) }}</div><div style="color:#8fa3bd;font-size:12px">Incassato {{ summary.attiva.payment_pct }}%</div><div class="fh-progress"><span style="width:{{ summary.attiva.payment_pct }}%"></span></div><div class="fh-metrics"><div class="fh-metric"><b>{% if summary.attiva.paid %}&euro; {{ "%.0f"|format(summary.attiva.paid) }}{% else %}Da incassare{% endif %}</b><span>Incassato</span></div><div class="fh-metric"><b>{% if summary.attiva.residual %}&euro; {{ "%.0f"|format(summary.attiva.residual) }}{% else %}Chiuso{% endif %}</b><span>Residuo</span></div><div class="fh-metric"><b>{% if summary.attiva.overdue_count %}{{ summary.attiva.overdue_count }}{% else %}OK{% endif %}</b><span>Scadenze</span></div></div>{% else %}<div class="fh-zero-title">Nessun documento emesso</div><div class="fh-zero-copy">Crea la prima fattura cliente o sincronizza i documenti dal provider.</div>{% endif %}<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><a class="btn btn-secondary btn-sm" href="/fatturazione/nuova?tipo=attiva"><i class="fa fa-plus"></i> Nuova attiva</a><a class="btn btn-secondary btn-sm" href="/fatturazione/clienti"><i class="fa fa-users"></i> Clienti</a></div></div>
+    <div class="fh-flow passiva"><div class="fh-flow-head"><div><div class="fh-flow-title"><i class="fa fa-arrow-down-long"></i> Fatture passive</div><div style="color:#8fa3bd;font-size:12px">Noi paghiamo fornitori</div></div><a class="btn btn-primary btn-sm" href="/fatturazione?tipo=passiva&anno={{ anno }}">Apri passive</a></div>{% if summary.passiva.count %}<div class="fh-flow-total">&euro; {{ "%.0f"|format(summary.passiva.total) }}</div><div style="color:#8fa3bd;font-size:12px">Pagato {{ summary.passiva.payment_pct }}%</div><div class="fh-progress"><span style="width:{{ summary.passiva.payment_pct }}%"></span></div><div class="fh-metrics"><div class="fh-metric"><b>{% if summary.passiva.paid %}&euro; {{ "%.0f"|format(summary.passiva.paid) }}{% else %}Da pagare{% endif %}</b><span>Pagato</span></div><div class="fh-metric"><b>{% if summary.passiva.residual %}&euro; {{ "%.0f"|format(summary.passiva.residual) }}{% else %}Chiuso{% endif %}</b><span>Residuo</span></div><div class="fh-metric"><b>{% if summary.passiva.overdue_count %}{{ summary.passiva.overdue_count }}{% else %}OK{% endif %}</b><span>Scadenze</span></div></div>{% else %}<div class="fh-zero-title">Nessun documento ricevuto</div><div class="fh-zero-copy">Importa passive dal provider o registra il primo costo fornitore.</div>{% endif %}<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><a class="btn btn-secondary btn-sm" href="/fatturazione/nuova?tipo=passiva"><i class="fa fa-plus"></i> Nuova passiva</a><a class="btn btn-secondary btn-sm" href="/fornitori"><i class="fa fa-truck-fast"></i> Fornitori</a></div></div>
+  </div>
+  <div class="fh-ops-card">
+    <div class="fh-ops-head"><div><h3><i class="fa fa-store" style="color:#38bdf8"></i> Impatto su fiere e margini</h3><p>La fatturazione resta collegata all'operativita: ricavi, costi e scadenze diventano segnali per le commesse.</p></div><a class="btn btn-secondary btn-sm" href="/cantieri">Apri fiere</a></div>
+    <div class="fh-commesse-grid">
+      <div class="fh-commessa"><b>{% if summary.attiva.count %}&euro; {{ "%.0f"|format(summary.attiva.total) }}{% else %}Nessuna fattura emessa{% endif %}</b><span>Ricavi da collegare alle fiere</span></div>
+      <div class="fh-commessa"><b>{% if summary.passiva.count %}&euro; {{ "%.0f"|format(summary.passiva.total) }}{% else %}Nessun costo passivo{% endif %}</b><span>Costi fornitori da assegnare alle commesse</span></div>
+      <div class="fh-commessa"><b>{% if has_any_docs %}&euro; {{ "%.0f"|format(totals.saldo_emesso) }}{% else %}In attesa dati{% endif %}</b><span>Margine stimato aggiornato</span></div>
+      <div class="fh-commessa"><b>{% if totals.totale_scadute %}{{ totals.totale_scadute }} scadenze{% else %}Nessuna criticita{% endif %}</b><span>Documenti che possono impattare le fiere</span></div>
+    </div>
   </div>
   <div class="fh-doc-spaces">
     {% for g in doc_spaces %}
-    <div class="fh-space {{ g.tone }}">
+    <div class="fh-space {{ g.tone }} {{ 'featured' if g.key in ['active_standard','passive_standard','credit_notes'] else 'compact' }}">
       <div class="fh-space-head"><div class="fh-space-ico"><i class="fa {{ g.icon }}"></i></div><div><h3>{{ g.label }}</h3><p>{{ g.subtitle }}</p></div></div>
+      {% if g.count %}
       <div class="fh-space-amount">&euro; {{ "%.0f"|format(g.total_abs) }}</div>
       <div class="fh-space-impact">Impatto contabile: &euro; {{ "%.0f"|format(g.total) }}</div>
       <div class="fh-space-meta">
         <div><b>{{ g.count }}</b><span>doc.</span></div>
         <div><b>{{ g.payment_pct }}%</b><span>chiuso</span></div>
-        <div><b>{{ g.overdue_count }}</b><span>scaduti</span></div>
+        <div><b>{% if g.overdue_count %}{{ g.overdue_count }}{% else %}OK{% endif %}</b><span>scadenze</span></div>
       </div>
+      {% else %}
+      <div class="fh-space-empty"><div class="fh-zero-title">Nessun documento</div><div class="fh-zero-copy">Spazio pronto per {{ g.label|lower }}.</div></div>
+      {% endif %}
       <div class="fh-space-actions">
         {% for l in g.links %}<a class="btn btn-secondary btn-sm" href="{{ l.url }}">{{ l.label }}</a>{% endfor %}
       </div>
@@ -23951,6 +24002,8 @@ FATT_LIST_TMPL = """
 .sf{background:#fff;border-radius:12px;padding:16px;border:1px solid var(--border);text-align:center}
 .sf .val{font-size:26px;font-weight:800;margin-bottom:4px}
 .sf .lbl{font-size:12px;color:var(--text-light)}
+.sf .fh-zero-title{font-size:15px;font-weight:900;color:#e5f0ff;line-height:1.15;margin-bottom:6px}
+body.theme-light .sf .fh-zero-title{color:#0f172a}
 .sf.rosso .val{color:#dc2626}.sf.verde .val{color:#16a34a}.sf.amber .val{color:#d97706}.sf.blu .val{color:#2563eb}
 .badge-fatt{padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700}
 .bf-da{background:#fef3c7;color:#92400e}.bf-parz{background:#dbeafe;color:#1e40af}
@@ -23988,7 +24041,7 @@ FATT_LIST_TMPL = """
         </select>
       </label>
       <button type="submit" class="btn btn-primary btn-sm" title="Importa e aggiorna fatture attive e passive da Fatture in Cloud">
-        <i class="fa fa-cloud-arrow-down"></i> Sincronizza da Fatture in Cloud
+        <i class="fa fa-cloud-arrow-down"></i> Sincronizza SDI
       </button>
     </form>
     <a href="/fatturazione/elettronica" class="btn btn-secondary btn-sm" title="Configura provider"><i class="fa fa-plug"></i> Provider</a>
@@ -23996,22 +24049,23 @@ FATT_LIST_TMPL = """
 </div>
 
 <!-- Statistiche -->
+{% set has_list_docs = fatture|length > 0 %}
 <div class="stat-fatt">
   <div class="sf rosso">
-    <div class="val">&euro; {{ "%.0f"|format(tot_da_pagare) }}</div>
+    {% if tot_da_pagare %}<div class="val">&euro; {{ "%.0f"|format(tot_da_pagare) }}</div>{% else %}<div class="fh-zero-title">{% if has_list_docs %}Nessun residuo{% else %}Nessun documento{% endif %}</div>{% endif %}
     <div class="lbl"><i class="fa fa-file-invoice"></i> {% if tipo=='attiva' %}Da incassare{% else %}Da pagare{% endif %}</div>
   </div>
   <div class="sf amber">
-    <div class="val">&euro; {{ "%.0f"|format(tot_parziale) }}</div>
+    {% if tot_parziale %}<div class="val">&euro; {{ "%.0f"|format(tot_parziale) }}</div>{% else %}<div class="fh-zero-title">Nessuna parziale</div>{% endif %}
     <div class="lbl"><i class="fa fa-hourglass-half"></i> Parzialmente pagate</div>
   </div>
   <div class="sf verde">
-    <div class="val">&euro; {{ "%.0f"|format(tot_pagato) }}</div>
+    {% if tot_pagato %}<div class="val">&euro; {{ "%.0f"|format(tot_pagato) }}</div>{% else %}<div class="fh-zero-title">In attesa</div>{% endif %}
     <div class="lbl"><i class="fa fa-check"></i> {% if tipo=='attiva' %}Incassato totale{% else %}Pagato totale{% endif %}</div>
   </div>
   <div class="sf blu">
-    <div class="val">{{ n_scadute }}</div>
-    <div class="lbl"><i class="fa fa-triangle-exclamation"></i> Scadute</div>
+    {% if n_scadute %}<div class="val">{{ n_scadute }}</div>{% else %}<div class="fh-zero-title">Tutto in ordine</div>{% endif %}
+    <div class="lbl"><i class="fa fa-triangle-exclamation"></i> Documenti scaduti</div>
   </div>
 </div>
 
@@ -24057,7 +24111,7 @@ FATT_LIST_TMPL = """
 <!-- Azioni + filtri -->
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
   <div style="display:flex;gap:10px;flex-wrap:wrap">
-    <a href="/fatturazione/nuova?tipo={{ tipo }}" class="btn btn-primary"><i class="fa fa-plus"></i> Nuova fattura {{ tipo }}</a>
+    <a href="/fatturazione/nuova?tipo={{ tipo }}" class="btn btn-primary"><i class="fa fa-plus"></i> Nuova fattura</a>
     <a href="/fatturazione/elettronica" class="btn btn-secondary"><i class="fa fa-plug-circle-bolt"></i> Fatturazione elettronica</a>
     {% if tipo == 'attiva' %}
     <a href="/fatturazione/clienti" class="btn btn-secondary"><i class="fa fa-users"></i> Clienti</a>
