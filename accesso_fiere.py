@@ -4800,7 +4800,7 @@ PUBLIC_HOME_TMPL = """<!DOCTYPE html>
               </div>
             </div>
             <div class="kpi-float k1"><b>12</b><span>Cantieri live</span></div>
-            <div class="kpi-float k2"><b>98%</b><span>Documenti verificati</span></div>
+            <div class="kpi-float k2"><b>OK</b><span>Documenti verificati</span></div>
             <div class="kpi-float k3"><b>Realtime</b><span>Presenze, SDI, workflow e notifiche.</span></div>
           </div>
         </div>
@@ -4847,44 +4847,12 @@ PUBLIC_HOME_TMPL = """<!DOCTYPE html>
         </div>
       </section>
 
-      <section class="section" id="moduli">
-        <div class="shell">
-          <div class="section-head">
-            <h2>Tutto quello che serve per gestire un allestimento fieristico.</h2>
-            <p>Moduli separati, dati unificati, controllo operativo continuo.</p>
-          </div>
-          <div class="modules-grid">
-            <article class="module-card"><div class="shot"><div class="shot-title">Squadre live <em>8 attive</em></div><div class="shot-bars"><i></i><i></i><i></i></div><div class="shot-flow"><i></i><span></span><i></i><span></span><i></i></div></div><h3>Controllo squadre</h3><p>Presenze, capisquadra, ore lavorate e attivita live.</p></article>
-            <article class="module-card"><div class="shot"><div class="shot-title">Compliance <em>98%</em></div><div class="shot-table"><b><span>UNILAV</span><span>OK</span></b><b><span>DPI</span><span>OK</span></b><b><span>Sicurezza</span><span>1 alert</span></b></div></div><h3>Documenti e compliance</h3><p>Scadenze, DPI, verifiche, alert e documenti aziendali.</p></article>
-            <article class="module-card"><div class="shot"><div class="shot-title">Fiera Milano <em>Live</em></div><div class="shot-flow"><i></i><span></span><i></i><span></span><i></i></div><div class="shot-table"><b><span>Setup</span><span>70%</span></b><b><span>Smontaggio</span><span>Pronto</span></b></div></div><h3>Fiere e cantieri</h3><p>Setup, avanzamento, smontaggio e responsabilita operative.</p></article>
-            <article class="module-card"><div class="shot"><div class="shot-title">SDI provider <em>Sync</em></div><div class="shot-invoice"><b>Attive</b><b>Passive</b><b>Note credito</b><b>Autofatture</b></div></div><h3>Fatturazione elettronica</h3><p>Attive, passive, note, autofatture, SDI e provider.</p></article>
-            <article class="module-card"><div class="shot"><div class="shot-title">Flotta <em>12 mezzi</em></div><div class="shot-vehicle"><b>Revisione OK</b><b>Bollo 30gg</b><b>Assicurazione OK</b><b>Tagliando</b></div></div><h3>Mezzi e scadenze</h3><p>Revisioni, assicurazioni, bolli, documenti e flotte.</p></article>
-            <article class="module-card"><div class="shot"><div class="shot-title">App operativa <em>Realtime</em></div><div class="shot-mobile"><b>Dipendente</b><b>Caposquadra</b><b>Admin</b></div></div><h3>App mobile operativa</h3><p>Dipendenti, capisquadra, amministrazione e notifiche.</p></article>
-          </div>
-        </div>
-      </section>
-
-      <section class="section" id="mobile">
-        <div class="shell cinema">
-          <div>
-            <span class="eyebrow">Mobile operativo</span>
-            <h2>Il cantiere continua anche fuori ufficio.</h2>
-            <p>Timbrature, ferie, notifiche, workflow e documenti restano sincronizzati per dipendenti, capisquadra, amministrazione e contabilita.</p>
-            <div class="hero-actions"><a class="btn btn-primary" href="/area-clienti">Vai all'app mobile</a></div>
-          </div>
-          <div class="phone-stage" aria-label="Mockup app mobile">
-            <div class="phone one"><div class="phone-screen"><div class="phone-top"></div><div class="phone-title">Caposquadra <span>LIVE</span></div><div class="phone-card"><b>12 presenti</b><small>Fiera Milano - Pad. 8</small></div><div class="phone-list"><div><span>Montaggio stand A12</span><b class="phone-ok">OK</b></div><div><span>Documento DPI</span><b class="phone-warn">Alert</b></div><div><span>Ore squadra</span><b>72h</b></div></div></div></div>
-            <div class="phone two"><div class="phone-screen"><div class="phone-top"></div><div class="phone-title">Badge digitale <span>QR + PIN</span></div><div class="phone-card phone-qr"><div class="qr-mini"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div><b>Verifica</b><small>UNILAV, corsi, scadenze</small></div></div><div class="phone-list"><div><span>PIN personale</span><b>****</b></div><div><span>Accesso documenti</span><b class="phone-ok">Attivo</b></div></div></div></div>
-          </div>
-        </div>
-      </section>
-
       <section class="section" id="badge-digitale">
         <div class="shell badge-digital">
           <div class="badge-copy">
             <span class="eyebrow">Killer feature</span>
             <h2>Badge digitale con verifica documenti in tempo reale.</h2>
-            <p>Ogni operatore puo essere verificato tramite QR e PIN personale, con accesso controllato a documenti, UNILAV, corsi sicurezza e scadenze.</p>
+            <p>Ogni operatore puo essere verificato tramite QR e PIN personale. In caso di controllo, il responsabile visualizza solo i documenti autorizzati: UNILAV, corsi sicurezza, scadenze e certificazioni.</p>
             <div class="badge-actions">
               <a class="btn btn-primary" href="/area-clienti">Apri verifica badge</a>
               <a class="btn" href="#demo">Guarda il flusso</a>
@@ -4911,6 +4879,38 @@ PUBLIC_HOME_TMPL = """<!DOCTYPE html>
               <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
               <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="moduli">
+        <div class="shell">
+          <div class="section-head">
+            <h2>Tutto quello che serve per gestire un allestimento fieristico.</h2>
+            <p>Moduli separati, dati unificati, controllo operativo continuo.</p>
+          </div>
+          <div class="modules-grid">
+            <article class="module-card"><div class="shot"><div class="shot-title">Squadre live <em>8 attive</em></div><div class="shot-bars"><i></i><i></i><i></i></div><div class="shot-flow"><i></i><span></span><i></i><span></span><i></i></div></div><h3>Controllo squadre</h3><p>Presenze, capisquadra, ore lavorate e attivita live.</p></article>
+            <article class="module-card"><div class="shot"><div class="shot-title">Compliance <em>Verifica</em></div><div class="shot-table"><b><span>UNILAV</span><span>OK</span></b><b><span>DPI</span><span>OK</span></b><b><span>Sicurezza</span><span>Alert</span></b></div></div><h3>Documenti e compliance</h3><p>Scadenze, DPI, verifiche, alert e documenti aziendali.</p></article>
+            <article class="module-card"><div class="shot"><div class="shot-title">Fiera Milano <em>Live</em></div><div class="shot-flow"><i></i><span></span><i></i><span></span><i></i></div><div class="shot-table"><b><span>Setup</span><span>70%</span></b><b><span>Smontaggio</span><span>Pronto</span></b></div></div><h3>Fiere e cantieri</h3><p>Setup, avanzamento, smontaggio e responsabilita operative.</p></article>
+            <article class="module-card"><div class="shot"><div class="shot-title">SDI provider <em>Sync</em></div><div class="shot-invoice"><b>Attive</b><b>Passive</b><b>Note credito</b><b>Autofatture</b></div></div><h3>Fatturazione elettronica</h3><p>Attive, passive, note, autofatture, SDI e provider.</p></article>
+            <article class="module-card"><div class="shot"><div class="shot-title">Flotta <em>12 mezzi</em></div><div class="shot-vehicle"><b>Revisione OK</b><b>Bollo 30gg</b><b>Assicurazione OK</b><b>Tagliando</b></div></div><h3>Mezzi e scadenze</h3><p>Revisioni, assicurazioni, bolli, documenti e flotte.</p></article>
+            <article class="module-card"><div class="shot"><div class="shot-title">App operativa <em>Realtime</em></div><div class="shot-mobile"><b>Dipendente</b><b>Caposquadra</b><b>Admin</b></div></div><h3>App mobile operativa</h3><p>Dipendenti, capisquadra, amministrazione e notifiche.</p></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="mobile">
+        <div class="shell cinema">
+          <div>
+            <span class="eyebrow">Mobile operativo</span>
+            <h2>Il cantiere continua anche fuori ufficio.</h2>
+            <p>Timbrature, ferie, notifiche, workflow e documenti restano sincronizzati per dipendenti, capisquadra, amministrazione e contabilita.</p>
+            <div class="hero-actions"><a class="btn btn-primary" href="/area-clienti">Vai all'app mobile</a></div>
+          </div>
+          <div class="phone-stage" aria-label="Mockup app mobile">
+            <div class="phone one"><div class="phone-screen"><div class="phone-top"></div><div class="phone-title">Caposquadra <span>LIVE</span></div><div class="phone-card"><b>12 presenti</b><small>Fiera Milano - Pad. 8</small></div><div class="phone-list"><div><span>Montaggio stand A12</span><b class="phone-ok">OK</b></div><div><span>Documento DPI</span><b class="phone-warn">Alert</b></div><div><span>Ore squadra</span><b>72h</b></div></div></div></div>
+            <div class="phone two"><div class="phone-screen"><div class="phone-top"></div><div class="phone-title">Badge digitale <span>QR + PIN</span></div><div class="phone-card phone-qr"><div class="qr-mini"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div><b>Verifica</b><small>UNILAV, corsi, scadenze</small></div></div><div class="phone-list"><div><span>PIN personale</span><b>****</b></div><div><span>Accesso documenti</span><b class="phone-ok">Attivo</b></div></div></div></div>
           </div>
         </div>
       </section>
@@ -4974,10 +4974,10 @@ PUBLIC_HOME_TMPL = """<!DOCTYPE html>
             <div class="timeline"><span></span></div>
           </div>
           <div>
-            <span class="eyebrow">Demo 60 secondi</span>
-            <h2>Vedi il flusso completo, dal cantiere alla fattura.</h2>
-            <p>Dashboard live, notifiche, workflow, mobile, SDI, approvazioni e presenze in una demo breve pensata per far capire subito il valore operativo.</p>
-            <div class="hero-actions"><a class="btn btn-primary" href="mailto:info@accessofiere.com?subject=Richiesta%20demo%20video%20Accesso%20Fiere">Richiedi demo video</a></div>
+            <span class="eyebrow">Demo guidata</span>
+            <h2>Prenota una demo live e guarda il flusso completo.</h2>
+            <p>Dashboard, mobile, badge QR + PIN, notifiche, workflow, SDI, approvazioni e presenze: in una demo guidata vedi come il gestionale lavora davvero per un allestitore.</p>
+            <div class="hero-actions"><a class="btn btn-primary" href="mailto:info@accessofiere.com?subject=Prenota%20demo%20live%20Accesso%20Fiere">Prenota una demo live</a></div>
           </div>
         </div>
       </section>
@@ -4989,12 +4989,12 @@ PUBLIC_HOME_TMPL = """<!DOCTYPE html>
             <p class="quote">"Prima gestivamo tutto tra WhatsApp, Excel e telefonate. Ora abbiamo finalmente controllo operativo completo."<small>Azienda allestimenti Milano</small></p>
           </div>
           <div class="proof-grid">
-            <div class="proof-stat"><b>12+</b><span>Aziende servite</span></div>
-            <div class="proof-stat"><b>180+</b><span>Operatori coordinati</span></div>
-            <div class="proof-stat"><b>9.500+</b><span>Documenti gestiti</span></div>
-            <div class="proof-stat"><b>42.000+</b><span>Ore sincronizzate</span></div>
-            <div class="proof-stat"><b>3.200+</b><span>Fatture elaborate</span></div>
-            <div class="proof-stat"><b>Realtime</b><span>Web, mobile e provider SDI</span></div>
+            <div class="proof-stat"><b>Verticale</b><span>Progettato per allestitori, montaggio e cantieri fieristici</span></div>
+            <div class="proof-stat"><b>Badge</b><span>QR + PIN con accesso controllato ai documenti autorizzati</span></div>
+            <div class="proof-stat"><b>Ruoli</b><span>Admin, amministrazione, capisquadra e dipendenti</span></div>
+            <div class="proof-stat"><b>SDI</b><span>Fatture attive, passive, note e provider elettronici</span></div>
+            <div class="proof-stat"><b>Audit</b><span>Storico operativo, scadenze e workflow tracciati</span></div>
+            <div class="proof-stat"><b>Realtime</b><span>Web, mobile, notifiche e sincronizzazioni provider</span></div>
           </div>
         </div>
       </section>
@@ -5003,7 +5003,7 @@ PUBLIC_HOME_TMPL = """<!DOCTYPE html>
         <div class="shell final-cta">
           <h2>Porta ordine operativo nella tua azienda.</h2>
           <p>Scopri come Accesso Fiere centralizza operativita, documenti, presenze e fatturazione in un unico sistema.</p>
-          <a class="btn btn-primary" href="mailto:info@accessofiere.com?subject=Prenota%20demo%20Accesso%20Fiere">Prenota una demo</a>
+          <a class="btn btn-primary" href="mailto:info@accessofiere.com?subject=Prenota%20demo%20live%20Accesso%20Fiere">Prenota una demo live</a>
         </div>
       </section>
     </main>
@@ -5016,7 +5016,7 @@ PUBLIC_HOME_TMPL = """<!DOCTYPE html>
             <p style="margin-top:18px">Controllo operativo, documenti, presenze, mezzi e fatturazione elettronica per aziende che lavorano davvero sul campo.</p>
           </div>
           <div><h4>Piattaforma</h4><a href="#moduli">Funzionalita</a><a href="#mobile">Mobile app</a><a href="#control-room">Control room</a><a href="/area-clienti">Area clienti</a></div>
-          <div><h4>Enterprise</h4><a href="#demo">Demo</a><a href="mailto:info@accessofiere.com?subject=API%20Accesso%20Fiere">API</a><a href="mailto:info@accessofiere.com?subject=Sicurezza%20Accesso%20Fiere">Sicurezza</a><a href="mailto:info@accessofiere.com?subject=Roadmap%20Accesso%20Fiere">Roadmap</a></div>
+          <div><h4>Enterprise</h4><a href="#demo">Demo</a><a href="mailto:info@accessofiere.com?subject=API%20Accesso%20Fiere">API</a><a href="/sicurezza">Sicurezza</a><a href="mailto:info@accessofiere.com?subject=Roadmap%20Accesso%20Fiere">Roadmap</a></div>
           <div><h4>Compliance</h4><a href="/privacy">Privacy</a><a href="/cookies">Cookie Policy</a><a href="/termini">Termini</a><a href="mailto:info@accessofiere.com?subject=Status%20sistema">Status sistema</a></div>
           <div><h4>Supporto</h4><a href="mailto:info@accessofiere.com">info@accessofiere.com</a><a href="mailto:info@accessofiere.com?subject=Documentazione">Documentazione</a><a href="mailto:info@accessofiere.com?subject=Supporto">Supporto</a><a href="mailto:info@accessofiere.com?subject=Contatti%20commerciali">Contatti commerciali</a></div>
         </div>
@@ -5349,6 +5349,34 @@ TERMS_BODY = """
 <p>Per informazioni sui termini di servizio puoi scrivere a <a href="mailto:info@accessofiere.com">info@accessofiere.com</a>.</p>
 """
 
+
+SECURITY_BODY = """
+<h1>Sicurezza</h1>
+<p class="muted">Ultimo aggiornamento: 13 maggio 2026</p>
+
+<div class="box">
+  <p>Accesso Fiere protegge dati operativi, documenti aziendali, badge digitali e informazioni dei lavoratori con controlli pensati per aziende di allestimento fieristico.</p>
+</div>
+
+<h2>1. Accessi e ruoli</h2>
+<p>La piattaforma separa le aree operative per ruolo: amministratore, amministrazione, caposquadra e dipendente. Ogni profilo visualizza solo le funzioni coerenti con il proprio incarico.</p>
+
+<h2>2. Badge digitale QR + PIN</h2>
+<p>Il badge digitale permette la verifica dell'operatore tramite QR e PIN personale. In caso di controllo vengono mostrati solo i documenti autorizzati, come UNILAV, corsi sicurezza, scadenze e certificazioni.</p>
+
+<h2>3. Documenti protetti</h2>
+<p>I documenti caricati nel gestionale sono collegati ad aziende, utenti e scadenze. L'accesso ai file avviene attraverso aree protette e controlli applicativi.</p>
+
+<h2>4. Tracciabilita operativa</h2>
+<p>Presenze, richieste, scadenze, workflow e sincronizzazioni provider vengono gestiti con storico operativo, cosi il responsabile puo ricostruire cosa e successo e quando.</p>
+
+<h2>5. Backup e continuita</h2>
+<p>Il servizio e progettato per lavorare con database tenant separati e volume dati persistente. Le politiche di backup dipendono dall'ambiente di deploy configurato per il cliente.</p>
+
+<h2>6. GDPR</h2>
+<p>Accesso Fiere tratta dati personali e documentali per fornire il servizio richiesto dall'azienda cliente. Per richieste privacy e sicurezza puoi scrivere a <a href="mailto:info@accessofiere.com">info@accessofiere.com</a>.</p>
+"""
+
 COOKIE_BODY = """
 <h1>Cookie Policy</h1>
 <p class="muted">Ultimo aggiornamento: 9 maggio 2026</p>
@@ -5419,6 +5447,12 @@ def termini():
 def cookie_policy():
     return render_template_string(LEGAL_PAGE_TMPL, title='Cookie Policy', body=COOKIE_BODY)
 
+@app.route('/sicurezza')
+@app.route('/security')
+def sicurezza():
+    return render_template_string(LEGAL_PAGE_TMPL, title='Sicurezza', body=SECURITY_BODY)
+
+
 @app.route('/home')
 @app.route('/pubblico')
 def public_home():
@@ -5441,6 +5475,7 @@ def sitemap_xml():
         ('/privacy', '0.5'),
         ('/cookies', '0.5'),
         ('/termini', '0.5'),
+        ('/sicurezza', '0.7'),
         ('/area-clienti', '0.6'),
     ]
     items = "\n".join(
@@ -10181,7 +10216,7 @@ def _amministrazione_stats():
     return s
 
 PUBLIC_NO_TENANT_ENDPOINTS = {
-    'index', 'public_home', 'privacy', 'termini', 'cookie_policy', 'robots_txt', 'sitemap_xml', 'login', 'logout', 'area_clienti',
+    'index', 'public_home', 'privacy', 'termini', 'cookie_policy', 'sicurezza', 'robots_txt', 'sitemap_xml', 'login', 'logout', 'area_clienti',
     'set_lang', 'registrati', 'landing', 'pwa_manifest', 'pwa_service_worker', 'pwa_offline',
     'static', 'pwa_static', 'stripe_webhook', 'fattureincloud_webhook', 'acube_webhook', 'aruba_webhook',
     'fatturazione_elettronica_callback',
