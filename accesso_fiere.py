@@ -1959,7 +1959,7 @@ BASE = """<!DOCTYPE html>
 <html lang="{{ lang }}" dir="{{ t.dir }}">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{{ page_title }} | Accesso Fiere Ã¢â‚¬â€ Gestionale Allestitori</title>
+<title>{{ page_title }} | Accesso Fiere - Gestionale Allestitori</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#0f4c81">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4449,6 +4449,17 @@ PUBLIC_HOME_TMPL = """<!DOCTYPE html>
       background:#d9fbff;box-shadow:0 0 0 7px rgba(111,216,239,.08),0 0 18px rgba(111,216,239,.34);
     }
     .brand small{display:block;color:var(--muted);font-size:12px;font-weight:700;letter-spacing:0;margin-top:2px}
+    .brand-logo-img{
+      width:46px;height:46px;border-radius:14px;object-fit:contain;
+      background:rgba(255,255,255,.96);padding:5px;
+      border:1px solid rgba(111,216,239,.24);
+      box-shadow:0 14px 32px rgba(0,0,0,.22);
+    }
+    .brand-logo-fallback{
+      width:46px;height:46px;border-radius:14px;display:grid;place-items:center;
+      background:linear-gradient(145deg,rgba(111,216,239,.18),rgba(7,17,31,.9));
+      border:1px solid rgba(111,216,239,.34);font-size:14px;font-weight:900;color:#dffbff;
+    }
     .nav-links{display:flex;align-items:center;gap:22px;color:var(--muted);font-size:13px;font-weight:700}
     .nav-links a:hover{color:#fff}
     .nav-actions{display:flex;align-items:center;gap:10px}
@@ -4629,6 +4640,15 @@ PUBLIC_HOME_TMPL = """<!DOCTYPE html>
     .shot:before{content:"";display:block;width:42%;height:10px;border-radius:99px;background:rgba(255,255,255,.22);margin-bottom:14px}
     .shot span{display:block;height:12px;border-radius:99px;background:rgba(111,216,239,.2);margin:9px 0}
     .shot span:nth-child(2){width:78%}.shot span:nth-child(3){width:54%}.shot span:nth-child(4){width:88%}
+    .shot-title{display:flex;align-items:center;justify-content:space-between;color:#dcecff;font-size:12px;font-weight:900;margin-bottom:12px}
+    .shot-title em{font-style:normal;color:#7ce6f7;background:rgba(111,216,239,.1);border:1px solid rgba(111,216,239,.18);border-radius:999px;padding:4px 7px}
+    .shot-bars{display:grid;gap:8px}.shot-bars i{display:block;height:10px;border-radius:999px;background:linear-gradient(90deg,rgba(111,216,239,.62),rgba(106,168,255,.2))}
+    .shot-bars i:nth-child(2){width:78%}.shot-bars i:nth-child(3){width:54%}
+    .shot-table{display:grid;gap:7px}.shot-table b{display:flex;justify-content:space-between;border:1px solid rgba(151,184,220,.12);background:rgba(7,17,31,.35);border-radius:10px;padding:7px 9px;font-size:11px;color:#dcecff}
+    .shot-flow{display:flex;gap:8px;align-items:center;margin-top:12px}.shot-flow i{width:10px;height:10px;border-radius:999px;background:var(--green);box-shadow:0 0 16px rgba(53,212,154,.35)}.shot-flow span{height:2px;flex:1;background:linear-gradient(90deg,rgba(111,216,239,.68),rgba(106,168,255,.18))}
+    .shot-invoice{display:grid;grid-template-columns:1fr 1fr;gap:8px}.shot-invoice b{min-height:32px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(151,184,220,.12);display:grid;place-items:center;font-size:11px;color:#dcecff}
+    .shot-vehicle{display:grid;grid-template-columns:1fr 1fr;gap:8px}.shot-vehicle b{border-left:3px solid var(--green);background:rgba(255,255,255,.05);border-radius:10px;padding:8px;color:#dcecff;font-size:11px}
+    .shot-mobile{display:flex;gap:8px}.shot-mobile b{flex:1;height:70px;border-radius:15px;border:1px solid rgba(151,184,220,.12);background:linear-gradient(180deg,rgba(111,216,239,.15),rgba(7,17,31,.3));display:grid;place-items:center;color:#dcecff;font-size:11px}
     .module-card h3{margin:0 0 8px;font-size:19px;letter-spacing:-.035em}
     .module-card p{font-size:14px;margin:0;color:#9bb0c8}
     .cinema{
@@ -4643,9 +4663,15 @@ PUBLIC_HOME_TMPL = """<!DOCTYPE html>
       background:#07111f;box-shadow:0 26px 70px rgba(0,0,0,.38);padding:14px;
     }
     .phone.one{left:18px;top:34px;transform:rotate(-7deg)}.phone.two{right:38px;top:0;transform:rotate(7deg)}
-    .phone-screen{height:100%;border-radius:30px;background:linear-gradient(180deg,#102640,#081525);border:1px solid rgba(111,216,239,.14);padding:18px;overflow:hidden}
-    .phone-top{height:8px;width:58px;border-radius:99px;background:rgba(255,255,255,.18);margin:0 auto 20px}
-    .phone-row{height:58px;border-radius:16px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.08);margin-bottom:10px}
+    .phone-screen{height:100%;border-radius:30px;background:linear-gradient(180deg,#102640,#081525);border:1px solid rgba(111,216,239,.18);padding:18px;overflow:hidden}
+    .phone-top{height:8px;width:58px;border-radius:99px;background:rgba(255,255,255,.22);margin:0 auto 18px}
+    .phone-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;color:#f2f8ff;font-size:13px;font-weight:900}
+    .phone-title span{color:#7ce6f7;font-size:10px;border:1px solid rgba(111,216,239,.22);border-radius:999px;padding:4px 7px;background:rgba(111,216,239,.08)}
+    .phone-card{border-radius:17px;background:rgba(255,255,255,.065);border:1px solid rgba(255,255,255,.09);padding:12px;margin-bottom:10px}
+    .phone-card b{display:block;font-size:22px;letter-spacing:-.05em}.phone-card small{display:block;color:#96aac2;margin-top:4px;font-weight:700}
+    .phone-list{display:grid;gap:8px}.phone-list div{height:38px;border-radius:13px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between;padding:0 10px;color:#dcecff;font-size:11px;font-weight:800}
+    .phone-ok{color:#8af0c2}.phone-warn{color:#ffd180}
+    .phone-qr{display:grid;grid-template-columns:56px 1fr;gap:10px;align-items:center}.qr-mini{width:56px;height:56px;border-radius:12px;background:#eaf6ff;padding:7px;display:grid;grid-template-columns:repeat(4,1fr);gap:3px}.qr-mini i{background:#081525;border-radius:2px}.qr-mini i:nth-child(2n){opacity:.55}
     .control-room{padding:26px;border-radius:30px;border:1px solid rgba(151,184,220,.14);background:rgba(12,27,48,.76);box-shadow:var(--shadow)}
     .wide-dashboard{height:500px;border-radius:24px;border:1px solid rgba(151,184,220,.14);background:linear-gradient(145deg,#102640,#07111f);position:relative;overflow:hidden}
     .wide-dashboard:before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:48px 48px}
@@ -4663,6 +4689,24 @@ PUBLIC_HOME_TMPL = """<!DOCTYPE html>
     .ap1{left:26px;top:72px}.ap2{right:34px;top:108px}.ap3{left:58px;bottom:72px}.ap4{right:42px;bottom:88px}.ap5{left:50%;top:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,rgba(111,216,239,.24),rgba(106,168,255,.14))}
     .auto-copy{padding:26px}.auto-copy ul{list-style:none;padding:0;margin:22px 0 0;display:grid;grid-template-columns:1fr 1fr;gap:12px}
     .auto-copy li{border:1px solid rgba(151,184,220,.13);background:rgba(255,255,255,.045);border-radius:16px;padding:14px;color:#dcecff;font-weight:800;font-size:14px}
+    .badge-digital{
+      display:grid;grid-template-columns:.98fr 1.02fr;gap:28px;align-items:center;
+      border-radius:32px;border:1px solid rgba(151,184,220,.14);
+      background:linear-gradient(135deg,rgba(13,31,55,.86),rgba(7,17,31,.94));
+      padding:30px;box-shadow:var(--shadow);overflow:hidden;position:relative;
+    }
+    .badge-digital:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 72% 28%,rgba(111,216,239,.16),transparent 34%);pointer-events:none}
+    .badge-copy,.badge-visual{position:relative;z-index:1}
+    .badge-copy p{max-width:610px}.badge-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
+    .badge-visual{min-height:420px;display:grid;grid-template-columns:.9fr 1.1fr;gap:16px;align-items:center}
+    .operator-card{border:1px solid rgba(151,184,220,.16);background:rgba(7,17,31,.72);border-radius:28px;padding:20px;box-shadow:0 22px 60px rgba(0,0,0,.26)}
+    .operator-photo{width:74px;height:74px;border-radius:22px;background:linear-gradient(135deg,rgba(111,216,239,.35),rgba(106,168,255,.14));border:1px solid rgba(111,216,239,.2);margin-bottom:14px}
+    .operator-card h3{margin:0;font-size:20px;letter-spacing:-.04em}.operator-card p{margin:5px 0 14px;font-size:13px;color:#97abc4}
+    .pin-code{display:flex;gap:7px;margin:14px 0}.pin-code i{width:34px;height:42px;border-radius:11px;background:rgba(255,255,255,.08);border:1px solid rgba(151,184,220,.15);display:grid;place-items:center;font-style:normal;font-weight:900;color:#eaf6ff}
+    .qr-large{width:100%;aspect-ratio:1;border-radius:24px;background:#eef8ff;padding:18px;display:grid;grid-template-columns:repeat(7,1fr);gap:5px;box-shadow:0 22px 50px rgba(0,0,0,.22)}
+    .qr-large i{background:#07111f;border-radius:3px}.qr-large i:nth-child(3n){opacity:.42}.qr-large i:nth-child(5n){opacity:.72}
+    .doc-checks{display:grid;gap:10px}.doc-check{border:1px solid rgba(151,184,220,.14);background:rgba(255,255,255,.055);border-radius:16px;padding:13px 14px;display:flex;align-items:center;justify-content:space-between;color:#dcecff;font-weight:850}
+    .doc-check span{font-size:12px;color:#94abc5;font-weight:700}.doc-check b{color:#8af0c2}.doc-check.warn b{color:#ffd180}
     .demo-grid{display:grid;grid-template-columns:1.04fr .96fr;gap:24px;align-items:center}
     .video-card{height:430px;border-radius:30px;border:1px solid rgba(151,184,220,.14);background:linear-gradient(135deg,rgba(16,38,67,.86),rgba(7,17,31,.9));position:relative;overflow:hidden;box-shadow:var(--shadow)}
     .video-card:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 44%,rgba(111,216,239,.18),transparent 32%),linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:auto,48px 48px,48px 48px}
@@ -4682,8 +4726,8 @@ PUBLIC_HOME_TMPL = """<!DOCTYPE html>
     .footer-grid a:hover{color:#fff}
     .foot-bottom{border-top:1px solid rgba(151,184,220,.1);margin-top:32px;padding-top:22px;display:flex;justify-content:space-between;gap:18px;color:#7890aa;font-size:12px}
     @media(max-width:980px){
-      .hero-grid,.problem-grid,.cinema,.automation,.demo-grid,.proof{grid-template-columns:1fr}
-      .visual-wrap{min-height:520px}.modules-grid{grid-template-columns:repeat(2,1fr)}.kpi-strip{grid-template-columns:repeat(2,1fr)}
+      .hero-grid,.problem-grid,.cinema,.automation,.badge-digital,.demo-grid,.proof{grid-template-columns:1fr}
+      .visual-wrap{min-height:520px}.modules-grid{grid-template-columns:repeat(2,1fr)}.kpi-strip{grid-template-columns:repeat(2,1fr)}.badge-visual{grid-template-columns:1fr}
       .nav-links{display:none}.footer-grid{grid-template-columns:1fr 1fr}
     }
     @media(max-width:640px){
@@ -4701,7 +4745,7 @@ PUBLIC_HOME_TMPL = """<!DOCTYPE html>
     <nav class="nav">
       <div class="shell nav-inner">
         <a class="brand" href="/home" aria-label="Accesso Fiere">
-          <span class="brand-mark" aria-hidden="true"></span>
+          {% if af_logo_b64 %}<img class="brand-logo-img" src="data:image/jpeg;base64,{{ af_logo_b64 }}" alt="Accesso Fiere">{% else %}<span class="brand-logo-fallback">AF</span>{% endif %}
           <span>Accesso Fiere<small>Gestionale Allestitori</small></span>
         </a>
         <div class="nav-links">
@@ -4810,12 +4854,12 @@ PUBLIC_HOME_TMPL = """<!DOCTYPE html>
             <p>Moduli separati, dati unificati, controllo operativo continuo.</p>
           </div>
           <div class="modules-grid">
-            <article class="module-card"><div class="shot"><span></span><span></span><span></span></div><h3>Controllo squadre</h3><p>Presenze, capisquadra, ore lavorate e attivita live.</p></article>
-            <article class="module-card"><div class="shot"><span></span><span></span><span></span></div><h3>Documenti e compliance</h3><p>Scadenze, DPI, verifiche, alert e documenti aziendali.</p></article>
-            <article class="module-card"><div class="shot"><span></span><span></span><span></span></div><h3>Fiere e cantieri</h3><p>Setup, avanzamento, smontaggio e responsabilita operative.</p></article>
-            <article class="module-card"><div class="shot"><span></span><span></span><span></span></div><h3>Fatturazione elettronica</h3><p>Attive, passive, note, autofatture, SDI e provider.</p></article>
-            <article class="module-card"><div class="shot"><span></span><span></span><span></span></div><h3>Mezzi e scadenze</h3><p>Revisioni, assicurazioni, bolli, documenti e flotte.</p></article>
-            <article class="module-card"><div class="shot"><span></span><span></span><span></span></div><h3>App mobile operativa</h3><p>Dipendenti, capisquadra, amministrazione e notifiche.</p></article>
+            <article class="module-card"><div class="shot"><div class="shot-title">Squadre live <em>8 attive</em></div><div class="shot-bars"><i></i><i></i><i></i></div><div class="shot-flow"><i></i><span></span><i></i><span></span><i></i></div></div><h3>Controllo squadre</h3><p>Presenze, capisquadra, ore lavorate e attivita live.</p></article>
+            <article class="module-card"><div class="shot"><div class="shot-title">Compliance <em>98%</em></div><div class="shot-table"><b><span>UNILAV</span><span>OK</span></b><b><span>DPI</span><span>OK</span></b><b><span>Sicurezza</span><span>1 alert</span></b></div></div><h3>Documenti e compliance</h3><p>Scadenze, DPI, verifiche, alert e documenti aziendali.</p></article>
+            <article class="module-card"><div class="shot"><div class="shot-title">Fiera Milano <em>Live</em></div><div class="shot-flow"><i></i><span></span><i></i><span></span><i></i></div><div class="shot-table"><b><span>Setup</span><span>70%</span></b><b><span>Smontaggio</span><span>Pronto</span></b></div></div><h3>Fiere e cantieri</h3><p>Setup, avanzamento, smontaggio e responsabilita operative.</p></article>
+            <article class="module-card"><div class="shot"><div class="shot-title">SDI provider <em>Sync</em></div><div class="shot-invoice"><b>Attive</b><b>Passive</b><b>Note credito</b><b>Autofatture</b></div></div><h3>Fatturazione elettronica</h3><p>Attive, passive, note, autofatture, SDI e provider.</p></article>
+            <article class="module-card"><div class="shot"><div class="shot-title">Flotta <em>12 mezzi</em></div><div class="shot-vehicle"><b>Revisione OK</b><b>Bollo 30gg</b><b>Assicurazione OK</b><b>Tagliando</b></div></div><h3>Mezzi e scadenze</h3><p>Revisioni, assicurazioni, bolli, documenti e flotte.</p></article>
+            <article class="module-card"><div class="shot"><div class="shot-title">App operativa <em>Realtime</em></div><div class="shot-mobile"><b>Dipendente</b><b>Caposquadra</b><b>Admin</b></div></div><h3>App mobile operativa</h3><p>Dipendenti, capisquadra, amministrazione e notifiche.</p></article>
           </div>
         </div>
       </section>
@@ -4826,11 +4870,47 @@ PUBLIC_HOME_TMPL = """<!DOCTYPE html>
             <span class="eyebrow">Mobile operativo</span>
             <h2>Il cantiere continua anche fuori ufficio.</h2>
             <p>Timbrature, ferie, notifiche, workflow e documenti restano sincronizzati per dipendenti, capisquadra, amministrazione e contabilita.</p>
-            <div class="hero-actions"><a class="btn btn-primary" href="mailto:info@accessofiere.com?subject=Demo%20mobile%20Accesso%20Fiere">Vedi app mobile</a></div>
+            <div class="hero-actions"><a class="btn btn-primary" href="/area-clienti">Vai all'app mobile</a></div>
           </div>
           <div class="phone-stage" aria-label="Mockup app mobile">
-            <div class="phone one"><div class="phone-screen"><div class="phone-top"></div><div class="phone-row"></div><div class="phone-row"></div><div class="phone-row"></div><div class="phone-row"></div></div></div>
-            <div class="phone two"><div class="phone-screen"><div class="phone-top"></div><div class="phone-row"></div><div class="phone-row"></div><div class="phone-row"></div><div class="phone-row"></div></div></div>
+            <div class="phone one"><div class="phone-screen"><div class="phone-top"></div><div class="phone-title">Caposquadra <span>LIVE</span></div><div class="phone-card"><b>12 presenti</b><small>Fiera Milano - Pad. 8</small></div><div class="phone-list"><div><span>Montaggio stand A12</span><b class="phone-ok">OK</b></div><div><span>Documento DPI</span><b class="phone-warn">Alert</b></div><div><span>Ore squadra</span><b>72h</b></div></div></div></div>
+            <div class="phone two"><div class="phone-screen"><div class="phone-top"></div><div class="phone-title">Badge digitale <span>QR + PIN</span></div><div class="phone-card phone-qr"><div class="qr-mini"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div><b>Verifica</b><small>UNILAV, corsi, scadenze</small></div></div><div class="phone-list"><div><span>PIN personale</span><b>****</b></div><div><span>Accesso documenti</span><b class="phone-ok">Attivo</b></div></div></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="badge-digitale">
+        <div class="shell badge-digital">
+          <div class="badge-copy">
+            <span class="eyebrow">Killer feature</span>
+            <h2>Badge digitale con verifica documenti in tempo reale.</h2>
+            <p>Ogni operatore puo essere verificato tramite QR e PIN personale, con accesso controllato a documenti, UNILAV, corsi sicurezza e scadenze.</p>
+            <div class="badge-actions">
+              <a class="btn btn-primary" href="/area-clienti">Apri verifica badge</a>
+              <a class="btn" href="#demo">Guarda il flusso</a>
+            </div>
+          </div>
+          <div class="badge-visual">
+            <div class="operator-card">
+              <div class="operator-photo"></div>
+              <h3>Marco Rossi</h3>
+              <p>Operatore montaggio - Badge attivo</p>
+              <div class="pin-code"><i>4</i><i>8</i><i>2</i><i>1</i></div>
+              <div class="doc-checks">
+                <div class="doc-check"><span>UNILAV</span><b>OK</b></div>
+                <div class="doc-check"><span>Corso sicurezza</span><b>OK</b></div>
+                <div class="doc-check warn"><span>DPI consegnati</span><b>Verifica</b></div>
+              </div>
+            </div>
+            <div class="qr-large" aria-label="QR badge digitale">
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            </div>
           </div>
         </div>
       </section>
@@ -4932,7 +5012,7 @@ PUBLIC_HOME_TMPL = """<!DOCTYPE html>
       <div class="shell">
         <div class="footer-grid">
           <div>
-            <div class="brand"><span class="brand-mark" aria-hidden="true"></span><span>Accesso Fiere<small>Il sistema operativo per allestitori fieristici</small></span></div>
+            <div class="brand">{% if af_logo_b64 %}<img class="brand-logo-img" src="data:image/jpeg;base64,{{ af_logo_b64 }}" alt="Accesso Fiere">{% else %}<span class="brand-logo-fallback">AF</span>{% endif %}<span>Accesso Fiere<small>Il sistema operativo per allestitori fieristici</small></span></div>
             <p style="margin-top:18px">Controllo operativo, documenti, presenze, mezzi e fatturazione elettronica per aziende che lavorano davvero sul campo.</p>
           </div>
           <div><h4>Piattaforma</h4><a href="#moduli">Funzionalita</a><a href="#mobile">Mobile app</a><a href="#control-room">Control room</a><a href="/area-clienti">Area clienti</a></div>
@@ -5343,7 +5423,7 @@ def cookie_policy():
 @app.route('/pubblico')
 def public_home():
     """Homepage pubblica: non entra mai nel tenant anche se esiste una sessione aperta."""
-    return render_template_string(PUBLIC_HOME_TMPL)
+    return render_template_string(PUBLIC_HOME_TMPL, af_logo_b64=globals().get('LOGO_ACCESSO_FIERE_B64', ''))
 
 
 @app.route('/robots.txt')
@@ -5927,7 +6007,7 @@ def pwa_manifest():
         start_url = '/login'
 
     manifest = {
-        "name": f"{nome_app} Ã¢â‚¬â€ Gestionale",
+        "name": f"{nome_app} - Gestionale",
         "short_name": nome_breve,
         "description": "Timbrature, ferie, documenti e gestione fiere",
         "start_url": start_url,
@@ -5961,7 +6041,7 @@ def pwa_manifest():
 @app.route('/sw.js')
 def pwa_service_worker():
     """Service worker per PWA. Permette installazione + cache base + offline minimo."""
-    sw_code = """// Accesso Fiere Ã¢â‚¬â€ Service Worker
+    sw_code = """// Accesso Fiere - Service Worker
 const CACHE_VERSION = 'v6-in-app-notifications';
 const CACHE_NAME = `accesso-fiere-${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline';
@@ -6595,7 +6675,7 @@ def _genera_icona_pwa(out_path, filename):
 PWA_OFFLINE_TMPL = """<!DOCTYPE html>
 <html lang="it"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Offline Ã‚Â· Accesso Fiere</title>
+<title>Offline - Accesso Fiere</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#0f4c81">
 <style>
@@ -16947,7 +17027,7 @@ TESSERINO_PUB_PIN_TMPL = """<!DOCTYPE html>
 <html lang="it"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>Verifica ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {{ dip.nome }} {{ dip.cognome }}</title>
+<title>Verifica - {{ dip.nome }} {{ dip.cognome }}</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>""" + _TESS_PUB_BASE_CSS + """
@@ -17010,7 +17090,7 @@ TESSERINO_PUB_DOCS_TMPL = """<!DOCTYPE html>
 <html lang="it"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>Documenti ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {{ dip.nome }} {{ dip.cognome }}</title>
+<title>Documenti - {{ dip.nome }} {{ dip.cognome }}</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>""" + _TESS_PUB_BASE_CSS + """
@@ -17139,7 +17219,7 @@ TESSERINO_PUB_NOPIN_TMPL = """<!DOCTYPE html>
 <html lang="it"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>Tesserino ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {{ dip.nome }} {{ dip.cognome }}</title>
+<title>Tesserino - {{ dip.nome }} {{ dip.cognome }}</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>""" + _TESS_PUB_BASE_CSS + """
@@ -19361,7 +19441,7 @@ PASS_TMPL = """<!DOCTYPE html>
 <html lang="it"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Pacchetto Pass ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â {{ ev.titolo }}</title>
+<title>Pacchetto Pass - {{ ev.titolo }}</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f5;color:#1a1a2e;font-size:13px}
@@ -26848,7 +26928,7 @@ MOBILE_CS_TMPL = """<!DOCTYPE html>
 <link rel="apple-touch-icon" sizes="180x180" href="/static/pwa/icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/static/pwa/icon-192.png">
 <meta name="theme-color" content="#0f172a">
-<title>Caposquadra ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {{ azienda }}</title>
+<title>Caposquadra - {{ azienda }}</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -30282,7 +30362,7 @@ def dip_documenti(uid):
     docs = db.execute("SELECT * FROM documenti_dipendente WHERE utente_id=? ORDER BY caricato_il DESC", (uid,)).fetchall()
     db.close()
     ai_result = session.pop('ai_result_dip', None)
-    return render_page(DOC_DIP_TMPL, page_title=f'Documenti ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ {dip["nome"]}',
+    return render_page(DOC_DIP_TMPL, page_title=f'Documenti - {dip["nome"]}',
                        active='dipendenti', dip=dip, docs=docs, ai_result=ai_result, AI_OK=AI_OK)
 
 
@@ -32763,7 +32843,7 @@ def banca_ore_dettaglio(uid):
                                ORDER BY id DESC""", (uid,)).fetchall()
     db.close()
     return render_page(BANCA_ORE_DETTAGLIO_TMPL,
-                       page_title=f"Banca Ore Ã¢â‚¬â€ {u['nome']} {u['cognome']}",
+                       page_title=f"Banca Ore - {u['nome']} {u['cognome']}",
                        active='banca_ore', u=dict(u),
                        info=info, rettifiche=[dict(r) for r in rettifiche],
                        mese_corrente=date.today().strftime('%Y-%m'))
@@ -35362,7 +35442,7 @@ LANDING_TMPL = """<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GestionaleHR Ã¢â‚¬â€ Il Accesso Fiere per le PMI italiane</title>
+<title>GestionaleHR - Accesso Fiere per le PMI italiane</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -35496,7 +35576,7 @@ REGISTRATI_TMPL = """<!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Registrati Ã¢â‚¬â€ Accesso Fiere</title>
+<title>Registrati - Accesso Fiere</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
