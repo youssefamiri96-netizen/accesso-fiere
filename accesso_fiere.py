@@ -23740,6 +23740,7 @@ def _fatt_overview_data(db, anno):
         for key, meta in group_defs.items()
     }
     monthly_by_group = {key: [0.0] * 12 for key in group_defs}
+    unassigned = {'active_amount': 0.0, 'active_count': 0, 'passive_amount': 0.0, 'passive_count': 0}
     rows = db.execute("""
         SELECT f.*,
                COALESCE((SELECT SUM(r.importo) FROM rate_fattura r
@@ -23789,6 +23790,13 @@ def _fatt_overview_data(db, anno):
             g['passive_count'] += 1
         else:
             g['active_count'] += 1
+        if not row['cantiere_id']:
+            if tipo == 'passiva':
+                unassigned['passive_amount'] += abs(total)
+                unassigned['passive_count'] += 1
+            else:
+                unassigned['active_amount'] += abs(total)
+                unassigned['active_count'] += 1
         month_value = str(row['data_emissione'] or row['creato_il'] or '')
         if len(month_value) >= 7 and month_value[:4] == str(anno):
             try:
@@ -23847,10 +23855,13 @@ def _fatt_overview_data(db, anno):
         monthly_active_paid.append(round(pay_a[0] or 0, 2))
         monthly_passive_paid.append(round(pay_p[0] or 0, 2))
     totals = {'saldo_emesso': round(summaries['attiva']['total'] - summaries['passiva']['total'], 2), 'saldo_cassa': round(summaries['attiva']['paid'] - summaries['passiva']['paid'], 2), 'totale_scadute': summaries['attiva']['overdue_count'] + summaries['passiva']['overdue_count']}
+    unassigned['active_amount'] = round(unassigned['active_amount'], 2)
+    unassigned['passive_amount'] = round(unassigned['passive_amount'], 2)
     doc_spaces = [doc_groups[k] for k in ('active_standard', 'passive_standard', 'credit_notes', 'debit_notes', 'self_invoices', 'receipts', 'other_docs')]
     return {
         'summary': summaries,
         'totals': totals,
+        'unassigned': unassigned,
         'doc_spaces': doc_spaces,
         'doc_type_mix': [g['total_abs'] for g in doc_spaces],
         'doc_type_mix_labels': [g['label'] for g in doc_spaces],
@@ -23939,8 +23950,8 @@ body.theme-light .fh-space-meta b,body.theme-light .fh-metric b{color:#0f172a}
   <div class="fh-ops-card">
     <div class="fh-ops-head"><div><h3><i class="fa fa-chart-line" style="color:#38bdf8"></i> Marginalita commesse</h3><p>Collega fatture, costi e ricavi alle fiere per conoscere il margine reale.</p></div><a class="btn btn-secondary btn-sm" href="/cantieri">Apri fiere</a></div>
     <div class="fh-commesse-grid">
-      <div class="fh-commessa needs-link"><strong>Ricavi non assegnati</strong><b>{% if summary.attiva.count %}&euro; {{ "%.0f"|format(summary.attiva.total) }}{% else %}Nessun ricavo aperto{% endif %}</b><span>Fatture attive da collegare alle fiere o commesse.</span></div>
-      <div class="fh-commessa needs-link"><strong>Costi non assegnati</strong><b>{% if summary.passiva.count %}&euro; {{ "%.0f"|format(summary.passiva.total) }}{% else %}Nessun costo passivo{% endif %}</b><span>Fatture fornitori da imputare alla commessa corretta.</span></div>
+      <div class="fh-commessa needs-link"><strong>Ricavi non assegnati</strong><b>{% if unassigned.active_count %}&euro; {{ "%.0f"|format(unassigned.active_amount) }}{% else %}Tutti assegnati{% endif %}</b><span>{{ unassigned.active_count }} fatture attive da collegare alle fiere o commesse.</span></div>
+      <div class="fh-commessa needs-link"><strong>Costi non assegnati</strong><b>{% if unassigned.passive_count %}&euro; {{ "%.0f"|format(unassigned.passive_amount) }}{% else %}Tutti assegnati{% endif %}</b><span>{{ unassigned.passive_count }} fatture fornitori da imputare alla commessa corretta.</span></div>
       <div class="fh-commessa"><strong>Fiere senza fatture</strong><b>{% if has_any_docs %}Da verificare{% else %}In attesa dati{% endif %}</b><span>Controlla le fiere aperte che non hanno ancora documenti collegati.</span></div>
       <div class="fh-commessa margin"><strong>Margini da aggiornare</strong><b>{% if has_any_docs %}&euro; {{ "%.0f"|format(totals.saldo_emesso) }}{% else %}In attesa dati{% endif %}</b><span>Stima ricavi meno costi, pronta per diventare margine reale.</span></div>
     </div>
@@ -24018,6 +24029,15 @@ body.theme-light .sf .fh-zero-title{color:#0f172a}
 .fatt-rate-row:hover td{background:transparent!important}
 .fatt-year-select{height:34px;padding:0 34px 0 12px;border:1px solid rgba(148,163,184,.35);border-radius:8px;background:#102238;color:#e5f0ff;font-size:12px;font-weight:700;outline:none}
 .fatt-year-pill{display:flex;align-items:center;gap:6px;background:#0f1f33;border:1px solid rgba(148,163,184,.25);border-radius:10px;padding:4px 8px;color:#9fb3c8;font-size:11px;font-weight:700}
+.fatt-assign-inline{margin-top:7px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.fatt-assign-inline form{margin:0}
+.fatt-assign-select{height:30px;max-width:260px;padding:0 28px 0 9px;border-radius:8px;border:1px solid rgba(56,189,248,.30);background:#0b1726;color:#dbeafe;font-size:11px;font-weight:800;outline:none}
+.fatt-assign-select.is-linked{border-color:rgba(34,197,94,.42);background:rgba(34,197,94,.08);color:#bbf7d0}
+.fatt-margin-link{height:28px;display:inline-flex;align-items:center;gap:5px;padding:0 9px;border-radius:999px;background:rgba(56,189,248,.10);border:1px solid rgba(56,189,248,.25);color:#7dd3fc;text-decoration:none;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.02em}
+.fatt-margin-link:hover{background:rgba(56,189,248,.16);color:#e0f2fe}
+body.theme-light .fatt-assign-select{background:#f8fafc;color:#0f172a;border-color:#cbd5e1}
+body.theme-light .fatt-assign-select.is-linked{background:#ecfdf5;color:#047857;border-color:#86efac}
+body.theme-light .fatt-margin-link{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}
 </style>
 
 <!-- Tabs attiva/passiva -->
@@ -24210,6 +24230,20 @@ body.theme-light .sf .fh-zero-title{color:#0f172a}
       </span>
       {% endif %}
     {% endif %}
+    <div class="fatt-assign-inline">
+      <form method="POST" action="/fatturazione/{{ f.id }}/assegna-cantiere">
+        <input type="hidden" name="next" value="{{ request.full_path }}">
+        <select name="cantiere_id" class="fatt-assign-select {% if f.cantiere_id %}is-linked{% endif %}" onchange="this.form.submit()" title="Attribuisci questa fattura a una fiera o evento">
+          <option value="">{% if f.cantiere_id %}Rimuovi fiera/evento{% else %}+ collega fiera/evento{% endif %}</option>
+          {% for ca in cantieri %}
+          <option value="{{ ca.id }}" {{ 'selected' if f.cantiere_id and f.cantiere_id == ca.id }}>{{ ca.nome }}{% if ca.citta %} - {{ ca.citta }}{% endif %}</option>
+          {% endfor %}
+        </select>
+      </form>
+      {% if f.cantiere_id %}
+      <a class="fatt-margin-link" href="/cantieri/{{ f.cantiere_id }}" title="Apri marginalita della fiera"><i class="fa fa-chart-line"></i> margine</a>
+      {% endif %}
+    </div>
   </td>
   <td style="font-family:monospace;font-size:12px">{{ f.data_emissione or '-' }}</td>
   <td style="font-family:monospace;font-size:12px;{{ 'color:#dc2626;font-weight:700' if f.scadenza_scaduta and f.stato_display not in ['pagata','stornata'] else '' }}">
@@ -24302,7 +24336,7 @@ body.theme-light .sf .fh-zero-title{color:#0f172a}
 <thead><tr style="background:#0f172a;color:#fff">
   <th style="width:42px;padding:10px 8px"></th>
   <th style="padding:10px 8px;font-size:12px">N&deg;</th>
-  <th style="padding:10px 8px;font-size:12px">{% if tipo=='passiva' %}FORNITORE/CLIENTE{% else %}CLIENTE{% endif %}</th>
+  <th style="padding:10px 8px;font-size:12px">{% if tipo=='passiva' %}FORNITORE / FIERA{% else %}CLIENTE / FIERA{% endif %}</th>
   <th style="padding:10px 8px;font-size:12px">DATA</th>
   <th style="padding:10px 8px;font-size:12px">SCADENZA</th>
   <th style="padding:10px 8px;font-size:12px">IMPORTO</th>
@@ -24722,6 +24756,18 @@ FATT_DETAIL_TMPL = """
 
 # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Template form fattura ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
 FATT_FORM_TMPL = """
+<style>
+.fatt-commessa-panel{margin-top:14px;padding:14px;border-radius:14px;background:linear-gradient(135deg,rgba(56,189,248,.10),rgba(34,197,94,.06));border:1px solid rgba(56,189,248,.28)}
+.fatt-commessa-panel label{display:flex;align-items:center;gap:8px;color:#dff7ff;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}
+.fatt-commessa-panel select{min-height:44px;border-color:rgba(56,189,248,.42)!important;background:#0b1726!important;color:#e5f0ff!important;font-weight:800}
+.fatt-commessa-help{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-top:10px}
+.fatt-commessa-help span{display:flex;align-items:center;gap:7px;padding:8px 10px;border-radius:10px;background:rgba(15,31,51,.70);border:1px solid rgba(148,163,184,.18);color:#b9cbe0;font-size:11px;font-weight:700}
+.fatt-commessa-help i{color:#38bdf8}
+body.theme-light .fatt-commessa-panel{background:#eff6ff;border-color:#bfdbfe}
+body.theme-light .fatt-commessa-panel label{color:#0f172a}
+body.theme-light .fatt-commessa-panel select{background:#fff!important;color:#0f172a!important;border-color:#93c5fd!important}
+body.theme-light .fatt-commessa-help span{background:#fff;color:#475569;border-color:#dbeafe}
+</style>
 <div style="margin-bottom:16px"><a href="/fatturazione" class="btn btn-secondary btn-sm"><i class="fa fa-arrow-left"></i> Torna alle fatture</a></div>
 
 {% if ai_result %}
@@ -24836,9 +24882,23 @@ FATT_FORM_TMPL = """
       <label>Descrizione lavori</label>
       <textarea name="descrizione" rows="2" placeholder="Es. Montaggio stand Fiera Milano - pad. 5">{{ fattura.descrizione or '' }}</textarea>
     </div>
-    <div class="form-group">
+    <div class="form-group fatt-commessa-panel">
+      <label><i class="fa fa-location-dot"></i> Fiera / evento collegato</label>
+      <select name="cantiere_id" id="fatt-cantiere-id">
+        <option value="">Non assegnata a una fiera o evento</option>
+        {% for ca in cantieri %}
+        <option value="{{ ca.id }}" {{ 'selected' if fattura.cantiere_id and fattura.cantiere_id == ca.id }}>{{ ca.nome }}{% if ca.citta %} - {{ ca.citta }}{% endif %}</option>
+        {% endfor %}
+      </select>
+      <div class="fatt-commessa-help">
+        <span><i class="fa fa-arrow-trend-up"></i> Le attive diventano ricavi della fiera</span>
+        <span><i class="fa fa-arrow-trend-down"></i> Le passive diventano costi assegnati</span>
+        <span><i class="fa fa-user-clock"></i> Le ore timbrate calcolano il costo personale</span>
+      </div>
+    </div>
+    <div class="form-group" style="display:none">
       <label>Collega a fiera / evento</label>
-      <select name="cantiere_id">
+      <select name="cantiere_id_legacy">
         <option value="">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Nessuna fiera collegata ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â</option>
         {% for ca in cantieri %}
         <option value="{{ ca.id }}" {{ 'selected' if fattura.cantiere_id and fattura.cantiere_id == ca.id }}>{{ ca.nome }}{% if ca.citta %} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {{ ca.citta }}{% endif %}</option>
@@ -25368,6 +25428,7 @@ def fatturazione():
         mesi_fatturato.append(round(row_f[0] or 0, 2))
         mesi_incassato.append(round(row_p[0] or 0, 2))
 
+    cantieri = db.execute("SELECT id,nome,citta FROM cantieri ORDER BY COALESCE(data_inizio,'' ) DESC, nome").fetchall()
     live_version = _fatt_live_version(db, anno, tipo)
     db.close()
     active_key = 'fatturazione_attiva' if tipo == 'attiva' else 'fatturazione_passiva'
@@ -25380,7 +25441,7 @@ def fatturazione():
         top_clienti=top_clienti, today=date.today().isoformat(),
         current_year=date.today().year, anno=anno, sync_year=sync_year, available_years=available_years,
         mesi_labels=mesi_labels, mesi_fatturato=mesi_fatturato, mesi_incassato=mesi_incassato,
-        live_version=live_version)
+        cantieri=cantieri, live_version=live_version)
 
 
 @app.route('/fatturazione/live-status')
@@ -25556,6 +25617,38 @@ def _salva_fattura(fid):
     db.close()
     flash(f'Fattura {numero} salvata!', 'success')
     return redirect(url_for('fatturazione_dettaglio', fid=saved_id))
+
+
+@app.route('/fatturazione/<int:fid>/assegna-cantiere', methods=['POST'])
+@admin_required
+def fatturazione_assegna_cantiere(fid):
+    next_url = request.form.get('next') or request.referrer or url_for('fatturazione')
+    db = get_db()
+    f = db.execute("SELECT id, tipo FROM fatture WHERE id=?", (fid,)).fetchone()
+    if not f:
+        db.close()
+        flash('Fattura non trovata.', 'error')
+        return redirect(url_for('fatturazione'))
+
+    cantiere_id = request.form.get('cantiere_id') or None
+    if cantiere_id:
+        try:
+            cantiere_id = int(cantiere_id)
+        except Exception:
+            cantiere_id = None
+        cantiere = db.execute("SELECT id FROM cantieri WHERE id=?", (cantiere_id,)).fetchone() if cantiere_id else None
+        if not cantiere:
+            db.close()
+            flash('Fiera o evento non trovato.', 'error')
+            target = next_url if _same_origin_url(next_url) else url_for('fatturazione', tipo=f['tipo'] or 'attiva')
+            return redirect(target)
+
+    db.execute("UPDATE fatture SET cantiere_id=? WHERE id=?", (cantiere_id, fid))
+    safe_commit(db)
+    db.close()
+    flash('Fattura collegata alla fiera/evento.' if cantiere_id else 'Collegamento fiera/evento rimosso.', 'success')
+    target = next_url if _same_origin_url(next_url) else url_for('fatturazione', tipo=f['tipo'] or 'attiva')
+    return redirect(target)
 
 
 @app.route('/fatturazione/<int:fid>')
