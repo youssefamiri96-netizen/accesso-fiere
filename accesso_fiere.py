@@ -23875,12 +23875,15 @@ FATT_OVERVIEW_TMPL = """
 .fh-system-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;background:rgba(15,31,51,.72);border:1px solid rgba(148,163,184,.22);border-radius:12px;padding:10px}
 .fh-system-strip div{background:#0b1726;border:1px solid rgba(148,163,184,.14);border-radius:10px;padding:11px 12px}
 .fh-system-strip b{display:block;color:#e5f0ff;font-size:13px}.fh-system-strip span{display:block;color:#8fa3bd;font-size:11px;margin-top:3px}
-.fh-ops-card{background:#0f1f33;border:1px solid rgba(148,163,184,.22);border-radius:12px;padding:16px}
+.fh-ops-card{background:linear-gradient(135deg,rgba(15,31,51,.96),rgba(11,23,38,.98));border:1px solid rgba(56,189,248,.28);border-radius:16px;padding:18px;position:relative;overflow:hidden;box-shadow:0 18px 48px rgba(0,0,0,.18)}
+.fh-ops-card:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 16% 0%,rgba(56,189,248,.16),transparent 34%),linear-gradient(120deg,rgba(34,197,94,.08),transparent 42%);pointer-events:none}
 .fh-ops-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
 .fh-ops-head h3{margin:0;color:#f8fafc;font-size:16px}.fh-ops-head p{margin:4px 0 0;color:#8fa3bd;font-size:12px;line-height:1.4}
 .fh-commesse-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
-.fh-commessa{background:#0b1726;border:1px solid rgba(148,163,184,.16);border-radius:10px;padding:13px}
-.fh-commessa b{display:block;color:#f8fafc;font-size:18px;letter-spacing:-.035em}.fh-commessa span{display:block;color:#8fa3bd;font-size:11px;margin-top:4px}
+.fh-commessa{background:rgba(11,23,38,.86);border:1px solid rgba(148,163,184,.18);border-radius:12px;padding:14px;position:relative;z-index:1}
+.fh-commessa b{display:block;color:#f8fafc;font-size:18px;letter-spacing:-.035em}.fh-commessa span{display:block;color:#8fa3bd;font-size:11px;margin-top:4px;line-height:1.35}
+.fh-commessa strong{display:block;color:#e5f0ff;font-size:12px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:7px}
+.fh-commessa.needs-link{border-color:rgba(250,204,21,.28)}.fh-commessa.margin{border-color:rgba(34,197,94,.28)}
 .fh-space.featured{grid-column:span 2;min-height:190px;background:linear-gradient(135deg,#102238,#0b1726)}
 .fh-space.compact{opacity:.92}
 .fh-space-empty{margin-top:13px;border:1px dashed rgba(148,163,184,.23);border-radius:10px;padding:12px;background:rgba(11,23,38,.45)}
@@ -23934,12 +23937,12 @@ body.theme-light .fh-space-meta b,body.theme-light .fh-metric b{color:#0f172a}
     <div class="fh-flow passiva"><div class="fh-flow-head"><div><div class="fh-flow-title"><i class="fa fa-arrow-down-long"></i> Fatture passive</div><div style="color:#8fa3bd;font-size:12px">Noi paghiamo fornitori</div></div><a class="btn btn-primary btn-sm" href="/fatturazione?tipo=passiva&anno={{ anno }}">Apri passive</a></div>{% if summary.passiva.count %}<div class="fh-flow-total">&euro; {{ "%.0f"|format(summary.passiva.total) }}</div><div style="color:#8fa3bd;font-size:12px">Pagato {{ summary.passiva.payment_pct }}%</div><div class="fh-progress"><span style="width:{{ summary.passiva.payment_pct }}%"></span></div><div class="fh-metrics"><div class="fh-metric"><b>{% if summary.passiva.paid %}&euro; {{ "%.0f"|format(summary.passiva.paid) }}{% else %}Da pagare{% endif %}</b><span>Pagato</span></div><div class="fh-metric"><b>{% if summary.passiva.residual %}&euro; {{ "%.0f"|format(summary.passiva.residual) }}{% else %}Chiuso{% endif %}</b><span>Residuo</span></div><div class="fh-metric"><b>{% if summary.passiva.overdue_count %}{{ summary.passiva.overdue_count }}{% else %}OK{% endif %}</b><span>Scadenze</span></div></div>{% else %}<div class="fh-zero-title">Nessun documento ricevuto</div><div class="fh-zero-copy">Importa passive dal provider o registra il primo costo fornitore.</div>{% endif %}<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><a class="btn btn-secondary btn-sm" href="/fatturazione/nuova?tipo=passiva"><i class="fa fa-plus"></i> Nuova passiva</a><a class="btn btn-secondary btn-sm" href="/fornitori"><i class="fa fa-truck-fast"></i> Fornitori</a></div></div>
   </div>
   <div class="fh-ops-card">
-    <div class="fh-ops-head"><div><h3><i class="fa fa-store" style="color:#38bdf8"></i> Impatto su fiere e margini</h3><p>La fatturazione resta collegata all'operativita: ricavi, costi e scadenze diventano segnali per le commesse.</p></div><a class="btn btn-secondary btn-sm" href="/cantieri">Apri fiere</a></div>
+    <div class="fh-ops-head"><div><h3><i class="fa fa-chart-line" style="color:#38bdf8"></i> Marginalita commesse</h3><p>Collega fatture, costi e ricavi alle fiere per conoscere il margine reale.</p></div><a class="btn btn-secondary btn-sm" href="/cantieri">Apri fiere</a></div>
     <div class="fh-commesse-grid">
-      <div class="fh-commessa"><b>{% if summary.attiva.count %}&euro; {{ "%.0f"|format(summary.attiva.total) }}{% else %}Nessuna fattura emessa{% endif %}</b><span>Ricavi da collegare alle fiere</span></div>
-      <div class="fh-commessa"><b>{% if summary.passiva.count %}&euro; {{ "%.0f"|format(summary.passiva.total) }}{% else %}Nessun costo passivo{% endif %}</b><span>Costi fornitori da assegnare alle commesse</span></div>
-      <div class="fh-commessa"><b>{% if has_any_docs %}&euro; {{ "%.0f"|format(totals.saldo_emesso) }}{% else %}In attesa dati{% endif %}</b><span>Margine stimato aggiornato</span></div>
-      <div class="fh-commessa"><b>{% if totals.totale_scadute %}{{ totals.totale_scadute }} scadenze{% else %}Nessuna criticita{% endif %}</b><span>Documenti che possono impattare le fiere</span></div>
+      <div class="fh-commessa needs-link"><strong>Ricavi non assegnati</strong><b>{% if summary.attiva.count %}&euro; {{ "%.0f"|format(summary.attiva.total) }}{% else %}Nessun ricavo aperto{% endif %}</b><span>Fatture attive da collegare alle fiere o commesse.</span></div>
+      <div class="fh-commessa needs-link"><strong>Costi non assegnati</strong><b>{% if summary.passiva.count %}&euro; {{ "%.0f"|format(summary.passiva.total) }}{% else %}Nessun costo passivo{% endif %}</b><span>Fatture fornitori da imputare alla commessa corretta.</span></div>
+      <div class="fh-commessa"><strong>Fiere senza fatture</strong><b>{% if has_any_docs %}Da verificare{% else %}In attesa dati{% endif %}</b><span>Controlla le fiere aperte che non hanno ancora documenti collegati.</span></div>
+      <div class="fh-commessa margin"><strong>Margini da aggiornare</strong><b>{% if has_any_docs %}&euro; {{ "%.0f"|format(totals.saldo_emesso) }}{% else %}In attesa dati{% endif %}</b><span>Stima ricavi meno costi, pronta per diventare margine reale.</span></div>
     </div>
   </div>
   <div class="fh-doc-spaces">
