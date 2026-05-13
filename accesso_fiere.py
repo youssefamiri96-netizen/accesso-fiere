@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 ACCESSO FIERE v1 - Gestionale Allestitori Fieristici
 Gestionale per allestitori fieristici: fiere, personale,
@@ -17,11 +17,11 @@ from functools import wraps
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from werkzeug.utils import secure_filename
-
 try:
     from accesso_modules import efatt_helpers as _efatt_helpers
 except Exception:
     _efatt_helpers = None
+
 
 # Lock cross-process per SQLite (funziona con gunicorn multi-worker)
 _db_write_lock = threading.Lock()
@@ -60,7 +60,7 @@ app.config.update(
 )
 BASE_DIR    = os.path.dirname(os.path.abspath(__file__))
 # Su Railway usa /data (volume persistente), in locale usa la cartella del file
-# IMPORTANTE: se esiste la variabile env DATA_DIR, usa quella (piÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¹ affidabile del check fs)
+# IMPORTANTE: se esiste la variabile env DATA_DIR, usa quella (piÃƒÂ¹ affidabile del check fs)
 if os.environ.get('DATA_DIR'):
     DATA_DIR = os.environ['DATA_DIR']
 elif os.path.isdir('/data') and os.access('/data', os.W_OK):
@@ -69,15 +69,6 @@ else:
     DATA_DIR = BASE_DIR
 
 os.makedirs(DATA_DIR, exist_ok=True)
-
-def _load_template_source(relative_path, fallback):
-    """Carica template/static estratti, mantenendo fallback inline per deploy legacy."""
-    try:
-        path = os.path.join(BASE_DIR, *relative_path.split('/'))
-        with open(path, 'r', encoding='utf-8') as f:
-            return f.read()
-    except Exception:
-        return fallback
 
 def _load_app_secret_key():
     weak_values = {'', 'accesso-fiere-secret-2025-changeme', 'startup-only-replaced-after-data-dir'}
@@ -103,7 +94,7 @@ def _load_app_secret_key():
 
 app.secret_key = _load_app_secret_key()
 
-# Migrazione automatica: se DATA_DIR ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ /data (volume Railway) ma i DB sono ancora in BASE_DIR,
+# Migrazione automatica: se DATA_DIR ÃƒÂ¨ /data (volume Railway) ma i DB sono ancora in BASE_DIR,
 # copia i file dal vecchio path. Succede la prima volta che monti il volume persistente.
 if DATA_DIR != BASE_DIR:
     import shutil as _sh
@@ -148,9 +139,9 @@ if DATA_DIR != BASE_DIR:
             except Exception:
                 pass
     if _migrated:
-        print(f"[ACCESSO FIERE] ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ MIGRAZIONE completata da {BASE_DIR} a {DATA_DIR}: {', '.join(_migrated)}", flush=True)
+        print(f"[ACCESSO FIERE] Ã¢Å“â€¦ MIGRAZIONE completata da {BASE_DIR} a {DATA_DIR}: {', '.join(_migrated)}", flush=True)
 
-# LOG di diagnostica all'avvio ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â visibile nei log Railway
+# LOG di diagnostica all'avvio Ã¢â‚¬â€ visibile nei log Railway
 print(f"[ACCESSO FIERE] DATA_DIR = {DATA_DIR}", flush=True)
 print(f"[ACCESSO FIERE] /data exists: {os.path.isdir('/data')}", flush=True)
 print(f"[ACCESSO FIERE] /data writable: {os.access('/data', os.W_OK) if os.path.isdir('/data') else 'N/A'}", flush=True)
@@ -158,14 +149,14 @@ try:
     tenants_dir = os.path.join(DATA_DIR, 'tenants')
     if os.path.isdir(tenants_dir):
         tenants_list = os.listdir(tenants_dir)
-        print(f"[ACCESSO FIERE] Tenant DBs trovati: {len(tenants_list)} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ {tenants_list}", flush=True)
+        print(f"[ACCESSO FIERE] Tenant DBs trovati: {len(tenants_list)} Ã¢â€ â€™ {tenants_list}", flush=True)
     else:
         print(f"[ACCESSO FIERE] Cartella tenants non esiste ancora", flush=True)
 except Exception as _e:
     print(f"[ACCESSO FIERE] Errore lettura tenants: {_e}", flush=True)
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ MASTER DB (SaaS) ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
-# Contiene aziende, abbonamenti, piani ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â separato dai DB tenant
+# Ã¢â€â‚¬Ã¢â€â‚¬ MASTER DB (SaaS) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# Contiene aziende, abbonamenti, piani Ã¢â‚¬â€ separato dai DB tenant
 MASTER_DB = os.path.join(DATA_DIR, 'accesso_fiere_master.db')
 
 def get_master_db():
@@ -216,7 +207,7 @@ def init_master_db():
                    ('Enterprise', 99.0, 999, 'Dipendenti illimitati'))
     db.commit(); db.close()
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ TENANT DB ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+# Ã¢â€â‚¬Ã¢â€â‚¬ TENANT DB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 # Ogni azienda ha il suo DB isolato
 def get_tenant_db_path(azienda_id):
     p = os.path.join(DATA_DIR, 'tenants')
@@ -238,7 +229,7 @@ def get_current_db_path():
     return DB_LEGACY
 
 # Ridefinisco DB come property dinamica
-DB = DB_LEGACY  # mantenuto per compatibilitÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  con codice esistente
+DB = DB_LEGACY  # mantenuto per compatibilitÃƒÂ  con codice esistente
 
 UPLOAD_DIR         = os.path.join(DATA_DIR, 'uploads_dipendenti')
 UPLOAD_DIR_VEICOLI = os.path.join(DATA_DIR, 'uploads_veicoli')
@@ -255,7 +246,7 @@ os.makedirs(UPLOAD_DIR_LOGHI,   exist_ok=True)
 os.makedirs(UPLOAD_DIR_FOTOTESSERE, exist_ok=True)
 os.makedirs(UPLOAD_DIR_FERIE_CERT, exist_ok=True)
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Migrazione one-time: se esiste un vecchio logo_legacy.* lo assegno al tenant 1
+# Ã¢â€â‚¬Ã¢â€â‚¬ Migrazione one-time: se esiste un vecchio logo_legacy.* lo assegno al tenant 1
 # (il primo admin storico) e poi via il fallback. I nuovi tenant partono senza logo.
 try:
     _legacy_files = [f for f in os.listdir(UPLOAD_DIR_LOGHI) if f.startswith('logo_legacy.')]
@@ -265,15 +256,15 @@ try:
         _source = os.path.join(UPLOAD_DIR_LOGHI, _legacy)
         if not os.path.exists(_target):
             os.rename(_source, _target)
-            print(f'[LOGO MIGRATION] {_legacy} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ logo_1.{_ext}')
+            print(f'[LOGO MIGRATION] {_legacy} Ã¢â€ â€™ logo_1.{_ext}')
         else:
-            # GiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  migrato: rimuovo il legacy per evitare fallback accidentali
+            # GiÃƒÂ  migrato: rimuovo il legacy per evitare fallback accidentali
             os.remove(_source)
             print(f'[LOGO MIGRATION] rimosso duplicato {_legacy}')
 except Exception as _e:
     print(f'[LOGO MIGRATION] skip: {_e}')
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Logo aziendale helpers ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+# Ã¢â€â‚¬Ã¢â€â‚¬ Logo aziendale helpers Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 def _logo_tenant_key():
     """Ritorna la chiave-tenant da usare per il nome file del logo.
     Usa azienda_id (la vera chiave di sessione multi-tenant) con fallback a 'legacy'."""
@@ -283,7 +274,7 @@ def _logo_tenant_key():
 
 def get_logo_azienda_path(tenant_id=None):
     """Ritorna il path del logo aziendale se esiste (qualsiasi estensione), altrimenti None.
-    Ogni tenant ha il suo logo isolato ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â niente fallback incrociati tra tenant."""
+    Ogni tenant ha il suo logo isolato Ã¢â‚¬â€ niente fallback incrociati tra tenant."""
     if tenant_id is None:
         tid = _logo_tenant_key()
     else:
@@ -369,7 +360,7 @@ def analizza_documento_ai(file_path, nome_file, tipo_doc_hint='', uid=None):
     """
     api_key = get_setting('anthropic_api_key', '')
     if not api_key:
-        return {'_error': 'API key Anthropic non configurata. Vai in Impostazioni ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ AI.'}
+        return {'_error': 'API key Anthropic non configurata. Vai in Impostazioni Ã¢â€ â€™ AI.'}
     if not os.path.exists(file_path):
         return {'_error': f'File non trovato: {file_path}'}
 
@@ -415,16 +406,16 @@ Schema JSON da restituire:
 }
 
 REGOLE:
-- "tipo_doc" ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ una breve etichetta libera (es. "Patente B", "Certificato medico idoneitÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â ", "Attestato corso muletto")
+- "tipo_doc" ÃƒÂ¨ una breve etichetta libera (es. "Patente B", "Certificato medico idoneitÃƒÂ ", "Attestato corso muletto")
 - "categoria" DEVE essere ESATTAMENTE una di queste 14 stringhe (rispetta maiuscole/spazi):
-  Contratto, Patente, Visita medica, IdoneitÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  sanitaria, Formazione PSC, Lavori in altezza, Abilitazione muletto, Antincendio, Primo soccorso, DPI consegnati, UNILAV, Documento identitÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â , Corso/Attestato, Altro
-- Le categorie specifiche per allestimenti vanno preferite quando applicabili (es. un attestato per uso del carrello elevatore ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ "Abilitazione muletto", non "Corso/Attestato")
-- "nome_cognome" ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ il nome del titolare se chiaramente leggibile
+  Contratto, Patente, Visita medica, IdoneitÃƒÂ  sanitaria, Formazione PSC, Lavori in altezza, Abilitazione muletto, Antincendio, Primo soccorso, DPI consegnati, UNILAV, Documento identitÃƒÂ , Corso/Attestato, Altro
+- Le categorie specifiche per allestimenti vanno preferite quando applicabili (es. un attestato per uso del carrello elevatore Ã¢â€ â€™ "Abilitazione muletto", non "Corso/Attestato")
+- "nome_cognome" ÃƒÂ¨ il nome del titolare se chiaramente leggibile
 - "data_emissione" e "data_scadenza" in formato ISO YYYY-MM-DD; usa "" (stringa vuota) se non presenti/leggibili
-- "ente_rilascio" ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ chi ha emesso il documento (es. "Motorizzazione Civile", "ASL", "Studio Medico XYZ")
-- "note" ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ una breve descrizione di una frase
+- "ente_rilascio" ÃƒÂ¨ chi ha emesso il documento (es. "Motorizzazione Civile", "ASL", "Studio Medico XYZ")
+- "note" ÃƒÂ¨ una breve descrizione di una frase
 
-Se un campo non ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ leggibile o non presente, usa stringa vuota "". NON inventare dati.
+Se un campo non ÃƒÂ¨ leggibile o non presente, usa stringa vuota "". NON inventare dati.
 """
 
         resp = client.messages.create(
@@ -450,9 +441,9 @@ Se un campo non ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ leggibile o non prese
 
         # Validazione e sanitizzazione
         categorie_valide = {
-            'Contratto','Patente','Visita medica','IdoneitÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  sanitaria','Formazione PSC',
+            'Contratto','Patente','Visita medica','IdoneitÃƒÂ  sanitaria','Formazione PSC',
             'Lavori in altezza','Abilitazione muletto','Antincendio','Primo soccorso',
-            'DPI consegnati','UNILAV','Documento identitÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â ','Corso/Attestato','Altro'
+            'DPI consegnati','UNILAV','Documento identitÃƒÂ ','Corso/Attestato','Altro'
         }
         if result.get('categoria') not in categorie_valide:
             result['categoria'] = 'Altro'
@@ -478,9 +469,9 @@ Se un campo non ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ leggibile o non prese
     except Exception as e:
         return {'_error': f'Errore AI: {str(e)[:200]}'}
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 #  DATABASE
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 def get_db():
     db_path = get_current_db_path()
     conn = sqlite3.connect(db_path, timeout=60, check_same_thread=False)
@@ -504,7 +495,7 @@ def safe_commit(conn):
     conn.commit()  # ultimo tentativo, se fallisce lascia propagare
 
 def init_db():
-    db = get_db()  # giÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  con WAL e timeout 30s
+    db = get_db()  # giÃƒÂ  con WAL e timeout 30s
     db.executescript("""
     CREATE TABLE IF NOT EXISTS utenti (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -586,7 +577,7 @@ def init_db():
         valore TEXT
     );
     """)
-    # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Migrazione automatica colonne mancanti ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+    # Ã¢â€â‚¬Ã¢â€â‚¬ Migrazione automatica colonne mancanti Ã¢â€â‚¬Ã¢â€â‚¬
     migrations = [
         "ALTER TABLE presenze ADD COLUMN cantiere_id INTEGER",
         "ALTER TABLE richieste_presenze ADD COLUMN cantiere_id INTEGER",
@@ -606,7 +597,7 @@ def init_db():
         "ALTER TABLE cantieri ADD COLUMN responsabile TEXT",
         "ALTER TABLE cantieri ADD COLUMN tipo_allestimento TEXT DEFAULT 'standard'",
         "ALTER TABLE cantieri ADD COLUMN note_logistica TEXT",
-        # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Sprint 1.1 ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Schede fiera complete ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+        # Ã¢â€â‚¬Ã¢â€â‚¬ Sprint 1.1 Ã¢â‚¬â€ Schede fiera complete Ã¢â€â‚¬Ã¢â€â‚¬
         "ALTER TABLE cantieri ADD COLUMN tipo_evento TEXT DEFAULT 'Fiera'",
         "ALTER TABLE cantieri ADD COLUMN committente_id INTEGER",
         "ALTER TABLE cantieri ADD COLUMN data_setup TEXT",
@@ -615,9 +606,9 @@ def init_db():
         "ALTER TABLE cantieri ADD COLUMN costo_previsto REAL DEFAULT 0",
         "ALTER TABLE cantieri ADD COLUMN ricavo_previsto REAL DEFAULT 0",
         "ALTER TABLE cantieri ADD COLUMN note_tecniche TEXT",
-        # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Sprint 1.2 ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Categorizzazione documenti ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+        # Ã¢â€â‚¬Ã¢â€â‚¬ Sprint 1.2 Ã¢â‚¬â€ Categorizzazione documenti Ã¢â€â‚¬Ã¢â€â‚¬
         "ALTER TABLE documenti_dipendente ADD COLUMN categoria TEXT DEFAULT 'Altro'",
-        # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Sprint 1.3 ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Ruolo caposquadra: tabella squadre ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+        # Ã¢â€â‚¬Ã¢â€â‚¬ Sprint 1.3 Ã¢â‚¬â€ Ruolo caposquadra: tabella squadre Ã¢â€â‚¬Ã¢â€â‚¬
         """CREATE TABLE IF NOT EXISTS squadre (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nome TEXT NOT NULL,
@@ -634,7 +625,7 @@ def init_db():
             FOREIGN KEY(squadra_id) REFERENCES squadre(id) ON DELETE CASCADE,
             FOREIGN KEY(utente_id) REFERENCES utenti(id)
         )""",
-        # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Sprint 2.1 ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Incarichi montatori ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+        # Ã¢â€â‚¬Ã¢â€â‚¬ Sprint 2.1 Ã¢â‚¬â€ Incarichi montatori Ã¢â€â‚¬Ã¢â€â‚¬
         """CREATE TABLE IF NOT EXISTS incarichi (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             cantiere_id INTEGER NOT NULL,
@@ -650,9 +641,9 @@ def init_db():
             FOREIGN KEY(cantiere_id) REFERENCES cantieri(id) ON DELETE CASCADE,
             FOREIGN KEY(utente_id) REFERENCES utenti(id)
         )""",
-        # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Sprint 2.2 ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Costo orario dipendente ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+        # Ã¢â€â‚¬Ã¢â€â‚¬ Sprint 2.2 Ã¢â‚¬â€ Costo orario dipendente Ã¢â€â‚¬Ã¢â€â‚¬
         "ALTER TABLE utenti ADD COLUMN costo_orario REAL DEFAULT 0",
-        # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Sprint 3.1 ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Geofencing per timbratura mobile ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+        # Ã¢â€â‚¬Ã¢â€â‚¬ Sprint 3.1 Ã¢â‚¬â€ Geofencing per timbratura mobile Ã¢â€â‚¬Ã¢â€â‚¬
         "ALTER TABLE cantieri ADD COLUMN lat REAL",
         "ALTER TABLE cantieri ADD COLUMN lng REAL",
         "ALTER TABLE cantieri ADD COLUMN raggio_geofence_metri INTEGER DEFAULT 200",
@@ -800,7 +791,7 @@ def init_db():
         "ALTER TABLE fatture ADD COLUMN imponibile_lordo REAL DEFAULT 0",
         "ALTER TABLE fatture ADD COLUMN sconto_importo REAL DEFAULT 0",
         # Doc type per distinguere fatture standard / note di credito
-        # Tipo documento provider: invoice, credit_note, self_own_invoice, self_supplier_invoice, receipt...
+        # Valori: 'invoice' (default), 'credit_note'
         "ALTER TABLE fatture ADD COLUMN doc_type TEXT DEFAULT 'invoice'",
         # Riferimento a fattura originale per le note di credito
         "ALTER TABLE fatture ADD COLUMN fattura_riferimento_id INTEGER",
@@ -903,10 +894,10 @@ def init_db():
         "ALTER TABLE preventivi_voci ADD COLUMN data_fine TEXT",
         "ALTER TABLE preventivi_voci ADD COLUMN importo_modificato REAL",
         "ALTER TABLE preventivi_voci ADD COLUMN sconto_riga REAL DEFAULT 0",
-        # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Banca ore ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+        # Ã¢â€â‚¬Ã¢â€â‚¬ Banca ore Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
         "ALTER TABLE utenti ADD COLUMN ore_contratto_mensili REAL DEFAULT 0",
         "ALTER TABLE utenti ADD COLUMN ore_contratto_giornaliere REAL DEFAULT 0",
-        # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Storico dipendenti eliminati ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+        # Ã¢â€â‚¬Ã¢â€â‚¬ Storico dipendenti eliminati Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
         # Preserva i dati anagrafici minimi per le JOIN quando l'utente viene rimosso
         """CREATE TABLE IF NOT EXISTS utenti_storico (
             id INTEGER PRIMARY KEY,
@@ -917,14 +908,14 @@ def init_db():
             data_assunzione TEXT,
             data_eliminazione TEXT DEFAULT (datetime('now'))
         )""",
-        # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Layout dashboard personalizzato (1 riga per azienda) ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+        # Ã¢â€â‚¬Ã¢â€â‚¬ Layout dashboard personalizzato (1 riga per azienda) Ã¢â€â‚¬Ã¢â€â‚¬
         """CREATE TABLE IF NOT EXISTS dashboard_layout (
             id INTEGER PRIMARY KEY CHECK (id=1),
             layout_json TEXT NOT NULL DEFAULT '{}',
             aggiornato_il TEXT DEFAULT (datetime('now'))
         )""",
         # VIEW che unisce utenti attivi/disattivi e utenti_storico (eliminati).
-        # Utile per le JOIN nei report: cosÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¬ presenze/rimborsi di persone eliminate
+        # Utile per le JOIN nei report: cosÃƒÂ¬ presenze/rimborsi di persone eliminate
         # mantengono nome e cognome.
         "DROP VIEW IF EXISTS utenti_full",
         """CREATE VIEW IF NOT EXISTS utenti_full AS
@@ -948,7 +939,7 @@ def init_db():
         )""",
         "CREATE INDEX IF NOT EXISTS idx_banca_ore_utente ON banca_ore_movimenti(utente_id)",
         "CREATE INDEX IF NOT EXISTS idx_banca_ore_mese ON banca_ore_movimenti(mese)",
-        # Banca ore ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Monte ore manuale per dipendente/mese (NUOVO Sprint 4)
+        # Banca ore Ã¢â‚¬â€ Monte ore manuale per dipendente/mese (NUOVO Sprint 4)
         """CREATE TABLE IF NOT EXISTS banca_ore_monte (
             utente_id INTEGER NOT NULL,
             mese TEXT NOT NULL,
@@ -958,7 +949,7 @@ def init_db():
             PRIMARY KEY (utente_id, mese),
             FOREIGN KEY(utente_id) REFERENCES utenti(id)
         )""",
-        # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Fatturazione attiva/passiva + fornitori ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+        # Ã¢â€â‚¬Ã¢â€â‚¬ Fatturazione attiva/passiva + fornitori Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
         "ALTER TABLE fatture ADD COLUMN tipo TEXT DEFAULT 'attiva'",
         "ALTER TABLE fatture ADD COLUMN fornitore_id INTEGER",
         "ALTER TABLE fatture ADD COLUMN fornitore_nome TEXT",
@@ -1077,17 +1068,17 @@ def init_db():
             FOREIGN KEY(cliente_id) REFERENCES clienti(id),
             FOREIGN KEY(cantiere_id) REFERENCES cantieri(id)
         )""",
-        # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Fototessera dipendente (per tesserino di riconoscimento) ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+        # Ã¢â€â‚¬Ã¢â€â‚¬ Fototessera dipendente (per tesserino di riconoscimento) Ã¢â€â‚¬Ã¢â€â‚¬
         "ALTER TABLE utenti ADD COLUMN fototessera_filename TEXT",
         "ALTER TABLE utenti ADD COLUMN tesserino_codice TEXT",
-        # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Tesserino: token URL univoco + PIN per accesso ai documenti ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+        # Ã¢â€â‚¬Ã¢â€â‚¬ Tesserino: token URL univoco + PIN per accesso ai documenti Ã¢â€â‚¬Ã¢â€â‚¬
         "ALTER TABLE utenti ADD COLUMN tesserino_token TEXT",
         "ALTER TABLE utenti ADD COLUMN tesserino_pin_hash TEXT",
         "CREATE UNIQUE INDEX IF NOT EXISTS idx_utenti_tesserino_token ON utenti(tesserino_token) WHERE tesserino_token IS NOT NULL",
-        # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Pausa pranzo nelle timbrature (per visibilitÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  admin + integritÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  storico) ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+        # Ã¢â€â‚¬Ã¢â€â‚¬ Pausa pranzo nelle timbrature (per visibilitÃƒÂ  admin + integritÃƒÂ  storico) Ã¢â€â‚¬Ã¢â€â‚¬
         "ALTER TABLE presenze ADD COLUMN pausa_ore REAL DEFAULT 0",
         "ALTER TABLE richieste_presenze ADD COLUMN pausa_ore REAL DEFAULT 0",
-        # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ PWA push notifications: subscriptions per device ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+        # Ã¢â€â‚¬Ã¢â€â‚¬ PWA push notifications: subscriptions per device Ã¢â€â‚¬Ã¢â€â‚¬
         """CREATE TABLE IF NOT EXISTS pwa_subscriptions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             utente_id INTEGER NOT NULL,
@@ -1124,11 +1115,11 @@ def init_db():
     pw_emp   = hashlib.sha256('pass123'.encode()).hexdigest()
     try:
         db.execute("INSERT INTO utenti (nome,cognome,email,password,ruolo,titolo,data_assunzione) VALUES (?,?,?,?,?,?,?)",
-                   ('Admin','Sistema','admin@accessofiere.com',pw_admin,'admin','Resp. Allestimenti','2024-01-01'))
+                   ('Admin','Sistema','admin@accessofiere.it',pw_admin,'admin','Resp. Allestimenti','2024-01-01'))
         db.execute("INSERT INTO utenti (nome,cognome,email,password,ruolo,titolo,data_assunzione) VALUES (?,?,?,?,?,?,?)",
-                   ('Marco','Rossi','marco@accessofiere.com',pw_emp,'dipendente','Capo Montaggio','2024-03-01'))
+                   ('Marco','Rossi','marco@accessofiere.it',pw_emp,'dipendente','Capo Montaggio','2024-03-01'))
         db.execute("INSERT INTO utenti (nome,cognome,email,password,ruolo,titolo,data_assunzione) VALUES (?,?,?,?,?,?,?)",
-                   ('Elena','Bianchi','elena@accessofiere.com',pw_emp,'dipendente','Allestitorice','2024-02-15'))
+                   ('Elena','Bianchi','elena@accessofiere.it',pw_emp,'dipendente','Allestitorice','2024-02-15'))
         db.execute("INSERT INTO cantieri (nome,indirizzo,ente_organizzatore,citta,padiglione,superficie_mq) VALUES (?,?,?,?,?,?)",('EICMA 2025','Fiera Milano, Rho','Fiera Milano S.p.A.','Milano','Pad. 18',1200))
         db.execute("INSERT INTO cantieri (nome,indirizzo,ente_organizzatore,citta,padiglione,superficie_mq) VALUES (?,?,?,?,?,?)",('SANA 2025','BolognaFiere, Via della Fiera 20','BolognaFiere S.p.A.','Bologna','Pad. 30',800))
         db.execute("INSERT INTO cantieri (nome,indirizzo,ente_organizzatore,citta,padiglione,superficie_mq) VALUES (?,?,?,?,?,?)",('HOST 2025','Fiera Milano, Rho','Fiera Milano S.p.A.','Milano','Pad. 02',600))
@@ -1242,7 +1233,7 @@ def ensure_columns():
                 # Banca ore
                 "ALTER TABLE utenti ADD COLUMN ore_contratto_mensili REAL DEFAULT 0",
                 "ALTER TABLE utenti ADD COLUMN ore_contratto_giornaliere REAL DEFAULT 0",
-                # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Sprint 1.1 ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Schede fiera complete ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+                # Ã¢â€â‚¬Ã¢â€â‚¬ Sprint 1.1 Ã¢â‚¬â€ Schede fiera complete Ã¢â€â‚¬Ã¢â€â‚¬
                 "ALTER TABLE cantieri ADD COLUMN tipo_evento TEXT DEFAULT 'Fiera'",
                 "ALTER TABLE cantieri ADD COLUMN committente_id INTEGER",
                 "ALTER TABLE cantieri ADD COLUMN data_setup TEXT",
@@ -1251,9 +1242,9 @@ def ensure_columns():
                 "ALTER TABLE cantieri ADD COLUMN costo_previsto REAL DEFAULT 0",
                 "ALTER TABLE cantieri ADD COLUMN ricavo_previsto REAL DEFAULT 0",
                 "ALTER TABLE cantieri ADD COLUMN note_tecniche TEXT",
-                # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Sprint 1.2 ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Categorizzazione documenti ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+                # Ã¢â€â‚¬Ã¢â€â‚¬ Sprint 1.2 Ã¢â‚¬â€ Categorizzazione documenti Ã¢â€â‚¬Ã¢â€â‚¬
                 "ALTER TABLE documenti_dipendente ADD COLUMN categoria TEXT DEFAULT 'Altro'",
-                # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Sprint 1.3 ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Squadre / Caposquadra ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+                # Ã¢â€â‚¬Ã¢â€â‚¬ Sprint 1.3 Ã¢â‚¬â€ Squadre / Caposquadra Ã¢â€â‚¬Ã¢â€â‚¬
                 """CREATE TABLE IF NOT EXISTS squadre (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     nome TEXT NOT NULL,
@@ -1270,7 +1261,7 @@ def ensure_columns():
                     FOREIGN KEY(squadra_id) REFERENCES squadre(id) ON DELETE CASCADE,
                     FOREIGN KEY(utente_id) REFERENCES utenti(id)
                 )""",
-                # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Sprint 2.1 ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Incarichi montatori ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+                # Ã¢â€â‚¬Ã¢â€â‚¬ Sprint 2.1 Ã¢â‚¬â€ Incarichi montatori Ã¢â€â‚¬Ã¢â€â‚¬
                 """CREATE TABLE IF NOT EXISTS incarichi (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     cantiere_id INTEGER NOT NULL,
@@ -1286,9 +1277,9 @@ def ensure_columns():
                     FOREIGN KEY(cantiere_id) REFERENCES cantieri(id) ON DELETE CASCADE,
                     FOREIGN KEY(utente_id) REFERENCES utenti(id)
                 )""",
-                # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Sprint 2.2 ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Costo orario dipendente ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+                # Ã¢â€â‚¬Ã¢â€â‚¬ Sprint 2.2 Ã¢â‚¬â€ Costo orario dipendente Ã¢â€â‚¬Ã¢â€â‚¬
                 "ALTER TABLE utenti ADD COLUMN costo_orario REAL DEFAULT 0",
-                # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Sprint 3.1 ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Geofencing ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+                # Ã¢â€â‚¬Ã¢â€â‚¬ Sprint 3.1 Ã¢â‚¬â€ Geofencing Ã¢â€â‚¬Ã¢â€â‚¬
                 "ALTER TABLE cantieri ADD COLUMN lat REAL",
                 "ALTER TABLE cantieri ADD COLUMN lng REAL",
                 "ALTER TABLE cantieri ADD COLUMN raggio_geofence_metri INTEGER DEFAULT 200",
@@ -1338,7 +1329,7 @@ def ensure_columns():
                 )""",
                 "CREATE INDEX IF NOT EXISTS idx_banca_ore_utente ON banca_ore_movimenti(utente_id)",
                 "CREATE INDEX IF NOT EXISTS idx_banca_ore_mese ON banca_ore_movimenti(mese)",
-                # Banca ore ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Monte ore manuale per dipendente/mese (NUOVO)
+                # Banca ore Ã¢â‚¬â€ Monte ore manuale per dipendente/mese (NUOVO)
                 """CREATE TABLE IF NOT EXISTS banca_ore_monte (
                     utente_id INTEGER NOT NULL,
                     mese TEXT NOT NULL,
@@ -1375,16 +1366,16 @@ def ensure_columns():
                     sito_web TEXT, note TEXT, attivo INTEGER DEFAULT 1,
                     creato_il TEXT DEFAULT (datetime('now'))
                 )""",
-                # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Fototessera + tesserino + PIN (idempotenti) ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+                # Ã¢â€â‚¬Ã¢â€â‚¬ Fototessera + tesserino + PIN (idempotenti) Ã¢â€â‚¬Ã¢â€â‚¬
                 "ALTER TABLE utenti ADD COLUMN fototessera_filename TEXT",
                 "ALTER TABLE utenti ADD COLUMN tesserino_codice TEXT",
                 "ALTER TABLE utenti ADD COLUMN tesserino_token TEXT",
                 "ALTER TABLE utenti ADD COLUMN tesserino_pin_hash TEXT",
                 "CREATE UNIQUE INDEX IF NOT EXISTS idx_utenti_tesserino_token ON utenti(tesserino_token) WHERE tesserino_token IS NOT NULL",
-                # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Pausa pranzo nelle timbrature ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+                # Ã¢â€â‚¬Ã¢â€â‚¬ Pausa pranzo nelle timbrature Ã¢â€â‚¬Ã¢â€â‚¬
                 "ALTER TABLE presenze ADD COLUMN pausa_ore REAL DEFAULT 0",
                 "ALTER TABLE richieste_presenze ADD COLUMN pausa_ore REAL DEFAULT 0",
-                # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ PWA push notifications ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+                # Ã¢â€â‚¬Ã¢â€â‚¬ PWA push notifications Ã¢â€â‚¬Ã¢â€â‚¬
                 """CREATE TABLE IF NOT EXISTS pwa_subscriptions (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     utente_id INTEGER NOT NULL,
@@ -1414,7 +1405,7 @@ def ensure_columns():
                 try: db.execute(sql)
                 except: pass
             # Migration speciale: rimuovere NOT NULL da richieste_presenze.ora_entrata/ora_uscita
-            # (per consentire richieste in modalitÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  "ore totali" senza orari precisi)
+            # (per consentire richieste in modalitÃƒÂ  "ore totali" senza orari precisi)
             try:
                 cols = db.execute("PRAGMA table_info(richieste_presenze)").fetchall()
                 # cols[i] = (cid, name, type, notnull, dflt_value, pk)
@@ -1453,14 +1444,14 @@ def ensure_columns():
                 print(f'[ensure_columns] {e}')
                 return
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 #  AUTO-INIT DB PER RICHIESTE AUTHENTICATED
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 _tenant_initialized = set()  # cache per non reinizializzare ad ogni request
 
 @app.before_request
 def auto_init_tenant_db():
-    """Se l'utente ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ loggato su un tenant, assicura che il DB esista e sia aggiornato."""
+    """Se l'utente ÃƒÂ¨ loggato su un tenant, assicura che il DB esista e sia aggiornato."""
     azienda_id = session.get('azienda_id')
     if not azienda_id:
         return
@@ -1480,9 +1471,9 @@ def auto_init_tenant_db():
             if missing:
                 init_db()
             # Chiama sempre ensure_columns per applicare eventuali nuove colonne
-            # ai DB giÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  esistenti (migrazione idempotente).
+            # ai DB giÃƒÂ  esistenti (migrazione idempotente).
             ensure_columns()
-        # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Pulizia automatica record fantasma (scadenze senza file allegato) ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+        # Ã¢â€â‚¬Ã¢â€â‚¬ Pulizia automatica record fantasma (scadenze senza file allegato) Ã¢â€â‚¬Ã¢â€â‚¬
         # Vengono creati quando un utente cancella un file ma il record di scadenza
         # rimane in DB. Inquinano i contatori. Si fa una volta al primo accesso.
         try:
@@ -1499,9 +1490,9 @@ def auto_init_tenant_db():
     except Exception as e:
         print(f'[auto_init_tenant_db] {e}')
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 #  AUTH
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 AMMINISTRAZIONE_ENDPOINTS = {
     'amministrazione_home','amministrazione_mobile',
     'global_search',
@@ -1544,16 +1535,16 @@ def login_required(f):
                 db = get_db()
                 u = db.execute("SELECT attivo, ruolo FROM utenti WHERE id=?", (session['user_id'],)).fetchone()
                 db.close()
-                # Tratta NULL come attivo (compatibilitÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  record vecchi). Solo attivo=0 esplicito blocca.
+                # Tratta NULL come attivo (compatibilitÃƒÂ  record vecchi). Solo attivo=0 esplicito blocca.
                 if not u or u['attivo'] == 0:
                     session.clear()
-                    flash('Il tuo account ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ stato disattivato. Contatta l\'amministratore.', 'error')
+                    flash('Il tuo account ÃƒÂ¨ stato disattivato. Contatta l\'amministratore.', 'error')
                     return redirect(url_for('login'))
                 if u['ruolo'] and session.get('ruolo') != u['ruolo']:
                     session['ruolo'] = u['ruolo']
             except Exception:
                 pass
-        # Solo admin vedono le pagine admin. Caposquadra ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ mobile-cs, dipendenti ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ mobile
+        # Solo admin vedono le pagine admin. Caposquadra Ã¢â€ â€™ mobile-cs, dipendenti Ã¢â€ â€™ mobile
         admin_pages = {'dashboard','dipendenti','presenze','ferie','cantieri','global_search',
                        'documenti','scadenze','calendario','richieste','impostazioni','fatturazione','preventivi','clienti','contratti_clienti',
                        'banca_ore','banca_ore_dettaglio','squadre_lista','calendario_fiere',
@@ -1591,7 +1582,7 @@ def admin_required(f):
                 db.close()
                 if not u or u['attivo'] == 0:
                     session.clear()
-                    flash('Il tuo account ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ stato disattivato.', 'error')
+                    flash('Il tuo account ÃƒÂ¨ stato disattivato.', 'error')
                     return redirect(url_for('login'))
                 if u['ruolo'] and session.get('ruolo') != u['ruolo']:
                     session['ruolo'] = u['ruolo']
@@ -1620,7 +1611,7 @@ def caposquadra_required(f):
                 db.close()
                 if not u or u['attivo'] == 0:
                     session.clear()
-                    flash('Il tuo account ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ stato disattivato.', 'error')
+                    flash('Il tuo account ÃƒÂ¨ stato disattivato.', 'error')
                     return redirect(url_for('login'))
                 if u['ruolo'] and session.get('ruolo') != u['ruolo']:
                     session['ruolo'] = u['ruolo']
@@ -1642,9 +1633,9 @@ def get_squadra_membri_ids(db, caposquadra_id):
 
 def hash_pw(pw): return hashlib.sha256(pw.encode()).hexdigest()
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 #  EMAIL
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 def send_email(to, subject, body):
     """
     Invia email tramite Brevo HTTP API (funziona su Railway).
@@ -1662,7 +1653,7 @@ def send_email(to, subject, body):
 
     print(f"[EMAIL] Invio a={to} via={metodo} mittente={mittente}")
 
-    # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Brevo / Sendinblue HTTP API (funziona su Railway) ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+    # Ã¢â€â‚¬Ã¢â€â‚¬ Brevo / Sendinblue HTTP API (funziona su Railway) Ã¢â€â‚¬Ã¢â€â‚¬
     if 'brevo' in metodo or 'sendinblue' in metodo or metodo.strip() == 'brevo':
         try:
             import json as _json
@@ -1694,7 +1685,7 @@ def send_email(to, subject, body):
             traceback.print_exc()
             return False
 
-    # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Fallback SMTP (per ambienti non Railway) ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+    # Ã¢â€â‚¬Ã¢â€â‚¬ Fallback SMTP (per ambienti non Railway) Ã¢â€â‚¬Ã¢â€â‚¬
     try:
         host = metodo
         port = int(get_setting('smtp_port', '587'))
@@ -1719,9 +1710,9 @@ def send_email(to, subject, body):
         traceback.print_exc()
         return False
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
-#  NOTIFICHE SCADENZE ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â eseguita 1 volta/giorno
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+#  NOTIFICHE SCADENZE Ã¢â‚¬â€ eseguita 1 volta/giorno
+# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 def check_scadenze_email():
     """Controlla tutti i documenti in scadenza e manda 1 sola email riassuntiva all'admin."""
     email_admin = get_setting('email_notifiche', '')
@@ -1731,7 +1722,7 @@ def check_scadenze_email():
     db = get_db()
     righe = []
 
-    # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Documenti dipendenti (tabella documenti con assegnato_a) ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+    # Ã¢â€â‚¬Ã¢â€â‚¬ Documenti dipendenti (tabella documenti con assegnato_a) Ã¢â€â‚¬Ã¢â€â‚¬
     try:
         docs_dip = db.execute("""
             SELECT d.titolo, d.data_scadenza, u.nome, u.cognome,
@@ -1742,14 +1733,14 @@ def check_scadenze_email():
             ORDER BY d.data_scadenza""").fetchall()
         for d in docs_dip:
             gg = d['days_left']
-            label = f"<span style='color:#dc2626'>ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Scade oggi</span>" if gg == 0 else f"tra <b>{gg} giorni</b>"
-            righe.append(f"<tr><td style='padding:6px 12px'>ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ Doc. dipendente</td>"
-                         f"<td style='padding:6px 12px'><b>{d['titolo']}</b> ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â {d['nome']} {d['cognome']}</td>"
+            label = f"<span style='color:#dc2626'>Ã¢Å¡Â Ã¯Â¸Â Scade oggi</span>" if gg == 0 else f"tra <b>{gg} giorni</b>"
+            righe.append(f"<tr><td style='padding:6px 12px'>Ã°Å¸â€œâ€¹ Doc. dipendente</td>"
+                         f"<td style='padding:6px 12px'><b>{d['titolo']}</b> Ã¢â‚¬â€ {d['nome']} {d['cognome']}</td>"
                          f"<td style='padding:6px 12px;font-family:monospace'>{d['data_scadenza']}</td>"
                          f"<td style='padding:6px 12px'>{label}</td></tr>")
     except: pass
 
-    # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Documenti caricati dalla sezione Dipendenti ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+    # Ã¢â€â‚¬Ã¢â€â‚¬ Documenti caricati dalla sezione Dipendenti Ã¢â€â‚¬Ã¢â€â‚¬
     try:
         docs_dip2 = db.execute("""
             SELECT dd.nome_originale as titolo, dd.tipo_doc, dd.data_scadenza, u.nome, u.cognome,
@@ -1760,14 +1751,14 @@ def check_scadenze_email():
             ORDER BY dd.data_scadenza""").fetchall()
         for d in docs_dip2:
             gg = d['days_left']
-            label = f"<span style='color:#dc2626'>ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Scade oggi</span>" if gg == 0 else f"tra <b>{gg} giorni</b>"
-            righe.append(f"<tr><td style='padding:6px 12px'>ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ {d['tipo_doc']}</td>"
-                         f"<td style='padding:6px 12px'><b>{d['titolo']}</b> ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â {d['nome']} {d['cognome']}</td>"
+            label = f"<span style='color:#dc2626'>Ã¢Å¡Â Ã¯Â¸Â Scade oggi</span>" if gg == 0 else f"tra <b>{gg} giorni</b>"
+            righe.append(f"<tr><td style='padding:6px 12px'>Ã°Å¸â€œâ€ž {d['tipo_doc']}</td>"
+                         f"<td style='padding:6px 12px'><b>{d['titolo']}</b> Ã¢â‚¬â€ {d['nome']} {d['cognome']}</td>"
                          f"<td style='padding:6px 12px;font-family:monospace'>{d['data_scadenza']}</td>"
                          f"<td style='padding:6px 12px'>{label}</td></tr>")
     except: pass
 
-    # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Documenti azienda ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+    # Ã¢â€â‚¬Ã¢â€â‚¬ Documenti azienda Ã¢â€â‚¬Ã¢â€â‚¬
     try:
         docs_az = db.execute("""
             SELECT titolo, data_scadenza, avviso_giorni,
@@ -1778,14 +1769,14 @@ def check_scadenze_email():
             ORDER BY data_scadenza""").fetchall()
         for d in docs_az:
             gg = d['days_left']
-            label = f"<span style='color:#dc2626'>ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Scade oggi</span>" if gg == 0 else f"tra <b>{gg} giorni</b>"
-            righe.append(f"<tr><td style='padding:6px 12px'>ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚ÂÃƒâ€šÃ‚Â¢ Doc. azienda</td>"
+            label = f"<span style='color:#dc2626'>Ã¢Å¡Â Ã¯Â¸Â Scade oggi</span>" if gg == 0 else f"tra <b>{gg} giorni</b>"
+            righe.append(f"<tr><td style='padding:6px 12px'>Ã°Å¸ÂÂ¢ Doc. azienda</td>"
                          f"<td style='padding:6px 12px'><b>{d['titolo']}</b></td>"
                          f"<td style='padding:6px 12px;font-family:monospace'>{d['data_scadenza']}</td>"
                          f"<td style='padding:6px 12px'>{label}</td></tr>")
     except: pass
 
-    # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Scadenze veicoli ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+    # Ã¢â€â‚¬Ã¢â€â‚¬ Scadenze veicoli Ã¢â€â‚¬Ã¢â€â‚¬
     try:
         veicoli_sc = db.execute("""
             SELECT targa, marca, modello, revisione, assicurazione, bollo,
@@ -1801,9 +1792,9 @@ def check_scadenze_email():
                     gg = (date.fromisoformat(sc) - date.today()).days
                 except: continue
                 if 0 <= gg <= 30:
-                    label = f"<span style='color:#dc2626'>ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Scade oggi</span>" if gg == 0 else f"tra <b>{gg} giorni</b>"
-                    righe.append(f"<tr><td style='padding:6px 12px'>ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚Â¡ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Veicolo</td>"
-                                 f"<td style='padding:6px 12px'><b>{etichetta}</b> ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â {v['targa']} {v['marca']} {v['modello']}</td>"
+                    label = f"<span style='color:#dc2626'>Ã¢Å¡Â Ã¯Â¸Â Scade oggi</span>" if gg == 0 else f"tra <b>{gg} giorni</b>"
+                    righe.append(f"<tr><td style='padding:6px 12px'>Ã°Å¸Å¡â€” Veicolo</td>"
+                                 f"<td style='padding:6px 12px'><b>{etichetta}</b> Ã¢â‚¬â€ {v['targa']} {v['marca']} {v['modello']}</td>"
                                  f"<td style='padding:6px 12px;font-family:monospace'>{sc}</td>"
                                  f"<td style='padding:6px 12px'>{label}</td></tr>")
     except: pass
@@ -1813,7 +1804,7 @@ def check_scadenze_email():
         return
 
     base = get_base_url()
-    corpo = (f"<h2 style='color:#0f172a'>ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Riepilogo scadenze ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â {oggi}</h2>"
+    corpo = (f"<h2 style='color:#0f172a'>Ã¢Å¡Â Ã¯Â¸Â Riepilogo scadenze Ã¢â‚¬â€ {oggi}</h2>"
              f"<p>Hai <b>{len(righe)} scadenza/e</b> nei prossimi 30 giorni:</p>"
              f"<table style='border-collapse:collapse;font-family:sans-serif;width:100%'>"
              f"<thead><tr style='background:#0f172a;color:#fff'>"
@@ -1823,18 +1814,18 @@ def check_scadenze_email():
              f"<th style='padding:8px 12px;text-align:left'>Quando</th>"
              f"</tr></thead><tbody>{''.join(righe)}</tbody></table>"
              f"<p style='margin-top:20px'>"
-             f"<a href='{base}/documenti-azienda' style='background:#0f172a;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:700;margin-right:10px'>Documenti azienda ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢</a>"
-             f"<a href='{base}/documenti' style='background:#2563eb;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:700'>Documenti dipendenti ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢</a>"
+             f"<a href='{base}/documenti-azienda' style='background:#0f172a;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:700;margin-right:10px'>Documenti azienda Ã¢â€ â€™</a>"
+             f"<a href='{base}/documenti' style='background:#2563eb;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:700'>Documenti dipendenti Ã¢â€ â€™</a>"
              f"</p>")
 
     import threading
     threading.Thread(target=lambda: send_email(email_admin,
-        f'[ACCESSO FIERE] {len(righe)} scadenze nei prossimi 30 giorni ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â {oggi}', corpo), daemon=True).start()
+        f'[ACCESSO FIERE] {len(righe)} scadenze nei prossimi 30 giorni Ã¢â‚¬â€ {oggi}', corpo), daemon=True).start()
 
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 #  RENDER HELPER
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 _MOJIBAKE_RUN_RE = re.compile(r'[^\x00-\x7F]+')
 
 def _fix_mojibake_run(run):
@@ -1880,7 +1871,7 @@ def render_page(tmpl, **ctx):
     ctx.setdefault('current_lang', session.get('lang', 'it'))
     ctx.setdefault('langs', LANGS)
     ctx.setdefault('t', get_lang())
-    # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Logo aziendale ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+    # Ã¢â€â‚¬Ã¢â€â‚¬ Logo aziendale Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     try:
         tid = str(session.get('azienda_id') or 'legacy')
         logo_path = None
@@ -1888,11 +1879,7 @@ def render_page(tmpl, **ctx):
             if _fname.startswith(f'logo_{tid}.'):
                 logo_path = os.path.join(UPLOAD_DIR_LOGHI, _fname)
                 break
-        if logo_path is None and tid != 'legacy':
-            for _fname in os.listdir(UPLOAD_DIR_LOGHI):
-                if _fname.startswith('logo_legacy.'):
-                    logo_path = os.path.join(UPLOAD_DIR_LOGHI, _fname)
-                    break
+        # NESSUN fallback legacy: ogni tenant ha il proprio logo isolato
         ctx.setdefault('ha_logo_az', logo_path is not None)
         ctx.setdefault('logo_az_ts', int(os.path.getmtime(logo_path)) if logo_path else 0)
     except Exception:
@@ -1933,7 +1920,7 @@ def render_page(tmpl, **ctx):
                                    'totale_scaduti':0,'totale_in_scadenza':0,
                                    'veicoli_in_scadenza':0,'docs_dip_in_scadenza':0,'docs_az_in_scadenza':0}
         db.close()
-        # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Controllo scadenze 1 volta al giorno ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+        # Ã¢â€â‚¬Ã¢â€â‚¬ Controllo scadenze 1 volta al giorno Ã¢â€â‚¬Ã¢â€â‚¬
         oggi = date.today().isoformat()
         if session.get('_scadenze_check') != oggi:
             session['_scadenze_check'] = oggi
@@ -1957,7 +1944,7 @@ def render_page(tmpl, **ctx):
     if theme_mode not in ('dark', 'light'):
         theme_mode = 'dark'
     ctx.setdefault('theme_mode', theme_mode)
-    # AI chat disponibile solo se la API key Anthropic ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ configurata
+    # AI chat disponibile solo se la API key Anthropic ÃƒÂ¨ configurata
     try:
         ctx['ai_chat_abilitato'] = AI_OK and bool(get_setting('anthropic_api_key', '').strip())
     except Exception:
@@ -1965,14 +1952,14 @@ def render_page(tmpl, **ctx):
     full = BASE.replace('    {% block content %}{% endblock %}', tmpl)
     return render_template_string(full, **ctx)
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 #  BASE TEMPLATE
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 BASE = """<!DOCTYPE html>
 <html lang="{{ lang }}" dir="{{ t.dir }}">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{{ page_title }} | Accesso Fiere ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Gestionale Allestitori</title>
+<title>{{ page_title }} | Accesso Fiere Ã¢â‚¬â€ Gestionale Allestitori</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#0f4c81">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1984,9 +1971,8 @@ BASE = """<!DOCTYPE html>
 <link rel="icon" type="image/png" sizes="192x192" href="/static/pwa/icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/static/pwa/icon-512.png">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&amp;f[]=satoshi@400,500,700,900&amp;display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 :root{--bg:#f1f5f9;--surface:#f8fafc;--sidebar:#0b1624;--sidebar-hover:#132338;--accent:#0f4f75;--accent2:#38a9bd;--safety:#d99221;--white:#fff;--text:#172033;--text-light:#64748b;--border:#d9e3ee;--card:#fff;--success:#149164;--warning:#d99221;--danger:#c93c3c;--radius:12px;--shadow:0 1px 2px rgba(15,23,42,.04),0 18px 46px -34px rgba(15,23,42,.38)}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -1996,7 +1982,6 @@ body{font-family:'Inter',sans-serif;background:linear-gradient(180deg,#f8fafc 0%
 .sidebar::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}
 .sidebar-logo{padding:18px 18px 16px;border-bottom:1px solid rgba(148,163,184,.1);display:flex;align-items:center;gap:11px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.008))}
 .sidebar-logo img{height:36px;width:auto;object-fit:contain;flex-shrink:0;border-radius:7px}
-.sidebar-fallback-logo{width:32px;height:32px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;background:linear-gradient(135deg,#1f6f9e,#38a9bd);color:#fff;font-size:12px;font-weight:900;letter-spacing:-.03em;border:1px solid rgba(255,255,255,.16)}
 .sidebar-logo .company{font-size:14px;font-weight:800;color:#fff;letter-spacing:-.2px}
 .sidebar-logo .sub{font-size:10.5px;color:rgba(203,213,225,.58);margin-top:2px;font-weight:700;letter-spacing:.1px}
 nav{flex:1;padding:8px 0 12px}
@@ -2140,7 +2125,7 @@ textarea{resize:vertical;min-height:80px}
 .empty-state p{font-size:13px;color:var(--text-light);max-width:400px;margin:0 auto 16px}
 .tag{display:inline-block;background:#f1f5f9;color:var(--text-light);font-size:11px;padding:3px 9px;border-radius:7px;margin-right:4px;font-weight:500;border:1px solid #e2e8f0}
 
-/* ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â PAGE HEADER MODERNO ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â */
+/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â PAGE HEADER MODERNO Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
 .page-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px;flex-wrap:wrap;gap:14px;padding-bottom:16px;border-bottom:1px solid var(--border)}
 .page-header-info{flex:1;min-width:240px}
 .page-breadcrumb{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-light);margin-bottom:8px;font-weight:500}
@@ -2151,7 +2136,7 @@ textarea{resize:vertical;min-height:80px}
 .page-desc{font-size:13px;color:var(--text-light);max-width:600px}
 .page-actions{display:flex;gap:8px;flex-wrap:wrap}
 
-/* ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â FILTER BAR ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â */
+/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â FILTER BAR Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
 .filter-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#fff;padding:12px 16px;border-radius:11px;border:1px solid var(--border);margin-bottom:16px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
 .filter-bar input,.filter-bar select{width:auto;min-width:160px;padding:7px 11px;font-size:13px;border-radius:8px}
 .filter-bar .filter-search{position:relative;flex:1;min-width:220px;max-width:340px}
@@ -2161,20 +2146,20 @@ textarea{resize:vertical;min-height:80px}
 .filter-bar .filter-clear{margin-left:auto;font-size:12px;color:var(--text-light);text-decoration:none;padding:6px 10px;border-radius:7px;transition:all .15s}
 .filter-bar .filter-clear:hover{background:#f1f5f9;color:var(--accent)}
 
-/* ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â ACTION ICONS NELLE TABELLE ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â */
+/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â ACTION ICONS NELLE TABELLE Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
 .action-icons{display:flex;gap:4px}
 .action-icon{width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;background:#f8fafc;border:1px solid var(--border);color:var(--text-light);text-decoration:none;cursor:pointer;font-size:12px;transition:all .15s}
 .action-icon:hover{background:#fff;color:var(--accent);border-color:var(--accent);box-shadow:0 2px 8px rgba(15,76,129,.15);transform:translateY(-1px)}
 .action-icon.danger:hover{color:var(--danger);border-color:var(--danger);box-shadow:0 2px 8px rgba(239,68,68,.15)}
 .action-icon.success:hover{color:var(--success);border-color:var(--success);box-shadow:0 2px 8px rgba(34,197,94,.15)}
 
-/* ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â SECTION TITLE (per pagine con sezioni multiple) ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â */
+/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â SECTION TITLE (per pagine con sezioni multiple) Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
 .section-title{font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.7px;margin:24px 0 12px;display:flex;align-items:center;gap:8px}
 .section-title::before{content:"";width:3px;height:14px;background:linear-gradient(180deg,var(--accent),var(--accent2));border-radius:2px}
 .section-title:first-child{margin-top:0}
 .mobile-admin-shortcuts{display:none}
 
-/* ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â STATUS PILL (per stati: attivo, sospeso, in lavorazione...) ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â */
+/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â STATUS PILL (per stati: attivo, sospeso, in lavorazione...) Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
 .status-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:99px;font-size:11.5px;font-weight:600}
 .status-pill::before{content:"";width:6px;height:6px;border-radius:50%}
 .status-pill.live{background:#dcfce7;color:#15803d}
@@ -2187,7 +2172,7 @@ textarea{resize:vertical;min-height:80px}
 .status-pill.danger::before{background:#ef4444}
 @keyframes liveDot{0%{box-shadow:0 0 0 0 rgba(34,197,94,.7)}70%{box-shadow:0 0 0 6px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
 
-/* ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â CONTROL ROOM THEME - DESKTOP ADMIN ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â */
+/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â CONTROL ROOM THEME - DESKTOP ADMIN Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
 @media (min-width:901px){
   :root{
     --bg:#06111f;
@@ -2925,7 +2910,7 @@ textarea{resize:vertical;min-height:80px}
   }
 }
 
-/* ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â MOBILE RESPONSIVE ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â */
+/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â MOBILE RESPONSIVE Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
 @media (max-width:760px){
   .page-header{flex-direction:column;align-items:stretch}
   .page-title{font-size:18px}
@@ -3067,9 +3052,9 @@ body.theme-light #ai-chat-panel,body.theme-light .ai-chat-body,body.theme-light 
 <aside class="sidebar">
   <div class="sidebar-logo">
     {%- if ha_logo_az %}
-    <img src="/admin/logo/serve?t={{ logo_az_ts }}" alt="{{ azienda_nome }}" style="height:36px;width:auto;object-fit:contain;flex-shrink:0;border-radius:9px;background:rgba(255,255,255,.045);padding:2px">
+    <img src="/admin/logo/serve?t={{ logo_az_ts }}" alt="{{ azienda_nome }}" style="height:36px;width:auto;object-fit:contain;flex-shrink:0;border-radius:5px;background:#fff;padding:2px">
     {%- else %}
-    <span class="sidebar-fallback-logo" aria-hidden="true">AF</span>
+    <img src="data:image/png;base64,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" alt="Accesso Fiere" style="height:36px;width:36px;object-fit:contain;flex-shrink:0;border-radius:8px">
     {%- endif %}
     <div>
       <div class="company">{{ azienda_nome }}</div>
@@ -3217,7 +3202,7 @@ body.theme-light #ai-chat-panel,body.theme-light .ai-chat-body,body.theme-light 
   <div id="tb-menu" class="tb-menu">
     <div class="tb-menu-head">
       <div class="name">{{ session.nome }} {{ session.cognome }}</div>
-      <div class="role">{{ 'Amministratore' if session.ruolo=='admin' else 'Amministrazione' if session.ruolo=='amministrazione' else 'Dipendente' }} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {{ azienda_nome }}</div>
+      <div class="role">{{ 'Amministratore' if session.ruolo=='admin' else 'Amministrazione' if session.ruolo=='amministrazione' else 'Dipendente' }} Ã‚Â· {{ azienda_nome }}</div>
     </div>
     {% if session.ruolo=='admin' %}
     <a href="/admin/impostazioni"><i class="fa fa-gear"></i> Impostazioni</a>
@@ -3242,7 +3227,7 @@ body.theme-light #ai-chat-panel,body.theme-light .ai-chat-body,body.theme-light 
       if(q) window.location.href = '/cerca?q=' + encodeURIComponent(q);
     }
   }
-  // Cmd+K / Ctrl+K ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ focus ricerca
+  // Cmd+K / Ctrl+K Ã¢â€ â€™ focus ricerca
   document.addEventListener('keydown', function(e){
     if((e.metaKey || e.ctrlKey) && e.key === 'k'){
       e.preventDefault();
@@ -3970,201 +3955,10 @@ body{font-family:'Geist','Inter',system-ui,-apple-system,BlinkMacSystemFont,'Seg
   }
   body.sidebar-collapsed .sidebar-user{justify-content:center;padding:12px}
   body.sidebar-collapsed nav a:not(.nav-sub):hover::before,
-body.sidebar-collapsed .nav-group>summary:hover::before{
+  body.sidebar-collapsed .nav-group>summary:hover::before{
     content:attr(data-tooltip);position:absolute;left:54px;top:50%;transform:translateY(-50%);
     white-space:nowrap;background:#111c2b;color:#f8fafc;border:1px solid rgba(201,213,225,.18);
     border-radius:8px;padding:7px 9px;font-size:12px;font-weight:700;box-shadow:0 16px 32px -22px rgba(0,0,0,.75);z-index:200;
-  }
-}
-
-/* Enterprise v2: piu respiro, numeri grandi, sidebar piu Linear/Vercel */
-@media (min-width:901px){
-  body{
-    font-family:'Satoshi','General Sans','Geist','Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif!important;
-    letter-spacing:0!important;
-  }
-  .content{padding:28px 30px!important}
-  .card-body{padding:20px!important}
-  .stats-grid,.kpi-grid,.fh-kpis{gap:14px!important}
-  .grid-2,.grid-3,.fh-grid,.fh-split{gap:14px!important}
-  .card,.stat-card,.kpi-card,.fh-card,.fh-kpi,.fh-flow{
-    border-radius:10px!important;
-  }
-  .card-header{
-    min-height:52px!important;
-    padding:15px 22px!important;
-  }
-  .card-header h3,.panel-title,.section-title{
-    font-size:13px!important;
-    font-weight:760!important;
-    letter-spacing:-.01em!important;
-  }
-  .page-title,.topbar h1{
-    font-weight:760!important;
-    letter-spacing:-.035em!important;
-  }
-  .page-desc,.card-body,.muted,.text-muted,.empty-state{
-    font-size:12.5px!important;
-    line-height:1.55!important;
-  }
-  .kpi-value{
-    font-size:clamp(30px,2.4vw,42px)!important;
-    font-weight:850!important;
-  }
-  .kpi-value.kpi-state-ok{
-    font-size:clamp(26px,2vw,34px)!important;
-    line-height:1.02!important;
-    max-width:100%!important;
-    overflow-wrap:normal!important;
-  }
-  .stat-val,.stat-value,.sf .val{
-    font-size:clamp(24px,2vw,34px)!important;
-    font-weight:850!important;
-  }
-  .fh-kpi .val{
-    font-size:clamp(25px,2.1vw,36px)!important;
-    font-weight:850!important;
-  }
-  .fh-flow-total{
-    font-size:clamp(32px,2.8vw,46px)!important;
-    font-weight:860!important;
-    margin:9px 0 7px!important;
-  }
-  .fh-metric b{
-    font-size:16px!important;
-    font-weight:780!important;
-  }
-  .kpi-label,.kpi-foot,.stat-lbl,.stat-label,.sf .lbl,.fh-kpi .lbl,.fh-kpi .hint,.fh-metric span{
-    font-size:11px!important;
-    line-height:1.35!important;
-    font-weight:650!important;
-  }
-  .sidebar{
-    width:232px!important;
-    background:linear-gradient(180deg,rgba(14,25,39,.96),rgba(11,20,33,.98))!important;
-    box-shadow:8px 0 26px -24px rgba(0,0,0,.65)!important;
-    border-right:1px solid rgba(201,213,225,.12)!important;
-  }
-  .main{margin-left:232px!important}
-  .sidebar-logo{
-    padding:15px 16px 14px!important;
-    min-height:64px!important;
-    border-bottom-color:rgba(201,213,225,.10)!important;
-  }
-  .sidebar-logo img{
-    height:30px!important;
-    width:30px!important;
-    border-radius:8px!important;
-  }
-  .sidebar-logo .company{
-    font-size:13px!important;
-    font-weight:760!important;
-    letter-spacing:-.02em!important;
-  }
-  .sidebar-logo .sub{
-    font-size:10px!important;
-    opacity:.72!important;
-  }
-  nav{padding:8px 8px 12px!important}
-  .nav-section{
-    padding:16px 10px 6px!important;
-    font-size:9px!important;
-    letter-spacing:.08em!important;
-    color:rgba(180,195,211,.48)!important;
-  }
-  .nav-section::before{display:none!important}
-  nav a,.nav-group>summary{
-    margin:2px 0!important;
-    padding:8px 10px!important;
-    border-left:0!important;
-    border-radius:9px!important;
-    gap:10px!important;
-    font-size:12.5px!important;
-    font-weight:650!important;
-    color:rgba(223,232,242,.70)!important;
-  }
-  nav a i,.nav-group>summary i:first-child{
-    width:18px!important;
-    font-size:13px!important;
-    opacity:.86!important;
-  }
-  nav a:hover,.nav-group>summary:hover{
-    background:rgba(201,213,225,.07)!important;
-    color:#f8fafc!important;
-  }
-  nav a.active,.nav-group>summary.active{
-    background:rgba(201,213,225,.10)!important;
-    box-shadow:none!important;
-    color:#fff!important;
-  }
-  nav a.active::after{
-    right:6px!important;
-    width:3px!important;
-    height:18px!important;
-    border-radius:99px!important;
-    background:rgba(201,213,225,.82)!important;
-  }
-  nav a.nav-sub{
-    padding-left:36px!important;
-    font-size:12px!important;
-    opacity:.70!important;
-  }
-  nav a.nav-sub::before{left:23px!important;opacity:.35!important}
-  .sidebar-user{
-    padding:12px 14px!important;
-    background:rgba(255,255,255,.025)!important;
-  }
-  .sidebar-user .avatar{
-    width:30px!important;
-    height:30px!important;
-    box-shadow:none!important;
-  }
-  .sidebar-user .uname{font-size:12px!important;font-weight:680!important}
-  .sidebar-user .urole{font-size:10px!important}
-  .sidebar-collapse-btn{
-    right:8px!important;
-    width:26px!important;
-    height:26px!important;
-    border-radius:7px!important;
-    background:rgba(201,213,225,.045)!important;
-    box-shadow:none!important;
-  }
-  body.sidebar-collapsed .sidebar{width:68px!important}
-  body.sidebar-collapsed .main{margin-left:68px!important}
-  body.sidebar-collapsed .sidebar-logo{
-    padding:14px 9px!important;
-  }
-  body.sidebar-collapsed .sidebar-logo img{
-    height:32px!important;
-    width:32px!important;
-  }
-  body.sidebar-collapsed nav{
-    padding:10px 8px!important;
-  }
-  body.sidebar-collapsed nav a,
-  body.sidebar-collapsed .nav-group>summary{
-    width:44px!important;
-    height:42px!important;
-    padding:0!important;
-    margin:3px auto!important;
-    border-radius:12px!important;
-  }
-  body.sidebar-collapsed nav a i,
-  body.sidebar-collapsed .nav-group>summary i:first-child{
-    width:auto!important;
-    font-size:15px!important;
-  }
-  body.sidebar-collapsed .sidebar-collapse-btn{
-    right:-12px!important;
-    background:#18283d!important;
-    border-color:rgba(201,213,225,.16)!important;
-  }
-  body.sidebar-collapsed nav a:not(.nav-sub):hover::before,
-  body.sidebar-collapsed .nav-group>summary:hover::before{
-    left:54px!important;
-    border-radius:9px!important;
-    font-size:12px!important;
-    padding:8px 10px!important;
   }
 }
 </style>
@@ -4185,7 +3979,7 @@ body.sidebar-collapsed .nav-group>summary:hover::before{
       var label=navLabel(el);
       if(label){ el.setAttribute('data-tooltip', label); el.setAttribute('title', label); }
     });
-    if(window.innerWidth >= 1200 && localStorage.getItem('af_sidebar_collapsed') === '1') document.body.classList.add('sidebar-collapsed');
+    if(localStorage.getItem('af_sidebar_collapsed') === '1') document.body.classList.add('sidebar-collapsed');
     var btn=document.createElement('button');
     btn.type='button';
     btn.className='sidebar-collapse-btn';
@@ -4252,7 +4046,7 @@ body.sidebar-collapsed .nav-group>summary:hover::before{
 </script>
 
 {% if session.ruolo == 'admin' and ai_chat_abilitato %}
-<!-- ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â AI ASSISTANT CHAT WIDGET ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â -->
+<!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â AI ASSISTANT CHAT WIDGET Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
 <div id="ai-chat-fab" onclick="toggleAiChat()" title="Assistente AI">
   <i class="fa fa-robot"></i>
   <span class="ai-fab-pulse"></span>
@@ -4378,7 +4172,7 @@ function sendAiMessage() {
   .then(function(data){
     typingDiv.remove();
     if (data.error) {
-      appendAiMsg('bot', 'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â ' + data.error);
+      appendAiMsg('bot', 'Ã¢Å¡Â Ã¯Â¸Â ' + data.error);
     } else {
       var reply = data.reply || '(nessuna risposta)';
       appendAiMsg('bot', reply);
@@ -4388,7 +4182,7 @@ function sendAiMessage() {
   })
   .catch(function(err){
     typingDiv.remove();
-    appendAiMsg('bot', 'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Errore di rete: ' + err);
+    appendAiMsg('bot', 'Ã¢Å¡Â Ã¯Â¸Â Errore di rete: ' + err);
     inp.disabled = false; btn.disabled = false;
   });
 }
@@ -4433,7 +4227,7 @@ setInterval(updateClock,1000);updateClock();
     if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true) return;
     if (document.getElementById('pwa-install-banner')) return;
     var b = document.createElement('div'); b.id='pwa-install-banner';
-    b.innerHTML = '<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(15,23,42,.35);max-width:480px;margin:0 auto"><div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â²</div><div style="flex:1;min-width:0"><div style="font-weight:800;font-size:14px;letter-spacing:-.1px;line-height:1.2">Installa l app</div><div style="font-size:11.5px;color:rgba(255,255,255,.75);margin-top:2px">Apri piu velocemente, usa offline</div></div><button id="pwa-yes" style="background:#fff;color:#0f4c81;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:12.5px;cursor:pointer;flex-shrink:0">Installa</button><button id="pwa-no" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</button></div>';
+    b.innerHTML = '<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(15,23,42,.35);max-width:480px;margin:0 auto"><div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">Ã°Å¸â€œÂ²</div><div style="flex:1;min-width:0"><div style="font-weight:800;font-size:14px;letter-spacing:-.1px;line-height:1.2">Installa l app</div><div style="font-size:11.5px;color:rgba(255,255,255,.75);margin-top:2px">Apri piu velocemente, usa offline</div></div><button id="pwa-yes" style="background:#fff;color:#0f4c81;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:12.5px;cursor:pointer;flex-shrink:0">Installa</button><button id="pwa-no" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">Ãƒâ€”</button></div>';
     document.body.appendChild(b);
     document.getElementById('pwa-yes').onclick=function(){window.installApp();};
     document.getElementById('pwa-no').onclick=function(){b.remove();};
@@ -4445,13 +4239,13 @@ setInterval(updateClock,1000);updateClock();
         if(document.getElementById('pwa-install-banner'))return;
         if(window.matchMedia('(display-mode: standalone)').matches)return;
         var b=document.createElement('div');b.id='pwa-install-banner';
-        b.innerHTML='<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border-radius:14px;padding:13px 14px;box-shadow:0 8px 24px rgba(15,23,42,.35);max-width:480px;margin:0 auto"><div style="display:flex;align-items:center;gap:12px;margin-bottom:7px"><div style="width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â²</div><div style="flex:1;font-weight:800;font-size:14px">Installa Accesso Fiere</div><button id="pwa-ios-no" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</button></div><div style="font-size:12px;color:rgba(255,255,255,.85);line-height:1.45">Tocca <strong>Condividi</strong> <span style="display:inline-block;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:11px">ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â </span> in basso, poi <strong>"Aggiungi a Home"</strong></div></div>';
+        b.innerHTML='<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border-radius:14px;padding:13px 14px;box-shadow:0 8px 24px rgba(15,23,42,.35);max-width:480px;margin:0 auto"><div style="display:flex;align-items:center;gap:12px;margin-bottom:7px"><div style="width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">Ã°Å¸â€œÂ²</div><div style="flex:1;font-weight:800;font-size:14px">Installa Accesso Fiere</div><button id="pwa-ios-no" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">Ãƒâ€”</button></div><div style="font-size:12px;color:rgba(255,255,255,.85);line-height:1.45">Tocca <strong>Condividi</strong> <span style="display:inline-block;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:11px">Ã¢Â¬â€ </span> in basso, poi <strong>"Aggiungi a Home"</strong></div></div>';
         document.body.appendChild(b);
         document.getElementById('pwa-ios-no').onclick=function(){b.remove();};
     },2500);
   }
 
-  // ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Push Notifications onboarding ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Push Notifications onboarding Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   // Mostra il banner solo se: app installata (standalone), notifiche supportate, permission default
   function isStandalone(){
     return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
@@ -4464,7 +4258,7 @@ setInterval(updateClock,1000);updateClock();
     if (document.getElementById('pwa-push-banner')) return;
     setTimeout(function(){
       var b=document.createElement('div'); b.id='pwa-push-banner';
-      b.innerHTML=`<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(22,163,74,.35);max-width:480px;margin:0 auto"><div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â€šÂ¬Ã‚Â</div><div style="flex:1;min-width:0"><div style="font-weight:800;font-size:14px;letter-spacing:-.1px">Attiva notifiche</div><div style="font-size:11.5px;color:rgba(255,255,255,.85);margin-top:2px">Ricevi aggiornamenti su ferie e scadenze</div></div><button id="pn-yes" style="background:#fff;color:#16a34a;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:12.5px;cursor:pointer;flex-shrink:0">Attiva</button><button id="pn-no" style="background:transparent;color:rgba(255,255,255,.7);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</button></div>`;
+      b.innerHTML=`<div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(22,163,74,.35);max-width:480px;margin:0 auto"><div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">Ã°Å¸â€â€</div><div style="flex:1;min-width:0"><div style="font-weight:800;font-size:14px;letter-spacing:-.1px">Attiva notifiche</div><div style="font-size:11.5px;color:rgba(255,255,255,.85);margin-top:2px">Ricevi aggiornamenti su ferie e scadenze</div></div><button id="pn-yes" style="background:#fff;color:#16a34a;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:12.5px;cursor:pointer;flex-shrink:0">Attiva</button><button id="pn-no" style="background:transparent;color:rgba(255,255,255,.7);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">Ãƒâ€”</button></div>`;
       document.body.appendChild(b);
       document.getElementById('pn-yes').onclick=function(){
         b.remove();
@@ -4530,1852 +4324,203 @@ setInterval(updateClock,1000);updateClock();
   else window.addEventListener('load', showPushBanner);
 })();
 </script>
-<style>
-/* Stabilita e performance: override finale dopo tutti gli stili pagina */
-@media (min-width:901px){
-  body:not(.theme-light) .topbar,
-  body:not(.theme-light) .card,
-  body:not(.theme-light) .stat-card,
-  body:not(.theme-light) .table-wrap,
-  body:not(.theme-light) .filter-bar,
-  body:not(.theme-light) .hero-bar,
-  body:not(.theme-light) .page-header,
-  body:not(.theme-light) .insight-card,
-  body:not(.theme-light) .timeline-card{
-    backdrop-filter:none!important;
-  }
-  body:not(.theme-light) .card,
-  body:not(.theme-light) .stat-card,
-  body:not(.theme-light) .kpi-card,
-  body:not(.theme-light) .hero-bar,
-  body:not(.theme-light) .insight-card,
-  body:not(.theme-light) .timeline-card{
-    box-shadow:0 12px 28px -24px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.04)!important;
-  }
-  body:not(.theme-light) .card:hover,
-  body:not(.theme-light) .stat-card:hover,
-  body:not(.theme-light) .kpi-card:hover{
-    transform:none!important;
-    box-shadow:0 12px 28px -24px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.04)!important;
-  }
-  body:not(.theme-light) *,
-  body:not(.theme-light) *::before,
-  body:not(.theme-light) *::after{
-    transition-duration:.08s!important;
-    animation-duration:.01ms!important;
-    animation-iteration-count:1!important;
-  }
-  body.sidebar-collapsed .sidebar{
-    width:68px!important;
-    overflow-x:visible!important;
-  }
-  body.sidebar-collapsed .main{margin-left:68px!important}
-  body.sidebar-collapsed .sidebar-logo{
-    justify-content:center!important;
-    padding:14px 8px!important;
-  }
-  body.sidebar-collapsed .sidebar-logo>div,
-  body.sidebar-collapsed .sidebar-user .uinfo,
-  body.sidebar-collapsed .sidebar-user .udot,
-  body.sidebar-collapsed .nav-section,
-  body.sidebar-collapsed .notif-badge,
-  body.sidebar-collapsed .nav-chev{
-    display:none!important;
-  }
-  body.sidebar-collapsed nav{
-    padding:10px 8px!important;
-  }
-  body.sidebar-collapsed nav a,
-  body.sidebar-collapsed .nav-group>summary{
-    width:44px!important;
-    height:42px!important;
-    min-width:44px!important;
-    padding:0!important;
-    margin:3px auto!important;
-    border-left:0!important;
-    border-radius:12px!important;
-    justify-content:center!important;
-    align-items:center!important;
-    gap:0!important;
-    font-size:0!important;
-    line-height:0!important;
-    color:transparent!important;
-    overflow:visible!important;
-    white-space:nowrap!important;
-  }
-  body.sidebar-collapsed nav a i,
-  body.sidebar-collapsed .nav-group>summary i:first-child{
-    width:auto!important;
-    min-width:0!important;
-    margin:0!important;
-    font-size:15px!important;
-    line-height:1!important;
-    color:#aebccc!important;
-  }
-  body.sidebar-collapsed nav a.active i,
-  body.sidebar-collapsed .nav-group>summary.active i:first-child{
-    color:#eef7ff!important;
-  }
-  body.sidebar-collapsed nav a.active::after{
-    right:-5px!important;
-    width:3px!important;
-    height:20px!important;
-    border-radius:99px!important;
-  }
-}
-@media (max-width:1200px) and (min-width:901px){
-  body.sidebar-collapsed .content{padding:18px!important}
-  body.sidebar-collapsed .hero-bar{align-items:flex-start!important}
-  body.sidebar-collapsed .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
-  body.sidebar-collapsed .dash-live-grid{grid-template-columns:1fr!important}
-}
-</style>
 </body></html>"""
 
-# Homepage pubblica premium: sistema operativo verticale per allestitori fieristici.
-# Public UI templates are stored in templates/public and static/accesso.
-# These compact fallbacks keep old single-file deploys alive if those folders are missing.
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+#  LOGIN
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 LOGIN_TMPL = """<!DOCTYPE html>
 <html lang="{{ t.get('dir','ltr') == 'rtl' and 'ar' or 'it' }}" dir="{{ t.dir }}">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Accesso Fiere - Sistema operativo per allestitori fieristici</title>
-  <meta name="description" content="Accesso Fiere centralizza squadre, documenti, presenze, cantieri fieristici, mezzi e fatturazione in un unico sistema operativo.">
-  <meta name="keywords" content="software allestitori fieristici, gestionale allestimenti, gestione squadre fiere, documenti cantieri fieristici, presenze fiere, fatturazione elettronica allestitori">
-  <meta name="robots" content="index,follow">
-  <meta name="theme-color" content="#07111F">
-  <link rel="canonical" href="https://www.accessofiere.com/home">
-  <meta property="og:title" content="Accesso Fiere - Il sistema operativo per allestitori fieristici">
-  <meta property="og:description" content="Controlla squadre, documenti, presenze, cantieri fieristici e fatturazione in un unico sistema operativo.">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://www.accessofiere.com/home">
-  <meta property="og:site_name" content="Accesso Fiere">
-  <meta name="twitter:card" content="summary_large_image">
-  <link rel="privacy-policy" href="/privacy-policy">
-  <link rel="terms-of-service" href="/terms-and-conditions">
-  <link rel="help" href="/cookie-policy">
-  <script type="application/ld+json">
-  {
-    "@context":"https://schema.org",
-    "@type":"SoftwareApplication",
-    "name":"Accesso Fiere",
-    "applicationCategory":"BusinessApplication",
-    "operatingSystem":"Web, iOS, Android",
-    "description":"Software operativo verticale per allestitori fieristici: squadre, documenti, presenze, cantieri, mezzi e fatturazione elettronica.",
-    "url":"https://www.accessofiere.com/home",
-    "offers":{"@type":"Offer","availability":"https://schema.org/InStock","priceCurrency":"EUR"},
-    "audience":{"@type":"BusinessAudience","audienceType":"Aziende di allestimento fieristico"}
-  }
-  </script>
-  <style>
-:root{
-      --bg:#07111f;
-      --bg-2:#0b1730;
-      --bg-3:#0f223d;
-      --panel:rgba(15,34,61,.72);
-      --panel-strong:rgba(13,29,51,.92);
-      --line:rgba(166,189,218,.18);
-      --line-strong:rgba(166,189,218,.28);
-      --text:#eef5ff;
-      --muted:#9fb1c8;
-      --muted-2:#7488a3;
-      --cyan:#47c7e8;
-      --blue:#5c8cff;
-      --green:#37d989;
-      --amber:#f5b444;
-      --red:#f15f6d;
-      --shadow:0 24px 70px rgba(0,0,0,.30);
-      --radius:22px;
-    }
-    *{box-sizing:border-box}
-    html{scroll-behavior:smooth}
-    body{
-      margin:0;
-      font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-      background:var(--bg);
-      color:var(--text);
-      line-height:1.5;
-      overflow-x:hidden;
-      text-rendering:geometricPrecision;
-    }
-    body:before{
-      content:"";
-      position:fixed;
-      inset:0;
-      pointer-events:none;
-      background:
-        radial-gradient(circle at 80% 6%,rgba(71,199,232,.16),transparent 32%),
-        radial-gradient(circle at 12% 18%,rgba(92,140,255,.12),transparent 28%),
-        linear-gradient(135deg,#07111f 0%,#0b1730 50%,#07111f 100%);
-      z-index:-2;
-    }
-    body:after{
-      content:"";
-      position:fixed;
-      inset:0;
-      pointer-events:none;
-      background:
-        linear-gradient(rgba(255,255,255,.028) 1px,transparent 1px),
-        linear-gradient(90deg,rgba(255,255,255,.026) 1px,transparent 1px);
-      background-size:72px 72px;
-      mask-image:linear-gradient(to bottom,rgba(0,0,0,.92),transparent 82%);
-      z-index:-1;
-    }
-    a{color:inherit}
-    .fa,.fa-solid,.fa-brands{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      width:1em;
-      height:1em;
-      font-style:normal;
-      vertical-align:-.1em;
-    }
-    .fa:before,.fa-solid:before,.fa-brands:before{
-      content:"";
-      width:.48em;
-      height:.48em;
-      border-radius:999px;
-      background:currentColor;
-      box-shadow:0 0 0 3px rgba(71,199,232,.08);
-    }
-    .public-shell{min-height:100vh}
-    .container{width:min(1180px,calc(100% - 44px));margin:0 auto}
-    .nav{
-      position:sticky;
-      top:0;
-      z-index:30;
-      backdrop-filter:blur(18px);
-      background:rgba(7,17,31,.78);
-      border-bottom:1px solid var(--line);
-    }
-    .nav-inner{
-      min-height:72px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:22px;
-    }
-    .brand{display:flex;align-items:center;gap:12px;text-decoration:none;min-width:190px}
-    .brand-mark{
-      position:relative;
-      width:38px;
-      height:38px;
-      border:1px solid rgba(71,199,232,.32);
-      border-radius:12px;
-      display:grid;
-      place-items:center;
-      color:#dff8ff;
-      background:linear-gradient(145deg,rgba(71,199,232,.18),rgba(92,140,255,.12));
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
-      overflow:hidden;
-    }
-    .brand-mark:before{
-      content:"";
-      position:absolute;
-      inset:8px 7px;
-      border-left:1px solid rgba(199,245,255,.34);
-      border-right:1px solid rgba(199,245,255,.18);
-      background:linear-gradient(90deg,transparent 0 42%,rgba(71,199,232,.36) 42% 48%,transparent 48% 100%);
-      opacity:.72;
-    }
-    .brand-mark:before{
-      inset:10px 18px 10px 9px;
-      border-left:2px solid rgba(223,248,255,.74);
-      border-right:0;
-      background:linear-gradient(180deg,transparent 0 42%,rgba(71,199,232,.82) 42% 58%,transparent 58% 100%);
-    }
-    .brand-monogram{
-      position:relative;
-      z-index:1;
-      width:24px;
-      height:24px;
-      display:grid;
-      place-items:center;
-      margin-left:6px;
-      border-radius:8px;
-      font-size:10px;
-      font-weight:900;
-      line-height:1;
-      letter-spacing:-.04em;
-      color:#ffffff;
-      background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.02));
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.18);
-    }
-    .brand-text strong{display:block;font-size:15px;font-weight:900;letter-spacing:.01em}
-    .brand-text span{display:block;font-size:11px;color:var(--muted);font-weight:700;margin-top:1px}
-    .nav-links{display:flex;align-items:center;gap:4px}
-    .nav-links a{
-      text-decoration:none;
-      color:#b8c7dc;
-      font-size:13px;
-      font-weight:750;
-      padding:9px 11px;
-      border-radius:10px;
-      transition:background .18s ease,color .18s ease;
-    }
-    .nav-links a:hover{background:rgba(255,255,255,.06);color:#fff}
-    .nav-actions{display:flex;align-items:center;gap:10px}
-    .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:9px;
-      min-height:42px;
-      padding:0 15px;
-      border-radius:12px;
-      border:1px solid transparent;
-      text-decoration:none;
-      font-weight:850;
-      font-size:13.5px;
-      transition:transform .18s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease;
-      cursor:pointer;
-      font-family:inherit;
-      white-space:nowrap;
-    }
-    .btn:hover{transform:translateY(-1px)}
-    .btn-primary{
-      color:#06101d;
-      background:linear-gradient(135deg,#78def2,#62a3ff);
-      box-shadow:0 12px 30px rgba(71,199,232,.18);
-    }
-    .btn-secondary{
-      color:#dbeafe;
-      background:rgba(255,255,255,.055);
-      border-color:var(--line);
-    }
-    .btn-secondary:hover{border-color:rgba(166,189,218,.38);background:rgba(255,255,255,.075)}
-    .btn-quiet{
-      color:#b9c9dc;
-      background:transparent;
-      border-color:var(--line);
-    }
-    .hero{
-      position:relative;
-      padding:78px 0 48px;
-      display:grid;
-      grid-template-columns:minmax(0,1.02fr) minmax(430px,.98fr);
-      gap:52px;
-      align-items:center;
-    }
-    .hero:before{
-      content:"";
-      position:absolute;
-      left:-8%;
-      right:-8%;
-      bottom:0;
-      height:1px;
-      background:linear-gradient(90deg,transparent,rgba(71,199,232,.34),rgba(92,140,255,.22),transparent);
-      opacity:.9;
-    }
-    .eyebrow{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      max-width:100%;
-      color:#bcefff;
-      border:1px solid rgba(71,199,232,.26);
-      background:rgba(71,199,232,.075);
-      border-radius:999px;
-      padding:8px 12px;
-      font-size:11px;
-      font-weight:900;
-      letter-spacing:.11em;
-      text-transform:uppercase;
-      margin-bottom:20px;
-    }
-    .eyebrow i{font-size:10px;color:var(--cyan)}
-    h1,h2,h3,p{margin:0}
-    .hero h1{
-      font-size:clamp(44px,5.1vw,76px);
-      line-height:.98;
-      letter-spacing:-.035em;
-      font-weight:900;
-      max-width:780px;
-    }
-    .gradient-text{
-      background:linear-gradient(135deg,#ffffff 12%,#c9eaff 48%,#8fb7ff 100%);
-      -webkit-background-clip:text;
-      background-clip:text;
-      color:transparent;
-    }
-    .hero-sub{
-      margin-top:24px;
-      max-width:680px;
-      color:#b8c7dd;
-      font-size:18px;
-      line-height:1.7;
-    }
-    .hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
-    .trust{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      color:#91a5bf;
-      font-size:13.5px;
-      margin-top:18px;
-      font-weight:650;
-    }
-    .trust:before{
-      content:"";
-      width:8px;
-      height:8px;
-      border-radius:999px;
-      background:var(--green);
-      box-shadow:0 0 0 5px rgba(55,217,137,.11);
-      flex:0 0 auto;
-    }
-    .hero-proof{
-      display:grid;
-      grid-template-columns:repeat(3,minmax(0,1fr));
-      gap:10px;
-      margin-top:34px;
-      max-width:690px;
-    }
-    .proof-pill{
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.045);
-      border-radius:16px;
-      padding:14px 15px;
-    }
-    .proof-pill strong{display:block;font-size:20px;line-height:1;color:#fff;letter-spacing:-.03em}
-    .proof-pill span{display:block;color:#8fa2ba;font-size:12px;font-weight:700;margin-top:8px}
-    .device-wrap{position:relative;perspective:1200px}
-    .device-wrap:before{
-      content:"";
-      position:absolute;
-      inset:8% 4% auto auto;
-      width:58%;
-      height:58%;
-      border-radius:50%;
-      background:rgba(71,199,232,.13);
-      filter:blur(56px);
-      pointer-events:none;
-    }
-    .desktop-device{
-      position:relative;
-      z-index:2;
-      border:1px solid rgba(166,189,218,.22);
-      background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.045));
-      border-radius:26px;
-      padding:12px;
-      box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.14);
-      transform:rotateX(5deg) rotateY(-7deg) rotateZ(1deg);
-      transform-style:preserve-3d;
-      transition:transform .22s ease,border-color .22s ease;
-    }
-    .desktop-device:hover{transform:rotateX(3deg) rotateY(-4deg) translateY(-4px)}
-    .device-top{
-      height:34px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      color:#8da0ba;
-      font-size:11px;
-      padding:0 8px 8px;
-      font-weight:800;
-      letter-spacing:.02em;
-    }
-    .dots{display:flex;gap:6px}
-    .dots span{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.26)}
-    .dash-screen{
-      overflow:hidden;
-      border-radius:18px;
-      border:1px solid rgba(166,189,218,.18);
-      background:#091525;
-    }
-    .dash-header{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding:18px;
-      border-bottom:1px solid rgba(166,189,218,.14);
-      background:rgba(255,255,255,.025);
-    }
-    .dash-header h3{font-size:14px;font-weight:900}
-    .live-pill{
-      display:inline-flex;
-      align-items:center;
-      gap:7px;
-      color:#bff8df;
-      background:rgba(55,217,137,.12);
-      border:1px solid rgba(55,217,137,.24);
-      border-radius:999px;
-      padding:6px 9px;
-      font-size:10px;
-      font-weight:900;
-      text-transform:uppercase;
-      letter-spacing:.06em;
-    }
-    .live-dot{width:7px;height:7px;border-radius:999px;background:var(--green)}
-    .dash-body{padding:16px;display:grid;gap:14px}
-    .mini-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-    .mini-kpi{
-      min-height:84px;
-      padding:12px;
-      border:1px solid rgba(166,189,218,.14);
-      border-radius:14px;
-      background:rgba(255,255,255,.04);
-    }
-    .mini-kpi span{display:block;color:#8fa2ba;font-size:10px;font-weight:850;text-transform:uppercase;letter-spacing:.05em}
-    .mini-kpi strong{display:block;color:#fff;font-size:26px;letter-spacing:-.05em;margin-top:8px}
-    .mini-kpi small{display:block;color:#91a5bf;font-size:11px;font-weight:700;margin-top:2px}
-    .operational-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:12px}
-    .line-chart,.status-list{
-      border:1px solid rgba(166,189,218,.14);
-      border-radius:16px;
-      background:rgba(255,255,255,.035);
-      padding:13px;
-      min-height:176px;
-    }
-    .chart-bars{height:112px;display:flex;align-items:end;gap:8px;margin-top:18px}
-    .chart-bars span{
-      flex:1;
-      min-width:0;
-      border-radius:8px 8px 2px 2px;
-      background:linear-gradient(180deg,rgba(71,199,232,.95),rgba(92,140,255,.46));
-      opacity:.82;
-    }
-    .status-item{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:8px;
-      padding:10px 0;
-      border-bottom:1px solid rgba(166,189,218,.10);
-      color:#d5e3f5;
-      font-size:12px;
-      font-weight:750;
-    }
-    .status-item:last-child{border-bottom:0}
-    .tag{border-radius:999px;padding:4px 7px;font-size:10px;font-weight:900}
-    .tag.ok{background:rgba(55,217,137,.13);color:#a7f3cf}
-    .tag.warn{background:rgba(245,180,68,.13);color:#fedc8f}
-    .tag.bad{background:rgba(241,95,109,.13);color:#ffc1c7}
-    .workflow-row{
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:10px;
-    }
-    .flow-card{
-      min-height:82px;
-      border:1px solid rgba(166,189,218,.12);
-      border-radius:14px;
-      padding:11px;
-      background:rgba(255,255,255,.03);
-    }
-    .flow-card i{color:var(--cyan);font-size:13px}
-    .flow-card strong{display:block;font-size:12px;margin-top:9px}
-    .flow-card span{display:block;color:#7f93ae;font-size:10.5px;font-weight:700;margin-top:3px}
-    .float-chip{
-      position:absolute;
-      z-index:4;
-      display:flex;
-      align-items:center;
-      gap:9px;
-      border:1px solid rgba(166,189,218,.22);
-      background:rgba(7,17,31,.78);
-      backdrop-filter:blur(14px);
-      border-radius:16px;
-      padding:11px 13px;
-      box-shadow:0 18px 42px rgba(0,0,0,.22);
-      color:#dceaff;
-      font-size:12px;
-      font-weight:850;
-    }
-    .float-chip i{color:var(--cyan)}
-    .float-chip.one{left:-18px;top:78px}
-    .float-chip.two{right:-12px;bottom:92px}
-    .float-chip.three{left:44px;bottom:-18px}
-    .access-grid-card{
-      position:relative;
-      border:1px solid rgba(71,199,232,.22);
-      border-radius:28px;
-      overflow:hidden;
-      background:
-        radial-gradient(circle at 16% 20%,rgba(71,199,232,.12),transparent 30%),
-        linear-gradient(180deg,rgba(15,34,61,.78),rgba(9,21,36,.95));
-      box-shadow:0 24px 72px rgba(0,0,0,.24);
-      padding:28px;
-    }
-    .access-grid-card:before{
-      content:"";
-      position:absolute;
-      inset:0;
-      background:
-        linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),
-        linear-gradient(90deg,rgba(255,255,255,.032) 1px,transparent 1px);
-      background-size:58px 58px;
-      mask-image:linear-gradient(90deg,transparent,black 14%,black 86%,transparent);
-      pointer-events:none;
-    }
-    .brand-system{
-      display:grid;
-      grid-template-columns:minmax(0,.9fr) minmax(420px,1.1fr);
-      gap:28px;
-      align-items:center;
-    }
-    .brand-system h2{font-size:clamp(30px,3.2vw,48px)}
-    .brand-system p{margin-top:14px;color:#9fb1c8;font-size:16px;line-height:1.68}
-    .flow-map{
-      position:relative;
-      min-height:320px;
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:18px;
-      align-items:center;
-    }
-    .flow-map:before{
-      content:"";
-      position:absolute;
-      left:8%;
-      right:8%;
-      top:50%;
-      height:2px;
-      background:linear-gradient(90deg,rgba(71,199,232,.18),rgba(71,199,232,.88),rgba(92,140,255,.58),rgba(71,199,232,.18));
-      box-shadow:0 0 22px rgba(71,199,232,.18);
-    }
-    .flow-node{
-      position:relative;
-      z-index:1;
-      min-height:116px;
-      border:1px solid rgba(166,189,218,.18);
-      background:rgba(8,21,36,.76);
-      border-radius:22px;
-      padding:16px;
-    }
-    .flow-node:before{
-      content:"";
-      width:12px;
-      height:12px;
-      border-radius:999px;
-      background:var(--cyan);
-      box-shadow:0 0 0 7px rgba(71,199,232,.10);
-      display:block;
-      margin-bottom:18px;
-    }
-    .flow-node strong{display:block;font-size:14px}
-    .flow-node span{display:block;margin-top:6px;color:#8fa2ba;font-size:12px;font-weight:750}
-    .kpi-strip{
-      margin:26px auto 0;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.055);
-      backdrop-filter:blur(16px);
-      border-radius:24px;
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      overflow:hidden;
-    }
-    .kpi-box{padding:24px 24px;border-right:1px solid var(--line)}
-    .kpi-box:last-child{border-right:0}
-    .kpi-box strong{display:block;font-size:32px;line-height:1;font-weight:900;letter-spacing:-.045em}
-    .kpi-box span{display:block;margin-top:10px;color:#9fb1c8;font-size:13px;font-weight:700}
-    .section{padding:92px 0}
-    .section.compact{padding-top:66px}
-    .section-head{max-width:760px;margin-bottom:32px}
-    .section-label{
-      color:#87dff3;
-      font-size:12px;
-      font-weight:900;
-      text-transform:uppercase;
-      letter-spacing:.12em;
-      margin-bottom:12px;
-    }
-    .section h2{
-      font-size:clamp(32px,3.6vw,52px);
-      line-height:1.04;
-      letter-spacing:-.035em;
-      font-weight:900;
-      color:#fff;
-    }
-    .section-copy{
-      margin-top:15px;
-      color:#9fb1c8;
-      font-size:17px;
-      line-height:1.72;
-      max-width:720px;
-    }
-    .split{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:18px;
-      align-items:stretch;
-    }
-    .glass{
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      background:var(--panel);
-      box-shadow:0 16px 48px rgba(0,0,0,.18);
-      overflow:hidden;
-    }
-    .glass-pad{padding:24px}
-    .panel-title{display:flex;align-items:center;gap:10px;font-weight:900;font-size:18px;color:#fff}
-    .panel-title i{color:var(--cyan)}
-    .chaos-stack{display:grid;gap:10px;margin-top:22px}
-    .chaos-item{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:14px;
-      border:1px solid rgba(241,95,109,.14);
-      background:rgba(241,95,109,.055);
-      border-radius:14px;
-      padding:13px 14px;
-      color:#d7e3f2;
-      font-size:13px;
-      font-weight:750;
-    }
-    .chaos-item i{color:#ff9aa3}
-    .clean-table{margin-top:22px;border:1px solid rgba(166,189,218,.12);border-radius:16px;overflow:hidden}
-    .clean-row{
-      display:grid;
-      grid-template-columns:1fr auto;
-      gap:12px;
-      align-items:center;
-      padding:13px 14px;
-      border-bottom:1px solid rgba(166,189,218,.10);
-      font-size:13px;
-      color:#d9e6f7;
-      font-weight:750;
-    }
-    .clean-row:last-child{border-bottom:0}
-    .modules-grid{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:16px;
-    }
-    .module-card{
-      min-height:316px;
-      border:1px solid var(--line);
-      border-radius:22px;
-      background:rgba(15,34,61,.64);
-      overflow:hidden;
-      transition:transform .2s ease,border-color .2s ease,background .2s ease;
-    }
-    .module-card:hover{transform:translateY(-3px);border-color:rgba(71,199,232,.34);background:rgba(18,40,70,.78)}
-    .module-preview{
-      height:150px;
-      padding:16px;
-      border-bottom:1px solid rgba(166,189,218,.12);
-      background:
-        linear-gradient(135deg,rgba(71,199,232,.10),rgba(92,140,255,.07)),
-        rgba(255,255,255,.02);
-    }
-    .module-window{
-      width:100%;
-      height:100%;
-      border:1px solid rgba(166,189,218,.16);
-      border-radius:15px;
-      background:#081524;
-      padding:12px;
-      display:grid;
-      gap:8px;
-      align-content:start;
-    }
-    .module-line{height:9px;border-radius:999px;background:rgba(166,189,218,.18)}
-    .module-line.short{width:58%}
-    .module-line.med{width:78%}
-    .module-stat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
-    .module-stat span{height:38px;border-radius:10px;background:rgba(71,199,232,.11);border:1px solid rgba(71,199,232,.14)}
-    .module-content{padding:22px}
-    .module-content i{color:var(--cyan);font-size:18px;margin-bottom:13px}
-    .module-content h3{font-size:19px;letter-spacing:-.02em;font-weight:900;margin-bottom:8px}
-    .module-content p{color:#9fb1c8;font-size:14px;line-height:1.6}
-    .mobile-layout{
-      display:grid;
-      grid-template-columns:minmax(0,.88fr) minmax(380px,1.12fr);
-      gap:46px;
-      align-items:center;
-    }
-    .phone-stage{
-      min-height:520px;
-      position:relative;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-    .phone{
-      width:230px;
-      min-height:454px;
-      border:1px solid rgba(166,189,218,.28);
-      border-radius:36px;
-      background:#050c16;
-      padding:12px;
-      box-shadow:0 28px 70px rgba(0,0,0,.28);
-    }
-    .phone.secondary{
-      position:absolute;
-      left:24px;
-      top:74px;
-      transform:rotate(-7deg) scale(.88);
-      opacity:.88;
-    }
-    .phone.primary{
-      position:relative;
-      transform:rotate(4deg);
-      z-index:2;
-    }
-    .phone-screen{
-      border-radius:26px;
-      min-height:428px;
-      background:linear-gradient(180deg,#0e223d,#091522);
-      border:1px solid rgba(166,189,218,.14);
-      overflow:hidden;
-      padding:16px;
-    }
-    .phone-notch{width:72px;height:6px;border-radius:999px;background:rgba(255,255,255,.20);margin:0 auto 18px}
-    .phone-title{font-size:13px;font-weight:900;color:#fff;margin-bottom:14px}
-    .phone-card{
-      border:1px solid rgba(166,189,218,.13);
-      background:rgba(255,255,255,.055);
-      border-radius:16px;
-      padding:13px;
-      margin-bottom:10px;
-    }
-    .phone-card strong{display:block;font-size:20px;letter-spacing:-.04em}
-    .phone-card span{display:block;color:#9fb1c8;font-size:11px;font-weight:750;margin-top:3px}
-    .feature-list{display:grid;gap:12px;margin-top:26px}
-    .feature-row{
-      display:flex;
-      align-items:flex-start;
-      gap:13px;
-      padding:14px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.04);
-      border-radius:16px;
-    }
-    .feature-row i{color:var(--green);margin-top:3px}
-    .feature-row strong{display:block;font-size:14px}
-    .feature-row span{display:block;color:#9fb1c8;font-size:13px;margin-top:2px}
-    .control-room{
-      border:1px solid var(--line);
-      border-radius:28px;
-      background:linear-gradient(180deg,rgba(15,34,61,.78),rgba(10,24,42,.92));
-      overflow:hidden;
-      box-shadow:var(--shadow);
-    }
-    .control-top{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:16px;
-      padding:20px 22px;
-      border-bottom:1px solid rgba(166,189,218,.14);
-    }
-    .control-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:16px;padding:18px}
-    .control-main,.control-side{
-      border:1px solid rgba(166,189,218,.13);
-      border-radius:20px;
-      background:#091524;
-      padding:16px;
-    }
-    .wide-chart{
-      height:270px;
-      display:flex;
-      align-items:end;
-      gap:12px;
-      padding-top:28px;
-    }
-    .wide-chart span{
-      flex:1;
-      border-radius:12px 12px 3px 3px;
-      background:linear-gradient(180deg,rgba(71,199,232,.90),rgba(71,199,232,.18));
-      border:1px solid rgba(71,199,232,.22);
-    }
-    .alert-feed{display:grid;gap:10px;margin-top:16px}
-    .feed-item{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding:12px;
-      border-radius:14px;
-      border:1px solid rgba(166,189,218,.12);
-      background:rgba(255,255,255,.035);
-      font-size:12px;
-      color:#d8e5f6;
-      font-weight:750;
-    }
-    .automation-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-    .auto-card{
-      border:1px solid var(--line);
-      border-radius:18px;
-      background:rgba(255,255,255,.045);
-      padding:18px;
-      min-height:120px;
-    }
-    .auto-card i{color:var(--cyan);font-size:16px;margin-bottom:14px}
-    .auto-card strong{display:block;font-size:15px;margin-bottom:6px}
-    .auto-card span{color:#9fb1c8;font-size:13px;line-height:1.5}
-    .automation-flow{
-      display:grid;
-      grid-template-columns:minmax(0,.82fr) minmax(420px,1.18fr);
-      gap:22px;
-      align-items:stretch;
-    }
-    .automation-copy{
-      border:1px solid var(--line);
-      border-radius:24px;
-      background:rgba(255,255,255,.045);
-      padding:26px;
-    }
-    .automation-copy p{color:#9fb1c8;font-size:15px;line-height:1.62;margin-top:12px}
-    .auto-visual{
-      position:relative;
-      min-height:390px;
-      border:1px solid rgba(71,199,232,.20);
-      border-radius:28px;
-      background:
-        radial-gradient(circle at 76% 22%,rgba(71,199,232,.12),transparent 32%),
-        rgba(9,21,36,.86);
-      overflow:hidden;
-      padding:24px;
-    }
-    .auto-visual:before{
-      content:"";
-      position:absolute;
-      inset:28px;
-      border-radius:22px;
-      background:
-        linear-gradient(rgba(255,255,255,.034) 1px,transparent 1px),
-        linear-gradient(90deg,rgba(255,255,255,.034) 1px,transparent 1px);
-      background-size:54px 54px;
-      opacity:.75;
-    }
-    .auto-lane{
-      position:relative;
-      z-index:1;
-      display:grid;
-      grid-template-columns:46px 1fr auto;
-      align-items:center;
-      gap:14px;
-      min-height:58px;
-      margin:12px 0;
-      border:1px solid rgba(166,189,218,.14);
-      border-radius:16px;
-      background:rgba(7,17,31,.72);
-      padding:9px 12px;
-    }
-    .auto-lane i{
-      width:38px;
-      height:38px;
-      display:grid;
-      place-items:center;
-      border-radius:13px;
-      color:#dff9ff;
-      background:rgba(71,199,232,.12);
-      border:1px solid rgba(71,199,232,.18);
-    }
-    .auto-lane strong{display:block;font-size:13px}
-    .auto-lane span{display:block;color:#8ea2bb;font-size:11.5px;font-weight:750;margin-top:2px}
-    .demo-shell{
-      display:grid;
-      grid-template-columns:minmax(0,1.1fr) minmax(320px,.9fr);
-      gap:22px;
-      align-items:center;
-      border:1px solid rgba(166,189,218,.18);
-      border-radius:30px;
-      background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.032));
-      padding:22px;
-      overflow:hidden;
-    }
-    .demo-player{
-      position:relative;
-      min-height:380px;
-      border-radius:26px;
-      border:1px solid rgba(166,189,218,.18);
-      background:#081524;
-      overflow:hidden;
-      box-shadow:0 24px 64px rgba(0,0,0,.24);
-    }
-    .demo-player:before{
-      content:"";
-      position:absolute;
-      inset:0;
-      background:
-        radial-gradient(circle at 50% 36%,rgba(71,199,232,.17),transparent 30%),
-        linear-gradient(135deg,rgba(71,199,232,.08),rgba(92,140,255,.08));
-    }
-    .demo-frame{
-      position:absolute;
-      inset:34px;
-      border:1px solid rgba(166,189,218,.16);
-      border-radius:22px;
-      background:rgba(7,17,31,.74);
-      padding:18px;
-      transform:perspective(900px) rotateX(5deg) rotateY(-8deg);
-    }
-    .play-core{
-      position:absolute;
-      left:50%;
-      top:50%;
-      transform:translate(-50%,-50%);
-      width:76px;
-      height:76px;
-      display:grid;
-      place-items:center;
-      border-radius:50%;
-      border:1px solid rgba(255,255,255,.26);
-      background:rgba(255,255,255,.12);
-      backdrop-filter:blur(14px);
-      color:#fff;
-      font-size:24px;
-      box-shadow:0 20px 50px rgba(0,0,0,.28);
-    }
-    .demo-timeline{
-      position:absolute;
-      left:28px;
-      right:28px;
-      bottom:24px;
-      height:6px;
-      border-radius:999px;
-      background:rgba(255,255,255,.13);
-      overflow:hidden;
-    }
-    .demo-timeline span{display:block;width:58%;height:100%;background:linear-gradient(90deg,var(--cyan),var(--blue));border-radius:inherit}
-    .demo-copy{padding:10px}
-    .demo-copy h2{font-size:clamp(30px,3vw,46px)}
-    .demo-copy p{margin-top:14px;color:#9fb1c8;font-size:16px;line-height:1.68}
-    .demo-points{display:grid;gap:10px;margin:22px 0}
-    .demo-points span{display:flex;align-items:center;gap:10px;color:#dbe8f9;font-weight:800;font-size:13px}
-    .demo-points i{color:var(--green)}
-    .quote-panel{
-      display:grid;
-      grid-template-columns:.95fr 1.05fr;
-      gap:28px;
-      align-items:center;
-      border:1px solid var(--line);
-      border-radius:28px;
-      background:rgba(255,255,255,.055);
-      padding:30px;
-    }
-    .quote-mark{
-      width:54px;
-      height:54px;
-      display:grid;
-      place-items:center;
-      border-radius:18px;
-      background:rgba(71,199,232,.12);
-      color:#c7f5ff;
-      border:1px solid rgba(71,199,232,.25);
-      margin-bottom:18px;
-    }
-    blockquote{
-      margin:0;
-      color:#f6fbff;
-      font-size:25px;
-      line-height:1.35;
-      font-weight:850;
-      letter-spacing:-.025em;
-    }
-    cite{display:block;margin-top:18px;color:#93a8c3;font-style:normal;font-size:13px;font-weight:800}
-    .quote-mini{
-      border:1px solid rgba(166,189,218,.14);
-      border-radius:22px;
-      background:#091524;
-      padding:18px;
-    }
-    .quote-mini-row{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      border-bottom:1px solid rgba(166,189,218,.11);
-      padding:13px 0;
-      color:#dbe8f9;
-      font-size:13px;
-      font-weight:750;
-    }
-    .quote-mini-row:last-child{border-bottom:0}
-    .proof-grid{
-      display:grid;
-      grid-template-columns:repeat(5,1fr);
-      gap:12px;
-      margin-top:22px;
-    }
-    .proof-stat{
-      border:1px solid var(--line);
-      border-radius:18px;
-      background:rgba(255,255,255,.04);
-      padding:16px;
-      min-height:104px;
-    }
-    .proof-stat strong{display:block;font-size:30px;line-height:1;letter-spacing:-.05em;color:#fff}
-    .proof-stat span{display:block;color:#8fa2ba;font-size:11.5px;font-weight:800;margin-top:10px}
-    .seo-grid{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:14px;
-    }
-    .seo-card{
-      border:1px solid var(--line);
-      border-radius:18px;
-      background:rgba(255,255,255,.04);
-      padding:18px;
-      min-height:132px;
-      text-decoration:none;
-      transition:transform .18s ease,border-color .18s ease,background .18s ease;
-    }
-    .seo-card:hover{transform:translateY(-2px);border-color:rgba(71,199,232,.32);background:rgba(255,255,255,.06)}
-    .seo-card span{display:block;color:#87dff3;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
-    .seo-card strong{display:block;color:#fff;font-size:16px;line-height:1.35}
-    .seo-card small{display:block;color:#8fa2ba;font-size:12px;line-height:1.5;margin-top:10px}
-    .final-cta{
-      text-align:center;
-      border:1px solid rgba(71,199,232,.24);
-      border-radius:32px;
-      padding:58px 28px;
-      background:
-        radial-gradient(circle at 50% 0%,rgba(71,199,232,.16),transparent 48%),
-        rgba(255,255,255,.055);
-      box-shadow:0 22px 70px rgba(0,0,0,.20);
-    }
-    .final-cta h2{max-width:760px;margin:0 auto;font-size:clamp(34px,4.5vw,62px)}
-    .final-cta p{max-width:700px;margin:16px auto 28px;color:#a8bad0;font-size:17px;line-height:1.7}
-    footer{
-      border-top:1px solid var(--line);
-      padding:42px 0 48px;
-      color:#7f93ae;
-      font-size:13px;
-      background:rgba(3,9,17,.34);
-    }
-    .footer-inner{display:grid;grid-template-columns:1.1fr repeat(4,minmax(140px,.6fr));gap:30px;align-items:start}
-    .footer-brand-copy{max-width:330px;color:#8fa2ba;line-height:1.65;margin-top:14px}
-    .footer-col h4{margin:0 0 12px;color:#dceaff;font-size:12px;text-transform:uppercase;letter-spacing:.10em}
-    .footer-links{display:grid;gap:9px}
-    .footer-links a{text-decoration:none;color:#9fb1c8;font-weight:750}
-    .footer-links a:hover{color:#fff}
-    .footer-bottom{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:18px;
-      flex-wrap:wrap;
-      border-top:1px solid var(--line);
-      margin-top:32px;
-      padding-top:18px;
-      color:#71859d;
-    }
-    .status-dot{display:inline-flex;align-items:center;gap:8px;color:#a9f2ce;font-weight:850}
-    .status-dot:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green)}
-    .legal-inline{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-    .legal-inline a{color:#9fb1c8;text-decoration:none;font-weight:850}
-    .legal-inline a:hover{color:#fff}
-    .cookie-banner{
-      position:fixed;
-      left:22px;
-      right:22px;
-      bottom:22px;
-      z-index:80;
-      width:min(980px,calc(100% - 44px));
-      margin:0 auto;
-      border:1px solid rgba(166,189,218,.24);
-      background:rgba(7,17,31,.94);
-      backdrop-filter:blur(18px);
-      border-radius:20px;
-      box-shadow:0 24px 70px rgba(0,0,0,.36);
-      padding:18px;
-      display:grid;
-      grid-template-columns:minmax(0,1fr) auto;
-      gap:16px;
-      align-items:center;
-    }
-    .cookie-banner[hidden]{display:none}
-    .cookie-banner strong{display:block;color:#fff;font-size:15px;margin-bottom:4px}
-    .cookie-banner p{color:#a8bad0;font-size:13px;line-height:1.55;margin:0}
-    .cookie-banner a{color:#bcefff;font-weight:850;text-decoration:none}
-    .cookie-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
-    .cookie-actions button{
-      min-height:40px;
-      border-radius:12px;
-      padding:0 14px;
-      border:1px solid var(--line);
-      font-family:inherit;
-      font-weight:850;
-      cursor:pointer;
-      color:#dbeafe;
-      background:rgba(255,255,255,.055);
-    }
-    .cookie-actions button.primary{color:#06101d;border-color:transparent;background:linear-gradient(135deg,#78def2,#62a3ff)}
-    .login-only{
-      min-height:100vh;
-      display:grid;
-      place-items:center;
-      padding:22px;
-      background:
-        radial-gradient(circle at 20% 8%,rgba(71,199,232,.10),transparent 32%),
-        radial-gradient(circle at 88% 12%,rgba(92,140,255,.08),transparent 34%),
-        linear-gradient(180deg,#0b1730,#07111f);
-    }
-    .login-card{
-      width:min(410px,100%);
-      border:1px solid var(--line);
-      background:linear-gradient(180deg,rgba(17,38,68,.92),rgba(10,23,41,.96));
-      backdrop-filter:blur(16px);
-      border-radius:22px;
-      padding:26px;
-      box-shadow:0 24px 70px rgba(0,0,0,.28);
-    }
-    .login-brand{justify-content:center;margin-bottom:14px}
-    .public-return{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:34px;
-      margin:0 auto 22px;
-      padding:0 13px;
-      border:1px solid rgba(166,189,218,.18);
-      border-radius:999px;
-      background:rgba(255,255,255,.04);
-      color:#a8c7dd;
-      text-decoration:none;
-      font-size:12px;
-      font-weight:800;
-      transition:background .18s ease,border-color .18s ease,color .18s ease,transform .18s ease;
-    }
-    .public-return:before{content:"\2190";margin-right:7px;color:#74d8ef}
-    .public-return:hover{
-      background:rgba(71,199,232,.10);
-      border-color:rgba(71,199,232,.32);
-      color:#f5fdff;
-      transform:translateY(-1px);
-    }
-    .login-card h2{text-align:center;font-size:24px;letter-spacing:-.03em;margin-bottom:6px}
-    .login-card p{text-align:center;color:#9fb1c8;font-size:13.5px;margin-bottom:22px}
-    .lang-label,.form-label{display:block;font-size:12px;color:#9fb1c8;font-weight:850;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
-    .lang-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
-    .lang-btn{
-      width:100%;
-      min-height:38px;
-      border:1px solid var(--line);
-      border-radius:11px;
-      background:rgba(255,255,255,.045);
-      color:#b9c8dc;
-      font-family:inherit;
-      font-weight:850;
-      cursor:pointer;
-      transition:background .18s ease,border-color .18s ease,color .18s ease;
-    }
-    .lang-btn.active,.lang-btn:hover{background:rgba(71,199,232,.13);border-color:rgba(71,199,232,.34);color:#fff}
-    .form-group{margin-bottom:15px}
-    .form-control{
-      width:100%;
-      min-height:46px;
-      border:1px solid var(--line);
-      border-radius:13px;
-      background:#081524;
-      color:#eff6ff;
-      padding:0 13px;
-      font:inherit;
-      outline:none;
-      transition:border-color .18s ease,box-shadow .18s ease,background .18s ease;
-    }
-    .form-control:-webkit-autofill,
-    .form-control:-webkit-autofill:hover,
-    .form-control:-webkit-autofill:focus{
-      -webkit-box-shadow:0 0 0 1000px #081524 inset!important;
-      -webkit-text-fill-color:#eff6ff!important;
-      caret-color:#eff6ff!important;
-      border-color:rgba(71,199,232,.34)!important;
-      transition:background-color 9999s ease-in-out 0s;
-    }
-    .form-control:focus{border-color:rgba(71,199,232,.45);box-shadow:0 0 0 4px rgba(71,199,232,.10)}
-    .alert{
-      border:1px solid rgba(241,95,109,.26);
-      background:rgba(241,95,109,.12);
-      color:#ffd0d5;
-      border-radius:14px;
-      padding:11px 12px;
-      font-size:13px;
-      font-weight:750;
-      margin-bottom:16px;
-    }
-    .login-submit{width:100%;border:0;margin-top:3px;min-height:46px;justify-content:center}
-    .divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:#7388a3;font-size:12px;font-weight:750}
-    .divider:before,.divider:after{content:"";height:1px;background:var(--line);flex:1}
-    .google-btn,.register-btn{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      width:100%;
-      min-height:44px;
-      border-radius:13px;
-      text-decoration:none;
-      font-weight:850;
-      font-size:13.5px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.045);
-      color:#dbeafe;
-      transition:background .18s ease,border-color .18s ease;
-    }
-    .google-btn:hover,.register-btn:hover{background:rgba(255,255,255,.075);border-color:var(--line-strong)}
-    .legal-copy{text-align:center;color:#8296af;font-size:11.5px;line-height:1.6;margin-top:18px}
-    .legal-copy a{color:#bcefff;font-weight:800;text-decoration:none}
-    @media(max-width:1020px){
-      .nav-links{display:none}
-      .hero{grid-template-columns:1fr;gap:34px;padding-top:52px}
-      .device-wrap{max-width:720px}
-      .desktop-device{transform:none}
-      .float-chip{display:none}
-      .split,.mobile-layout,.control-grid,.quote-panel,.brand-system,.automation-flow,.demo-shell{grid-template-columns:1fr}
-      .phone.secondary{left:calc(50% - 250px)}
-      .footer-inner{grid-template-columns:1fr 1fr}
-    }
-    @media(max-width:760px){
-      .container{width:min(100% - 28px,1180px)}
-      .nav-inner{min-height:66px}
-      .brand{min-width:auto}
-      .brand-text span{display:none}
-      .nav-actions .btn-quiet{display:none}
-      .hero{padding-top:38px}
-      .hero h1{font-size:40px}
-      .hero-sub,.section-copy{font-size:15.5px}
-      .hero-proof,.kpi-strip,.modules-grid,.automation-grid,.mini-kpis,.workflow-row,.flow-map,.proof-grid,.seo-grid{grid-template-columns:1fr}
-      .kpi-box{border-right:0;border-bottom:1px solid var(--line)}
-      .kpi-box:last-child{border-bottom:0}
-      .operational-grid{grid-template-columns:1fr}
-      .access-grid-card{padding:18px}
-      .flow-map{min-height:auto}
-      .flow-map:before{display:none}
-      .section{padding:64px 0}
-      .phone-stage{min-height:480px;overflow:hidden}
-      .phone.secondary{display:none}
-      .phone.primary{transform:none}
-      .control-top{align-items:flex-start;flex-direction:column}
-      .wide-chart{height:210px}
-      .auto-visual,.demo-player{min-height:320px}
-      .demo-frame{inset:20px;transform:none}
-      blockquote{font-size:21px}
-      .footer-inner{grid-template-columns:1fr}
-      .footer-bottom{align-items:flex-start;flex-direction:column}
-      .cookie-banner{grid-template-columns:1fr;left:14px;right:14px;bottom:14px;width:calc(100% - 28px)}
-      .cookie-actions{justify-content:flex-start}
-    }
-    {% if t.dir == 'rtl' %}body,input,button{font-family:'Inter',Arial,sans-serif}{% endif %}
-
-/* Local icon fallback: evita dipendenza da Font Awesome nella homepage pubblica. */
-.fa,.fa-solid{font-style:normal;display:inline-flex;align-items:center;justify-content:center}
-.fa-arrow-right:before,.fa-right-to-bracket:before{content:"->"}
-.fa-calendar-check:before{content:""}
-.fa-play:before{content:""}
-.fa-bolt:before{content:""}
-.fa-user-lock:before{content:""}
-.fa-rocket:before{content:""}
-.fa-ban:before{content:""}
-.fa-file-circle-exclamation:before{content:""}
-.fa-comments:before{content:""}
-.fa-qrcode:before{content:""}
-.fa-shield-halved:before{content:""}
-.fa-mobile-screen:before{content:""}
-.fa-exclamation-circle:before{content:"!"}
-
-  </style>
-</head>
-<body class="{{ 'public-home' if public_home else 'login-only' }}">
-{% if public_home %}
-  <div class="public-shell">
-    <header class="nav">
-      <div class="container nav-inner">
-        <a class="brand" href="/home" aria-label="Accesso Fiere">
-          <span class="brand-mark"><span class="brand-monogram">AF</span></span>
-          <span class="brand-text">
-            <strong>Accesso Fiere</strong>
-            <span>Gestionale Allestitori</span>
-          </span>
-        </a>
-        <nav class="nav-links" aria-label="Navigazione principale">
-          <a href="#problema">Problema</a>
-          <a href="#moduli">Funzionalita</a>
-          <a href="#mobile">Mobile app</a>
-          <a href="#control-room">Control room</a>
-          <a href="#fatturazione">Fatturazione</a>
-          <a href="#demo">Demo</a>
-          <a href="#risorse">Risorse</a>
-        </nav>
-        <div class="nav-actions">
-          <a class="btn btn-quiet" href="/area-clienti"><i class="fa-solid fa-lock"></i> Area clienti</a>
-          <a class="btn btn-primary" href="mailto:info@accessofiere.com?subject=Richiesta%20demo%20Accesso%20Fiere"><i class="fa-solid fa-calendar-check"></i> Prenota demo</a>
-        </div>
-      </div>
-    </header>
-
-    <main>
-      <section class="container hero">
-        <div>
-          <div class="eyebrow"><i class="fa-solid fa-circle"></i> Software operativo verticale per allestitori fieristici</div>
-          <h1><span class="gradient-text">Controlla squadre, documenti, presenze e cantieri fieristici in un unico sistema.</span></h1>
-          <p class="hero-sub">Riduci errori, velocizza le operazioni e centralizza tutto: fiere, accessi, personale, documenti, mezzi, fatturazione e workflow operativi.</p>
-          <div class="hero-actions">
-            <a class="btn btn-primary" href="mailto:info@accessofiere.com?subject=Richiesta%20demo%20Accesso%20Fiere"><i class="fa-solid fa-arrow-right"></i> Prenota demo</a>
-            <a class="btn btn-secondary" href="#control-room"><i class="fa-solid fa-display"></i> Guarda la piattaforma</a>
-          </div>
-          <div class="trust">Usato da aziende di allestimento, montaggio e gestione fieristica.</div>
-          <div class="hero-proof">
-            <div class="proof-pill"><strong>Live</strong><span>controllo operativo in tempo reale</span></div>
-            <div class="proof-pill"><strong>SDI</strong><span>fatture collegate ai flussi operativi</span></div>
-            <div class="proof-pill"><strong>Mobile</strong><span>dipendenti e capisquadra sempre sincronizzati</span></div>
-          </div>
-        </div>
-
-        <div class="device-wrap" aria-label="Mockup dashboard Accesso Fiere">
-          <div class="desktop-device">
-            <div class="device-top">
-              <div class="dots"><span></span><span></span><span></span></div>
-              <span>control-room.accessofiere</span>
-              <span><i class="fa-solid fa-wifi"></i></span>
-            </div>
-            <div class="dash-screen">
-              <div class="dash-header">
-                <h3>Control room operativa</h3>
-                <span class="live-pill"><span class="live-dot"></span> Sincronizzato ora</span>
-              </div>
-              <div class="dash-body">
-                <div class="mini-kpis">
-                  <div class="mini-kpi"><span>Operatori live</span><strong>24</strong><small>6 squadre attive</small></div>
-                  <div class="mini-kpi"><span>Documenti critici</span><strong>3</strong><small>da verificare</small></div>
-                  <div class="mini-kpi"><span>Fiere aperte</span><strong>7</strong><small>setup e smontaggi</small></div>
-                </div>
-                <div class="operational-grid">
-                  <div class="line-chart">
-                    <div class="panel-title"><i class="fa-solid fa-chart-line"></i> Andamento ore</div>
-                    <div class="chart-bars">
-                      <span style="height:32%"></span><span style="height:46%"></span><span style="height:38%"></span><span style="height:70%"></span><span style="height:58%"></span><span style="height:82%"></span><span style="height:66%"></span>
-                    </div>
-                  </div>
-                  <div class="status-list">
-                    <div class="panel-title"><i class="fa-solid fa-list-check"></i> Stato live</div>
-                    <div class="status-item"><span>Badge Milano</span><span class="tag ok">OK</span></div>
-                    <div class="status-item"><span>DPI squadra 3</span><span class="tag warn">Check</span></div>
-                    <div class="status-item"><span>Mezzo VR-412</span><span class="tag ok">Pronto</span></div>
-                    <div class="status-item"><span>Fattura passiva</span><span class="tag bad">Scaduta</span></div>
-                  </div>
-                </div>
-                <div class="workflow-row">
-                  <div class="flow-card"><i class="fa-solid fa-users-gear"></i><strong>Squadre</strong><span>presenze e ruoli</span></div>
-                  <div class="flow-card"><i class="fa-solid fa-folder-shield"></i><strong>Documenti</strong><span>scadenze e alert</span></div>
-                  <div class="flow-card"><i class="fa-solid fa-truck-ramp-box"></i><strong>Mezzi</strong><span>revisioni e flotta</span></div>
-                  <div class="flow-card"><i class="fa-solid fa-file-invoice"></i><strong>Fatture</strong><span>attive, passive, SDI</span></div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="float-chip one"><i class="fa-solid fa-route"></i> Access Flow Grid</div>
-          <div class="float-chip two"><i class="fa-solid fa-file-shield"></i> Compliance live</div>
-          <div class="float-chip three"><i class="fa-solid fa-bolt"></i> Workflow 214 ms</div>
-        </div>
-      </section>
-
-      <section class="container">
-        <div class="kpi-strip" aria-label="Risultati operativi">
-          <div class="kpi-box"><strong>-70%</strong><span>Tempo perso nella gestione documenti</span></div>
-          <div class="kpi-box"><strong>+45%</strong><span>Velocita operativa squadre</span></div>
-          <div class="kpi-box"><strong>1 piattaforma</strong><span>Per fiere, presenze, documenti e fatture</span></div>
-          <div class="kpi-box"><strong>Realtime</strong><span>Aggiornamenti live da web e mobile</span></div>
-        </div>
-      </section>
-
-      <section class="container section compact" aria-label="Access Flow Grid">
-        <div class="access-grid-card">
-          <div class="brand-system">
-            <div>
-              <div class="section-label">Identita proprietaria</div>
-              <h2>Access Flow Grid: il tuo flusso operativo sempre visibile.</h2>
-              <p>Un pattern unico per leggere ogni processo: persone, documenti, mezzi, cantieri e fatture collegati in una linea operativa viva.</p>
-            </div>
-            <div class="flow-map" aria-hidden="true">
-              <div class="flow-node"><strong>Squadre</strong><span>Presenze, ruoli, capisquadra</span></div>
-              <div class="flow-node"><strong>Documenti</strong><span>DPI, scadenze, compliance</span></div>
-              <div class="flow-node"><strong>Cantieri</strong><span>Setup, live, smontaggio</span></div>
-              <div class="flow-node"><strong>Fatture</strong><span>SDI, provider, pagamenti</span></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="container section" id="problema">
-        <div class="section-head">
-          <div class="section-label">Il problema</div>
-          <h2>Il problema non &egrave; il lavoro. &Egrave; il caos operativo.</h2>
-          <p class="section-copy">Excel sparsi, chat WhatsApp, documenti mancanti, scadenze dimenticate, timbrature non sincronizzate e fatture separate dall'operativita. Accesso Fiere unifica tutto in un ecosistema operativo unico.</p>
-        </div>
-        <div class="split">
-          <div class="glass glass-pad">
-            <div class="panel-title"><i class="fa-solid fa-triangle-exclamation"></i> Prima: caos disperso</div>
-            <div class="chaos-stack">
-              <div class="chaos-item"><span><i class="fa-solid fa-file-excel"></i> Excel personale e mezzi</span><span class="tag bad">duplicati</span></div>
-              <div class="chaos-item"><span><i class="fa-brands fa-whatsapp"></i> WhatsApp per presenze e richieste</span><span class="tag warn">non tracciato</span></div>
-              <div class="chaos-item"><span><i class="fa-solid fa-envelope"></i> Email con documenti e scadenze</span><span class="tag bad">perso</span></div>
-              <div class="chaos-item"><span><i class="fa-solid fa-phone"></i> Telefonate per recuperare dati</span><span class="tag warn">lento</span></div>
-            </div>
-          </div>
-          <div class="glass glass-pad">
-            <div class="panel-title"><i class="fa-solid fa-circle-check"></i> Dopo: Accesso Fiere</div>
-            <div class="clean-table">
-              <div class="clean-row"><span>Squadre e presenze</span><span class="tag ok">Live</span></div>
-              <div class="clean-row"><span>Documenti e compliance</span><span class="tag ok">OK</span></div>
-              <div class="clean-row"><span>Scadenze e alert</span><span class="tag warn">2 avvisi</span></div>
-              <div class="clean-row"><span>Fatturazione collegata</span><span class="tag ok">Sincronizzata</span></div>
-              <div class="clean-row"><span>Workflow approvativi</span><span class="tag ok">Tracciati</span></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="container section compact" id="moduli">
-        <div class="section-head">
-          <div class="section-label">Moduli operativi</div>
-          <h2>Tutto quello che serve per gestire un allestimento fieristico.</h2>
-          <p class="section-copy">Ogni area del gestionale nasce per l'operativita reale di aziende che montano, smontano e coordinano cantieri temporanei.</p>
-        </div>
-        <div class="modules-grid">
-          <article class="module-card">
-            <div class="module-preview"><div class="module-window"><div class="module-line short"></div><div class="module-stat"><span></span><span></span><span></span></div><div class="module-line med"></div><div class="module-line"></div></div></div>
-            <div class="module-content"><i class="fa-solid fa-users-gear"></i><h3>Controllo squadre</h3><p>Presenze, capisquadra, ore lavorate, attivita live e storico operativo sempre sotto controllo.</p></div>
-          </article>
-          <article class="module-card">
-            <div class="module-preview"><div class="module-window"><div class="module-line"></div><div class="module-line med"></div><div class="module-stat"><span></span><span></span><span></span></div><div class="module-line short"></div></div></div>
-            <div class="module-content"><i class="fa-solid fa-folder-shield"></i><h3>Documenti e compliance</h3><p>Scadenze, documenti aziendali, DPI, verifiche, alert e stato operativo in tempo reale.</p></div>
-          </article>
-          <article class="module-card">
-            <div class="module-preview"><div class="module-window"><div class="module-stat"><span></span><span></span><span></span></div><div class="module-line"></div><div class="module-line med"></div><div class="module-line short"></div></div></div>
-            <div class="module-content"><i class="fa-solid fa-building-circle-check"></i><h3>Fiere e cantieri</h3><p>Setup, live, smontaggio, turni, incarichi e gestione operativa per ogni evento fieristico.</p></div>
-          </article>
-          <article class="module-card" id="fatturazione">
-            <div class="module-preview"><div class="module-window"><div class="module-line short"></div><div class="module-stat"><span></span><span></span><span></span></div><div class="module-line"></div><div class="module-line med"></div></div></div>
-            <div class="module-content"><i class="fa-solid fa-file-invoice-dollar"></i><h3>Fatturazione elettronica</h3><p>Attive, passive, SDI, pagamenti, scadenze e sincronizzazione provider in un cruscotto unico.</p></div>
-          </article>
-          <article class="module-card">
-            <div class="module-preview"><div class="module-window"><div class="module-line"></div><div class="module-line short"></div><div class="module-stat"><span></span><span></span><span></span></div><div class="module-line med"></div></div></div>
-            <div class="module-content"><i class="fa-solid fa-truck"></i><h3>Mezzi e scadenze</h3><p>Revisioni, assicurazioni, bollo, documenti veicoli, alert e disponibilita della flotta.</p></div>
-          </article>
-          <article class="module-card">
-            <div class="module-preview"><div class="module-window"><div class="module-stat"><span></span><span></span><span></span></div><div class="module-line short"></div><div class="module-line"></div><div class="module-line med"></div></div></div>
-            <div class="module-content"><i class="fa-solid fa-mobile-screen-button"></i><h3>App mobile operativa</h3><p>Dipendenti, capisquadra, amministrazione e contabilita con notifiche e workflow live.</p></div>
-          </article>
-        </div>
-      </section>
-
-      <section class="container section" id="mobile">
-        <div class="mobile-layout">
-          <div>
-            <div class="section-label">Mobile app</div>
-            <h2>Il cantiere continua anche fuori ufficio.</h2>
-            <p class="section-copy">Accesso Fiere include app dedicate per dipendenti, capisquadra, amministrazione e contabilita. Timbrature, ferie, notifiche, workflow e documenti restano sincronizzati in tempo reale.</p>
-            <div class="feature-list">
-              <div class="feature-row"><i class="fa-solid fa-location-dot"></i><div><strong>Presenze e timbrature</strong><span>Ore lavorate, entrate, uscite, pause e storico sempre consultabili.</span></div></div>
-              <div class="feature-row"><i class="fa-solid fa-bell"></i><div><strong>Notifiche operative</strong><span>Alert su documenti, richieste, ferie e scadenze senza rincorrere chat.</span></div></div>
-              <div class="feature-row"><i class="fa-solid fa-id-card"></i><div><strong>Documenti sempre pronti</strong><span>Capisquadra e dipendenti accedono alle informazioni utili dal telefono.</span></div></div>
-            </div>
-          </div>
-          <div class="phone-stage" aria-label="Mockup app mobile Accesso Fiere">
-            <div class="phone secondary">
-              <div class="phone-screen">
-                <div class="phone-notch"></div>
-                <div class="phone-title">Dipendente</div>
-                <div class="phone-card"><strong>8.5h</strong><span>Ore oggi</span></div>
-                <div class="phone-card"><strong>Ferie</strong><span>Richiesta inviata</span></div>
-                <div class="phone-card"><strong>DPI</strong><span>Documento valido</span></div>
-              </div>
-            </div>
-            <div class="phone primary">
-              <div class="phone-screen">
-                <div class="phone-notch"></div>
-                <div class="phone-title">Caposquadra live</div>
-                <div class="phone-card"><strong>Squadra A</strong><span>12 operatori presenti</span></div>
-                <div class="phone-card"><strong>Milano Rho</strong><span>Setup stand in corso</span></div>
-                <div class="phone-card"><strong>2 alert</strong><span>Documenti da verificare</span></div>
-                <div class="phone-card"><strong>Pronto</strong><span>Report turno sincronizzato</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="container section compact" id="control-room">
-        <div class="section-head">
-          <div class="section-label">Control room</div>
-          <h2>Una control room operativa per la tua azienda.</h2>
-          <p class="section-copy">Controlla fiere live, documenti critici, workflow bloccati, presenze, scadenze, fatturato e richieste dipendenti da una sola dashboard.</p>
-        </div>
-        <div class="control-room">
-          <div class="control-top">
-            <div class="panel-title"><i class="fa-solid fa-gauge-high"></i> Dashboard operativa Accesso Fiere</div>
-            <span class="live-pill"><span class="live-dot"></span> Live da web e mobile</span>
-          </div>
-          <div class="control-grid">
-            <div class="control-main">
-              <div class="panel-title"><i class="fa-solid fa-chart-column"></i> Carico operativo e fatturato</div>
-              <div class="wide-chart">
-                <span style="height:38%"></span><span style="height:52%"></span><span style="height:46%"></span><span style="height:72%"></span><span style="height:64%"></span><span style="height:88%"></span><span style="height:79%"></span><span style="height:57%"></span>
-              </div>
-            </div>
-            <div class="control-side">
-              <div class="panel-title"><i class="fa-solid fa-signal"></i> Live feed</div>
-              <div class="alert-feed">
-                <div class="feed-item"><span>Fiera Bologna - squadra confermata</span><span class="tag ok">OK</span></div>
-                <div class="feed-item"><span>Documento patente in scadenza</span><span class="tag warn">Alert</span></div>
-                <div class="feed-item"><span>Fattura passiva ricevuta da SDI</span><span class="tag ok">Sync</span></div>
-                <div class="feed-item"><span>Richiesta permesso da approvare</span><span class="tag warn">Pending</span></div>
-                <div class="feed-item"><span>Veicolo assicurazione aggiornata</span><span class="tag ok">OK</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="container section compact">
-        <div class="automation-flow">
-          <div class="automation-copy">
-            <div class="section-label">Automazione</div>
-            <h2>Meno amministrazione. Pi&ugrave; operativita.</h2>
-            <p>Il sistema intercetta eventi, scadenze e richieste prima che diventino problemi. Meno rincorse, piu decisioni chiare.</p>
-            <div class="hero-actions">
-              <a class="btn btn-secondary" href="#demo"><i class="fa-solid fa-play"></i> Vedi flusso demo</a>
-            </div>
-          </div>
-          <div class="auto-visual" aria-label="Flussi automatici Accesso Fiere">
-            <div class="auto-lane"><i class="fa-solid fa-bell"></i><div><strong>Alert automatici</strong><span>documenti, pagamenti, scadenze</span></div><span class="tag ok">live</span></div>
-            <div class="auto-lane"><i class="fa-solid fa-calendar-check"></i><div><strong>Controllo scadenze</strong><span>veicoli, DPI, visite, contratti</span></div><span class="tag warn">priorita</span></div>
-            <div class="auto-lane"><i class="fa-solid fa-route"></i><div><strong>Workflow approvativi</strong><span>ferie, permessi, rimborsi</span></div><span class="tag ok">tracciato</span></div>
-            <div class="auto-lane"><i class="fa-solid fa-cloud-arrow-down"></i><div><strong>Sincronizzazione SDI</strong><span>attive, passive, provider</span></div><span class="tag ok">sync</span></div>
-            <div class="auto-lane"><i class="fa-solid fa-clock"></i><div><strong>Presenze live</strong><span>ore, squadre, report turno</span></div><span class="tag ok">mobile</span></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="container section compact" id="demo">
-        <div class="demo-shell">
-          <div class="demo-player" aria-label="Anteprima demo video Accesso Fiere">
-            <div class="demo-frame">
-              <div class="mini-kpis">
-                <div class="mini-kpi"><span>Demo</span><strong>60s</strong><small>workflow completo</small></div>
-                <div class="mini-kpi"><span>Mobile</span><strong>Live</strong><small>notifiche e presenze</small></div>
-                <div class="mini-kpi"><span>SDI</span><strong>Sync</strong><small>fatture e pagamenti</small></div>
-              </div>
-              <div class="chart-bars">
-                <span style="height:38%"></span><span style="height:62%"></span><span style="height:46%"></span><span style="height:82%"></span><span style="height:58%"></span><span style="height:74%"></span>
-              </div>
-            </div>
-            <div class="play-core"><i class="fa-solid fa-play"></i></div>
-            <div class="demo-timeline"><span></span></div>
-          </div>
-          <div class="demo-copy">
-            <div class="section-label">Demo video</div>
-            <h2>Una storia da 60 secondi, non una lista di funzioni.</h2>
-            <p>La sezione e pronta per collegare un video cinematico con dashboard live, notifiche, workflow, mobile, SDI, approvazioni e presenze.</p>
-            <div class="demo-points">
-              <span><i class="fa-solid fa-circle-check"></i> Dashboard live e KPI operativi</span>
-              <span><i class="fa-solid fa-circle-check"></i> App mobile per campo e ufficio</span>
-              <span><i class="fa-solid fa-circle-check"></i> Fatturazione elettronica e provider</span>
-            </div>
-            <a class="btn btn-primary" href="mailto:info@accessofiere.com?subject=Demo%20video%20Accesso%20Fiere"><i class="fa-solid fa-video"></i> Prenota demo guidata</a>
-          </div>
-        </div>
-      </section>
-
-      <section class="container section compact">
-        <div class="quote-panel">
-          <div>
-            <div class="section-label">Social proof</div>
-            <h2>Numeri operativi, non promesse generiche.</h2>
-            <p class="section-copy">Accesso Fiere rende misurabile cio che prima restava disperso tra chat, fogli, cartelle e telefonate.</p>
-            <div class="proof-grid">
-              <div class="proof-stat"><strong>12+</strong><span>aziende operative gestibili</span></div>
-              <div class="proof-stat"><strong>240+</strong><span>operatori coordinabili</span></div>
-              <div class="proof-stat"><strong>3.2k</strong><span>documenti tracciabili</span></div>
-              <div class="proof-stat"><strong>18k</strong><span>ore sincronizzabili</span></div>
-              <div class="proof-stat"><strong>1.2k</strong><span>fatture elaborabili</span></div>
-            </div>
-          </div>
-          <div class="quote-mini">
-            <div class="quote-mark"><i class="fa-solid fa-quote-left"></i></div>
-            <blockquote>Prima gestivamo tutto tra WhatsApp, Excel e telefonate. Ora abbiamo finalmente controllo operativo completo.</blockquote>
-            <cite>Azienda allestimenti Milano</cite>
-            <div class="quote-mini-row"><span>Documenti critici</span><span class="tag ok">sotto controllo</span></div>
-            <div class="quote-mini-row"><span>Squadre operative</span><span class="tag ok">coordinate</span></div>
-            <div class="quote-mini-row"><span>Fatture e scadenze</span><span class="tag ok">centralizzate</span></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="container section compact" id="risorse">
-        <div class="section-head">
-          <div class="section-label">SEO verticale</div>
-          <h2>Contenuti pensati per chi cerca soluzioni reali.</h2>
-          <p class="section-copy">Una base editoriale per far crescere autorevolezza e traffico qualificato su ricerche molto specifiche del settore fieristico.</p>
-        </div>
-        <div class="seo-grid">
-          <a class="seo-card" href="mailto:info@accessofiere.com?subject=Blog%20Accesso%20Fiere%20-%20documenti%20fieristici"><span>Guida</span><strong>Gestione documenti fieristici senza caos</strong><small>DPI, visite, scadenze e compliance in un unico flusso.</small></a>
-          <a class="seo-card" href="mailto:info@accessofiere.com?subject=Blog%20Accesso%20Fiere%20-%20software%20allestitori"><span>Software</span><strong>Software per allestitori: cosa deve fare davvero</strong><small>Dal campo all'amministrazione, senza sistemi scollegati.</small></a>
-          <a class="seo-card" href="mailto:info@accessofiere.com?subject=Blog%20Accesso%20Fiere%20-%20DPI%20cantieri"><span>Compliance</span><strong>Controllo DPI e documenti nei cantieri fieristici</strong><small>Alert, stati e storico per ridurre errori operativi.</small></a>
-          <a class="seo-card" href="mailto:info@accessofiere.com?subject=Blog%20Accesso%20Fiere%20-%20presenze%20fiere"><span>Presenze</span><strong>Presenze fiere: ore, squadre e capisquadra live</strong><small>Come sincronizzare turni, richieste e report dal telefono.</small></a>
-          <a class="seo-card" href="mailto:info@accessofiere.com?subject=Blog%20Accesso%20Fiere%20-%20squadre%20eventi"><span>Operativita</span><strong>Gestione squadre eventi e allestimenti temporanei</strong><small>Ruoli, badge, documenti e responsabilita operative.</small></a>
-          <a class="seo-card" href="mailto:info@accessofiere.com?subject=Blog%20Accesso%20Fiere%20-%20fatturazione"><span>SDI</span><strong>Fatturazione elettronica per aziende di allestimento</strong><small>Attive, passive, pagamenti e provider collegati al lavoro.</small></a>
-        </div>
-      </section>
-
-      <section class="container section compact">
-        <div class="final-cta">
-          <div class="section-label">Prenota demo</div>
-          <h2>Porta ordine operativo nella tua azienda.</h2>
-          <p>Scopri come Accesso Fiere puo centralizzare operativita, documenti, presenze e fatturazione in un unico sistema.</p>
-          <a class="btn btn-primary" href="mailto:info@accessofiere.com?subject=Richiesta%20demo%20Accesso%20Fiere"><i class="fa-solid fa-calendar-check"></i> Prenota una demo</a>
-        </div>
-      </section>
-    </main>
-
-    <footer>
-      <div class="container footer-inner">
-        <div>
-          <a class="brand" href="/home" aria-label="Accesso Fiere">
-            <span class="brand-mark"><span class="brand-monogram">AF</span></span>
-            <span class="brand-text">
-              <strong>Accesso Fiere</strong>
-              <span>Access Flow Grid</span>
-            </span>
-          </a>
-          <p class="footer-brand-copy">Il sistema operativo verticale per aziende di allestimento, montaggio e gestione fieristica.</p>
-        </div>
-        <div class="footer-col">
-          <h4>Prodotto</h4>
-          <div class="footer-links">
-            <a href="#moduli">Funzionalita</a>
-            <a href="#mobile">Mobile app</a>
-            <a href="#fatturazione">Fatturazione SDI</a>
-            <a href="#control-room">Control room</a>
-          </div>
-        </div>
-        <div class="footer-col">
-          <h4>Piattaforma</h4>
-          <div class="footer-links">
-            <a href="mailto:info@accessofiere.com?subject=API%20Accesso%20Fiere">API</a>
-            <a href="mailto:info@accessofiere.com?subject=Sicurezza%20Accesso%20Fiere">Sicurezza</a>
-            <a href="mailto:info@accessofiere.com?subject=Compliance%20Accesso%20Fiere">Compliance</a>
-            <a href="mailto:info@accessofiere.com?subject=Status%20sistema">Status sistema</a>
-          </div>
-        </div>
-        <div class="footer-col">
-          <h4>Risorse</h4>
-          <div class="footer-links">
-            <a href="#risorse">Blog SEO</a>
-            <a href="mailto:info@accessofiere.com?subject=Documentazione%20Accesso%20Fiere">Documentazione</a>
-            <a href="mailto:info@accessofiere.com?subject=Roadmap%20Accesso%20Fiere">Roadmap</a>
-            <a href="mailto:info@accessofiere.com?subject=Supporto%20Accesso%20Fiere">Supporto</a>
-          </div>
-        </div>
-        <div class="footer-col">
-          <h4>Azienda</h4>
-          <div class="footer-links">
-            <a href="mailto:info@accessofiere.com?subject=Contatto%20commerciale">Contatti commerciali</a>
-            <a href="mailto:info@accessofiere.com?subject=Demo%20Accesso%20Fiere">Demo</a>
-            <a href="/privacy-policy">Privacy Policy</a>
-            <a href="/cookie-policy">Cookie Policy</a>
-            <a href="/terms-and-conditions">Termini e Condizioni</a>
-          </div>
-        </div>
-      </div>
-      <div class="container footer-bottom">
-        <span class="status-dot">Sistema operativo</span>
-        <span class="legal-inline">
-          <a href="/privacy-policy">Privacy Policy</a>
-          <a href="/cookie-policy">Cookie Policy</a>
-          <a href="/terms-and-conditions">Termini e Condizioni</a>
-        </span>
-        <span>Accesso Fiere - software per allestitori fieristici.</span>
-      </div>
-    </footer>
-    <div class="cookie-banner" id="cookieBanner" role="dialog" aria-live="polite" aria-label="Informativa cookie" hidden>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Accesso Fiere - Software verticale per allestitori</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;min-height:100vh;display:flex;background:#f5f7fb;color:#102033}
+body.public-home .left{width:100%;flex:1}
+body.public-home .left-inner{max-width:1180px}
+body.public-home .hero-title{max-width:930px}
+body.login-only{justify-content:center;align-items:center;background:#f4f5f7}
+body.login-only .right{width:100%;max-width:520px;min-height:100vh;border-left:0;background:transparent}
+.left{flex:1;background:#08111f;color:#fff;min-height:100vh;overflow:auto;position:relative}
+.left:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(5,13,26,.96) 0%,rgba(8,27,48,.96) 54%,rgba(11,18,32,.98) 100%),linear-gradient(90deg,rgba(255,255,255,.055) 1px,transparent 1px),linear-gradient(0deg,rgba(255,255,255,.045) 1px,transparent 1px);background-size:auto,64px 64px,64px 64px;pointer-events:none}
+.left-inner{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:38px 54px 46px}
+.brand-row{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:54px}
+.left .logo{font-size:24px;font-weight:800;letter-spacing:-.2px;display:flex;align-items:center;gap:10px}
+.left .tagline{font-size:12px;color:#94a3b8;font-weight:800;text-transform:uppercase;letter-spacing:1.1px}
+.demo-pill{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);border-radius:999px;padding:9px 13px;color:#e2e8f0;text-decoration:none;font-size:13px;font-weight:800}
+.hero-kicker{display:inline-flex;align-items:center;gap:8px;background:rgba(0,183,216,.13);border:1px solid rgba(125,211,252,.28);color:#bae6fd;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.8px;margin-bottom:18px}
+.hero-title{font-size:52px;line-height:1.02;letter-spacing:0;max-width:860px;margin-bottom:18px}
+.hero-sub{font-size:18px;line-height:1.55;color:#cbd5e1;max-width:760px;margin-bottom:26px}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:30px}.hero-cta,.hero-secondary{display:inline-flex;align-items:center;gap:9px;border-radius:10px;padding:13px 18px;text-decoration:none;font-weight:900;font-size:14px}.hero-cta{background:#f59e0b;color:#111827}.hero-secondary{background:rgba(255,255,255,.09);color:#fff;border:1px solid rgba(255,255,255,.18)}
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;max-width:720px;margin:26px 0 34px}.metric{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px}.metric strong{display:block;font-size:26px;color:#fff}.metric span{display:block;font-size:12px;color:#cbd5e1;margin-top:3px;line-height:1.35}
+.section-label{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:#93c5fd;margin:28px 0 12px}.pain-grid,.workflow,.features{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.pain,.step,.feature{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.11);border-radius:14px;padding:15px;color:#dbeafe}.pain i,.step i,.feature i{color:#fbbf24;font-size:18px;margin-bottom:10px}.pain strong,.step strong,.feature strong{display:block;color:#fff;font-size:14px;margin-bottom:5px}.pain span,.step span,.feature span{display:block;color:#cbd5e1;font-size:12.5px;line-height:1.4}.step-num{width:25px;height:25px;border-radius:50%;background:#0ea5e9;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;margin-bottom:10px}
+.mockup{margin-top:28px;background:#d9e5f1;border-radius:14px;padding:12px;box-shadow:0 28px 80px rgba(0,0,0,.34);max-width:840px;border:1px solid rgba(255,255,255,.16)}.mock-top{height:34px;background:#fff;border-radius:8px 8px 0 0;display:flex;align-items:center;gap:6px;padding:0 12px}.dot{width:9px;height:9px;border-radius:50%;background:#cbd5e1}.mock-screen{background:#f8fafc;border-radius:0 0 8px 8px;padding:16px;color:#0f172a}.mock-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:12px}.mock-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:13px}.mock-title{font-size:12px;font-weight:900;color:#64748b;text-transform:uppercase;letter-spacing:.6px}.mock-big{font-size:24px;font-weight:900;margin-top:6px}.status-row{display:flex;align-items:center;justify-content:space-between;border-top:1px solid #eef2f7;padding-top:9px;margin-top:9px;font-size:12px}.status-ok{color:#16a34a;font-weight:900}.status-warn{color:#d97706;font-weight:900}.status-bad{color:#dc2626;font-weight:900}
+.right{width:470px;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:34px;background:#f8fafc;border-left:1px solid #e2e8f0}
+.login-box{background:#fff;border-radius:18px;padding:34px;width:100%;max-width:410px;box-shadow:0 18px 55px rgba(15,23,42,.12);border:1px solid #e5edf5}
+.login-box h2{font-size:22px;font-weight:700;margin-bottom:6px}
+.login-box p{font-size:13px;color:#64748b;margin-bottom:20px}
+.form-group{margin-bottom:18px}
+label{display:block;font-size:12.5px;font-weight:600;color:#64748b;margin-bottom:6px}
+input,select{width:100%;padding:10px 13px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:14px;font-family:inherit;transition:border .18s;background:#fff;color:#1e293b}
+input:focus,select:focus{outline:none;border-color:#0f4c81}
+.btn{width:100%;padding:11px;background:#0f4c81;color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn:hover{background:#0b3f70}
+.alert{padding:10px 14px;background:#fee2e2;color:#dc2626;border-radius:8px;font-size:13px;margin-bottom:16px;border:1px solid #fecaca}
+.lang-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.lang-btn{flex:1;min-width:70px;padding:8px 6px;border:1.5px solid #e2e8f0;border-radius:8px;background:#f8fafc;font-size:13px;font-weight:600;cursor:pointer;text-align:center;transition:.15s;color:#475569}
+.lang-btn.active{border-color:#0f4c81;background:#e0f2fe;color:#0f4c81}
+.mobile-brand{display:none}.desktop-only{display:block}
+@media(max-width:900px){body{display:block;background:#f4f5f7}.left{display:none}.right{min-height:100vh;width:100%;padding:20px;border:0}.login-box{box-shadow:0 4px 28px rgba(15,23,42,.08);padding:28px 22px;border-radius:16px;max-width:390px}.desktop-only{display:none!important}.mobile-brand{display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:22px;font-size:22px;font-weight:900;color:#0f172a}.login-box h2{font-size:20px;text-align:center}.login-box p{text-align:center;margin-bottom:18px}.form-group{margin-bottom:16px}.btn{padding:13px;font-size:15px}}
+{% if t.dir == 'rtl' %}body,input,select,button{font-family:'Inter',Arial,sans-serif}{% endif %}
+</style></head>
+<body class="{{ 'public-home' if public_home else 'login-only' if not show_landing else '' }}">
+{% if show_landing %}
+<div class="left">
+  <div class="left-inner">
+    <div class="brand-row">
       <div>
-        <strong>Privacy e cookie</strong>
-        <p>Usiamo cookie tecnici e servizi necessari al funzionamento del sito. Puoi leggere <a href="/privacy-policy">Privacy Policy</a>, <a href="/cookie-policy">Cookie Policy</a> e <a href="/terms-and-conditions">Termini e Condizioni</a>.</p>
+        <div class="logo">
+          <svg width="34" height="34" viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg" style="border-radius:9px;background:#0f4c81;padding:4px">
+            <rect x="11" y="20" width="7" height="22" rx="2" fill="#fff"/>
+            <rect x="34" y="20" width="7" height="22" rx="2" fill="#fff"/>
+            <path d="M11 22 Q26 6 41 22" fill="none" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
+            <rect x="8" y="42" width="36" height="3" rx="1.5" fill="#f59e0b"/>
+          </svg>
+          Accesso Fiere
+        </div>
+        <div class="tagline">Il sistema operativo per allestitori fieristici</div>
       </div>
-      <div class="cookie-actions">
-        <button type="button" data-cookie-choice="necessary">Solo necessari</button>
-        <button class="primary" type="button" data-cookie-choice="accepted">Accetta</button>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a class="demo-pill" href="/area-clienti"><i class="fa fa-user-lock"></i> Area clienti</a>
+        <a class="demo-pill" href="mailto:info@accessofiere.com?subject=Richiesta%20demo%20Accesso%20Fiere"><i class="fa fa-calendar-check"></i> Prenota demo</a>
       </div>
     </div>
-    <script>
-      (function(){
-        var banner = document.getElementById('cookieBanner');
-        if(!banner) return;
-        try {
-          if(!localStorage.getItem('accesso_fiere_cookie_choice')) banner.hidden = false;
-          var buttons = banner.querySelectorAll('[data-cookie-choice]');
-          for(var i=0;i<buttons.length;i++){
-            buttons[i].addEventListener('click', function(){
-              localStorage.setItem('accesso_fiere_cookie_choice', this.getAttribute('data-cookie-choice'));
-              banner.hidden = true;
-            });
-          }
-        } catch(e) {
-          banner.hidden = true;
-        }
-      })();
-    </script>
-  </div>
-{% else %}
-  <div class="login-card" id="login">
-    <a class="brand login-brand" href="/home" aria-label="Accesso Fiere">
-      <span class="brand-mark"><span class="brand-monogram">AF</span></span>
-      <span class="brand-text">
-        <strong>Accesso Fiere</strong>
-        <span>Gestionale Allestitori</span>
-      </span>
-    </a>
-    <a class="public-return" href="/home">Torna alla pagina pubblica</a>
 
+    <div class="hero-kicker"><i class="fa fa-bolt"></i> Software verticale per fiere, eventi e cantieri temporanei</div>
+    <h1 class="hero-title">Gestisci accessi, documenti e squadre fieristiche in un unico sistema.</h1>
+    <p class="hero-sub">Riduci errori, velocizza gli ingressi e coordina personale, mezzi, documenti e richieste operative senza rincorrere Excel, chat e fogli sparsi.</p>
+    <div class="hero-actions">
+      <a class="hero-cta" href="mailto:info@accessofiere.com?subject=Demo%20Accesso%20Fiere"><i class="fa fa-play"></i> Prenota una demo</a>
+      <a class="hero-secondary" href="{{ '/area-clienti' if public_home else '#login' }}"><i class="fa fa-right-to-bracket"></i> {{ 'Area clienti' if public_home else 'Accedi al gestionale' }}</a>
+    </div>
+
+    <div class="metrics">
+      <div class="metric"><strong>-70%</strong><span>tempo perso a cercare documenti, scadenze e autorizzazioni</span></div>
+      <div class="metric"><strong>Live</strong><span>stato verde, giallo e rosso su persone, mezzi e documenti</span></div>
+      <div class="metric"><strong>1 app</strong><span>per admin, capicantiere, amministrazione e dipendenti</span></div>
+    </div>
+
+    <div class="mockup" aria-label="Anteprima software">
+      <div class="mock-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <div class="mock-screen">
+        <div class="mock-grid">
+          <div class="mock-card"><div class="mock-title">Dashboard cantiere</div><div class="mock-big">12 operatori pronti</div><div class="status-row"><span>Documenti</span><span class="status-ok">OK</span></div><div class="status-row"><span>Badge accesso</span><span class="status-warn">2 da verificare</span></div><div class="status-row"><span>Mezzi</span><span class="status-ok">Disponibili</span></div></div>
+          <div class="mock-card"><div class="mock-title">Alert operativi</div><div class="status-row"><span>Patente in scadenza</span><span class="status-warn">14 gg</span></div><div class="status-row"><span>Richieste ferie</span><span class="status-bad">3</span></div><div class="status-row"><span>Rimborsi</span><span class="status-ok">Gestiti</span></div><div class="status-row"><span>QR access</span><span class="status-ok">Attivo</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">Il costo reale del caos operativo</div>
+    <div class="pain-grid">
+      <div class="pain"><i class="fa fa-ban"></i><strong>Personale bloccato agli ingressi</strong><span>Documenti mancanti, badge non pronti e autorizzazioni recuperate all'ultimo minuto.</span></div>
+      <div class="pain"><i class="fa fa-file-circle-exclamation"></i><strong>Scadenze fuori controllo</strong><span>Patenti, visite mediche, assicurazioni, bollo e documenti aziendali sempre monitorati.</span></div>
+      <div class="pain"><i class="fa fa-comments"></i><strong>Troppo WhatsApp, troppo Excel</strong><span>Timbrature, ferie, permessi e rimborsi entrano in un workflow unico e tracciabile.</span></div>
+    </div>
+
+    <div class="section-label">Workflow reale per allestitori</div>
+    <div class="workflow">
+      <div class="step"><div class="step-num">1</div><strong>Carica personale e squadre</strong><span>Ruoli, capisquadra, documenti, scadenze, foto e tesserini.</span></div>
+      <div class="step"><div class="step-num">2</div><strong>Prepara fiere e cantieri</strong><span>Coordina presenze, mezzi, incarichi, accessi e documenti richiesti.</span></div>
+      <div class="step"><div class="step-num">3</div><strong>Monitora tutto live</strong><span>Alert automatici, richieste da approvare e dashboard per PC e telefono.</span></div>
+    </div>
+
+    <div class="section-label">Perche e diverso da un gestionale generico</div>
+    <div class="features">
+      <div class="feature"><i class="fa fa-qrcode"></i><strong>QR Access</strong><span>Identificazione rapida operatori e tesserini sempre disponibili.</span></div>
+      <div class="feature"><i class="fa fa-shield-halved"></i><strong>Sicurezza documentale</strong><span>Stato live documenti dipendenti, azienda e veicoli.</span></div>
+      <div class="feature"><i class="fa fa-mobile-screen"></i><strong>Mobile sul campo</strong><span>Dipendenti e responsabili usano funzioni semplici da telefono.</span></div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% if not public_home %}
+<div class="right" id="login">
+  <div class="login-box">
+    <div class="mobile-brand">
+      <svg width="30" height="30" viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg" style="border-radius:8px;background:#0f4c81;padding:4px">
+        <rect x="11" y="20" width="7" height="22" rx="2" fill="#fff"/><rect x="34" y="20" width="7" height="22" rx="2" fill="#fff"/><path d="M11 22 Q26 6 41 22" fill="none" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/><rect x="8" y="42" width="36" height="3" rx="1.5" fill="#f59e0b"/>
+      </svg>
+      Accesso Fiere
+    </div>
+    <!-- Selettore lingua -->
     <div class="form-group">
-      <span class="lang-label">{{ t.login_lang }}</span>
+      <label>{{ t.login_lang }}</label>
       <div class="lang-bar">
         {% for code, l in langs.items() %}
-        <form method="POST" action="/set-lang">
+        <form method="POST" action="/set-lang" style="flex:1;min-width:70px">
           <input type="hidden" name="lang" value="{{ code }}">
           <input type="hidden" name="next" value="/login">
-          <button type="submit" class="lang-btn {{ 'active' if current_lang == code }}">{{ code|upper }}</button>
+          <button type="submit" class="lang-btn {{ 'active' if current_lang == code }}">
+            {{ l.flag }} {{ l.name }}
+          </button>
         </form>
         {% endfor %}
       </div>
     </div>
 
-    <h2>Area clienti</h2>
-    <p>Accedi al gestionale aziendale.</p>
-    {% if error %}<div class="alert">{{ error }}</div>{% endif %}
-    <form method="POST" action="/login">
+    <h2>{{ t.login_title }}</h2>
+    <p>{{ t.login_sub }}</p>
+    {% if error %}<div class="alert"><i class="fa fa-exclamation-circle"></i> {{ error }}</div>{% endif %}
+    <form method="POST">
       <div class="form-group">
-        <label class="form-label">{{ t.login_email }}</label>
-        <input class="form-control" type="email" name="email" placeholder="nome@azienda.it" required dir="ltr">
+        <label>{{ t.login_email }}</label>
+        <input type="email" name="email" placeholder="nome@azienda.it" required dir="ltr">
       </div>
       <div class="form-group">
-        <label class="form-label">{{ t.login_pass }}</label>
-        <input class="form-control" type="password" name="password" placeholder="********" required dir="ltr">
+        <label>{{ t.login_pass }}</label>
+        <input type="password" name="password" placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢" required dir="ltr">
       </div>
-      <button class="btn btn-primary login-submit" type="submit">Accedi</button>
+      <button class="btn" type="submit">{{ t.login_btn }} <i class="fa fa-arrow-right" style="margin-{{ 'right' if t.dir=='rtl' else 'left' }}:6px"></i></button>
     </form>
-
     {% if not is_mobile %}
-    <div class="divider">oppure</div>
-    <a class="google-btn" href="/auth/google">
-      <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/><path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24c0 3.55.85 6.91 2.34 9.88l7.35-5.7z"/><path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/></svg>
+    <div class="desktop-only" style="display:flex;align-items:center;gap:10px;margin:18px 0">
+      <div style="flex:1;height:1px;background:#e2e8f0"></div>
+      <span style="font-size:12px;color:#94a3b8">oppure</span>
+      <div style="flex:1;height:1px;background:#e2e8f0"></div>
+    </div>
+    <a class="desktop-only" href="/auth/google" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px;background:#fff;border:1.5px solid #e2e8f0;border-radius:9px;font-size:14px;font-weight:600;color:#1e293b;text-decoration:none;transition:.15s" onmouseover="this.style.borderColor='#4285f4';this.style.background='#f8faff'" onmouseout="this.style.borderColor='#e2e8f0';this.style.background='#fff'">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/><path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24c0 3.55.85 6.91 2.34 9.88l7.35-5.7z"/><path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/></svg>
       Accedi con Google
     </a>
-    <div class="divider">non hai un account?</div>
-    <a class="register-btn" href="/registrati">Registra la tua azienda - 14 giorni gratis</a>
-    {% else %}
-    <div class="divider">non hai un account?</div>
-    <a class="register-btn" href="/registrati">Registra la tua azienda</a>
-    {% endif %}
-
-    <div class="legal-copy">
-      Usando Accesso Fiere accetti <a href="/termini">Termini</a>,
-      <a href="/privacy">Privacy</a> e <a href="/cookies">Cookie Policy</a>.
+    <div class="desktop-only" style="display:flex;align-items:center;gap:10px;margin:16px 0 4px">
+      <div style="flex:1;height:1px;background:#e2e8f0"></div>
+      <span style="font-size:12px;color:#94a3b8">non hai un account?</span>
+      <div style="flex:1;height:1px;background:#e2e8f0"></div>
     </div>
-  </div>
+    <a class="desktop-only" href="/registrati" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:#f0f6ff;border:1.5px solid #bfdbfe;border-radius:9px;font-size:14px;font-weight:700;color:#0f4c81;text-decoration:none;margin-top:10px;transition:.15s" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#f0f6ff'">
+      <i class="fa fa-rocket"></i> Registra la tua azienda Ã¢â‚¬â€ 14 giorni gratis
+    </a>
+    {% endif %}
+    {% if is_mobile %}
+    <div style="display:flex;align-items:center;gap:10px;margin:16px 0 4px">
+      <div style="flex:1;height:1px;background:#e2e8f0"></div>
+      <span style="font-size:12px;color:#94a3b8">non hai un account?</span>
+      <div style="flex:1;height:1px;background:#e2e8f0"></div>
+    </div>
+    <a href="/registrati" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:#f0f6ff;border:1.5px solid #bfdbfe;border-radius:9px;font-size:14px;font-weight:700;color:#0f4c81;text-decoration:none;margin-top:10px;transition:.15s">
+      <i class="fa fa-rocket"></i> Registra la tua azienda
+    </a>
+    {% endif %}
+    <div style="text-align:center;font-size:11.5px;color:#94a3b8;margin-top:18px;line-height:1.5">
+      Usando Accesso Fiere accetti <a href="/termini" style="color:#0f4c81;font-weight:700">Termini</a>,
+      <a href="/privacy" style="color:#0f4c81;font-weight:700">Privacy</a> e
+      <a href="/cookies" style="color:#0f4c81;font-weight:700">Cookie Policy</a>.
+    </div>
+</div>
 {% endif %}
-</body>
-</html>
-"""
+</body></html>"""
 
 LEGAL_PAGE_TMPL = """<!DOCTYPE html>
 <html lang="it">
@@ -6535,9 +4680,9 @@ LEGAL_CONSENT_SNIPPET = """
       <div style="font-size:12.5px;line-height:1.45;color:rgba(255,255,255,.76)">Usiamo cookie tecnici necessari per login, sicurezza e funzionamento della webapp. Non usiamo cookie pubblicitari.</div>
       <div style="margin-top:7px;font-size:12px">
         <a href="/privacy" style="color:#93c5fd;font-weight:700;text-decoration:none">Privacy</a>
-        <span style="color:rgba(255,255,255,.35)"> Ãƒâ€šÃ‚Â· </span>
+        <span style="color:rgba(255,255,255,.35)"> Ã‚Â· </span>
         <a href="/cookies" style="color:#93c5fd;font-weight:700;text-decoration:none">Cookie Policy</a>
-        <span style="color:rgba(255,255,255,.35)"> Ãƒâ€šÃ‚Â· </span>
+        <span style="color:rgba(255,255,255,.35)"> Ã‚Â· </span>
         <a href="/termini" style="color:#93c5fd;font-weight:700;text-decoration:none">Termini</a>
       </div>
     </div>
@@ -6560,28 +4705,16 @@ LEGAL_CONSENT_SNIPPET = """
 
 @app.route('/privacy')
 @app.route('/privacy-policy')
-@app.route('/privacy-policy.html')
-@app.route('/privacy.html')
 def privacy():
     return render_template_string(LEGAL_PAGE_TMPL, title='Privacy Policy', body=PRIVACY_BODY)
 
 @app.route('/termini')
 @app.route('/terms')
-@app.route('/termini-e-condizioni')
-@app.route('/terms-and-conditions')
-@app.route('/termini-e-condizioni.html')
-@app.route('/terms-and-conditions.html')
-@app.route('/terms.html')
-@app.route('/condizioni-generali')
 def termini():
     return render_template_string(LEGAL_PAGE_TMPL, title='Termini di servizio', body=TERMS_BODY)
 
 @app.route('/cookies')
 @app.route('/cookie-policy')
-@app.route('/cookie-policy.html')
-@app.route('/cookies-policy')
-@app.route('/cookie')
-@app.route('/cookie.html')
 def cookie_policy():
     return render_template_string(LEGAL_PAGE_TMPL, title='Cookie Policy', body=COOKIE_BODY)
 
@@ -6609,27 +4742,11 @@ def area_clienti():
 @app.route('/')
 def index():
     if request.args.get('public') == '1':
-        return render_template_string(
-            LOGIN_TMPL,
-            error=None,
-            t=get_lang(),
-            langs=LANGS,
-            current_lang=session.get('lang','it'),
-            is_mobile=False,
-            public_home=True,
-            show_landing=True
-        )
+        return redirect(url_for('public_home'))
     if 'user_id' not in session:
-        return render_template_string(
-            LOGIN_TMPL,
-            error=None,
-            t=get_lang(),
-            langs=LANGS,
-            current_lang=session.get('lang','it'),
-            is_mobile=False,
-            public_home=True,
-            show_landing=True
-        )
+        if is_mobile_request():
+            return redirect(url_for('login'))
+        return redirect(url_for('public_home'))
     if session.get('ruolo') == 'admin':
         return redirect(url_for('admin_mobile') if is_mobile_request() else url_for('dashboard'))
     if session.get('ruolo') == 'amministrazione':
@@ -6646,15 +4763,15 @@ def is_mobile_request():
     return any(x in ua for x in ('iphone', 'android', 'mobile', 'windows phone', 'ipad'))
 
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
-#  PWA ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Progressive Web App (installabile, offline, push)
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+#  PWA Ã¢â‚¬â€ Progressive Web App (installabile, offline, push)
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ VAPID + Web Push (RFC 8030, RFC 8291, RFC 8292) ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ VAPID + Web Push (RFC 8030, RFC 8291, RFC 8292) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 # Implementazione zero-dependency: usa solo `cryptography` (stdlib di fatto via requirements)
 # Genera chiavi VAPID una volta sola, salvate nel master DB. Le chiavi sono pubbliche/private:
-# - public key ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ mandata al browser per registrare il push
-# - private key ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ firma i JWT VAPID per autenticarsi col push service del browser
+# - public key Ã¢â€ â€™ mandata al browser per registrare il push
+# - private key Ã¢â€ â€™ firma i JWT VAPID per autenticarsi col push service del browser
 
 def _b64url(data):
     """Base64 URL-safe senza padding (RFC 7515)."""
@@ -6666,7 +4783,7 @@ def _b64url_decode(s):
     return base64.urlsafe_b64decode(s + b'=' * pad)
 
 
-# P-256 in Python puro: evita di rompere Railway se `cryptography` non ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ installato.
+# P-256 in Python puro: evita di rompere Railway se `cryptography` non ÃƒÂ¨ installato.
 _P256_P = 0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff
 _P256_A = -3
 _P256_N = 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551
@@ -6792,7 +4909,7 @@ def _get_vapid_keys():
     return pub_b64, priv_pem
 
 
-def _vapid_jwt(audience, subject_email='mailto:info@accessofiere.com'):
+def _vapid_jwt(audience, subject_email='mailto:noreply@example.com'):
     """Genera un JWT VAPID firmato con la chiave privata. Audience = origine del push service."""
     _, priv_pem = _get_vapid_keys()
     private_int = _p256_private_load(priv_pem)
@@ -7170,7 +5287,7 @@ def pwa_manifest():
         start_url = '/login'
 
     manifest = {
-        "name": f"{nome_app} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Gestionale",
+        "name": f"{nome_app} Ã¢â‚¬â€ Gestionale",
         "short_name": nome_breve,
         "description": "Timbrature, ferie, documenti e gestione fiere",
         "start_url": start_url,
@@ -7204,7 +5321,7 @@ def pwa_manifest():
 @app.route('/sw.js')
 def pwa_service_worker():
     """Service worker per PWA. Permette installazione + cache base + offline minimo."""
-    sw_code = """// Accesso Fiere ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Service Worker
+    sw_code = """// Accesso Fiere Ã¢â‚¬â€ Service Worker
 const CACHE_VERSION = 'v6-in-app-notifications';
 const CACHE_NAME = `accesso-fiere-${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline';
@@ -7275,7 +5392,7 @@ self.addEventListener('fetch', (event) => {
   }
 });
 
-// Push notifications (Sprint 2 ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â placeholder)
+// Push notifications (Sprint 2 Ã¢â‚¬â€ placeholder)
 self.addEventListener('push', (event) => {
   let data = { title: 'Accesso Fiere', body: 'Hai un nuovo aggiornamento.', url: '/' };
   if (event.data) {
@@ -7308,13 +5425,13 @@ self.addEventListener('notificationclick', (event) => {
 
 @app.route('/offline')
 def pwa_offline():
-    """Pagina mostrata quando l'app ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ offline."""
+    """Pagina mostrata quando l'app ÃƒÂ¨ offline."""
     return render_template_string(PWA_OFFLINE_TMPL)
 
 
 @app.route('/static/pwa/<path:filename>')
 def pwa_static(filename):
-    """Serve le icone PWA. Le genera al volo se non esistono giÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â ."""
+    """Serve le icone PWA. Le genera al volo se non esistono giÃƒÂ ."""
     pwa_dir = os.path.join(DATA_DIR, 'pwa_static')
     os.makedirs(pwa_dir, exist_ok=True)
     fpath = os.path.join(pwa_dir, filename)
@@ -7330,7 +5447,7 @@ def pwa_static(filename):
     return send_file(fpath)
 
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Push subscription endpoints ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Push subscription endpoints Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 @app.route('/api/push/public-key')
 def pwa_push_public_key():
     """Restituisce la chiave pubblica VAPID al browser per registrare il push."""
@@ -7353,11 +5470,11 @@ def pwa_push_subscribe():
     user_agent = request.headers.get('User-Agent', '')[:200]
     db = get_db()
     try:
-        # Upsert sull'endpoint (un utente puÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â² avere piÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¹ device, ma stesso endpoint = stesso device)
+        # Upsert sull'endpoint (un utente puÃƒÂ² avere piÃƒÂ¹ device, ma stesso endpoint = stesso device)
         existing = db.execute("SELECT id, utente_id FROM pwa_subscriptions WHERE endpoint=?",
                               (endpoint,)).fetchone()
         if existing:
-            # Endpoint giÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  registrato ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â aggiorna utente_id (caso: device condiviso che cambia user)
+            # Endpoint giÃƒÂ  registrato Ã¢â‚¬â€ aggiorna utente_id (caso: device condiviso che cambia user)
             db.execute("UPDATE pwa_subscriptions SET utente_id=?, p256dh=?, auth=?, user_agent=? WHERE id=?",
                        (session['user_id'], p256dh, auth, user_agent, existing['id']))
         else:
@@ -7390,7 +5507,7 @@ def pwa_push_test():
     """Invia una notifica di test all'utente loggato (debug + onboarding)."""
     sent = send_push_to_user(
         session['user_id'],
-        title='ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Notifiche attivate!',
+        title='Ã¢Å“â€¦ Notifiche attivate!',
         body='Riceverai aggiornamenti su ferie, presenze e scadenze.',
         url='/',
     )
@@ -7494,7 +5611,7 @@ def api_admin_richieste_live():
                 'key': f'spesa-{r["id"]}',
                 'created': r['creato_il'] or '',
                 'title': 'Nuova richiesta rimborso spesa',
-                'body': f'{r["nome"]} {r["cognome"]} ha richiesto un rimborso da ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ {float(r["importo"] or 0):.2f} ({r["categoria"]}) del {r["data"]}.',
+                'body': f'{r["nome"]} {r["cognome"]} ha richiesto un rimborso da Ã¢â€šÂ¬ {float(r["importo"] or 0):.2f} ({r["categoria"]}) del {r["data"]}.',
                 'url': '/admin/spese?stato=in_attesa'
             })
     except Exception as e:
@@ -7623,7 +5740,7 @@ def admin_notifiche():
                                ORDER BY datetime(s.creato_il) DESC, s.id DESC LIMIT 30""").fetchall():
             richieste_live.append({
                 'title': 'Nuova richiesta rimborso spesa',
-                'body': f'{r["nome"]} {r["cognome"]} ha richiesto un rimborso da ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ {float(r["importo"] or 0):.2f} ({r["categoria"]}) del {r["data"]}.',
+                'body': f'{r["nome"]} {r["cognome"]} ha richiesto un rimborso da Ã¢â€šÂ¬ {float(r["importo"] or 0):.2f} ({r["categoria"]}) del {r["data"]}.',
                 'created': r['creato_il'] or '',
                 'url': '/admin/spese?stato=in_attesa'
             })
@@ -7660,9 +5777,9 @@ def admin_notifiche_push():
             flash('Titolo e messaggio obbligatori.', 'error')
             return redirect(url_for('admin_notifiche_push'))
         if title and len(title) > 80:
-            title = title[:77] + 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦'
+            title = title[:77] + 'Ã¢â‚¬Â¦'
         if body and len(body) > 200:
-            body = body[:197] + 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦'
+            body = body[:197] + 'Ã¢â‚¬Â¦'
         sent = 0
         saved = 0
         if target == 'all':
@@ -7677,7 +5794,7 @@ def admin_notifiche_push():
             saved = 1
         else:
             db.close()
-        flash(f'ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â¤ Messaggi salvati: {saved}. Push inviate: {sent}.', 'success' if saved else 'info')
+        flash(f'Ã°Å¸â€œÂ¤ Messaggi salvati: {saved}. Push inviate: {sent}.', 'success' if saved else 'info')
         return redirect(url_for('admin_notifiche_push'))
     # GET: mostra form + statistiche
     stats_per_user = db.execute("""SELECT u.id, u.nome, u.cognome, u.ruolo,
@@ -7721,15 +5838,15 @@ NOTIFICHE_PUSH_TMPL = """
 
 <div class="grid-2">
   <div class="card">
-    <div class="card-header"><h3>ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â¤ Invia notifica</h3></div>
+    <div class="card-header"><h3>Ã°Å¸â€œÂ¤ Invia notifica</h3></div>
     <form method="POST" style="padding:18px">
       <div class="form-group">
         <label>Destinatari</label>
         <select name="target" id="target-select">
-          <option value="all">ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â¢ Tutti i dipendenti attivi (salva anche in app)</option>
+          <option value="all">Ã°Å¸â€œÂ¢ Tutti i dipendenti attivi (salva anche in app)</option>
           {% for u in stats_per_user %}
             {% if u.ruolo != 'admin' %}
-            <option value="{{ u.id }}">ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“Ãƒâ€šÃ‚Â¤ {{ u.nome }} {{ u.cognome }} ({{ u.devices }} device)</option>
+            <option value="{{ u.id }}">Ã°Å¸â€˜Â¤ {{ u.nome }} {{ u.cognome }} ({{ u.devices }} device)</option>
             {% endif %}
           {% endfor %}
         </select>
@@ -7751,7 +5868,7 @@ NOTIFICHE_PUSH_TMPL = """
   </div>
 
   <div class="card">
-    <div class="card-header"><h3>ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“Ãƒâ€šÃ‚Â¥ Stato dipendenti</h3></div>
+    <div class="card-header"><h3>Ã°Å¸â€˜Â¥ Stato dipendenti</h3></div>
     <div class="table-wrap">
       <table>
         <thead><tr><th>Utente</th><th>Ruolo</th><th>Device</th><th>Ultima notifica</th></tr></thead>
@@ -7762,9 +5879,9 @@ NOTIFICHE_PUSH_TMPL = """
           <td><span class="tag" style="font-size:10px">{{ u.ruolo }}</span></td>
           <td>
             {% if u.devices > 0 %}
-              <span class="badge badge-green">ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â± {{ u.devices }}</span>
+              <span class="badge badge-green">Ã°Å¸â€œÂ± {{ u.devices }}</span>
             {% else %}
-              <span style="color:var(--text-light);font-size:12px">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â</span>
+              <span style="color:var(--text-light);font-size:12px">Ã¢â‚¬â€</span>
             {% endif %}
           </td>
           <td style="font-size:11px;color:var(--text-light)">{{ u.ultima or 'Mai' }}</td>
@@ -7777,7 +5894,7 @@ NOTIFICHE_PUSH_TMPL = """
 </div>
 
 <div class="card" style="margin-top:18px">
-  <div class="card-header"><h3>ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Come funzionano le notifiche</h3></div>
+  <div class="card-header"><h3>Ã¢â€žÂ¹Ã¯Â¸Â Come funzionano le notifiche</h3></div>
   <div style="padding:18px;font-size:13.5px;line-height:1.65;color:var(--text-light)">
     <ul style="padding-left:20px;display:flex;flex-direction:column;gap:8px">
       <li>I dipendenti devono <strong>installare l'app</strong> sul cellulare (PWA) e <strong>accettare il permesso notifiche</strong>.</li>
@@ -7808,9 +5925,9 @@ def _genera_icona_pwa(out_path, filename):
     # Gradient blu
     for y in range(size):
         ratio = y / size
-        r = int(15 + (30-15)*ratio)   # 0fÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢1e
-        g = int(76 + (58-76)*ratio)   # 4cÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢3a
-        b = int(129 + (138-129)*ratio) # 81ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢8a
+        r = int(15 + (30-15)*ratio)   # 0fÃ¢â€ â€™1e
+        g = int(76 + (58-76)*ratio)   # 4cÃ¢â€ â€™3a
+        b = int(129 + (138-129)*ratio) # 81Ã¢â€ â€™8a
         draw.line([(0,y),(size,y)], fill=(r,g,b))
     # Cerchio centrale luminoso
     inner = size - 2*pad
@@ -7838,7 +5955,7 @@ def _genera_icona_pwa(out_path, filename):
 PWA_OFFLINE_TMPL = """<!DOCTYPE html>
 <html lang="it"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Offline ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· Accesso Fiere</title>
+<title>Offline Ã‚Â· Accesso Fiere</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#0f4c81">
 <style>
@@ -7852,10 +5969,10 @@ p{color:rgba(255,255,255,.7);font-size:14.5px;line-height:1.55;margin-bottom:24p
 </style></head>
 <body>
 <div class="box">
-  <div class="icon">ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Âµ</div>
+  <div class="icon">Ã°Å¸â€œÂµ</div>
   <h1>Sei offline</h1>
-  <p>Non c'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ connessione internet al momento. Le timbrature offline saranno sincronizzate appena tornerai online.</p>
-  <button onclick="location.reload()" class="btn">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Ãƒâ€šÃ‚Â» Riprova</button>
+  <p>Non c'ÃƒÂ¨ connessione internet al momento. Le timbrature offline saranno sincronizzate appena tornerai online.</p>
+  <button onclick="location.reload()" class="btn">Ã¢â€ Â» Riprova</button>
 </div>
 </body></html>"""
 
@@ -7890,7 +6007,7 @@ PWA_INSTALL_SCRIPT = """
     });
   }
 
-  // Banner "Installa l'app" ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â cattura il prompt nativo
+  // Banner "Installa l'app" Ã¢â‚¬â€ cattura il prompt nativo
   let deferredPrompt = null;
   window.addEventListener('beforeinstallprompt', function(e){
     e.preventDefault();
@@ -7907,18 +6024,18 @@ PWA_INSTALL_SCRIPT = """
     banner.id = 'pwa-install-banner';
     banner.innerHTML = `
       <div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(15,23,42,.35);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:480px;margin:0 auto">
-        <div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â²</div>
+        <div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">Ã°Å¸â€œÂ²</div>
         <div style="flex:1;min-width:0">
           <div style="font-weight:800;font-size:14px;letter-spacing:-.1px;line-height:1.2">Installa l'app</div>
-          <div style="font-size:11.5px;color:rgba(255,255,255,.75);margin-top:2px">Apri piÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¹ velocemente, usa offline</div>
+          <div style="font-size:11.5px;color:rgba(255,255,255,.75);margin-top:2px">Apri piÃƒÂ¹ velocemente, usa offline</div>
         </div>
         <button id="pwa-install-yes" style="background:#fff;color:#0f4c81;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:12.5px;cursor:pointer;font-family:inherit;flex-shrink:0">Installa</button>
-        <button id="pwa-install-no" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</button>
+        <button id="pwa-install-no" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">Ãƒâ€”</button>
       </div>`;
     document.body.appendChild(banner);
     document.getElementById('pwa-install-yes').onclick = function(){
       if (!deferredPrompt) {
-        alert('Per installare su Chrome mobile: apri il menu ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹Ãƒâ€šÃ‚Â® e scegli "Installa app" o "Aggiungi a schermata Home".\\n\\nSu Chrome desktop usa l icona Installa nella barra degli indirizzi.');
+        alert('Per installare su Chrome mobile: apri il menu Ã¢â€¹Â® e scegli "Installa app" o "Aggiungi a schermata Home".\\n\\nSu Chrome desktop usa l icona Installa nella barra degli indirizzi.');
         return;
       }
       deferredPrompt.prompt();
@@ -7935,7 +6052,7 @@ PWA_INSTALL_SCRIPT = """
   }
   setTimeout(showInstallBanner, 1800);
 
-  // Su iOS Safari il prompt nativo non esiste ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â mostriamo un suggerimento manuale
+  // Su iOS Safari il prompt nativo non esiste Ã¢â‚¬â€ mostriamo un suggerimento manuale
   // dopo che l'utente ha visitato 2 volte (per non essere fastidiosi)
   function isIOSSafari(){
     var ua = navigator.userAgent.toLowerCase();
@@ -7953,11 +6070,11 @@ PWA_INSTALL_SCRIPT = """
         banner.innerHTML = `
           <div style="position:fixed;bottom:14px;left:14px;right:14px;z-index:9999;background:linear-gradient(135deg,#0f4c81,#1e3a8a);color:#fff;border-radius:14px;padding:13px 14px;box-shadow:0 8px 24px rgba(15,23,42,.35);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:480px;margin:0 auto">
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:7px">
-              <div style="width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â²</div>
+              <div style="width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">Ã°Å¸â€œÂ²</div>
               <div style="flex:1;font-weight:800;font-size:14px">Installa Accesso Fiere</div>
-              <button id="pwa-ios-no" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</button>
+              <button id="pwa-ios-no" style="background:transparent;color:rgba(255,255,255,.6);border:none;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0">Ãƒâ€”</button>
             </div>
-            <div style="font-size:12px;color:rgba(255,255,255,.85);line-height:1.45">Tocca <strong>Condividi</strong> <span style="display:inline-block;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:11px">ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â </span> in basso, poi <strong>"Aggiungi a Home"</strong></div>
+            <div style="font-size:12px;color:rgba(255,255,255,.85);line-height:1.45">Tocca <strong>Condividi</strong> <span style="display:inline-block;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:11px">Ã¢Â¬â€ </span> in basso, poi <strong>"Aggiungi a Home"</strong></div>
           </div>`;
         document.body.appendChild(banner);
         document.getElementById('pwa-ios-no').onclick = function(){
@@ -8085,7 +6202,7 @@ def login():
                 # Tabella utenti potrebbe non esistere ancora su DB appena creato
                 continue
 
-        # Fallback: prova anche il DB legacy (per compatibilitÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  con installazioni vecchie)
+        # Fallback: prova anche il DB legacy (per compatibilitÃƒÂ  con installazioni vecchie)
         if not utente_trovato:
             try:
                 conn = sqlite3.connect(DB_LEGACY)
@@ -8109,7 +6226,7 @@ def login():
                 'ruolo': utente_trovato['ruolo'],
                 'email': utente_trovato['email'],
             })
-            # Imposta l'azienda di appartenenza (se il login ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ stato trovato in un tenant)
+            # Imposta l'azienda di appartenenza (se il login ÃƒÂ¨ stato trovato in un tenant)
             if azienda_trovata:
                 session['azienda_id'] = azienda_trovata['id']
                 session['azienda_nome'] = azienda_trovata['nome']
@@ -8137,7 +6254,7 @@ def logout(): session.clear(); return redirect(url_for('login'))
 @app.route('/api/session-check')
 def api_session_check():
     """Endpoint leggero per il polling lato client.
-    Risponde {active: true} se l'utente ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ ancora loggato e attivo,
+    Risponde {active: true} se l'utente ÃƒÂ¨ ancora loggato e attivo,
     altrimenti {active: false, reason: ...}. Usato dal JS per fare
     logout automatico in tempo quasi-reale quando l'admin disattiva l'account."""
     from flask import jsonify
@@ -8154,7 +6271,7 @@ def api_session_check():
         if not u:
             session.clear()
             return jsonify({'active': False, 'reason': 'deleted'})
-        # Tratta NULL come attivo (compatibilitÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  con record vecchi pre-migration)
+        # Tratta NULL come attivo (compatibilitÃƒÂ  con record vecchi pre-migration)
         if u['attivo'] == 0:
             session.clear()
             return jsonify({'active': False, 'reason': 'deactivated'})
@@ -8204,10 +6321,10 @@ _SESSION_POLL_JS = """
 
 @app.after_request
 def _inject_session_poll(response):
-    """Inietta il polling JS in tutte le risposte HTML, ma SOLO se l'utente ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ loggato.
+    """Inietta il polling JS in tutte le risposte HTML, ma SOLO se l'utente ÃƒÂ¨ loggato.
     Aggiunge anche header anti-cache per le pagine HTML loggate, in modo che il browser/PWA
     non serva versioni vecchie del template (senza polling) e l'utente disattivato venga
-    sempre forzato al re-fetch della pagina (che lo rederigerÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  al login)."""
+    sempre forzato al re-fetch della pagina (che lo rederigerÃƒÂ  al login)."""
     try:
         ctype = response.headers.get('Content-Type', '')
         # Solo HTML
@@ -8259,7 +6376,7 @@ def diag():
     out.append(f"<p><b>DATA_DIR:</b> <code>{_html.escape(DATA_DIR)}</code></p>")
     out.append(f"<p><b>/data esiste:</b> {os.path.isdir('/data')}</p>")
     out.append(f"<p><b>/data scrivibile:</b> {os.access('/data', os.W_OK) if os.path.isdir('/data') else 'N/A'}</p>")
-    out.append(f"<p><b>MASTER_DB:</b> <code>{_html.escape(MASTER_DB)}</code> ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â esiste: {os.path.isfile(MASTER_DB)}</p>")
+    out.append(f"<p><b>MASTER_DB:</b> <code>{_html.escape(MASTER_DB)}</code> Ã¢â‚¬â€ esiste: {os.path.isfile(MASTER_DB)}</p>")
 
     # Lista aziende nel master
     out.append("<h3>Aziende registrate nel master DB</h3>")
@@ -8302,7 +6419,7 @@ def diag():
             for f in sorted(files):
                 fp = os.path.join(tenants_dir, f)
                 sz = os.path.getsize(fp) if os.path.isfile(fp) else 0
-                out.append(f"<li><code>{_html.escape(f)}</code> ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â {sz} byte</li>")
+                out.append(f"<li><code>{_html.escape(f)}</code> Ã¢â‚¬â€ {sz} byte</li>")
             out.append("</ul>")
         else:
             out.append("<p>Cartella tenants vuota</p>")
@@ -8317,7 +6434,7 @@ def diag():
             fp = os.path.join(DATA_DIR, f)
             if os.path.isfile(fp):
                 sz = os.path.getsize(fp)
-                out.append(f"<li><code>{_html.escape(f)}</code> ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â {sz} byte (file)</li>")
+                out.append(f"<li><code>{_html.escape(f)}</code> Ã¢â‚¬â€ {sz} byte (file)</li>")
             else:
                 out.append(f"<li><code>{_html.escape(f)}</code>/ (cartella)</li>")
     except Exception as e:
@@ -8327,9 +6444,9 @@ def diag():
     return '<html><body style="font-family:system-ui;max-width:900px;margin:20px auto;padding:20px">' + '\n'.join(out) + '</body></html>'
 
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 #  GOOGLE OAUTH 2.0
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 
 GOOGLE_AUTH_URL      = 'https://accounts.google.com/o/oauth2/v2/auth'
 GOOGLE_TOKEN_URL     = 'https://oauth2.googleapis.com/token'
@@ -8337,7 +6454,7 @@ GOOGLE_USERINFO_URL  = 'https://www.googleapis.com/oauth2/v3/userinfo'
 GOOGLE_SCOPES        = 'openid email profile'
 
 def _google_redirect_uri():
-    # PrioritÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â : variabile ambiente > impostazione DB > fallback automatico
+    # PrioritÃƒÂ : variabile ambiente > impostazione DB > fallback automatico
     env_uri = os.environ.get('GOOGLE_REDIRECT_URI', '')
     if env_uri:
         return env_uri
@@ -8458,9 +6575,9 @@ def auth_google_callback():
         # Blocca utenti disattivati
         if u['attivo'] != 1:
             db.close()
-            flash('Il tuo account ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ stato disattivato. Contatta l\'amministratore.', 'error')
+            flash('Il tuo account ÃƒÂ¨ stato disattivato. Contatta l\'amministratore.', 'error')
             return redirect(url_for('login'))
-        # Utente esistente ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â aggiorna google_id e avatar se mancanti
+        # Utente esistente Ã¢â‚¬â€ aggiorna google_id e avatar se mancanti
         db.execute("UPDATE utenti SET google_id=?, avatar_url=? WHERE id=?",
                    (google_id, avatar_url, u['id']))
         safe_commit(db); db.close()
@@ -8468,7 +6585,7 @@ def auth_google_callback():
                         'ruolo': u['ruolo'], 'email': u['email']})
         return redirect(url_for('dashboard') if u['ruolo'] == 'admin' else url_for('mobile'))
     else:
-        # Nuovo utente ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â salva dati temporanei e mostra form completamento
+        # Nuovo utente Ã¢â‚¬â€ salva dati temporanei e mostra form completamento
         db.close()
         session['google_reg'] = {
             'google_id':  google_id,
@@ -8497,7 +6614,7 @@ def auth_google_completa():
             return render_template_string(_COMPLETA_TMPL, reg=reg, error='Nome e cognome sono obbligatori.')
 
         db = get_db()
-        # Password casuale (non usata ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â login solo via Google)
+        # Password casuale (non usata Ã¢â‚¬â€ login solo via Google)
         import secrets as _sec
         pw_random = hash_pw(_sec.token_hex(32))
         try:
@@ -8551,8 +6668,8 @@ input:focus{outline:none;border-color:#2563eb}
     <div class="avatar-ph">{{ (reg.nome[0] if reg.nome else '?') }}</div>
     {% endif %}
     <div>
-      <h2>Benvenuto! ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹</h2>
-      <span class="badge">ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ Google {{ reg.email }}</span>
+      <h2>Benvenuto! Ã°Å¸â€˜â€¹</h2>
+      <span class="badge">Ã¢Å“â€œ Google {{ reg.email }}</span>
     </div>
   </div>
   <p>Completa il tuo profilo per accedere al gestionale.</p>
@@ -8565,21 +6682,21 @@ input:focus{outline:none;border-color:#2563eb}
     <label>Telefono</label>
     <input name="telefono" type="tel" placeholder="+39 333...">
     <label>Mansione</label>
-    <input name="mansione" placeholder="Es. AllestitorÃƒÆ’Ã‚ÂÃƒâ€šÃ‚Âµ, Montaggio stand...">
+    <input name="mansione" placeholder="Es. AllestitorÃÂµ, Montaggio stand...">
     <label>Data assunzione</label>
     <input name="data_assunzione" type="date">
-    <button class="btn" type="submit">Crea profilo e accedi ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢</button>
+    <button class="btn" type="submit">Crea profilo e accedi Ã¢â€ â€™</button>
   </form>
 </div>
 </body></html>"""
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 #  TRADUZIONI MULTILINGUA (dipendenti mobile)
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 LANGS = {
     'it': {
-        'dir': 'ltr', 'flag': 'ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡Ãƒâ€šÃ‚Â®ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡Ãƒâ€šÃ‚Â¹', 'name': 'Italiano',
-        'login_title': 'Bentornato ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹',
+        'dir': 'ltr', 'flag': 'Ã°Å¸â€¡Â®Ã°Å¸â€¡Â¹', 'name': 'Italiano',
+        'login_title': 'Bentornato Ã°Å¸â€˜â€¹',
         'login_sub': 'Accedi al gestionale aziendale',
         'login_email': 'Email',
         'login_pass': 'Password',
@@ -8589,7 +6706,7 @@ LANGS = {
         'logout': 'Esci',
         'day_worked': 'Giorno lavorato',
         'site': 'Cantiere',
-        'select_site': 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Seleziona fiera ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â',
+        'select_site': 'Ã¢â‚¬â€ Seleziona fiera Ã¢â‚¬â€',
         'hours_worked': 'Ore lavorate',
         'total_hours': 'Ore totali',
         'break': 'Pausa',
@@ -8609,7 +6726,7 @@ LANGS = {
         'net_hours': 'Ore nette',
         'back': 'Indietro',
         'filter_month': 'Filtra per mese',
-        'all_months': 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Tutti i mesi ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â',
+        'all_months': 'Ã¢â‚¬â€ Tutti i mesi Ã¢â‚¬â€',
         'total_approved': 'ore totali approvate',
         'days_worked': 'giorni lavorati',
         'pending': 'in attesa',
@@ -8617,7 +6734,7 @@ LANGS = {
         'timbrature': 'Timbrature',
         'no_timbrature': 'Nessuna timbratura',
         'months': ['','Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'],
-        'days': ['Domenica','LunedÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¬','MartedÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¬','MercoledÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¬','GiovedÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¬','VenerdÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¬','Sabato'],
+        'days': ['Domenica','LunedÃƒÂ¬','MartedÃƒÂ¬','MercoledÃƒÂ¬','GiovedÃƒÂ¬','VenerdÃƒÂ¬','Sabato'],
         # Calendario lavori
         'work_calendar': 'Calendario Lavori',
         'work_calendar_sub': 'I tuoi servizi confermati',
@@ -8633,11 +6750,11 @@ LANGS = {
         'download': 'Scarica',
         'back_btn': 'Torna',
         'assigned_work': 'LAVORI ASSEGNATI',
-        'ciao':'Ciao','day_label':'Giorno lavorato','break_label':'Pausa (ore)','break_hint':'Es. 1h','note_ph':'Es. lavoro straordinario, materiali usati...','submit_hours':'Invia ore','sending':'Invio in corso...','last_entries':'Ultime registrazioni','desktop_ver':'Versione desktop','no_site':'Cantiere non specificato','net_hours_lbl':'nette','break_lbl':'Pausa','work_hours':'Ore lavorate','hours_suffix':'h','my_hours_title':'Le mie ore','filter_by_month':'Filtra per mese','all_months_opt':'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Tutti i mesi ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â','approved_total':'ore totali approvate','days_worked_lbl':'giorni lavorati','pending_lbl':'in attesa','download_pdf_btn':'Scarica report PDF','status_waiting':'In attesa','status_approved':'Approvata','status_rejected':'Rifiutata','net_h':'Ore nette','no_entries':'Nessuna timbratura','work_calendar_btn':'Calendario Lavori','spese_btn':'Spese Rimborsabili','spese_title':'Spese Rimborsabili','spese_new':'Nuova spesa','spese_date':'Data','spese_cat':'Categoria','spese_amount':'Importo (ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬)','spese_desc':'Descrizione','spese_vehicle':'Veicolo aziendale (opzionale)','spese_no_vehicle':'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ nessun veicolo ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ','spese_photo_label':'Foto scontrino / fattura','spese_photo_req':'obbligatoria','spese_photo_hint':'Tocca per scattare una foto o caricare dalla galleria','spese_submit':'Invia spesa','spese_sending':'Invio in corso...','spese_history':'Ultime spese','spese_waiting':'ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€šÃ‚Â³ In attesa','spese_approved':'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ Approvata','spese_rejected':'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Rifiutata','spese_note_admin':'Nota:','spese_error_photo':'La foto dello scontrino ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ obbligatoria.','spese_success':'Spesa inviata!','report_title':'Report Ore Lavorate','report_period':'Periodo','report_days':'Giorni lavorati','report_total_hours':'Ore totali','report_date':'Data','report_site':'Cantiere','report_hours':'Ore','report_notes':'Note','report_total_row':'TOTALE','report_spese_title':'Spese Rimborsabili Approvate','report_spese_cat':'Categoria','report_spese_desc':'Descrizione','report_spese_vehicle':'Veicolo','report_spese_amount':'Importo','report_spese_total':'TOTALE RIMBORSI','report_footer':'Report generato automaticamente da','all_months_label':'Tutti i mesi',
+        'ciao':'Ciao','day_label':'Giorno lavorato','break_label':'Pausa (ore)','break_hint':'Es. 1h','note_ph':'Es. lavoro straordinario, materiali usati...','submit_hours':'Invia ore','sending':'Invio in corso...','last_entries':'Ultime registrazioni','desktop_ver':'Versione desktop','no_site':'Cantiere non specificato','net_hours_lbl':'nette','break_lbl':'Pausa','work_hours':'Ore lavorate','hours_suffix':'h','my_hours_title':'Le mie ore','filter_by_month':'Filtra per mese','all_months_opt':'Ã¢â‚¬â€ Tutti i mesi Ã¢â‚¬â€','approved_total':'ore totali approvate','days_worked_lbl':'giorni lavorati','pending_lbl':'in attesa','download_pdf_btn':'Scarica report PDF','status_waiting':'In attesa','status_approved':'Approvata','status_rejected':'Rifiutata','net_h':'Ore nette','no_entries':'Nessuna timbratura','work_calendar_btn':'Calendario Lavori','spese_btn':'Spese Rimborsabili','spese_title':'Spese Rimborsabili','spese_new':'Nuova spesa','spese_date':'Data','spese_cat':'Categoria','spese_amount':'Importo (Ã¢â€šÂ¬)','spese_desc':'Descrizione','spese_vehicle':'Veicolo aziendale (opzionale)','spese_no_vehicle':'Ã¢â‚¬â€œ nessun veicolo Ã¢â‚¬â€œ','spese_photo_label':'Foto scontrino / fattura','spese_photo_req':'obbligatoria','spese_photo_hint':'Tocca per scattare una foto o caricare dalla galleria','spese_submit':'Invia spesa','spese_sending':'Invio in corso...','spese_history':'Ultime spese','spese_waiting':'Ã¢ÂÂ³ In attesa','spese_approved':'Ã¢Å“â€œ Approvata','spese_rejected':'Ã¢Å“â€” Rifiutata','spese_note_admin':'Nota:','spese_error_photo':'La foto dello scontrino ÃƒÂ¨ obbligatoria.','spese_success':'Spesa inviata!','report_title':'Report Ore Lavorate','report_period':'Periodo','report_days':'Giorni lavorati','report_total_hours':'Ore totali','report_date':'Data','report_site':'Cantiere','report_hours':'Ore','report_notes':'Note','report_total_row':'TOTALE','report_spese_title':'Spese Rimborsabili Approvate','report_spese_cat':'Categoria','report_spese_desc':'Descrizione','report_spese_vehicle':'Veicolo','report_spese_amount':'Importo','report_spese_total':'TOTALE RIMBORSI','report_footer':'Report generato automaticamente da','all_months_label':'Tutti i mesi',
     },
     'en': {
-        'dir': 'ltr', 'flag': 'ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡Ãƒâ€šÃ‚Â§', 'name': 'English',
-        'login_title': 'Welcome back ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹',
+        'dir': 'ltr', 'flag': 'Ã°Å¸â€¡Â¬Ã°Å¸â€¡Â§', 'name': 'English',
+        'login_title': 'Welcome back Ã°Å¸â€˜â€¹',
         'login_sub': 'Sign in to the company portal',
         'login_email': 'Email',
         'login_pass': 'Password',
@@ -8647,7 +6764,7 @@ LANGS = {
         'logout': 'Logout',
         'day_worked': 'Work day',
         'site': 'Site',
-        'select_site': 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Select site ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â',
+        'select_site': 'Ã¢â‚¬â€ Select site Ã¢â‚¬â€',
         'hours_worked': 'Hours worked',
         'total_hours': 'Total hours',
         'break': 'Break',
@@ -8667,7 +6784,7 @@ LANGS = {
         'net_hours': 'Net hours',
         'back': 'Back',
         'filter_month': 'Filter by month',
-        'all_months': 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â All months ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â',
+        'all_months': 'Ã¢â‚¬â€ All months Ã¢â‚¬â€',
         'total_approved': 'total approved hours',
         'days_worked': 'days worked',
         'pending': 'pending',
@@ -8691,123 +6808,123 @@ LANGS = {
         'download': 'Download',
         'back_btn': 'Back',
         'assigned_work': 'ASSIGNED WORK',
-        'ciao':'Hello','day_label':'Work day','break_label':'Break (hours)','break_hint':'E.g. 1h','note_ph':'E.g. overtime, materials used...','submit_hours':'Submit hours','sending':'Sending...','last_entries':'Recent entries','desktop_ver':'Desktop version','no_site':'Site not specified','net_hours_lbl':'net','break_lbl':'Break','work_hours':'Hours worked','hours_suffix':'h','my_hours_title':'My hours','filter_by_month':'Filter by month','all_months_opt':'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â All months ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â','approved_total':'total approved hours','days_worked_lbl':'days worked','pending_lbl':'pending','download_pdf_btn':'Download PDF report','status_waiting':'Pending','status_approved':'Approved','status_rejected':'Rejected','net_h':'Net hours','no_entries':'No entries','work_calendar_btn':'Work Calendar','spese_btn':'Reimbursable Expenses','spese_title':'Reimbursable Expenses','spese_new':'New expense','spese_date':'Date','spese_cat':'Category','spese_amount':'Amount (ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬)','spese_desc':'Description','spese_vehicle':'Company vehicle (optional)','spese_no_vehicle':'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ no vehicle ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ','spese_photo_label':'Receipt / invoice photo','spese_photo_req':'required','spese_photo_hint':'Tap to take a photo or upload from gallery','spese_submit':'Submit expense','spese_sending':'Submitting...','spese_history':'Recent expenses','spese_waiting':'ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€šÃ‚Â³ Pending','spese_approved':'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ Approved','spese_rejected':'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Rejected','spese_note_admin':'Note:','spese_error_photo':'Receipt photo is required.','spese_success':'Expense submitted!','report_title':'Hours Worked Report','report_period':'Period','report_days':'Days worked','report_total_hours':'Total hours','report_date':'Date','report_site':'Site','report_hours':'Hours','report_notes':'Notes','report_total_row':'TOTAL','report_spese_title':'Approved Reimbursable Expenses','report_spese_cat':'Category','report_spese_desc':'Description','report_spese_vehicle':'Vehicle','report_spese_amount':'Amount','report_spese_total':'TOTAL REIMBURSEMENTS','report_footer':'Report automatically generated by','all_months_label':'All months',
+        'ciao':'Hello','day_label':'Work day','break_label':'Break (hours)','break_hint':'E.g. 1h','note_ph':'E.g. overtime, materials used...','submit_hours':'Submit hours','sending':'Sending...','last_entries':'Recent entries','desktop_ver':'Desktop version','no_site':'Site not specified','net_hours_lbl':'net','break_lbl':'Break','work_hours':'Hours worked','hours_suffix':'h','my_hours_title':'My hours','filter_by_month':'Filter by month','all_months_opt':'Ã¢â‚¬â€ All months Ã¢â‚¬â€','approved_total':'total approved hours','days_worked_lbl':'days worked','pending_lbl':'pending','download_pdf_btn':'Download PDF report','status_waiting':'Pending','status_approved':'Approved','status_rejected':'Rejected','net_h':'Net hours','no_entries':'No entries','work_calendar_btn':'Work Calendar','spese_btn':'Reimbursable Expenses','spese_title':'Reimbursable Expenses','spese_new':'New expense','spese_date':'Date','spese_cat':'Category','spese_amount':'Amount (Ã¢â€šÂ¬)','spese_desc':'Description','spese_vehicle':'Company vehicle (optional)','spese_no_vehicle':'Ã¢â‚¬â€œ no vehicle Ã¢â‚¬â€œ','spese_photo_label':'Receipt / invoice photo','spese_photo_req':'required','spese_photo_hint':'Tap to take a photo or upload from gallery','spese_submit':'Submit expense','spese_sending':'Submitting...','spese_history':'Recent expenses','spese_waiting':'Ã¢ÂÂ³ Pending','spese_approved':'Ã¢Å“â€œ Approved','spese_rejected':'Ã¢Å“â€” Rejected','spese_note_admin':'Note:','spese_error_photo':'Receipt photo is required.','spese_success':'Expense submitted!','report_title':'Hours Worked Report','report_period':'Period','report_days':'Days worked','report_total_hours':'Total hours','report_date':'Date','report_site':'Site','report_hours':'Hours','report_notes':'Notes','report_total_row':'TOTAL','report_spese_title':'Approved Reimbursable Expenses','report_spese_cat':'Category','report_spese_desc':'Description','report_spese_vehicle':'Vehicle','report_spese_amount':'Amount','report_spese_total':'TOTAL REIMBURSEMENTS','report_footer':'Report automatically generated by','all_months_label':'All months',
     },
     'fr': {
-        'dir': 'ltr', 'flag': 'ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡Ãƒâ€šÃ‚Â·', 'name': 'FranÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ais',
-        'login_title': 'Bon retour ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹',
+        'dir': 'ltr', 'flag': 'Ã°Å¸â€¡Â«Ã°Å¸â€¡Â·', 'name': 'FranÃƒÂ§ais',
+        'login_title': 'Bon retour Ã°Å¸â€˜â€¹',
         'login_sub': "Connectez-vous au portail de l'entreprise",
         'login_email': 'E-mail',
         'login_pass': 'Mot de passe',
         'login_btn': 'Se connecter',
         'login_error': 'E-mail ou mot de passe incorrect.',
         'login_lang': 'Langue',
-        'logout': 'DÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©connexion',
-        'day_worked': 'Jour travaillÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©',
+        'logout': 'DÃƒÂ©connexion',
+        'day_worked': 'Jour travaillÃƒÂ©',
         'site': 'Chantier',
-        'select_site': 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â SÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lectionner chantier ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â',
-        'hours_worked': 'Heures travaillÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©es',
+        'select_site': 'Ã¢â‚¬â€ SÃƒÂ©lectionner chantier Ã¢â‚¬â€',
+        'hours_worked': 'Heures travaillÃƒÂ©es',
         'total_hours': 'Total heures',
         'break': 'Pause',
         'no_break': 'Aucune',
         'notes': 'Notes (facultatif)',
-        'notes_ph': 'Ex. heures supplÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©mentaires, matÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©riaux...',
+        'notes_ph': 'Ex. heures supplÃƒÂ©mentaires, matÃƒÂ©riaux...',
         'submit': 'Envoyer les heures',
         'sending': 'Envoi en cours...',
-        'recent': 'DerniÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨res saisies',
+        'recent': 'DerniÃƒÂ¨res saisies',
         'my_hours': 'Mes heures',
         'my_hours_sub': 'Historique, filtres par mois et rapport PDF',
         'desktop': 'Version bureau',
-        'unknown_site': 'Chantier non spÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©cifiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©',
+        'unknown_site': 'Chantier non spÃƒÂ©cifiÃƒÂ©',
         'waiting': 'En attente',
-        'approved': 'ApprouvÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©e',
-        'rejected': 'RefusÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©e',
+        'approved': 'ApprouvÃƒÂ©e',
+        'rejected': 'RefusÃƒÂ©e',
         'net_hours': 'Heures nettes',
         'back': 'Retour',
         'filter_month': 'Filtrer par mois',
-        'all_months': 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Tous les mois ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â',
-        'total_approved': 'heures totales approuvÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©es',
-        'days_worked': 'jours travaillÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©s',
+        'all_months': 'Ã¢â‚¬â€ Tous les mois Ã¢â‚¬â€',
+        'total_approved': 'heures totales approuvÃƒÂ©es',
+        'days_worked': 'jours travaillÃƒÂ©s',
         'pending': 'en attente',
-        'download_pdf': 'TÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©charger rapport PDF',
+        'download_pdf': 'TÃƒÂ©lÃƒÂ©charger rapport PDF',
         'timbrature': 'Saisies de temps',
         'no_timbrature': 'Aucune saisie',
-        'months': ['','Janvier','FÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©vrier','Mars','Avril','Mai','Juin','Juillet','AoÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â»t','Septembre','Octobre','Novembre','DÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©cembre'],
+        'months': ['','Janvier','FÃƒÂ©vrier','Mars','Avril','Mai','Juin','Juillet','AoÃƒÂ»t','Septembre','Octobre','Novembre','DÃƒÂ©cembre'],
         'days': ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'],
         # Calendrier des travaux
         'work_calendar': 'Calendrier des Travaux',
-        'work_calendar_sub': 'Vos missions confirmÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©es',
-        'your_role': 'VOTRE RÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂLE',
-        'full_team': 'ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°quipe complÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨te',
+        'work_calendar_sub': 'Vos missions confirmÃƒÂ©es',
+        'your_role': 'VOTRE RÃƒâ€LE',
+        'full_team': 'Ãƒâ€°quipe complÃƒÂ¨te',
         'drawings': 'Plans / Projets',
         'passes': 'Vos Badges',
-        'no_events': 'Aucun travail assignÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© pour',
-        'duration': 'durÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©e',
-        'start': 'dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©but',
+        'no_events': 'Aucun travail assignÃƒÂ© pour',
+        'duration': 'durÃƒÂ©e',
+        'start': 'dÃƒÂ©but',
         'end': 'fin',
         'days_unit': 'j',
-        'download': 'TÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©charger',
+        'download': 'TÃƒÂ©lÃƒÂ©charger',
         'back_btn': 'Retour',
-        'assigned_work': 'MISSIONS ASSIGNÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°ES',
-        'ciao':'Bonjour','day_label':'Jour travaillÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©','break_label':'Pause (heures)','break_hint':'Ex. 1h','note_ph':'Ex. heures supplÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©mentaires, matÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©riaux...','submit_hours':'Envoyer les heures','sending':'Envoi...','last_entries':'DerniÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨res saisies','desktop_ver':'Version bureau','no_site':'Chantier non spÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©cifiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©','net_hours_lbl':'nettes','break_lbl':'Pause','work_hours':'Heures travaillÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©es','hours_suffix':'h','my_hours_title':'Mes heures','filter_by_month':'Filtrer par mois','all_months_opt':'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Tous les mois ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â','approved_total':'heures approuvÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©es','days_worked_lbl':'jours travaillÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©s','pending_lbl':'en attente','download_pdf_btn':'TÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©charger rapport PDF','status_waiting':'En attente','status_approved':'ApprouvÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©e','status_rejected':'RefusÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©e','net_h':'Heures nettes','no_entries':'Aucune saisie','work_calendar_btn':'Calendrier Travaux','spese_btn':'Frais Remboursables','spese_title':'Frais Remboursables','spese_new':'Nouveau frais','spese_date':'Date','spese_cat':'CatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©gorie','spese_amount':'Montant (ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬)','spese_desc':'Description','spese_vehicle':'VÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©hicule de sociÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©tÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© (optionnel)','spese_no_vehicle':'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ aucun vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©hicule ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ','spese_photo_label':'Photo reÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§u / facture','spese_photo_req':'obligatoire','spese_photo_hint':'Toucher pour prendre une photo ou importer de la galerie','spese_submit':'Envoyer la dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©pense','spese_sending':'Envoi...','spese_history':'DerniÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨res dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©penses','spese_waiting':'ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€šÃ‚Â³ En attente','spese_approved':'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ ApprouvÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©','spese_rejected':'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â RefusÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©','spese_note_admin':'Note:','spese_error_photo':'La photo du reÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§u est obligatoire.','spese_success':'DÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©pense envoyÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©e!','report_title':'Rapport Heures TravaillÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©es','report_period':'PÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©riode','report_days':'Jours travaillÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©s','report_total_hours':'Total heures','report_date':'Date','report_site':'Chantier','report_hours':'Heures','report_notes':'Notes','report_total_row':'TOTAL','report_spese_title':'Frais RemboursÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©s ApprouvÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©s','report_spese_cat':'CatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©gorie','report_spese_desc':'Description','report_spese_vehicle':'VÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©hicule','report_spese_amount':'Montant','report_spese_total':'TOTAL REMBOURSEMENTS','report_footer':'Rapport gÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©rÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© automatiquement par','all_months_label':'Tous les mois',
+        'assigned_work': 'MISSIONS ASSIGNÃƒâ€°ES',
+        'ciao':'Bonjour','day_label':'Jour travaillÃƒÂ©','break_label':'Pause (heures)','break_hint':'Ex. 1h','note_ph':'Ex. heures supplÃƒÂ©mentaires, matÃƒÂ©riaux...','submit_hours':'Envoyer les heures','sending':'Envoi...','last_entries':'DerniÃƒÂ¨res saisies','desktop_ver':'Version bureau','no_site':'Chantier non spÃƒÂ©cifiÃƒÂ©','net_hours_lbl':'nettes','break_lbl':'Pause','work_hours':'Heures travaillÃƒÂ©es','hours_suffix':'h','my_hours_title':'Mes heures','filter_by_month':'Filtrer par mois','all_months_opt':'Ã¢â‚¬â€ Tous les mois Ã¢â‚¬â€','approved_total':'heures approuvÃƒÂ©es','days_worked_lbl':'jours travaillÃƒÂ©s','pending_lbl':'en attente','download_pdf_btn':'TÃƒÂ©lÃƒÂ©charger rapport PDF','status_waiting':'En attente','status_approved':'ApprouvÃƒÂ©e','status_rejected':'RefusÃƒÂ©e','net_h':'Heures nettes','no_entries':'Aucune saisie','work_calendar_btn':'Calendrier Travaux','spese_btn':'Frais Remboursables','spese_title':'Frais Remboursables','spese_new':'Nouveau frais','spese_date':'Date','spese_cat':'CatÃƒÂ©gorie','spese_amount':'Montant (Ã¢â€šÂ¬)','spese_desc':'Description','spese_vehicle':'VÃƒÂ©hicule de sociÃƒÂ©tÃƒÂ© (optionnel)','spese_no_vehicle':'Ã¢â‚¬â€œ aucun vÃƒÂ©hicule Ã¢â‚¬â€œ','spese_photo_label':'Photo reÃƒÂ§u / facture','spese_photo_req':'obligatoire','spese_photo_hint':'Toucher pour prendre une photo ou importer de la galerie','spese_submit':'Envoyer la dÃƒÂ©pense','spese_sending':'Envoi...','spese_history':'DerniÃƒÂ¨res dÃƒÂ©penses','spese_waiting':'Ã¢ÂÂ³ En attente','spese_approved':'Ã¢Å“â€œ ApprouvÃƒÂ©','spese_rejected':'Ã¢Å“â€” RefusÃƒÂ©','spese_note_admin':'Note:','spese_error_photo':'La photo du reÃƒÂ§u est obligatoire.','spese_success':'DÃƒÂ©pense envoyÃƒÂ©e!','report_title':'Rapport Heures TravaillÃƒÂ©es','report_period':'PÃƒÂ©riode','report_days':'Jours travaillÃƒÂ©s','report_total_hours':'Total heures','report_date':'Date','report_site':'Chantier','report_hours':'Heures','report_notes':'Notes','report_total_row':'TOTAL','report_spese_title':'Frais RemboursÃƒÂ©s ApprouvÃƒÂ©s','report_spese_cat':'CatÃƒÂ©gorie','report_spese_desc':'Description','report_spese_vehicle':'VÃƒÂ©hicule','report_spese_amount':'Montant','report_spese_total':'TOTAL REMBOURSEMENTS','report_footer':'Rapport gÃƒÂ©nÃƒÂ©rÃƒÂ© automatiquement par','all_months_label':'Tous les mois',
     },
     'ar': {
-        'dir': 'rtl', 'flag': 'ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡Ãƒâ€šÃ‚Â²ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡Ãƒâ€šÃ‚Â¦', 'name': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©',
-        'login_title': 'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹',
-        'login_sub': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â®ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â° ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â´ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©',
-        'login_email': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ',
-        'login_pass': 'ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±',
-        'login_btn': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â®ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾',
-        'login_error': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â  ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â£ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â  ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â± ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â± ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©.',
-        'login_lang': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂºÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©',
-        'logout': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â®ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬',
-        'day_worked': 'ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾',
-        'site': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â´ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©',
-        'select_site': 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â®ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â± ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â´ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â',
-        'hours_worked': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾',
-        'total_hours': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â  ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª',
-        'break': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©',
-        'no_break': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â  ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©',
-        'notes': 'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª (ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â®ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â )',
-        'notes_ph': 'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â«ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾: ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¶ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©ÃƒÆ’Ã‹Å“Ãƒâ€¦Ã¢â‚¬â„¢ ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â®ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©...',
-        'submit': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª',
-        'sending': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â  ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾...',
-        'recent': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â®ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â± ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª',
-        'my_hours': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ',
-        'my_hours_sub': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â´ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â± PDF',
-        'desktop': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â®ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©',
-        'unknown_site': 'ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â´ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â± ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©',
-        'waiting': 'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±',
-        'approved': 'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§',
-        'rejected': 'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¶ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©',
-        'net_hours': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©',
-        'back': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹',
-        'filter_month': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â´ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±',
-        'all_months': 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â£ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â´ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â± ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â',
-        'total_approved': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©',
-        'days_worked': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â£ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾',
-        'pending': 'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±',
-        'download_pdf': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â± PDF',
-        'timbrature': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¶ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±',
-        'no_timbrature': 'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª',
-        'months': ['','ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±','ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±','ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³','ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â£ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾','ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ','ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ','ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ','ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â£ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂºÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â·ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³','ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±','ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â£ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±','ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±','ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±'],
-        'days': ['ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â£ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯','ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â«ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ','ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â«ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â«ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¡','ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â£ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¡','ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â®ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³','ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©','ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª'],
-        # ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â£ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾
-        'work_calendar': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â£ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾',
-        'work_calendar_sub': 'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¤ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©',
-        'your_role': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â  ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â°ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾',
-        'full_team': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾',
-        'drawings': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª / ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â´ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹',
-        'passes': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â®ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾',
-        'no_events': 'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â£ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â®ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â´ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±',
-        'duration': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©',
-        'start': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©',
-        'end': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©',
-        'days_unit': 'ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦',
-        'download': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾',
-        'back_btn': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹',
-        'assigned_work': 'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â£ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â®ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©',
-        'ciao':'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹','day_label':'ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾','break_label':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© (ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª)','break_hint':'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â«ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾: 1h','note_ph':'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â«ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾: ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¶ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©ÃƒÆ’Ã‹Å“Ãƒâ€¦Ã¢â‚¬â„¢ ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â®ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©...','submit_hours':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª','sending':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â  ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾...','last_entries':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â®ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â± ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª','desktop_ver':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â®ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©','no_site':'ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â´ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â± ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©','net_hours_lbl':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ','break_lbl':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©','work_hours':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾','hours_suffix':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³','my_hours_title':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ','filter_by_month':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â´ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±','all_months_opt':'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â£ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â´ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â± ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â','approved_total':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©','days_worked_lbl':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â£ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾','pending_lbl':'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±','download_pdf_btn':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â± PDF','status_waiting':'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±','status_approved':'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§','status_rejected':'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¶ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©','net_h':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©','no_entries':'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª','work_calendar_btn':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â£ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾','spese_btn':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯','spese_title':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯','spese_new':'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯','spese_date':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â®','spese_cat':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©','spese_amount':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âº (ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬)','spese_desc':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚Â','spese_vehicle':'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â´ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© (ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â®ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â )','spese_no_vehicle':'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â  ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ','spese_photo_label':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ / ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©','spese_photo_req':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â²ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ','spese_photo_hint':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¶ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂºÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â· ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â· ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â£ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â  ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â  ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¶','spese_submit':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚Â','spese_sending':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â  ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾...','spese_history':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â®ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â± ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚Â','spese_waiting':'ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€šÃ‚Â³ ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±','spese_approved':'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡','spese_rejected':'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¶','spese_note_admin':'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©:','spese_error_photo':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â²ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©.','spese_success':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚Â!','report_title':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â± ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾','report_period':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©','report_days':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â£ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾','report_total_hours':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â  ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª','report_date':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â®','report_site':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â´ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©','report_hours':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª','report_notes':'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª','report_total_row':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹','report_spese_title':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯','report_spese_cat':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©','report_spese_desc':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚Â','report_spese_vehicle':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©','report_spese_amount':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âº','report_spese_total':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â  ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¶ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª','report_footer':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â´ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¡ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â± ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â·ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©','all_months_label':'ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â£ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â´ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±',
+        'dir': 'rtl', 'flag': 'Ã°Å¸â€¡Â²Ã°Å¸â€¡Â¦', 'name': 'Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â±Ã˜Â¨Ã™Å Ã˜Â©',
+        'login_title': 'Ã™â€¦Ã˜Â±Ã˜Â­Ã˜Â¨Ã˜Â§Ã™â€¹ Ã˜Â¨Ã˜Â¹Ã™Ë†Ã˜Â¯Ã˜ÂªÃ™Æ’ Ã°Å¸â€˜â€¹',
+        'login_sub': 'Ã˜Â³Ã˜Â¬Ã™â€˜Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â¯Ã˜Â®Ã™Ë†Ã™â€ž Ã˜Â¥Ã™â€žÃ™â€° Ã˜Â¨Ã™Ë†Ã˜Â§Ã˜Â¨Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â´Ã˜Â±Ã™Æ’Ã˜Â©',
+        'login_email': 'Ã˜Â§Ã™â€žÃ˜Â¨Ã˜Â±Ã™Å Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â¥Ã™â€žÃ™Æ’Ã˜ÂªÃ˜Â±Ã™Ë†Ã™â€ Ã™Å ',
+        'login_pass': 'Ã™Æ’Ã™â€žÃ™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â±Ã™Ë†Ã˜Â±',
+        'login_btn': 'Ã˜Â¯Ã˜Â®Ã™Ë†Ã™â€ž',
+        'login_error': 'Ã˜Â§Ã™â€žÃ˜Â¨Ã˜Â±Ã™Å Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â¥Ã™â€žÃ™Æ’Ã˜ÂªÃ˜Â±Ã™Ë†Ã™â€ Ã™Å  Ã˜Â£Ã™Ë† Ã™Æ’Ã™â€žÃ™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â±Ã™Ë†Ã˜Â± Ã˜ÂºÃ™Å Ã˜Â± Ã˜ÂµÃ˜Â­Ã™Å Ã˜Â­Ã˜Â©.',
+        'login_lang': 'Ã˜Â§Ã™â€žÃ™â€žÃ˜ÂºÃ˜Â©',
+        'logout': 'Ã˜Â®Ã˜Â±Ã™Ë†Ã˜Â¬',
+        'day_worked': 'Ã™Å Ã™Ë†Ã™â€¦ Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€ž',
+        'site': 'Ã˜Â§Ã™â€žÃ™Ë†Ã˜Â±Ã˜Â´Ã˜Â©',
+        'select_site': 'Ã¢â‚¬â€ Ã˜Â§Ã˜Â®Ã˜ÂªÃ˜Â± Ã˜Â§Ã™â€žÃ™Ë†Ã˜Â±Ã˜Â´Ã˜Â© Ã¢â‚¬â€',
+        'hours_worked': 'Ã˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€ž',
+        'total_hours': 'Ã˜Â¥Ã˜Â¬Ã™â€¦Ã˜Â§Ã™â€žÃ™Å  Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª',
+        'break': 'Ã˜Â§Ã˜Â³Ã˜ÂªÃ˜Â±Ã˜Â§Ã˜Â­Ã˜Â©',
+        'no_break': 'Ã˜Â¨Ã˜Â¯Ã™Ë†Ã™â€  Ã˜Â§Ã˜Â³Ã˜ÂªÃ˜Â±Ã˜Â§Ã˜Â­Ã˜Â©',
+        'notes': 'Ã™â€¦Ã™â€žÃ˜Â§Ã˜Â­Ã˜Â¸Ã˜Â§Ã˜Âª (Ã˜Â§Ã˜Â®Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â±Ã™Å )',
+        'notes_ph': 'Ã™â€¦Ã˜Â«Ã˜Â§Ã™â€ž: Ã˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª Ã˜Â¥Ã˜Â¶Ã˜Â§Ã™ÂÃ™Å Ã˜Â©Ã˜Å’ Ã™â€¦Ã™Ë†Ã˜Â§Ã˜Â¯ Ã™â€¦Ã˜Â³Ã˜ÂªÃ˜Â®Ã˜Â¯Ã™â€¦Ã˜Â©...',
+        'submit': 'Ã˜Â¥Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª',
+        'sending': 'Ã˜Â¬Ã˜Â§Ã˜Â±Ã™Å  Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€ž...',
+        'recent': 'Ã˜Â¢Ã˜Â®Ã˜Â± Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â³Ã˜Â¬Ã™Å Ã™â€žÃ˜Â§Ã˜Âª',
+        'my_hours': 'Ã˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜ÂªÃ™Å ',
+        'my_hours_sub': 'Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¬Ã™â€ž Ã™Ë†Ã˜Â§Ã™â€žÃ™ÂÃ™â€žÃ˜ÂªÃ˜Â±Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â´Ã™â€¡Ã˜Â±Ã™Å Ã˜Â© Ã™Ë†Ã˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â± PDF',
+        'desktop': 'Ã˜Â§Ã™â€žÃ™â€ Ã˜Â³Ã˜Â®Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã™Æ’Ã˜ÂªÃ˜Â¨Ã™Å Ã˜Â©',
+        'unknown_site': 'Ã™Ë†Ã˜Â±Ã˜Â´Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã˜Â­Ã˜Â¯Ã˜Â¯Ã˜Â©',
+        'waiting': 'Ã™â€šÃ™Å Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â§Ã™â€ Ã˜ÂªÃ˜Â¸Ã˜Â§Ã˜Â±',
+        'approved': 'Ã™â€¦Ã™Ë†Ã˜Â§Ã™ÂÃ™â€š Ã˜Â¹Ã™â€žÃ™Å Ã™â€¡Ã˜Â§',
+        'rejected': 'Ã™â€¦Ã˜Â±Ã™ÂÃ™Ë†Ã˜Â¶Ã˜Â©',
+        'net_hours': 'Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜ÂµÃ˜Â§Ã™ÂÃ™Å Ã˜Â©',
+        'back': 'Ã˜Â±Ã˜Â¬Ã™Ë†Ã˜Â¹',
+        'filter_month': 'Ã˜ÂªÃ˜ÂµÃ™ÂÃ™Å Ã˜Â© Ã˜Â­Ã˜Â³Ã˜Â¨ Ã˜Â§Ã™â€žÃ˜Â´Ã™â€¡Ã˜Â±',
+        'all_months': 'Ã¢â‚¬â€ Ã™Æ’Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â´Ã™â€¡Ã˜Â± Ã¢â‚¬â€',
+        'total_approved': 'Ã˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª Ã™â€¦Ã˜Â¹Ã˜ÂªÃ™â€¦Ã˜Â¯Ã˜Â©',
+        'days_worked': 'Ã˜Â£Ã™Å Ã˜Â§Ã™â€¦ Ã˜Â¹Ã™â€¦Ã™â€ž',
+        'pending': 'Ã™â€šÃ™Å Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â§Ã™â€ Ã˜ÂªÃ˜Â¸Ã˜Â§Ã˜Â±',
+        'download_pdf': 'Ã˜ÂªÃ˜Â­Ã™â€¦Ã™Å Ã™â€ž Ã˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â± PDF',
+        'timbrature': 'Ã˜Â³Ã˜Â¬Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â­Ã˜Â¶Ã™Ë†Ã˜Â±',
+        'no_timbrature': 'Ã™â€žÃ˜Â§ Ã˜ÂªÃ™Ë†Ã˜Â¬Ã˜Â¯ Ã˜ÂªÃ˜Â³Ã˜Â¬Ã™Å Ã™â€žÃ˜Â§Ã˜Âª',
+        'months': ['','Ã™Å Ã™â€ Ã˜Â§Ã™Å Ã˜Â±','Ã™ÂÃ˜Â¨Ã˜Â±Ã˜Â§Ã™Å Ã˜Â±','Ã™â€¦Ã˜Â§Ã˜Â±Ã˜Â³','Ã˜Â£Ã˜Â¨Ã˜Â±Ã™Å Ã™â€ž','Ã™â€¦Ã˜Â§Ã™Å Ã™Ë†','Ã™Å Ã™Ë†Ã™â€ Ã™Å Ã™Ë†','Ã™Å Ã™Ë†Ã™â€žÃ™Å Ã™Ë†','Ã˜Â£Ã˜ÂºÃ˜Â³Ã˜Â·Ã˜Â³','Ã˜Â³Ã˜Â¨Ã˜ÂªÃ™â€¦Ã˜Â¨Ã˜Â±','Ã˜Â£Ã™Æ’Ã˜ÂªÃ™Ë†Ã˜Â¨Ã˜Â±','Ã™â€ Ã™Ë†Ã™ÂÃ™â€¦Ã˜Â¨Ã˜Â±','Ã˜Â¯Ã™Å Ã˜Â³Ã™â€¦Ã˜Â¨Ã˜Â±'],
+        'days': ['Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â­Ã˜Â¯','Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â«Ã™â€ Ã™Å Ã™â€ ','Ã˜Â§Ã™â€žÃ˜Â«Ã™â€žÃ˜Â§Ã˜Â«Ã˜Â§Ã˜Â¡','Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â±Ã˜Â¨Ã˜Â¹Ã˜Â§Ã˜Â¡','Ã˜Â§Ã™â€žÃ˜Â®Ã™â€¦Ã™Å Ã˜Â³','Ã˜Â§Ã™â€žÃ˜Â¬Ã™â€¦Ã˜Â¹Ã˜Â©','Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¨Ã˜Âª'],
+        # Ã˜ÂªÃ™â€šÃ™Ë†Ã™Å Ã™â€¦ Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â¹Ã™â€¦Ã˜Â§Ã™â€ž
+        'work_calendar': 'Ã˜Â¬Ã˜Â¯Ã™Ë†Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â¹Ã™â€¦Ã˜Â§Ã™â€ž',
+        'work_calendar_sub': 'Ã™â€¦Ã™â€¡Ã˜Â§Ã™â€¦Ã™Æ’ Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¤Ã™Æ’Ã˜Â¯Ã˜Â©',
+        'your_role': 'Ã˜Â¯Ã™Ë†Ã˜Â±Ã™Æ’ Ã™ÂÃ™Å  Ã™â€¡Ã˜Â°Ã˜Â§ Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€ž',
+        'full_team': 'Ã˜Â§Ã™â€žÃ™ÂÃ˜Â±Ã™Å Ã™â€š Ã˜Â§Ã™â€žÃ™Æ’Ã˜Â§Ã™â€¦Ã™â€ž',
+        'drawings': 'Ã˜Â§Ã™â€žÃ˜Â±Ã˜Â³Ã™Ë†Ã™â€¦Ã˜Â§Ã˜Âª / Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â´Ã˜Â§Ã˜Â±Ã™Å Ã˜Â¹',
+        'passes': 'Ã˜ÂªÃ˜ÂµÃ˜Â§Ã˜Â±Ã™Å Ã˜Â­ Ã˜Â§Ã™â€žÃ˜Â¯Ã˜Â®Ã™Ë†Ã™â€ž',
+        'no_events': 'Ã™â€žÃ˜Â§ Ã˜ÂªÃ™Ë†Ã˜Â¬Ã˜Â¯ Ã˜Â£Ã˜Â¹Ã™â€¦Ã˜Â§Ã™â€ž Ã™â€¦Ã˜Â®Ã˜ÂµÃ˜ÂµÃ˜Â© Ã™â€žÃ˜Â´Ã™â€¡Ã˜Â±',
+        'duration': 'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¯Ã˜Â©',
+        'start': 'Ã˜Â§Ã™â€žÃ˜Â¨Ã˜Â¯Ã˜Â§Ã™Å Ã˜Â©',
+        'end': 'Ã˜Â§Ã™â€žÃ™â€ Ã™â€¡Ã˜Â§Ã™Å Ã˜Â©',
+        'days_unit': 'Ã™Å Ã™Ë†Ã™â€¦',
+        'download': 'Ã˜ÂªÃ˜Â­Ã™â€¦Ã™Å Ã™â€ž',
+        'back_btn': 'Ã˜Â±Ã˜Â¬Ã™Ë†Ã˜Â¹',
+        'assigned_work': 'Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â¹Ã™â€¦Ã˜Â§Ã™â€ž Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â®Ã˜ÂµÃ˜ÂµÃ˜Â©',
+        'ciao':'Ã™â€¦Ã˜Â±Ã˜Â­Ã˜Â¨Ã˜Â§Ã™â€¹','day_label':'Ã™Å Ã™Ë†Ã™â€¦ Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€ž','break_label':'Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â³Ã˜ÂªÃ˜Â±Ã˜Â§Ã˜Â­Ã˜Â© (Ã˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª)','break_hint':'Ã™â€¦Ã˜Â«Ã˜Â§Ã™â€ž: 1h','note_ph':'Ã™â€¦Ã˜Â«Ã˜Â§Ã™â€ž: Ã˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª Ã˜Â¥Ã˜Â¶Ã˜Â§Ã™ÂÃ™Å Ã˜Â©Ã˜Å’ Ã™â€¦Ã™Ë†Ã˜Â§Ã˜Â¯ Ã™â€¦Ã˜Â³Ã˜ÂªÃ˜Â®Ã˜Â¯Ã™â€¦Ã˜Â©...','submit_hours':'Ã˜Â¥Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª','sending':'Ã˜Â¬Ã˜Â§Ã˜Â±Ã™Å  Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€ž...','last_entries':'Ã˜Â¢Ã˜Â®Ã˜Â± Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â³Ã˜Â¬Ã™Å Ã™â€žÃ˜Â§Ã˜Âª','desktop_ver':'Ã˜Â§Ã™â€žÃ™â€ Ã˜Â³Ã˜Â®Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã™Æ’Ã˜ÂªÃ˜Â¨Ã™Å Ã˜Â©','no_site':'Ã™Ë†Ã˜Â±Ã˜Â´Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã˜Â­Ã˜Â¯Ã˜Â¯Ã˜Â©','net_hours_lbl':'Ã˜ÂµÃ˜Â§Ã™ÂÃ™Å ','break_lbl':'Ã˜Â§Ã˜Â³Ã˜ÂªÃ˜Â±Ã˜Â§Ã˜Â­Ã˜Â©','work_hours':'Ã˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€ž','hours_suffix':'Ã˜Â³','my_hours_title':'Ã˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜ÂªÃ™Å ','filter_by_month':'Ã˜ÂªÃ˜ÂµÃ™ÂÃ™Å Ã˜Â© Ã˜Â­Ã˜Â³Ã˜Â¨ Ã˜Â§Ã™â€žÃ˜Â´Ã™â€¡Ã˜Â±','all_months_opt':'Ã¢â‚¬â€ Ã™Æ’Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â´Ã™â€¡Ã˜Â± Ã¢â‚¬â€','approved_total':'Ã˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª Ã™â€¦Ã˜Â¹Ã˜ÂªÃ™â€¦Ã˜Â¯Ã˜Â©','days_worked_lbl':'Ã˜Â£Ã™Å Ã˜Â§Ã™â€¦ Ã˜Â¹Ã™â€¦Ã™â€ž','pending_lbl':'Ã™â€šÃ™Å Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â§Ã™â€ Ã˜ÂªÃ˜Â¸Ã˜Â§Ã˜Â±','download_pdf_btn':'Ã˜ÂªÃ˜Â­Ã™â€¦Ã™Å Ã™â€ž Ã˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â± PDF','status_waiting':'Ã™â€šÃ™Å Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â§Ã™â€ Ã˜ÂªÃ˜Â¸Ã˜Â§Ã˜Â±','status_approved':'Ã™â€¦Ã™Ë†Ã˜Â§Ã™ÂÃ™â€š Ã˜Â¹Ã™â€žÃ™Å Ã™â€¡Ã˜Â§','status_rejected':'Ã™â€¦Ã˜Â±Ã™ÂÃ™Ë†Ã˜Â¶Ã˜Â©','net_h':'Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜ÂµÃ˜Â§Ã™ÂÃ™Å Ã˜Â©','no_entries':'Ã™â€žÃ˜Â§ Ã˜ÂªÃ™Ë†Ã˜Â¬Ã˜Â¯ Ã˜ÂªÃ˜Â³Ã˜Â¬Ã™Å Ã™â€žÃ˜Â§Ã˜Âª','work_calendar_btn':'Ã˜Â¬Ã˜Â¯Ã™Ë†Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â¹Ã™â€¦Ã˜Â§Ã™â€ž','spese_btn':'Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂµÃ˜Â§Ã˜Â±Ã™Å Ã™Â Ã˜Â§Ã™â€žÃ™â€šÃ˜Â§Ã˜Â¨Ã™â€žÃ˜Â© Ã™â€žÃ™â€žÃ˜Â§Ã˜Â³Ã˜ÂªÃ˜Â±Ã˜Â¯Ã˜Â§Ã˜Â¯','spese_title':'Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂµÃ˜Â§Ã˜Â±Ã™Å Ã™Â Ã˜Â§Ã™â€žÃ™â€šÃ˜Â§Ã˜Â¨Ã™â€žÃ˜Â© Ã™â€žÃ™â€žÃ˜Â§Ã˜Â³Ã˜ÂªÃ˜Â±Ã˜Â¯Ã˜Â§Ã˜Â¯','spese_new':'Ã™â€¦Ã˜ÂµÃ˜Â±Ã™Ë†Ã™Â Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯','spese_date':'Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â§Ã˜Â±Ã™Å Ã˜Â®','spese_cat':'Ã˜Â§Ã™â€žÃ™ÂÃ˜Â¦Ã˜Â©','spese_amount':'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¨Ã™â€žÃ˜Âº (Ã¢â€šÂ¬)','spese_desc':'Ã˜Â§Ã™â€žÃ™Ë†Ã˜ÂµÃ™Â','spese_vehicle':'Ã™â€¦Ã˜Â±Ã™Æ’Ã˜Â¨Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â´Ã˜Â±Ã™Æ’Ã˜Â© (Ã˜Â§Ã˜Â®Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â±Ã™Å )','spese_no_vehicle':'Ã¢â‚¬â€œ Ã˜Â¨Ã˜Â¯Ã™Ë†Ã™â€  Ã™â€¦Ã˜Â±Ã™Æ’Ã˜Â¨Ã˜Â© Ã¢â‚¬â€œ','spese_photo_label':'Ã˜ÂµÃ™Ë†Ã˜Â±Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¥Ã™Å Ã˜ÂµÃ˜Â§Ã™â€ž / Ã˜Â§Ã™â€žÃ™ÂÃ˜Â§Ã˜ÂªÃ™Ë†Ã˜Â±Ã˜Â©','spese_photo_req':'Ã˜Â¥Ã™â€žÃ˜Â²Ã˜Â§Ã™â€¦Ã™Å ','spese_photo_hint':'Ã˜Â§Ã˜Â¶Ã˜ÂºÃ˜Â· Ã™â€žÃ˜Â§Ã™â€žÃ˜ÂªÃ™â€šÃ˜Â§Ã˜Â· Ã˜ÂµÃ™Ë†Ã˜Â±Ã˜Â© Ã˜Â£Ã™Ë† Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â­Ã™â€¦Ã™Å Ã™â€ž Ã™â€¦Ã™â€  Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¹Ã˜Â±Ã˜Â¶','spese_submit':'Ã˜Â¥Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€ž Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂµÃ˜Â±Ã™Ë†Ã™Â','spese_sending':'Ã˜Â¬Ã˜Â§Ã˜Â±Ã™Å  Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€ž...','spese_history':'Ã˜Â¢Ã˜Â®Ã˜Â± Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂµÃ˜Â§Ã˜Â±Ã™Å Ã™Â','spese_waiting':'Ã¢ÂÂ³ Ã™â€šÃ™Å Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â§Ã™â€ Ã˜ÂªÃ˜Â¸Ã˜Â§Ã˜Â±','spese_approved':'Ã¢Å“â€œ Ã™â€¦Ã™Ë†Ã˜Â§Ã™ÂÃ™â€š Ã˜Â¹Ã™â€žÃ™Å Ã™â€¡','spese_rejected':'Ã¢Å“â€” Ã™â€¦Ã˜Â±Ã™ÂÃ™Ë†Ã˜Â¶','spese_note_admin':'Ã™â€¦Ã™â€žÃ˜Â§Ã˜Â­Ã˜Â¸Ã˜Â©:','spese_error_photo':'Ã˜ÂµÃ™Ë†Ã˜Â±Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¥Ã™Å Ã˜ÂµÃ˜Â§Ã™â€ž Ã˜Â¥Ã™â€žÃ˜Â²Ã˜Â§Ã™â€¦Ã™Å Ã˜Â©.','spese_success':'Ã˜ÂªÃ™â€¦ Ã˜Â¥Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€ž Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂµÃ˜Â±Ã™Ë†Ã™Â!','report_title':'Ã˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â± Ã˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€ž','report_period':'Ã˜Â§Ã™â€žÃ™ÂÃ˜ÂªÃ˜Â±Ã˜Â©','report_days':'Ã˜Â£Ã™Å Ã˜Â§Ã™â€¦ Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€ž','report_total_hours':'Ã˜Â¥Ã˜Â¬Ã™â€¦Ã˜Â§Ã™â€žÃ™Å  Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª','report_date':'Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â§Ã˜Â±Ã™Å Ã˜Â®','report_site':'Ã˜Â§Ã™â€žÃ™Ë†Ã˜Â±Ã˜Â´Ã˜Â©','report_hours':'Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â§Ã˜Â¹Ã˜Â§Ã˜Âª','report_notes':'Ã™â€¦Ã™â€žÃ˜Â§Ã˜Â­Ã˜Â¸Ã˜Â§Ã˜Âª','report_total_row':'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¬Ã™â€¦Ã™Ë†Ã˜Â¹','report_spese_title':'Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂµÃ˜Â§Ã˜Â±Ã™Å Ã™Â Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¹Ã˜ÂªÃ™â€¦Ã˜Â¯Ã˜Â© Ã˜Â§Ã™â€žÃ™â€šÃ˜Â§Ã˜Â¨Ã™â€žÃ˜Â© Ã™â€žÃ™â€žÃ˜Â§Ã˜Â³Ã˜ÂªÃ˜Â±Ã˜Â¯Ã˜Â§Ã˜Â¯','report_spese_cat':'Ã˜Â§Ã™â€žÃ™ÂÃ˜Â¦Ã˜Â©','report_spese_desc':'Ã˜Â§Ã™â€žÃ™Ë†Ã˜ÂµÃ™Â','report_spese_vehicle':'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â±Ã™Æ’Ã˜Â¨Ã˜Â©','report_spese_amount':'Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¨Ã™â€žÃ˜Âº','report_spese_total':'Ã˜Â¥Ã˜Â¬Ã™â€¦Ã˜Â§Ã™â€žÃ™Å  Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â¹Ã™Ë†Ã™Å Ã˜Â¶Ã˜Â§Ã˜Âª','report_footer':'Ã˜ÂªÃ™â€¦ Ã˜Â¥Ã™â€ Ã˜Â´Ã˜Â§Ã˜Â¡ Ã˜Â§Ã™â€žÃ˜ÂªÃ™â€šÃ˜Â±Ã™Å Ã˜Â± Ã˜ÂªÃ™â€žÃ™â€šÃ˜Â§Ã˜Â¦Ã™Å Ã˜Â§Ã™â€¹ Ã˜Â¨Ã™Ë†Ã˜Â§Ã˜Â³Ã˜Â·Ã˜Â©','all_months_label':'Ã™Æ’Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â´Ã™â€¡Ã˜Â±',
     },
 }
 
@@ -8877,24 +6994,24 @@ LANGS['fr'].update({
     'spese_cat_labels': {'Carburante':'Carburant','Parcheggio':'Parking','Pedaggio':'Peage','Vitto':'Repas','Alloggio':'Logement','Materiale':'Materiel','Trasporto':'Transport','Altro':'Autre'},
 })
 LANGS['ar'].update({
-    'profile_title':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚Â','profile_role_default':'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚Â','notifications':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â´ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª',
-    'loading':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â± ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾...','activate_notifications':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â´ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª','show_diagnostics':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¶ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â´ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â®ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âµ',
-    'install_app':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â«ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â·ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡','app_not_installed':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â·ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â± ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â«ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª','install_on_device':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â«ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â° ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â²',
-    'change_email':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â± ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â®ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾','new_email':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯','confirm_current_password':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â± ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©',
-    'update_email':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â« ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯','change_password':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â± ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±','current_password':'ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â± ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©',
-    'new_password':'ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â± ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©','min_6_chars':'6 ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â° ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾','at_least_6_chars':'6 ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â° ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾',
-    'repeat_new_password':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â± ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©','repeat_password':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±','logout_account':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â®ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬',
-    'leave_title':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â·ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­','leave_new':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â·ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯','leave_type':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹','leave_from':'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ','leave_to':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°',
-    'leave_vacation':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â·ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©','leave_permission':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­','leave_sickness':'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¶','leave_study':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©',
-    'leave_permission_from':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ','leave_permission_to':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°','leave_certificate':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â´ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¶ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©',
-    'leave_certificate_hint':'ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â  PDF ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â´ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©.','leave_reason':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨','optional':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â®ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ',
-    'send_request':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â·ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨','your_requests':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â·ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢','from_date':'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ','to_date':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°','days_short':'ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦',
-    'from_time':'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ','to_time':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°','accepted':'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾','admin_reply':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©:','certificate_attached':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â´ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©',
-    'no_requests':'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â·ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯.','leave_dates_required':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â® ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â·ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©.',
-    'leave_hours_required':'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â­ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â®ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©.',
-    'leave_certificate_required':'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¶ ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â´ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©.',
-    'leave_date_order':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â® ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â  ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â  ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â® ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©.','leave_sent':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â·ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨.',
-    'spese_cat_labels': {'Carburante':'ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯','Parcheggio':'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚Â','Pedaggio':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â³ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â·ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡','Vitto':'ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Âª','Alloggio':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©','Materiale':'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¯','Trasporto':'ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾','Altro':'ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â®ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°'},
+    'profile_title':'Ã˜Â§Ã˜Â¹Ã˜Â¯Ã˜Â§Ã˜Â¯Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ™â€¦Ã™â€žÃ™Â','profile_role_default':'Ã™â€¦Ã™Ë†Ã˜Â¸Ã™Â','notifications':'Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â´Ã˜Â¹Ã˜Â§Ã˜Â±Ã˜Â§Ã˜Âª',
+    'loading':'Ã˜Â¬Ã˜Â§Ã˜Â± Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â­Ã™â€¦Ã™Å Ã™â€ž...','activate_notifications':'Ã˜ÂªÃ™ÂÃ˜Â¹Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â´Ã˜Â¹Ã˜Â§Ã˜Â±Ã˜Â§Ã˜Âª','show_diagnostics':'Ã˜Â¹Ã˜Â±Ã˜Â¶ Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â´Ã˜Â®Ã™Å Ã˜Âµ',
+    'install_app':'Ã˜ÂªÃ˜Â«Ã˜Â¨Ã™Å Ã˜Âª Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â·Ã˜Â¨Ã™Å Ã™â€š','app_not_installed':'Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â·Ã˜Â¨Ã™Å Ã™â€š Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã˜Â«Ã˜Â¨Ã˜Âª','install_on_device':'Ã˜ÂªÃ˜Â«Ã˜Â¨Ã™Å Ã˜Âª Ã˜Â¹Ã™â€žÃ™â€° Ã˜Â§Ã™â€žÃ˜Â¬Ã™â€¡Ã˜Â§Ã˜Â²',
+    'change_email':'Ã˜ÂªÃ˜ÂºÃ™Å Ã™Å Ã˜Â± Ã˜Â¨Ã˜Â±Ã™Å Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â¯Ã˜Â®Ã™Ë†Ã™â€ž','new_email':'Ã˜Â§Ã™â€žÃ˜Â¨Ã˜Â±Ã™Å Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯','confirm_current_password':'Ã˜ÂªÃ˜Â§Ã™Æ’Ã™Å Ã˜Â¯ Ã™Æ’Ã™â€žÃ™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â±Ã™Ë†Ã˜Â± Ã˜Â§Ã™â€žÃ˜Â­Ã˜Â§Ã™â€žÃ™Å Ã˜Â©',
+    'update_email':'Ã˜ÂªÃ˜Â­Ã˜Â¯Ã™Å Ã˜Â« Ã˜Â§Ã™â€žÃ˜Â¨Ã˜Â±Ã™Å Ã˜Â¯','change_password':'Ã˜ÂªÃ˜ÂºÃ™Å Ã™Å Ã˜Â± Ã™Æ’Ã™â€žÃ™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â±Ã™Ë†Ã˜Â±','current_password':'Ã™Æ’Ã™â€žÃ™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â±Ã™Ë†Ã˜Â± Ã˜Â§Ã™â€žÃ˜Â­Ã˜Â§Ã™â€žÃ™Å Ã˜Â©',
+    'new_password':'Ã™Æ’Ã™â€žÃ™â€¦Ã˜Â© Ã™â€¦Ã˜Â±Ã™Ë†Ã˜Â± Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯Ã˜Â©','min_6_chars':'6 Ã˜Â§Ã˜Â­Ã˜Â±Ã™Â Ã˜Â¹Ã™â€žÃ™â€° Ã˜Â§Ã™â€žÃ˜Â§Ã™â€šÃ™â€ž','at_least_6_chars':'6 Ã˜Â§Ã˜Â­Ã˜Â±Ã™Â Ã˜Â¹Ã™â€žÃ™â€° Ã˜Â§Ã™â€žÃ˜Â§Ã™â€šÃ™â€ž',
+    'repeat_new_password':'Ã˜Â§Ã˜Â¹Ã˜Â¯ Ã™Æ’Ã˜ÂªÃ˜Â§Ã˜Â¨Ã˜Â© Ã™Æ’Ã™â€žÃ™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â±Ã™Ë†Ã˜Â± Ã˜Â§Ã™â€žÃ˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯Ã˜Â©','repeat_password':'Ã˜Â§Ã˜Â¹Ã˜Â¯ Ã™Æ’Ã˜ÂªÃ˜Â§Ã˜Â¨Ã˜Â© Ã™Æ’Ã™â€žÃ™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â±Ã™Ë†Ã˜Â±','logout_account':'Ã˜ÂªÃ˜Â³Ã˜Â¬Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â®Ã˜Â±Ã™Ë†Ã˜Â¬',
+    'leave_title':'Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â·Ã™â€ž Ã™Ë†Ã˜Â§Ã™â€žÃ˜ÂªÃ˜ÂµÃ˜Â§Ã˜Â±Ã™Å Ã˜Â­','leave_new':'Ã˜Â·Ã™â€žÃ˜Â¨ Ã˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯','leave_type':'Ã˜Â§Ã™â€žÃ™â€ Ã™Ë†Ã˜Â¹','leave_from':'Ã™â€¦Ã™â€ ','leave_to':'Ã˜Â§Ã™â€žÃ™â€°',
+    'leave_vacation':'Ã˜Â¹Ã˜Â·Ã™â€žÃ˜Â©','leave_permission':'Ã˜ÂªÃ˜ÂµÃ˜Â±Ã™Å Ã˜Â­','leave_sickness':'Ã™â€¦Ã˜Â±Ã˜Â¶','leave_study':'Ã˜ÂªÃ˜ÂµÃ˜Â±Ã™Å Ã˜Â­ Ã˜Â¯Ã˜Â±Ã˜Â§Ã˜Â³Ã˜Â©',
+    'leave_permission_from':'Ã˜Â§Ã™â€žÃ˜ÂªÃ˜ÂµÃ˜Â±Ã™Å Ã˜Â­ Ã™â€¦Ã™â€ ','leave_permission_to':'Ã˜Â§Ã™â€žÃ˜ÂªÃ˜ÂµÃ˜Â±Ã™Å Ã˜Â­ Ã˜Â§Ã™â€žÃ™â€°','leave_certificate':'Ã˜Â´Ã™â€¡Ã˜Â§Ã˜Â¯Ã˜Â© Ã™â€¦Ã˜Â±Ã˜Â¶Ã™Å Ã˜Â©',
+    'leave_certificate_hint':'Ã™Å Ã™â€¦Ã™Æ’Ã™â€ Ã™Æ’ Ã˜Â§Ã˜Â±Ã™ÂÃ˜Â§Ã™â€š Ã˜ÂµÃ™Ë†Ã˜Â±Ã˜Â© Ã˜Â§Ã™Ë† PDF Ã™â€žÃ™â€žÃ˜Â´Ã™â€¡Ã˜Â§Ã˜Â¯Ã˜Â©.','leave_reason':'Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¨Ã˜Â¨','optional':'Ã˜Â§Ã˜Â®Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â±Ã™Å ',
+    'send_request':'Ã˜Â§Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â·Ã™â€žÃ˜Â¨','your_requests':'Ã˜Â·Ã™â€žÃ˜Â¨Ã˜Â§Ã˜ÂªÃ™Æ’','from_date':'Ã™â€¦Ã™â€ ','to_date':'Ã˜Â§Ã™â€žÃ™â€°','days_short':'Ã™Å Ã™Ë†Ã™â€¦',
+    'from_time':'Ã™â€¦Ã™â€ ','to_time':'Ã˜Â§Ã™â€žÃ™â€°','accepted':'Ã™â€¦Ã™â€šÃ˜Â¨Ã™Ë†Ã™â€ž','admin_reply':'Ã˜Â±Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â¯Ã˜Â§Ã˜Â±Ã˜Â©:','certificate_attached':'Ã˜Â§Ã™â€žÃ˜Â´Ã™â€¡Ã˜Â§Ã˜Â¯Ã˜Â© Ã™â€¦Ã˜Â±Ã™ÂÃ™â€šÃ˜Â©',
+    'no_requests':'Ã™â€žÃ™Å Ã˜Â³ Ã™â€žÃ˜Â¯Ã™Å Ã™Æ’ Ã˜Â·Ã™â€žÃ˜Â¨Ã˜Â§Ã˜Âª Ã˜Â¨Ã˜Â¹Ã˜Â¯.','leave_dates_required':'Ã˜Â§Ã™â€žÃ˜ÂªÃ™Ë†Ã˜Â§Ã˜Â±Ã™Å Ã˜Â® Ã™â€¦Ã˜Â·Ã™â€žÃ™Ë†Ã˜Â¨Ã˜Â©.',
+    'leave_hours_required':'Ã™â€žÃ™â€žÃ˜ÂªÃ˜ÂµÃ˜Â§Ã˜Â±Ã™Å Ã˜Â­ Ã˜Â§Ã˜Â¯Ã˜Â®Ã™â€ž Ã™Ë†Ã™â€šÃ˜Âª Ã˜Â§Ã™â€žÃ˜Â¨Ã˜Â¯Ã˜Â§Ã™Å Ã˜Â© Ã™Ë†Ã˜Â§Ã™â€žÃ™â€ Ã™â€¡Ã˜Â§Ã™Å Ã˜Â©.',
+    'leave_certificate_required':'Ã™â€žÃ™â€žÃ™â€¦Ã˜Â±Ã˜Â¶ Ã™Å Ã˜Â¬Ã˜Â¨ Ã˜Â§Ã˜Â±Ã™ÂÃ˜Â§Ã™â€š Ã˜Â§Ã™â€žÃ˜Â´Ã™â€¡Ã˜Â§Ã˜Â¯Ã˜Â©.',
+    'leave_date_order':'Ã˜ÂªÃ˜Â§Ã˜Â±Ã™Å Ã˜Â® Ã˜Â§Ã™â€žÃ™â€ Ã™â€¡Ã˜Â§Ã™Å Ã˜Â© Ã™Å Ã˜Â¬Ã˜Â¨ Ã˜Â§Ã™â€  Ã™Å Ã™Æ’Ã™Ë†Ã™â€  Ã˜Â¨Ã˜Â¹Ã˜Â¯ Ã˜ÂªÃ˜Â§Ã˜Â±Ã™Å Ã˜Â® Ã˜Â§Ã™â€žÃ˜Â¨Ã˜Â¯Ã˜Â§Ã™Å Ã˜Â©.','leave_sent':'Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â±Ã˜Â³Ã˜Â§Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â·Ã™â€žÃ˜Â¨.',
+    'spese_cat_labels': {'Carburante':'Ã™Ë†Ã™â€šÃ™Ë†Ã˜Â¯','Parcheggio':'Ã™â€¦Ã™Ë†Ã™â€šÃ™Â','Pedaggio':'Ã˜Â±Ã˜Â³Ã™Ë†Ã™â€¦ Ã˜Â·Ã˜Â±Ã™Å Ã™â€š','Vitto':'Ã™Ë†Ã˜Â¬Ã˜Â¨Ã˜Â§Ã˜Âª','Alloggio':'Ã˜Â§Ã™â€šÃ˜Â§Ã™â€¦Ã˜Â©','Materiale':'Ã™â€¦Ã™Ë†Ã˜Â§Ã˜Â¯','Trasporto':'Ã™â€ Ã™â€šÃ™â€ž','Altro':'Ã˜Â§Ã˜Â®Ã˜Â±Ã™â€°'},
 })
 
 @app.route('/set-lang', methods=['POST'])
@@ -8908,9 +7025,9 @@ def set_lang():
 
 
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 #  DASHBOARD con GRAFICI
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 DASH_TMPL = """
 <style>
 .dash-header{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:14px}
@@ -8947,7 +7064,7 @@ body.customize-mode .widget:hover{background:#f0f9ff}
 .cust-legend{font-size:11px;color:var(--text-light);margin:14px 0 6px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
 </style>
 
-<!-- Floating tray per modalitÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  personalizza (visibile solo in customize-mode) -->
+<!-- Floating tray per modalitÃƒÂ  personalizza (visibile solo in customize-mode) -->
 <div class="dash-customize-tray">
   <button type="button" class="btn btn-link-soft" onclick="openCustomizer()" title="Personalizza widget"><i class="fa fa-sliders"></i></button>
   <button type="button" id="btn-save-layout" class="btn btn-primary" style="display:none" onclick="saveLayout()"><i class="fa fa-check"></i> Salva layout</button>
@@ -8967,7 +7084,7 @@ body.customize-mode .widget:hover{background:#f0f9ff}
 body.customize-mode .btn-link-soft{display:none}
 </style>
 
-{# Widget: Hero + KPI Cards moderni ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â sempre full-width, in cima #}
+{# Widget: Hero + KPI Cards moderni Ã¢â‚¬â€ sempre full-width, in cima #}
 {% macro w_stats() %}
 <div class="dash-hero widget" data-widget-id="stats" style="margin-bottom:26px">
   <span class="widget-drag-handle"><i class="fa fa-grip-vertical"></i> Hero & KPI</span>
@@ -9127,7 +7244,7 @@ body.customize-mode .btn-link-soft{display:none}
       <div class="kpi-icon"><i class="fa fa-euro-sign"></i></div>
       <div class="kpi-body">
         <div class="kpi-label">Rimborsi mese</div>
-        <div class="kpi-value"><span class="count-up" data-count="{{ "%.0f"|format(s.rimborsi_mese) }}">{{ "%.0f"|format(s.rimborsi_mese) }}</span><span class="kpi-unit">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬</span></div>
+        <div class="kpi-value"><span class="count-up" data-count="{{ "%.0f"|format(s.rimborsi_mese) }}">{{ "%.0f"|format(s.rimborsi_mese) }}</span><span class="kpi-unit">Ã¢â€šÂ¬</span></div>
         <div class="kpi-foot"><i class="fa fa-check-double"></i> spese approvate</div>
       </div>
       <div class="kpi-glow"></div>
@@ -9235,7 +7352,7 @@ body.customize-mode .btn-link-soft{display:none}
 {% endmacro %}
 
 <style>
-/* ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â HERO MODERNO ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â */
+/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â HERO MODERNO Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
 .dash-hero{position:relative}
 .hero-bar{
   background:
@@ -9284,7 +7401,7 @@ body.customize-mode .btn-link-soft{display:none}
 .sync-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 0 rgba(34,197,94,.7);animation:kpiDotPulse 2s infinite}
 .sync-live{background:rgba(20,145,100,.16);border:1px solid rgba(139,216,182,.32);color:#8bd8b6;border-radius:999px;padding:2px 7px;font-size:10px;font-weight:900}
 
-/* ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â KPI CARDS MODERNE ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â */
+/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â KPI CARDS MODERNE Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
 .kpi-grid{
   display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:2px;
 }
@@ -9406,8 +7523,6 @@ body.customize-mode .btn-link-soft{display:none}
   function animateCount(el){
     var target=parseFloat(el.getAttribute('data-count') || '0');
     if(!isFinite(target)){ target=0; }
-    el.textContent=Math.round(target).toLocaleString('it-IT');
-    return;
     var current=parseFloat((el.textContent || '').replace(/[.]/g,'').replace(',','.'));
     if(isFinite(current) && Math.round(current) === Math.round(target)){
       el.textContent=Math.round(target).toLocaleString('it-IT');
@@ -9430,7 +7545,7 @@ body.customize-mode .btn-link-soft{display:none}
 </script>
 
 <style>
-/* ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â DARK CONTROL ROOM DASHBOARD ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â */
+/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â DARK CONTROL ROOM DASHBOARD Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
 body{
   background:
     radial-gradient(circle at 82% 2%,rgba(22,96,130,.24),transparent 30%),
@@ -10121,7 +8236,7 @@ table tr:hover{
 {% macro w_ore_settimana() %}
 <div class="card widget" data-widget-id="ore_settimana">
   <span class="widget-drag-handle"><i class="fa fa-grip-vertical"></i> Sposta</span>
-  <div class="card-header"><h3><i class="fa fa-chart-bar" style="color:var(--accent2);margin-right:8px"></i>Ore lavorate ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ ultimi 7 giorni</h3></div>
+  <div class="card-header"><h3><i class="fa fa-chart-bar" style="color:var(--accent2);margin-right:8px"></i>Ore lavorate Ã¢â‚¬â€œ ultimi 7 giorni</h3></div>
   <div class="card-body"><canvas id="chartOre" height="200"></canvas></div>
 </div>
 {% endmacro %}
@@ -10144,9 +8259,9 @@ table tr:hover{
   {% for p in presenze_oggi %}
   <tr>
     <td><span class="avatar-sm">{{ (p.nome or '?')[0] }}{{ (p.cognome or '?')[0] }}</span>{{ p.nome }} {{ p.cognome }}</td>
-    <td><span class="tag">{{ p.cantiere_nome or 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ' }}</span></td>
+    <td><span class="tag">{{ p.cantiere_nome or 'Ã¢â‚¬â€œ' }}</span></td>
     <td style="font-family:monospace;color:var(--success)">{{ p.ora_entrata }}</td>
-    <td>{% if p.ora_uscita %}<span class="badge badge-gray">Uscito</span>{% else %}<span class="badge badge-green">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€šÃ‚Â In sede</span>{% endif %}</td>
+    <td>{% if p.ora_uscita %}<span class="badge badge-gray">Uscito</span>{% else %}<span class="badge badge-green">Ã¢â€”Â In sede</span>{% endif %}</td>
   </tr>{% endfor %}</tbody></table>
   {% else %}<div class="empty-state"><i class="fa fa-calendar-day"></i><p>Nessuna presenza registrata oggi. Il sistema resta in ascolto.</p></div>{% endif %}
   </div>
@@ -10168,7 +8283,7 @@ table tr:hover{
           <div style="font-size:13.5px;font-weight:600">{{ d.titolo }}</div>
           <div style="font-size:12px;color:var(--text-light)">
             {% if d.categoria %}<span style="background:{% if d.categoria=='Veicolo' %}#e0e7ff;color:#3730a3{% elif d.categoria=='Documento dipendente' %}#fef3c7;color:#92400e{% elif d.categoria=='Documento azienda' %}#dbeafe;color:#1e40af{% elif d.categoria=='Documento veicolo' %}#e0e7ff;color:#4338ca{% elif d.categoria=='Contratto cliente' %}#dcfce7;color:#15803d{% else %}#f1f5f9;color:#475569{% endif %};padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;margin-right:6px">{{ d.categoria }}</span>{% endif %}
-            {{ d.data_scadenza }}{% if d.nome %} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {{ d.nome }} {{ d.cognome }}{% endif %}
+            {{ d.data_scadenza }}{% if d.nome %} Ã‚Â· {{ d.nome }} {{ d.cognome }}{% endif %}
           </div>
         </div>
         <span class="badge badge-{{ d.priority_tone }}">{{ d.days_label }}</span>
@@ -10218,9 +8333,9 @@ table tr:hover{
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:600">{{ r.nome }} {{ r.cognome }}</div>
         <div style="font-size:11.5px;color:var(--text-light);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-          {{ r.data }} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·
-          {% if r.tipo=='presenza' %}{% if r.ora_entrata and r.ora_uscita %}{{ r.ora_entrata }}ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ{{ r.ora_uscita }} {% endif %}({{ "%.1f"|format(r.ore_totali or 0) }}h){% if r.cantiere_nome %} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {{ r.cantiere_nome }}{% endif %}
-          {% else %}{{ r.categoria }} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ {{ "%.2f"|format(r.importo or 0) }}{% if r.descrizione %} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {{ r.descrizione[:40] }}{% endif %}{% endif %}
+          {{ r.data }} Ã‚Â·
+          {% if r.tipo=='presenza' %}{% if r.ora_entrata and r.ora_uscita %}{{ r.ora_entrata }}Ã¢â‚¬â€œ{{ r.ora_uscita }} {% endif %}({{ "%.1f"|format(r.ore_totali or 0) }}h){% if r.cantiere_nome %} Ã‚Â· {{ r.cantiere_nome }}{% endif %}
+          {% else %}{{ r.categoria }} Ã‚Â· Ã¢â€šÂ¬ {{ "%.2f"|format(r.importo or 0) }}{% if r.descrizione %} Ã‚Â· {{ r.descrizione[:40] }}{% endif %}{% endif %}
         </div>
       </div>
       <a href="{% if r.tipo=='presenza' %}/admin/richieste{% else %}/admin/spese?stato=in_attesa{% endif %}"
@@ -10238,7 +8353,7 @@ table tr:hover{
 </div>
 {% endmacro %}
 
-{# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â RENDERING DINAMICO ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â #}
+{# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â RENDERING DINAMICO Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â #}
 {# Widget KPI sempre in testa (fissi) #}
 {% if 'stats' not in layout.hidden %}{{ w_stats() }}{% endif %}
 
@@ -10268,7 +8383,7 @@ table tr:hover{
   </div>
 </div>
 
-{# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â MODAL PERSONALIZZAZIONE ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â #}
+{# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â MODAL PERSONALIZZAZIONE Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â #}
 <div id="cust-modal" class="cust-modal" onclick="if(event.target===this)closeCustomizer()">
   <div class="cust-box" onclick="event.stopPropagation()">
     <h3><i class="fa fa-sliders" style="color:var(--accent);margin-right:6px"></i>Personalizza dashboard</h3>
@@ -10294,7 +8409,7 @@ table tr:hover{
 </div>
 
 <script>
-// ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â Configurazione widget ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â Configurazione widget Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 const WIDGET_LABELS = {
   'ore_settimana':  {lbl: 'Grafico ore ultimi 7 giorni', icon:'chart-bar'},
   'cantieri':       {lbl: 'Grafico presenze per cantiere', icon:'hard-hat'},
@@ -10306,7 +8421,7 @@ const WIDGET_LABELS = {
 const DEFAULT_LAYOUT = {left: ['ore_settimana','presenze_oggi'], right: ['cantieri','scadenze','ferie'], hidden: []};
 let currentLayout = {{ layout | tojson }};
 
-// ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â Grafici ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â Grafici Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 function renderCharts() {
   const premiumTooltip = {
     backgroundColor:'#071321',
@@ -10501,10 +8616,10 @@ function renderCharts() {
 }
 renderCharts();
 
-// ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â Modal personalizzazione ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â Modal personalizzazione Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 function buildCustomizerList() {
   const cols = {left: currentLayout.left || [], right: currentLayout.right || [], hidden: currentLayout.hidden || []};
-  // Widget non menzionati ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ vanno in hidden
+  // Widget non menzionati Ã¢â€ â€™ vanno in hidden
   const all = Object.keys(WIDGET_LABELS);
   const menzionati = new Set([...cols.left, ...cols.right, ...cols.hidden]);
   all.forEach(w => { if (!menzionati.has(w)) cols.hidden.push(w); });
@@ -10613,14 +8728,14 @@ function saveLayoutToServer(newLayout, reload) {
   }).catch(e => alert('Errore di rete: ' + e));
 }
 
-// ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â Drag & drop inline sui widget della dashboard ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â Drag & drop inline sui widget della dashboard Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 // (attivo solo in customize-mode)
 function exitCustomize() {
   document.body.classList.remove('customize-mode');
   document.getElementById('btn-save-layout').style.display = 'none';
   document.getElementById('btn-exit-customize').style.display = 'none';
 }
-// Drag & drop live sui widget (opzionale ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â riordina solo nella stessa colonna)
+// Drag & drop live sui widget (opzionale Ã¢â‚¬â€ riordina solo nella stessa colonna)
 document.querySelectorAll('.widget').forEach(w => {
   w.addEventListener('dragover', e => {
     if (!document.body.classList.contains('customize-mode')) return;
@@ -10648,7 +8763,7 @@ def dashboard():
     }
     s['richieste_totali'] = s['richieste'] + s['ferie'] + s['rimborsi_attesa']
 
-    # KPI moderni ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â deltas e info accessorie
+    # KPI moderni Ã¢â‚¬â€ deltas e info accessorie
     # Ore lavorate mese in corso vs mese precedente (% delta)
     mese_prev_y = date.today().year if date.today().month > 1 else date.today().year - 1
     mese_prev_m = date.today().month - 1 if date.today().month > 1 else 12
@@ -10658,7 +8773,7 @@ def dashboard():
     delta_ore_pct = round(((ore_mese - ore_mese_prev) / ore_mese_prev * 100), 1) if ore_mese_prev > 0 else 0
     # Spese rimborsate mese in corso
     rimborsi_mese = db.execute("SELECT COALESCE(SUM(importo),0) FROM spese_rimborso WHERE substr(data,1,7)=? AND stato='approvata'", (mese,)).fetchone()[0]
-    # Scadenze 30 giorni ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â separate documenti vs veicoli
+    # Scadenze 30 giorni Ã¢â‚¬â€ separate documenti vs veicoli
     sc_app = _conta_scadenze_app(db)
     scad_doc_30g    = sc_app['docs_dip_in_scadenza'] + sc_app['docs_az_in_scadenza']
     scad_doc_scaduti= sc_app['docs_dip_scaduti']    + sc_app['docs_az_scaduti']
@@ -10721,7 +8836,7 @@ def dashboard():
         FROM presenze p LEFT JOIN cantieri c ON c.id=p.cantiere_id
         WHERE p.data LIKE ? GROUP BY p.cantiere_id""",(f'{mese}%',)).fetchall()
 
-    # Scadenze imminenti ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â da TUTTE le fonti (documenti azienda, documenti dipendenti,
+    # Scadenze imminenti Ã¢â‚¬â€ da TUTTE le fonti (documenti azienda, documenti dipendenti,
     # documenti veicoli, campi scadenza veicoli, contratti clienti)
     scadenze_raw = db.execute("""
         -- Documenti azienda
@@ -10894,7 +9009,7 @@ def dashboard():
     for p in presenze_oggi[:4]:
         attivita_recenti.append({
             'title': f"{_dash_nome(p)} ha timbrato",
-            'meta': f"{p['ora_entrata'] or '--'} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {p['cantiere_nome'] or 'Fiera non specificata'}",
+            'meta': f"{p['ora_entrata'] or '--'} Ã‚Â· {p['cantiere_nome'] or 'Fiera non specificata'}",
             'url': '/presenze',
             'icon': 'fa-clock',
             'tone': 'blue',
@@ -10904,7 +9019,7 @@ def dashboard():
         if r['tipo'] == 'presenza':
             attivita_recenti.append({
                 'title': f"Richiesta timbratura: {_dash_nome(r)}",
-                'meta': f"{r['data']} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {_safe_float(r['ore_totali']):.1f}h",
+                'meta': f"{r['data']} Ã‚Â· {_safe_float(r['ore_totali']):.1f}h",
                 'url': '/admin/richieste',
                 'icon': 'fa-inbox',
                 'tone': 'amber',
@@ -10913,7 +9028,7 @@ def dashboard():
         else:
             attivita_recenti.append({
                 'title': f"Rimborso da approvare: {_dash_nome(r)}",
-                'meta': f"{r['categoria'] or 'Spesa'} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ {_safe_float(r['importo']):.2f}",
+                'meta': f"{r['categoria'] or 'Spesa'} Ã‚Â· Ã¢â€šÂ¬ {_safe_float(r['importo']):.2f}",
                 'url': '/admin/spese?stato=in_attesa',
                 'icon': 'fa-receipt',
                 'tone': 'amber',
@@ -10933,7 +9048,7 @@ def dashboard():
         if giorni <= 30:
             attivita_recenti.append({
                 'title': f"Scadenza: {d['titolo']}",
-                'meta': f"{d['categoria']} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· tra {giorni} giorni",
+                'meta': f"{d['categoria']} Ã‚Â· tra {giorni} giorni",
                 'url': '/scadenze',
                 'icon': 'fa-triangle-exclamation',
                 'tone': 'red' if giorni <= 7 else 'amber',
@@ -11080,7 +9195,7 @@ def dashboard():
     s['hero_incassato_mese_corrente'] = round(totale_incassato_periodo, 2)
     s['hero_fatturato_pct_corrente'] = round((totale_incassato_periodo / totale_fatturato_periodo) * 100, 1) if totale_fatturato_periodo > 0 else 0
 
-    # Carico layout personalizzato (1 riga per azienda ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â condiviso fra admin)
+    # Carico layout personalizzato (1 riga per azienda Ã¢â‚¬â€ condiviso fra admin)
     layout = _default_dashboard_layout()
     try:
         row = db.execute("SELECT layout_json FROM dashboard_layout WHERE id=1").fetchone()
@@ -11288,7 +9403,7 @@ def admin_mobile():
                                   richieste=richieste)
 
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â Dashboard layout personalizzato ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â Dashboard layout personalizzato Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 AMMINISTRAZIONE_HOME_TMPL = """
 <div class="page-header">
   <div>
@@ -32072,26 +30187,26 @@ PREV_FORM_TMPL = """
         <div style="margin-top:16px;padding:14px 16px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px">
           <div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">
             <i class="fa fa-calendar-days"></i> Date Evento / Fiera
-            <span style="font-weight:400;color:#64748b;text-transform:none;letter-spacing:0;margin-left:6px">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ appariranno sul PDF e serviranno per creare l'evento sul calendario</span>
+            <span style="font-weight:400;color:#64748b;text-transform:none;letter-spacing:0;margin-left:6px">Ã¢â€ â€™ appariranno sul PDF e serviranno per creare l'evento sul calendario</span>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label style="color:#16a34a;font-weight:600">ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Data inizio evento</label>
+              <label style="color:#16a34a;font-weight:600">Ã°Å¸â€œâ€¦ Data inizio evento</label>
               <input type="date" name="data_inizio_lavoro" value="{{ prev.data_inizio_lavoro if prev else '' }}" style="border-color:#86efac">
             </div>
             <div class="form-group">
-              <label style="color:#16a34a;font-weight:600">ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Data fine evento</label>
+              <label style="color:#16a34a;font-weight:600">Ã°Å¸â€œâ€¦ Data fine evento</label>
               <input type="date" name="data_fine_lavoro" value="{{ prev.data_fine_lavoro if prev else '' }}" style="border-color:#86efac">
             </div>
           </div>
           <div class="form-group" style="margin-bottom:0">
-            <label>ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â Sede / Luogo evento</label>
-            <input name="luogo_lavoro" value="{{ prev.luogo_lavoro if prev else '' }}" placeholder="Es. Fiera di Bologna ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Padiglione 36">
+            <label>Ã°Å¸â€œÂ Sede / Luogo evento</label>
+            <input name="luogo_lavoro" value="{{ prev.luogo_lavoro if prev else '' }}" placeholder="Es. Fiera di Bologna Ã¢â‚¬â€ Padiglione 36">
           </div>
           {% if prev and prev.stato == 'accettato' %}
           <div style="margin-top:10px;padding:8px 12px;background:#dcfce7;border-radius:8px;font-size:13px;color:#15803d">
             <i class="fa fa-calendar-plus"></i> <strong>Preventivo accettato!</strong>
-            <a href="/preventivi/{{ prev.id }}/crea-evento" style="color:#15803d;font-weight:700;margin-left:8px;text-decoration:underline">Crea evento sul calendario ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢</a>
+            <a href="/preventivi/{{ prev.id }}/crea-evento" style="color:#15803d;font-weight:700;margin-left:8px;text-decoration:underline">Crea evento sul calendario Ã¢â€ â€™</a>
           </div>
           {% endif %}
         </div>
@@ -32235,7 +30350,7 @@ PREV_FORM_TMPL = """
             <td style="padding:4px"><input name="pu[]" type="number" value="{{ v.prezzo_unitario }}" step="0.001" min="0" class="ti tr" oninput="rc(this)"></td>
             <td style="padding:4px"><input name="importo_mod[]" type="number" value="{{ '%.2f'|format(imp_mod) }}" step="0.01" min="0" class="ti tr td-imp" oninput="rcImp(this)" style="font-weight:700;color:#1e3a5f;background:#eff6ff;border-color:#93c5fd"></td>
             <td style="padding:8px;text-align:right;font-size:13px;font-weight:600" class="td-sc" style="color:{% if sconto_r > 0 %}#dc2626{% else %}#94a3b8{% endif %}">
-              {% if sconto_r > 0 %}<span style="color:#dc2626">-{{ '%.2f'|format(sconto_r) }}</span>{% else %}<span style="color:#94a3b8">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â</span>{% endif %}
+              {% if sconto_r > 0 %}<span style="color:#dc2626">-{{ '%.2f'|format(sconto_r) }}</span>{% else %}<span style="color:#94a3b8">Ã¢â‚¬â€</span>{% endif %}
             </td>
             <td style="padding:4px;text-align:center"><button type="button" onclick="delRow(this)" style="background:#fee2e2;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;color:#dc2626"><i class="fa fa-times"></i></button></td>
           </tr>
@@ -32283,7 +30398,7 @@ function mkRow(desc,qty,um,pu,di,df){
     '<td style="padding:4px"><input name="um[]" value="'+um+'" class="ti tc" placeholder="MQ"></td>'+
     '<td style="padding:4px"><input name="pu[]" type="number" value="'+pu+'" step="0.001" min="0" class="ti tr" oninput="rc(this)" placeholder="0.00"></td>'+
     '<td style="padding:4px"><input name="importo_mod[]" type="number" value="0.00" step="0.01" min="0" class="ti tr td-imp" oninput="rcImp(this)" style="font-weight:700;color:#1e3a5f;background:#eff6ff;border-color:#93c5fd"></td>'+
-    '<td style="padding:8px;text-align:right;font-size:13px;font-weight:600" class="td-sc"><span style="color:#94a3b8">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â</span></td>'+
+    '<td style="padding:8px;text-align:right;font-size:13px;font-weight:600" class="td-sc"><span style="color:#94a3b8">Ã¢â‚¬â€</span></td>'+
     '<td style="padding:4px;text-align:center"><button type="button" onclick="delRow(this)" style="background:#fee2e2;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;color:#dc2626"><i class="fa fa-times"></i></button></td>';
   b.appendChild(tr);document.getElementById('empty-voci').style.display='none';
   rc(tr.querySelector('[name="qty[]"]'));tr.querySelector('input[name="desc[]"]').focus();
@@ -32304,7 +30419,7 @@ function rc(inp){
   const p=parseFloat(tr.querySelector('input[name="pu[]"]').value)||0;
   const lordo=q*p;
   const impInp=tr.querySelector('.td-imp');
-  // Aggiorna importo modificato solo se non era giÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  cambiato manualmente
+  // Aggiorna importo modificato solo se non era giÃƒÂ  cambiato manualmente
   if(!impInp.dataset.manuale) impInp.value=lordo.toFixed(2);
   aggiornaSconto(tr, lordo);
   ricalcola();
@@ -32328,7 +30443,7 @@ function aggiornaSconto(tr, lordo){
   } else if(sc<-0.005){
     td.innerHTML='<span style="color:#16a34a;font-weight:700">+'+Math.abs(sc).toFixed(2)+'</span>';
   } else {
-    td.innerHTML='<span style="color:#94a3b8">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â</span>';
+    td.innerHTML='<span style="color:#94a3b8">Ã¢â‚¬â€</span>';
   }
 }
 function ricalcola(){
@@ -32350,7 +30465,7 @@ function ricalcola(){
   document.getElementById('inp-imp').value=imp.toFixed(2);
   // Mostra sconto totale se presente
   const scEl=document.getElementById('tot-sconto');
-  if(scEl){scEl.textContent=scTot>0.01?'Sconto totale: -ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬'+scTot.toFixed(2):'';}
+  if(scEl){scEl.textContent=scTot>0.01?'Sconto totale: -Ã¢â€šÂ¬'+scTot.toFixed(2):'';}
 }
 document.addEventListener('DOMContentLoaded',()=>{
   {% if prev and prev.iva is not none %}document.getElementById('sel-iva').value='{{ prev.iva|int }}';{% endif %}
@@ -32506,7 +30621,7 @@ def preventivo_crea_evento(pid):
         (pid,)).fetchall()
     db.close()
 
-    # Raggruppa voci per tipo ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â una card per tipo con date min/max
+    # Raggruppa voci per tipo Ã¢â‚¬â€ una card per tipo con date min/max
     from collections import defaultdict
     gruppi = defaultdict(lambda: {'voci': [], 'date_inizio': [], 'date_fine': []})
     for v in voci_raw:
@@ -32520,12 +30635,12 @@ def preventivo_crea_evento(pid):
         gruppi['altro']['voci'].append(prev['oggetto'] or '')
 
     eventi_suggeriti = []
-    tipo_labels = {'montaggio':'ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â§ Montaggio','smontaggio':'ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â© Smontaggio','fiera':'ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚ÂÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂºÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Fiera/Assistenza','altro':'ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€¦Ã¢â‚¬â„¢ Servizio'}
+    tipo_labels = {'montaggio':'Ã°Å¸â€Â§ Montaggio','smontaggio':'Ã°Å¸â€Â© Smontaggio','fiera':'Ã°Å¸Ââ€ºÃ¯Â¸Â Fiera/Assistenza','altro':'Ã°Å¸â€œÅ’ Servizio'}
     tipo_colori  = {'montaggio':'#16a34a','smontaggio':'#e63946','fiera':'#2196F3','altro':'#8b5cf6'}
     for tipo, g in gruppi.items():
         d_inizio = min(g['date_inizio']) if g['date_inizio'] else (prev['data_inizio_lavoro'] or '')
         d_fine   = max(g['date_fine'])   if g['date_fine']   else (prev['data_fine_lavoro'] or d_inizio)
-        titolo_sug = f"{tipo_labels.get(tipo,'Servizio')} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â {prev['oggetto'] or prev['numero']}"
+        titolo_sug = f"{tipo_labels.get(tipo,'Servizio')} Ã¢â‚¬â€ {prev['oggetto'] or prev['numero']}"
         eventi_suggeriti.append({
             'tipo':     tipo,
             'label':    tipo_labels.get(tipo,'Servizio'),
@@ -32535,21 +30650,21 @@ def preventivo_crea_evento(pid):
             'd_fine':   d_fine,
             'voci':     g['voci'],
         })
-    # Ordine: montaggio ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ fiera ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ smontaggio ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ altro
+    # Ordine: montaggio Ã¢â€ â€™ fiera Ã¢â€ â€™ smontaggio Ã¢â€ â€™ altro
     _ord = {'montaggio':0,'fiera':1,'smontaggio':2,'altro':3}
     eventi_suggeriti.sort(key=lambda x: _ord.get(x['tipo'],9))
 
     # Se il preventivo ha date evento/fiera, assicurati che ci sia sempre un evento Fiera
-    # con quelle date (ha prioritÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  sulle voci)
+    # con quelle date (ha prioritÃƒÂ  sulle voci)
     d_inizio_fiera = prev['data_inizio_lavoro'] or ''
     d_fine_fiera   = prev['data_fine_lavoro']   or d_inizio_fiera
     luogo_fiera    = prev['luogo_lavoro']        or ''
     if d_inizio_fiera:
         # Aggiorna o inserisci evento fiera con le date del preventivo
         fiera_esistente = next((e for e in eventi_suggeriti if e['tipo'] == 'fiera'), None)
-        titolo_fiera = f"ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚ÂÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂºÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Fiera ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â {prev['oggetto'] or prev['numero']}"
+        titolo_fiera = f"Ã°Å¸Ââ€ºÃ¯Â¸Â Fiera Ã¢â‚¬â€ {prev['oggetto'] or prev['numero']}"
         if luogo_fiera:
-            titolo_fiera = f"ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚ÂÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂºÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â {luogo_fiera}"
+            titolo_fiera = f"Ã°Å¸Ââ€ºÃ¯Â¸Â {luogo_fiera}"
         if fiera_esistente:
             fiera_esistente['d_inizio'] = d_inizio_fiera
             fiera_esistente['d_fine']   = d_fine_fiera
@@ -32557,7 +30672,7 @@ def preventivo_crea_evento(pid):
         else:
             eventi_suggeriti.insert(0, {
                 'tipo':     'fiera',
-                'label':    'ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚ÂÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂºÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Fiera/Evento',
+                'label':    'Ã°Å¸Ââ€ºÃ¯Â¸Â Fiera/Evento',
                 'colore':   '#2196F3',
                 'titolo':   titolo_fiera,
                 'd_inizio': d_inizio_fiera,
@@ -32575,10 +30690,10 @@ def preventivo_crea_evento(pid):
   <div class="card">
     <div class="card-header">
       <h3><i class="fa fa-calendar-plus" style="color:var(--accent2)"></i> Crea eventi dal preventivo {{ prev.numero }}</h3>
-      <div style="color:var(--text-light);font-size:13px;margin-top:4px">{{ prev.cliente_nome }} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â {{ prev.oggetto }}</div>
+      <div style="color:var(--text-light);font-size:13px;margin-top:4px">{{ prev.cliente_nome }} Ã¢â‚¬â€ {{ prev.oggetto }}</div>
     </div>
     <div class="card-body">
-      <p style="color:var(--text-light);margin-bottom:20px">Abbiamo rilevato <strong>{{ eventi|length }} tipo/i di servizio</strong> nelle voci del preventivo. Clicca su un pulsante per creare il relativo evento sul calendario, con le date giÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  compilate.</p>
+      <p style="color:var(--text-light);margin-bottom:20px">Abbiamo rilevato <strong>{{ eventi|length }} tipo/i di servizio</strong> nelle voci del preventivo. Clicca su un pulsante per creare il relativo evento sul calendario, con le date giÃƒÂ  compilate.</p>
       {% for e in eventi %}
       <div style="background:#fff;border:2px solid {{ e.colore }};border-radius:12px;padding:18px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
         <div>
@@ -32586,7 +30701,7 @@ def preventivo_crea_evento(pid):
           <div style="font-size:13px;color:var(--text);margin-bottom:6px">{{ e.titolo }}</div>
           {% if e.d_inizio %}
           <div style="font-size:12px;color:var(--text-light)"><i class="fa fa-calendar" style="margin-right:4px"></i>
-            {{ e.d_inizio }}{% if e.d_fine and e.d_fine != e.d_inizio %} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ {{ e.d_fine }}{% endif %}
+            {{ e.d_inizio }}{% if e.d_fine and e.d_fine != e.d_inizio %} Ã¢â€ â€™ {{ e.d_fine }}{% endif %}
           </div>
           {% endif %}
           <div style="margin-top:6px;font-size:11px;color:#94a3b8">
@@ -32680,7 +30795,7 @@ def _next_numero_fattura(db):
 def _parse_condizioni_pagamento(pagamento_text, totale, iva_perc, data_inizio):
     """
     Analizza il testo delle condizioni di pagamento.
-    Gestisce: testo su una riga con piÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¹ % separate da virgola/punto,
+    Gestisce: testo su una riga con piÃƒÂ¹ % separate da virgola/punto,
     testo su righe separate, o testo senza percentuali.
     """
     import re as _re
@@ -32747,7 +30862,7 @@ def _crea_fatture_da_preventivo(db, preventivo_id):
 
         rate = _parse_condizioni_pagamento(pagamento, totale, iva_perc, data_fine)
 
-        # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Protezione anti-duplicazione ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+        # Ã¢â€â‚¬Ã¢â€â‚¬ Protezione anti-duplicazione Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
         # 1) Trova TUTTE le fatture collegate a questo preventivo
         #    (sia via preventivo_id che via nota legacy)
         esistenti = db.execute("""
@@ -32755,12 +30870,12 @@ def _crea_fatture_da_preventivo(db, preventivo_id):
             WHERE preventivo_id=? OR note LIKE ?
         """, (preventivo_id, f'%preventivo:{preventivo_id}%')).fetchall()
 
-        # 2) Conta le fatture "reali" (giÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  emesse = hanno file o stato != da_emettere)
-        #    ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ vanno preservate sempre
+        # 2) Conta le fatture "reali" (giÃƒÂ  emesse = hanno file o stato != da_emettere)
+        #    Ã¢â€ â€™ vanno preservate sempre
         reali = [r for r in esistenti
                  if r['stato'] != 'da_emettere' or (r['file_nome'] and r['file_nome'].strip())]
 
-        # 3) Se le fatture reali coprono giÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  tutte le rate ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ non fare nulla
+        # 3) Se le fatture reali coprono giÃƒÂ  tutte le rate Ã¢â€ â€™ non fare nulla
         if len(reali) >= len(rate):
             return
 
@@ -32771,7 +30886,7 @@ def _crea_fatture_da_preventivo(db, preventivo_id):
                 db.execute("DELETE FROM fatture WHERE id=?", (r['id'],))
         safe_commit(db)
 
-        # 5) Crea solo le rate mancanti (totale rate - reali giÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  presenti)
+        # 5) Crea solo le rate mancanti (totale rate - reali giÃƒÂ  presenti)
         n_da_creare = len(rate) - len(reali)
         for i, rata in enumerate(rate[:n_da_creare], len(reali) + 1):
             imp_rata = round(rata['importo'] / (1 + iva_perc/100), 2)
@@ -32779,9 +30894,9 @@ def _crea_fatture_da_preventivo(db, preventivo_id):
             numero   = _next_numero_fattura(db)
             desc     = f"{prev['oggetto'] or 'Lavoro'}"
             if len(rate) > 1:
-                desc += f" ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Rata {i}/{len(rate)}: {rata['descrizione']}"
+                desc += f" Ã¢â‚¬â€ Rata {i}/{len(rate)}: {rata['descrizione']}"
             else:
-                desc += f" ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â {rata['descrizione']}"
+                desc += f" Ã¢â‚¬â€ {rata['descrizione']}"
 
             db.execute("""INSERT INTO fatture
                 (numero, cliente_id, cliente_nome, data_emissione, data_scadenza,
@@ -32798,7 +30913,7 @@ def _crea_fatture_da_preventivo(db, preventivo_id):
                 iva_perc,
                 iva_imp,
                 desc,
-                f"Generata automaticamente da preventivo:{preventivo_id} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â N.{prev['numero']}",
+                f"Generata automaticamente da preventivo:{preventivo_id} Ã¢â‚¬â€ N.{prev['numero']}",
                 rata['descrizione'],
                 'da_emettere',
                 preventivo_id,
@@ -32963,7 +31078,7 @@ def cliente_ai_estrai():
         }
         azienda = get_setting('azienda_nome', 'Accesso Fiere')
         prompt = f"""Analizza questo documento e estrai i dati dell'AZIENDA CLIENTE.
-Il cliente ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ l'azienda che NON ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ "{azienda}" (la nostra azienda).
+Il cliente ÃƒÂ¨ l'azienda che NON ÃƒÂ¨ "{azienda}" (la nostra azienda).
 Cerca nella sezione "cedente/prestatore", "cliente", "destinatario" o "cessionario/committente".
 Rispondi SOLO con JSON valido, zero testo aggiuntivo:
 {{"nome":"ragione sociale","partita_iva":"solo numeri o null","codice_fiscale":"o null","indirizzo":"via + civico o null","citta":"o null","cap":"o null","paese":"default Italia","email":"o null","telefono":"o null","referente":"nome contatto se presente o null","sito_web":"o null"}}"""
@@ -33067,9 +31182,9 @@ def cliente_elimina(cid):
 
 
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 #  FORNITORI
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 
 FORNITORI_TMPL = """
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
@@ -33090,7 +31205,7 @@ FORNITORI_TMPL = """
   <thead><tr style="background:#0f172a;color:#fff">
     <th style="padding:10px 12px;text-align:left">NOME</th>
     <th style="padding:10px 12px;text-align:left">P.IVA</th>
-    <th style="padding:10px 12px;text-align:left">CITTÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬</th>
+    <th style="padding:10px 12px;text-align:left">CITTÃƒâ‚¬</th>
     <th style="padding:10px 12px;text-align:left">EMAIL / TEL</th>
     <th style="padding:10px 12px;text-align:center">FATTURE</th>
     <th style="padding:10px 12px;text-align:right">TOT. PAGATO</th>
@@ -33100,14 +31215,14 @@ FORNITORI_TMPL = """
   {% for f in fornitori %}
   <tr style="border-bottom:1px solid var(--border)">
     <td style="padding:10px 12px"><strong>{{ f.nome }}</strong>{% if f.referente %}<div style="font-size:12px;color:var(--text-light)">{{ f.referente }}</div>{% endif %}</td>
-    <td style="padding:10px 12px;font-family:monospace;font-size:12px">{{ f.piva or 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ' }}</td>
-    <td style="padding:10px 12px">{{ f.citta or 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ' }}</td>
+    <td style="padding:10px 12px;font-family:monospace;font-size:12px">{{ f.piva or 'Ã¢â‚¬â€œ' }}</td>
+    <td style="padding:10px 12px">{{ f.citta or 'Ã¢â‚¬â€œ' }}</td>
     <td style="padding:10px 12px;font-size:12px">
       {% if f.email %}<div>{{ f.email }}</div>{% endif %}
       {% if f.telefono %}<div style="color:var(--text-light)">{{ f.telefono }}</div>{% endif %}
     </td>
     <td style="padding:10px 12px;text-align:center">{{ f.n_fatture }}</td>
-    <td style="padding:10px 12px;text-align:right;font-weight:700;color:#16a34a">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ {{ "%.2f"|format(f.tot_fatturato) }}</td>
+    <td style="padding:10px 12px;text-align:right;font-weight:700;color:#16a34a">Ã¢â€šÂ¬ {{ "%.2f"|format(f.tot_fatturato) }}</td>
     <td style="padding:10px 12px;text-align:right;white-space:nowrap">
       <a href="/fornitori/{{ f.id }}/modifica" class="btn btn-sm btn-secondary"><i class="fa fa-pen"></i></a>
       <a href="/fornitori/{{ f.id }}/elimina" class="btn btn-sm btn-danger" onclick="return confirm('Eliminare {{ f.nome }}?')"><i class="fa fa-trash"></i></a>
@@ -33143,7 +31258,7 @@ FORNITORE_FORM_TMPL = """
     <div class="form-group" style="grid-column:span 2"><label>Indirizzo</label><input name="indirizzo" value="{{ fr.indirizzo if fr else '' }}"></div>
   </div>
   <div class="form-row-3">
-    <div class="form-group"><label>CittÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â </label><input name="citta" value="{{ fr.citta if fr else '' }}"></div>
+    <div class="form-group"><label>CittÃƒÂ </label><input name="citta" value="{{ fr.citta if fr else '' }}"></div>
     <div class="form-group"><label>CAP</label><input name="cap" value="{{ fr.cap if fr else '' }}"></div>
     <div class="form-group"><label>Paese</label><input name="paese" value="{{ fr.paese if fr else 'Italia' }}"></div>
   </div>
@@ -33253,9 +31368,9 @@ def fornitore_elimina(fid):
     return redirect(url_for('fornitori_lista'))
 
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 #  BANCA ORE
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 
 def _banca_ore_saldo(db, utente_id):
     """Saldo LIVE banca ore: somma di tutti i delta mensili (live) + rettifiche manuali.
@@ -33264,7 +31379,7 @@ def _banca_ore_saldo(db, utente_id):
     return info['saldo']
 
 
-# FestivitÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  italiane fisse + Pasqua/Pasquetta calcolate
+# FestivitÃƒÂ  italiane fisse + Pasqua/Pasquetta calcolate
 def _festivita_italiane(year):
     """Restituisce set di date festive italiane per l'anno."""
     from datetime import date as _d, timedelta as _td
@@ -33301,8 +31416,8 @@ def _festivita_italiane(year):
 
 def _giorni_lavorativi_nel_mese(anno, mese, fino_a=None):
     """Conta i giorni lavorativi (lun-ven, esclusi festivi) del mese.
-    Se fino_a (date) ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ fornito, conta solo fino a quella data inclusa.
-    Se il mese ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ futuro rispetto a fino_a, ritorna 0."""
+    Se fino_a (date) ÃƒÂ¨ fornito, conta solo fino a quella data inclusa.
+    Se il mese ÃƒÂ¨ futuro rispetto a fino_a, ritorna 0."""
     from datetime import date as _d
     from calendar import monthrange
     festivi = _festivita_italiane(anno)
@@ -33343,7 +31458,7 @@ def _banca_ore_info_completa(db, utente_id):
 
     oggi = _d.today()
 
-    # Trova il mese piÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¹ antico tra: monte ore manuale, presenze, rettifiche
+    # Trova il mese piÃƒÂ¹ antico tra: monte ore manuale, presenze, rettifiche
     rows = []
     try:
         r1 = db.execute("SELECT MIN(mese) FROM banca_ore_monte WHERE utente_id=?", (utente_id,)).fetchone()
@@ -33361,7 +31476,7 @@ def _banca_ore_info_completa(db, utente_id):
     except Exception: pass
 
     if not rows:
-        # Nessun dato ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ mostra solo il mese corrente
+        # Nessun dato Ã¢â€ â€™ mostra solo il mese corrente
         primo_mese_str = oggi.strftime('%Y-%m')
     else:
         primo_mese_str = min(rows)
@@ -33407,7 +31522,7 @@ def _banca_ore_info_completa(db, utente_id):
             rett = 0.0
 
         delta_mese = round(ore_lav - monte, 2)
-        # Saldo del mese = delta lavorate-monte + rettifiche; il riporto ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ il saldo_progressivo prima dell'aggiornamento
+        # Saldo del mese = delta lavorate-monte + rettifiche; il riporto ÃƒÂ¨ il saldo_progressivo prima dell'aggiornamento
         riporto = round(saldo_progressivo, 2)
         saldo_mese = round(delta_mese + rett + riporto, 2)
 
@@ -33439,9 +31554,9 @@ def _banca_ore_info_completa(db, utente_id):
     }
 
 
-# Funzioni legacy mantenute per retrocompatibilitÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  ma DEPRECATE (no-op):
+# Funzioni legacy mantenute per retrocompatibilitÃƒÂ  ma DEPRECATE (no-op):
 def _banca_ore_mese_gia_chiuso(db, utente_id, mese):
-    """DEPRECATA: nel nuovo sistema non ci sono piÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¹ chiusure (saldo ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ live)."""
+    """DEPRECATA: nel nuovo sistema non ci sono piÃƒÂ¹ chiusure (saldo ÃƒÂ¨ live)."""
     return False
 
 
@@ -33455,7 +31570,7 @@ def _banca_ore_chiudi_mese_auto():
     pass
 
 
-# (Rimosso hook chiusura automatica: nel nuovo sistema il saldo ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ LIVE,
+# (Rimosso hook chiusura automatica: nel nuovo sistema il saldo ÃƒÂ¨ LIVE,
 # calcolato al volo dalle presenze. Nessuna scrittura periodica necessaria.)
 
 
@@ -33554,7 +31669,7 @@ BANCA_ORE_TMPL = """
         <input type="hidden" name="redirect_mese" value="{{ mese_sel }}">
         <input type="number" name="monte_ore" value="{{ '%.1f'|format(m.monte_ore) if m.monte_ore else '' }}"
                step="0.5" min="0" max="744"
-               placeholder="ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â"
+               placeholder="Ã¢â‚¬â€"
                onblur="this.form.submit()"
                class="bo-monte-input {% if not m.monte_ore %}bo-empty{% endif %}"
                title="Inserisci il monte ore per questo mese">
@@ -33565,10 +31680,10 @@ BANCA_ORE_TMPL = """
       {% if m.delta_mese > 0 %}+{% endif %}{{ "%.1f"|format(m.delta_mese) }} h
     </td>
     <td style="text-align:right;font-family:monospace;font-size:13px" class="{% if m.rettifiche > 0 %}bo-pos{% elif m.rettifiche < 0 %}bo-neg{% else %}bo-zero{% endif %}">
-      {% if m.rettifiche %}{% if m.rettifiche > 0 %}+{% endif %}{{ "%.1f"|format(m.rettifiche) }}{% else %}ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â{% endif %}
+      {% if m.rettifiche %}{% if m.rettifiche > 0 %}+{% endif %}{{ "%.1f"|format(m.rettifiche) }}{% else %}Ã¢â‚¬â€{% endif %}
     </td>
     <td style="text-align:right;font-family:monospace;font-size:13px;color:var(--text-light)">
-      {% if m.riporto %}{% if m.riporto > 0 %}+{% endif %}{{ "%.1f"|format(m.riporto) }}{% else %}ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â{% endif %}
+      {% if m.riporto %}{% if m.riporto > 0 %}+{% endif %}{{ "%.1f"|format(m.riporto) }}{% else %}Ã¢â‚¬â€{% endif %}
     </td>
     <td style="text-align:right;font-weight:800;font-size:14px" class="{% if m.saldo_finale > 0 %}bo-pos{% elif m.saldo_finale < 0 %}bo-neg{% else %}bo-zero{% endif %}">
       {% if m.saldo_finale > 0 %}+{% endif %}{{ "%.1f"|format(m.saldo_finale) }} h
@@ -33601,7 +31716,7 @@ BANCA_ORE_TMPL = """
           <input type="month" name="mese" value="{{ m.mese }}" required style="padding:5px 8px;border:1px solid #fcd34d;border-radius:5px;font-size:12px">
         </div>
         <div class="form-group" style="margin:0;min-width:120px">
-          <label style="font-size:11px">Delta ore (ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â±)</label>
+          <label style="font-size:11px">Delta ore (Ã‚Â±)</label>
           <input type="number" name="delta" step="0.25" required placeholder="es. -4 o 8" style="text-align:right;font-weight:700;padding:5px 8px;border:1px solid #fcd34d;border-radius:5px;font-size:12px">
         </div>
         <div class="form-group" style="margin:0;flex:1;min-width:200px">
@@ -33617,7 +31732,7 @@ BANCA_ORE_TMPL = """
   <tr id="chart-row-{{ u.id }}" class="bo-chart-row">
     <td colspan="9">
       <div class="bo-chart-wrap">
-        <div style="font-size:12px;color:var(--text-light);margin-bottom:6px">ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€¦Ã‚Â  Andamento ultimi 12 mesi: <strong>{{ u.nome }} {{ u.cognome }}</strong></div>
+        <div style="font-size:12px;color:var(--text-light);margin-bottom:6px">Ã°Å¸â€œÅ  Andamento ultimi 12 mesi: <strong>{{ u.nome }} {{ u.cognome }}</strong></div>
         <canvas id="chart-{{ u.id }}" class="bo-chart-canvas"></canvas>
       </div>
     </td>
@@ -33630,9 +31745,9 @@ BANCA_ORE_TMPL = """
 
 <div class="bo-info">
   <strong><i class="fa fa-circle-info"></i> Come funziona:</strong>
-  Le <strong>ore lavorate</strong> e i <strong>riporti</strong> sono automatici. Il <strong>monte ore</strong> di ogni mese lo inserisci tu cliccando direttamente nella cella (ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“Ãƒâ€¹Ã¢â‚¬Â  prova!).
-  Per rettifiche manuali (es. pagamento straordinari) usa "Azioni ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Rettifica". Per il grafico storico usa "Azioni ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Grafico 12 mesi".
-  Il <strong>SALDO BANCA</strong> ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ il saldo cumulativo aggiornato a oggi (riporto fino al mese corrente).
+  Le <strong>ore lavorate</strong> e i <strong>riporti</strong> sono automatici. Il <strong>monte ore</strong> di ogni mese lo inserisci tu cliccando direttamente nella cella (Ã°Å¸â€˜Ë† prova!).
+  Per rettifiche manuali (es. pagamento straordinari) usa "Azioni Ã¢â€ â€™ Rettifica". Per il grafico storico usa "Azioni Ã¢â€ â€™ Grafico 12 mesi".
+  Il <strong>SALDO BANCA</strong> ÃƒÂ¨ il saldo cumulativo aggiornato a oggi (riporto fino al mese corrente).
 </div>
 
 <!-- Dati grafici (JSON, letti da JS) -->
@@ -33686,7 +31801,7 @@ function toggleGrafico(id) {
     return;
   }
   row.classList.add('open');
-  if (charts[id]) return;  // giÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  renderizzato
+  if (charts[id]) return;  // giÃƒÂ  renderizzato
 
   var data = JSON.parse(document.getElementById('bo-chart-data').textContent);
   var d = data.dipendenti[id];
@@ -33771,7 +31886,7 @@ BANCA_ORE_DETTAGLIO_TMPL = """
   <div class="bo-card">
     <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700">Dipendente</div>
     <div style="font-size:20px;font-weight:800;margin-top:4px">{{ u.nome }} {{ u.cognome }}</div>
-    <div style="font-size:12px;color:var(--text-light)">{{ u.titolo or u.mansione or 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â' }}</div>
+    <div style="font-size:12px;color:var(--text-light)">{{ u.titolo or u.mansione or 'Ã¢â‚¬â€' }}</div>
   </div>
   <div class="bo-card">
     <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700">Ore lavorate (auto)</div>
@@ -33798,7 +31913,7 @@ BANCA_ORE_DETTAGLIO_TMPL = """
   <h3 style="margin:0 0 8px;font-size:16px"><i class="fa fa-calendar"></i> Andamento mese per mese</h3>
   <p style="font-size:12px;color:var(--text-light);margin:0 0 12px">
     <strong>Ore lavorate</strong> sono calcolate automaticamente dalle presenze.
-    <strong>Monte ore</strong> e <strong>Rettifiche</strong> li gestisci tu manualmente ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â clicca su una cella per modificarla.
+    <strong>Monte ore</strong> e <strong>Rettifiche</strong> li gestisci tu manualmente Ã¢â‚¬â€ clicca su una cella per modificarla.
   </p>
   {% if not info.mesi %}
   <div style="padding:24px;text-align:center;color:var(--text-light)">Nessuno storico disponibile.</div>
@@ -33869,7 +31984,7 @@ BANCA_ORE_DETTAGLIO_TMPL = """
       <input type="month" name="mese" id="rettifica-mese" required value="{{ mese_corrente }}">
     </div>
     <div class="form-group" style="margin:0">
-      <label>Delta ore (ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â±)</label>
+      <label>Delta ore (Ã‚Â±)</label>
       <input type="number" name="delta" step="0.25" required placeholder="es. -4 o 8" style="font-weight:700;text-align:right">
     </div>
     <div class="form-group" style="margin:0">
@@ -33894,9 +32009,9 @@ BANCA_ORE_DETTAGLIO_TMPL = """
     <tbody>
     {% for r in rettifiche %}
     <tr>
-      <td style="font-family:monospace;font-size:11px">{{ r.creato_il[:10] if r.creato_il else 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â' }}</td>
-      <td style="font-family:monospace;font-size:11px">{{ r.mese or 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â' }}</td>
-      <td style="font-size:13px">{{ r.descrizione or 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â' }}</td>
+      <td style="font-family:monospace;font-size:11px">{{ r.creato_il[:10] if r.creato_il else 'Ã¢â‚¬â€' }}</td>
+      <td style="font-family:monospace;font-size:11px">{{ r.mese or 'Ã¢â‚¬â€' }}</td>
+      <td style="font-size:13px">{{ r.descrizione or 'Ã¢â‚¬â€' }}</td>
       <td style="text-align:right;font-weight:800" class="{% if r.delta > 0 %}bo-pos{% elif r.delta < 0 %}bo-neg{% else %}bo-zero{% endif %}">
         {% if r.delta > 0 %}+{% endif %}{{ "%.2f"|format(r.delta) }} h
       </td>
@@ -33939,7 +32054,7 @@ def banca_ore():
         mesi_grafico.append(f"{y:04d}-{m:02d}")
         m -= 1
         if m < 1: m = 12; y -= 1
-    mesi_grafico.reverse()  # dal piÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¹ vecchio al piÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¹ recente
+    mesi_grafico.reverse()  # dal piÃƒÂ¹ vecchio al piÃƒÂ¹ recente
 
     db = get_db()
     dip_raw = db.execute("""SELECT id, nome, cognome, mansione as titolo
@@ -34002,13 +32117,13 @@ def banca_ore_dettaglio(uid):
     if not u:
         db.close(); flash('Dipendente non trovato.','error'); return redirect(url_for('banca_ore'))
     info = _banca_ore_info_completa(db, uid)
-    # Solo rettifiche manuali (i mesi sono giÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  nel breakdown live)
+    # Solo rettifiche manuali (i mesi sono giÃƒÂ  nel breakdown live)
     rettifiche = db.execute("""SELECT * FROM banca_ore_movimenti
                                WHERE utente_id=? AND tipo IN ('rettifica','manuale')
                                ORDER BY id DESC""", (uid,)).fetchall()
     db.close()
     return render_page(BANCA_ORE_DETTAGLIO_TMPL,
-                       page_title=f"Banca Ore ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â {u['nome']} {u['cognome']}",
+                       page_title=f"Banca Ore Ã¢â‚¬â€ {u['nome']} {u['cognome']}",
                        active='banca_ore', u=dict(u),
                        info=info, rettifiche=[dict(r) for r in rettifiche],
                        mese_corrente=date.today().strftime('%Y-%m'))
@@ -34044,7 +32159,7 @@ def banca_ore_monte_set(uid):
                    (uid, mese, monte_ore))
     safe_commit(db); db.close()
     flash(f"Monte ore {mese}: {monte_ore:.1f}h salvato.", 'success')
-    # Se chiamato dall'elenco con filtro mese, torna lÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¬; altrimenti vai al dettaglio
+    # Se chiamato dall'elenco con filtro mese, torna lÃƒÂ¬; altrimenti vai al dettaglio
     if redirect_mese:
         return redirect(url_for('banca_ore', mese=redirect_mese))
     return redirect(url_for('banca_ore_dettaglio', uid=uid))
@@ -34063,7 +32178,7 @@ def banca_ore_rettifica(uid):
     if not descrizione:
         flash('Descrizione obbligatoria.','error')
         return redirect(url_for('banca_ore', mese=redirect_mese) if redirect_mese else url_for('banca_ore_dettaglio', uid=uid))
-    # Mese specificato dal form (default mese corrente per retrocompatibilitÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â )
+    # Mese specificato dal form (default mese corrente per retrocompatibilitÃƒÂ )
     mese = (request.form.get('mese') or date.today().strftime('%Y-%m')).strip()
     if len(mese) != 7 or mese[4] != '-':
         mese = date.today().strftime('%Y-%m')
@@ -34082,9 +32197,9 @@ def banca_ore_rettifica(uid):
 @app.route('/banca-ore/chiudi-mese', methods=['POST', 'GET'])
 @admin_required
 def banca_ore_chiudi_mese():
-    """Mantenuta per retrocompatibilitÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  ma ora ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ no-op: nel nuovo sistema il saldo ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨
+    """Mantenuta per retrocompatibilitÃƒÂ  ma ora ÃƒÂ¨ no-op: nel nuovo sistema il saldo ÃƒÂ¨
     calcolato in tempo reale, non servono chiusure mensili."""
-    flash('Il saldo banca ore ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ ora calcolato in tempo reale: non serve piÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¹ chiudere il mese manualmente. ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦', 'success')
+    flash('Il saldo banca ore ÃƒÂ¨ ora calcolato in tempo reale: non serve piÃƒÂ¹ chiudere il mese manualmente. Ã¢Å“â€¦', 'success')
     return redirect(url_for('banca_ore'))
 
 
@@ -34100,11 +32215,11 @@ def banca_ore_movimento_elimina(mid):
     return redirect(url_for('banca_ore_dettaglio', uid=uid) if uid else url_for('banca_ore'))
 
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ REPORT BANCA ORE ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+# Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ REPORT BANCA ORE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 def _banca_ore_report_data(db, dipendente_id, mese_da, mese_a):
     """Ritorna lista di dipendenti con breakdown mensile nell'intervallo [mese_da, mese_a].
-    Usa la NUOVA logica live: monte = ore_giornaliere ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â giorni_lavorativi (lun-ven, no festivi).
+    Usa la NUOVA logica live: monte = ore_giornaliere Ãƒâ€” giorni_lavorativi (lun-ven, no festivi).
     Ogni dipendente: {id, nome, cognome, ore_giornaliere, saldo_iniziale, saldo_finale,
                      mesi: [{mese, giorni_lavorativi, ore_lavorate, monte_dovuto,
                              rettifiche: [...], delta_mese, saldo_progressivo}]}
@@ -34289,7 +32404,7 @@ BANCA_ORE_REPORT_TMPL = """
     <div class="form-group" style="margin:0">
       <label>Dipendente</label>
       <select name="dipendente_id">
-        <option value="tutti" {{ 'selected' if dipendente_id == 'tutti' }}>ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Tutti i dipendenti con contratto ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â</option>
+        <option value="tutti" {{ 'selected' if dipendente_id == 'tutti' }}>Ã¢â‚¬â€ Tutti i dipendenti con contratto Ã¢â‚¬â€</option>
         {% for u in tutti_dipendenti %}
         <option value="{{ u.id }}" {{ 'selected' if dipendente_id == u.id|string }}>{{ u.nome }} {{ u.cognome }}{% if u.titolo %} ({{ u.titolo }}){% endif %}</option>
         {% endfor %}
@@ -34324,7 +32439,7 @@ BANCA_ORE_REPORT_TMPL = """
       <div style="font-size:18px;font-weight:800">{{ u.nome }} {{ u.cognome }}</div>
       <div style="font-size:12px;opacity:.8">
         Contratto: <strong>{{ "%.1f"|format(u.ore_giornaliere or 0) }}h/giorno</strong>
-        &nbsp;ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·&nbsp; Periodo: {{ mese_da }} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ {{ mese_a }}
+        &nbsp;Ã‚Â·&nbsp; Periodo: {{ mese_da }} Ã¢â€ â€™ {{ mese_a }}
       </div>
     </div>
     <div style="text-align:right">
@@ -34363,9 +32478,9 @@ BANCA_ORE_REPORT_TMPL = """
         </td>
         <td style="font-size:12px;color:var(--text-light)">
           {% if m.is_corrente %}
-            <span style="color:#f59e0b"><i class="fa fa-clock"></i> Mese in corso ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â dati fino a oggi</span>
+            <span style="color:#f59e0b"><i class="fa fa-clock"></i> Mese in corso Ã¢â‚¬â€ dati fino a oggi</span>
           {% elif m.ore_lavorate == 0 %}
-            <span style="opacity:.5">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â</span>
+            <span style="opacity:.5">Ã¢â‚¬â€</span>
           {% else %}
             <span style="color:#16a34a"><i class="fa fa-check"></i> Calcolato in tempo reale</span>
           {% endif %}
@@ -34384,8 +32499,8 @@ BANCA_ORE_REPORT_TMPL = """
           {% if r.delta > 0 %}+{% endif %}{{ "%.2f"|format(r.delta) }} h
         </td>
         <td>
-          <strong>{% if r.tipo=='rettifica' %}ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Ãƒâ€šÃ‚Â» Rettifica{% elif r.tipo=='manuale' %}ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“Ãƒâ€¦Ã‚Â½ Manuale{% else %}{{ r.tipo }}{% endif %}:</strong>
-          {{ r.descrizione or 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â' }}
+          <strong>{% if r.tipo=='rettifica' %}Ã¢â€ Â» Rettifica{% elif r.tipo=='manuale' %}Ã¢Å“Å½ Manuale{% else %}{{ r.tipo }}{% endif %}:</strong>
+          {{ r.descrizione or 'Ã¢â‚¬â€' }}
           {% if r.delta < 0 %}<span style="background:#fca5a5;color:#7f1d1d;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:6px;font-weight:700">PRELIEVO</span>{% endif %}
         </td>
         <td></td>
@@ -34403,7 +32518,7 @@ BANCA_ORE_REPORT_TMPL = """
   <div style="display:flex;justify-content:space-between;align-items:center">
     <div>
       <strong style="color:#15803d;font-size:14px"><i class="fa fa-chart-simple"></i> Totale dipendenti nel report</strong>
-      <div style="font-size:12px;color:#16a34a;margin-top:2px">{{ report|length }} dipendenti ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· periodo {{ mese_da }} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ {{ mese_a }}</div>
+      <div style="font-size:12px;color:#16a34a;margin-top:2px">{{ report|length }} dipendenti Ã‚Â· periodo {{ mese_da }} Ã¢â€ â€™ {{ mese_a }}</div>
     </div>
     <div style="text-align:right">
       <div style="font-size:11px;color:#16a34a;text-transform:uppercase;font-weight:700">Saldo totale</div>
@@ -34490,7 +32605,7 @@ def banca_ore_report_export():
     rett_fill    = PatternFill("solid", fgColor="FEF3C7")
 
     # Titolo
-    ws.cell(1, 1, f"Report Banca Ore ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· Periodo {mese_da} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ {mese_a}").font = Font(bold=True, size=14, color="0F4C81")
+    ws.cell(1, 1, f"Report Banca Ore Ã‚Â· Periodo {mese_da} Ã¢â€ â€™ {mese_a}").font = Font(bold=True, size=14, color="0F4C81")
     ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=7)
     ws.cell(2, 1, f"Generato il {date.today().isoformat()}").font = Font(italic=True, size=10, color="64748B")
     ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=8)
@@ -34498,7 +32613,7 @@ def banca_ore_report_export():
     row_i = 4
     for u in report:
         # Intestazione dipendente
-        c = ws.cell(row_i, 1, f"{u['nome']} {u['cognome']} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· Contratto: {u['ore_giornaliere']:.1f}h/giorno ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· Saldo iniziale: {u['saldo_iniziale']:+.2f}h ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· Saldo finale: {u['saldo_finale']:+.2f}h")
+        c = ws.cell(row_i, 1, f"{u['nome']} {u['cognome']} Ã‚Â· Contratto: {u['ore_giornaliere']:.1f}h/giorno Ã‚Â· Saldo iniziale: {u['saldo_iniziale']:+.2f}h Ã‚Â· Saldo finale: {u['saldo_finale']:+.2f}h")
         c.font = dip_font; c.fill = dip_fill; c.alignment = left
         ws.merge_cells(start_row=row_i, start_column=1, end_row=row_i, end_column=8)
         row_i += 1
@@ -34532,7 +32647,7 @@ def banca_ore_report_export():
                 ws.cell(row_i, 7, 'Dati fino a oggi').alignment = left
             elif ore_lav == 0:
                 ws.cell(row_i, 6, '').alignment = left
-                ws.cell(row_i, 7, 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â').alignment = left
+                ws.cell(row_i, 7, 'Ã¢â‚¬â€').alignment = left
             else:
                 ws.cell(row_i, 6, 'Calcolo LIVE').font = Font(italic=True, color="16A34A")
                 ws.cell(row_i, 7, 'Saldo calcolato in tempo reale').alignment = left
@@ -34543,7 +32658,7 @@ def banca_ore_report_export():
 
             # Righe rettifiche/prelievi dettagliate
             for r in m['rettifiche']:
-                ws.cell(row_i, 1, f"  ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Ãƒâ€šÃ‚Â³ {mese_str}").font = Font(italic=True, size=10, color="64748B")
+                ws.cell(row_i, 1, f"  Ã¢â€ Â³ {mese_str}").font = Font(italic=True, size=10, color="64748B")
                 ws.cell(row_i, 2, '').alignment = right
                 ws.cell(row_i, 3, '').alignment = right
                 ws.cell(row_i, 4, '').alignment = right
@@ -34584,11 +32699,11 @@ def banca_ore_report_export():
 
 
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
-#  CALENDARIO FIERE ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â vista mensile/annuale visuale
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+#  CALENDARIO FIERE Ã¢â‚¬â€ vista mensile/annuale visuale
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 
 CALENDARIO_FIERE_TMPL = """
 <style>
@@ -34628,9 +32743,9 @@ CALENDARIO_FIERE_TMPL = """
     <a href="/calendario-fiere" class="btn btn-secondary btn-sm" style="margin-left:8px">Oggi</a>
   </div>
   <div class="cal-legend">
-    <span><span class="cal-legend-dot" style="background:#3b82f6"></span>ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â¦ Setup</span>
-    <span><span class="cal-legend-dot" style="background:#16a34a"></span>ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â´ Live</span>
-    <span><span class="cal-legend-dot" style="background:#dc2626"></span>ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â¤ Smontaggio</span>
+    <span><span class="cal-legend-dot" style="background:#3b82f6"></span>Ã°Å¸â€œÂ¦ Setup</span>
+    <span><span class="cal-legend-dot" style="background:#16a34a"></span>Ã°Å¸â€Â´ Live</span>
+    <span><span class="cal-legend-dot" style="background:#dc2626"></span>Ã°Å¸â€œÂ¤ Smontaggio</span>
   </div>
 </div>
 
@@ -34662,9 +32777,9 @@ CALENDARIO_FIERE_TMPL = """
       <span class="tipo-badge tipo-{{ 'fiera' if f.tipo_evento=='Fiera' else 'evento' if f.tipo_evento=='Evento aziendale' else 'congresso' if f.tipo_evento=='Congresso' else 'altro' }}" style="padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700">{{ f.tipo_evento or 'Fiera' }}</span>
       <div class="cal-event-name"><a href="/cantieri/{{ f.id }}">{{ f.nome }}</a></div>
       <div style="font-size:11px;color:var(--text-light);font-family:monospace">
-        {% if f.data_setup %}ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â¦{{ f.data_setup }}{% endif %}
-        {% if f.data_live %} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â´{{ f.data_live }}{% endif %}
-        {% if f.data_dismantling %} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â¤{{ f.data_dismantling }}{% endif %}
+        {% if f.data_setup %}Ã°Å¸â€œÂ¦{{ f.data_setup }}{% endif %}
+        {% if f.data_live %} Ã¢â‚¬Â¢ Ã°Å¸â€Â´{{ f.data_live }}{% endif %}
+        {% if f.data_dismantling %} Ã¢â‚¬Â¢ Ã°Å¸â€œÂ¤{{ f.data_dismantling }}{% endif %}
       </div>
       {% if f.committente_nome %}<div style="font-size:11px;color:var(--text-light)">{{ f.committente_nome }}</div>{% endif %}
     </div>
@@ -34712,8 +32827,8 @@ def calendario_fiere():
     """, (fine_mese, inizio_mese, fine_mese, inizio_mese)).fetchall()
     db.close()
 
-    # Costruzione griglia settimane: parto dal lunedÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¬ che contiene il 1ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â° del mese
-    primo_weekday = primo_giorno.weekday()  # lunedÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¬=0
+    # Costruzione griglia settimane: parto dal lunedÃƒÂ¬ che contiene il 1Ã‚Â° del mese
+    primo_weekday = primo_giorno.weekday()  # lunedÃƒÂ¬=0
     primo_giorno_grid = primo_giorno - _td(days=primo_weekday)
     # Genero 6 settimane (max possibili in un mese)
     settimane = []
@@ -34737,26 +32852,26 @@ def calendario_fiere():
                 # Se le 3 date sono definite uso quelle, altrimenti fallback su legacy
                 if ds and dl and dd:
                     if ds <= cur_iso < dl:
-                        fase = 'setup'; titolo = f"ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â¦ {f['nome']}"
+                        fase = 'setup'; titolo = f"Ã°Å¸â€œÂ¦ {f['nome']}"
                     elif dl <= cur_iso <= dd:
                         # da dl a dd-1 = live, dd = dismantling
                         if cur_iso < dd:
-                            fase = 'live'; titolo = f"ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â´ {f['nome']}"
+                            fase = 'live'; titolo = f"Ã°Å¸â€Â´ {f['nome']}"
                         else:
-                            fase = 'dismantling'; titolo = f"ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â¤ {f['nome']}"
+                            fase = 'dismantling'; titolo = f"Ã°Å¸â€œÂ¤ {f['nome']}"
                 elif ds and dl:
                     if ds <= cur_iso < dl:
-                        fase = 'setup'; titolo = f"ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â¦ {f['nome']}"
+                        fase = 'setup'; titolo = f"Ã°Å¸â€œÂ¦ {f['nome']}"
                     elif cur_iso == dl:
-                        fase = 'live'; titolo = f"ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â´ {f['nome']}"
+                        fase = 'live'; titolo = f"Ã°Å¸â€Â´ {f['nome']}"
                 elif ds and dd:
                     if ds <= cur_iso <= dd:
                         if cur_iso == ds:
-                            fase = 'setup'; titolo = f"ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â¦ {f['nome']}"
+                            fase = 'setup'; titolo = f"Ã°Å¸â€œÂ¦ {f['nome']}"
                         elif cur_iso == dd:
-                            fase = 'dismantling'; titolo = f"ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â¤ {f['nome']}"
+                            fase = 'dismantling'; titolo = f"Ã°Å¸â€œÂ¤ {f['nome']}"
                         else:
-                            fase = 'live'; titolo = f"ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â´ {f['nome']}"
+                            fase = 'live'; titolo = f"Ã°Å¸â€Â´ {f['nome']}"
                 elif di and df_ and di <= cur_iso <= df_:
                     fase = 'legacy'; titolo = f['nome']
                 elif di and not df_ and di == cur_iso:
@@ -34775,7 +32890,7 @@ def calendario_fiere():
                 'events': events,
             })
         settimane.append(week)
-        # Stop se siamo giÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  usciti dal mese
+        # Stop se siamo giÃƒÂ  usciti dal mese
         if w*7 + 6 >= 27 and (primo_giorno_grid + _td(days=(w+1)*7)).month != mese:
             break
 
@@ -34794,9 +32909,9 @@ def calendario_fiere():
                        fiere_mese=[dict(f) for f in fiere])
 
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 #  SQUADRE (Caposquadra)
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 
 SQUADRE_TMPL = """
 <style>
@@ -34831,7 +32946,7 @@ SQUADRE_TMPL = """
   <div class="sq-head">
     <div>
       <div class="sq-name"><i class="fa fa-users"></i> {{ s.nome }}</div>
-      <div class="sq-cs"><i class="fa fa-user-tie"></i> Caposquadra: <strong>{{ s.caposquadra_nome or 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ' }}</strong></div>
+      <div class="sq-cs"><i class="fa fa-user-tie"></i> Caposquadra: <strong>{{ s.caposquadra_nome or 'Ã¢â‚¬â€œ' }}</strong></div>
       {% if s.note %}<div style="font-size:12px;color:var(--text-light);margin-top:4px;font-style:italic">{{ s.note }}</div>{% endif %}
     </div>
     {% if not s.attiva %}<span class="badge badge-gray">Archiviata</span>{% endif %}
@@ -34865,13 +32980,13 @@ SQUADRE_TMPL = """
 
 <script>
 function confermaEliminaSquadra(nome, nMembri) {
-  var msg1 = 'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Stai per eliminare DEFINITIVAMENTE la squadra "' + nome + '".\n\n';
+  var msg1 = 'Ã¢Å¡Â Ã¯Â¸Â Stai per eliminare DEFINITIVAMENTE la squadra "' + nome + '".\n\n';
   if (nMembri > 0) {
-    msg1 += 'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ I ' + nMembri + ' membri NON verranno eliminati (restano nei dipendenti)\n';
+    msg1 += 'Ã¢Å“â€œ I ' + nMembri + ' membri NON verranno eliminati (restano nei dipendenti)\n';
   }
-  msg1 += 'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ Presenze e incarichi assegnati ai membri restano intatti\n';
-  msg1 += 'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â La squadra verrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  rimossa permanentemente\n';
-  msg1 += 'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â L\\'operazione NON ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ reversibile\n\n';
+  msg1 += 'Ã¢Å“â€œ Presenze e incarichi assegnati ai membri restano intatti\n';
+  msg1 += 'Ã¢Å“â€” La squadra verrÃƒÂ  rimossa permanentemente\n';
+  msg1 += 'Ã¢Å“â€” L\\'operazione NON ÃƒÂ¨ reversibile\n\n';
   msg1 += 'Procedere?';
   if (!confirm(msg1)) return false;
   return confirm('Conferma definitiva: eliminare la squadra "' + nome + '"?');
@@ -34894,10 +33009,10 @@ SQUADRA_FORM_TMPL = """
       <label>Caposquadra *</label>
       <select name="caposquadra_id" required>
         {% if not capisquadra %}
-        <option value="">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Nessun caposquadra disponibile, prima imposta il ruolo a un dipendente ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â</option>
+        <option value="">Ã¢â‚¬â€ Nessun caposquadra disponibile, prima imposta il ruolo a un dipendente Ã¢â‚¬â€</option>
         {% endif %}
         {% for cs in capisquadra %}
-        <option value="{{ cs.id }}" {{ 'selected' if s and s.caposquadra_id == cs.id }}>{{ cs.cognome }} {{ cs.nome }}{% if cs.mansione %} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {{ cs.mansione }}{% endif %}</option>
+        <option value="{{ cs.id }}" {{ 'selected' if s and s.caposquadra_id == cs.id }}>{{ cs.cognome }} {{ cs.nome }}{% if cs.mansione %} Ã‚Â· {{ cs.mansione }}{% endif %}</option>
         {% endfor %}
       </select>
       <small style="font-size:11px;color:var(--text-light)">Solo dipendenti con ruolo "Caposquadra" possono guidare una squadra.</small>
@@ -34910,7 +33025,7 @@ SQUADRA_FORM_TMPL = """
         <label style="display:flex;align-items:center;gap:10px;padding:6px 8px;cursor:pointer;border-radius:6px;font-size:13px" onmouseover="this.style.background='#fff'" onmouseout="this.style.background='transparent'">
           <input type="checkbox" name="membri" value="{{ d.id }}" {{ 'checked' if d.id in membri_ids }}>
           <strong>{{ d.cognome }} {{ d.nome }}</strong>
-          {% if d.mansione %}<span style="color:var(--text-light);font-size:12px">ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {{ d.mansione }}</span>{% endif %}
+          {% if d.mansione %}<span style="color:var(--text-light);font-size:12px">Ã‚Â· {{ d.mansione }}</span>{% endif %}
         </label>
         {% else %}
         <p style="color:var(--text-light);font-size:13px;text-align:center;padding:14px">Nessun dipendente disponibile.</p>
@@ -35065,9 +33180,9 @@ def squadra_elimina(sid):
     return redirect(url_for('squadre_lista'))
 
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
-#  REPORT GENERALE (Excel) ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ore, presenze, rimborsi, banca
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+#  REPORT GENERALE (Excel) Ã¢â‚¬â€ ore, presenze, rimborsi, banca
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 
 REPORT_TMPL = """
 <style>
@@ -35096,10 +33211,10 @@ REPORT_TMPL = """
     Scarica in un unico file Excel tutto lo storico di un dipendente (o di tutti) nel periodo selezionato:
   </p>
   <ul>
-    <li><strong>Presenze</strong> ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â date, orari, cantiere/fiera, note di ogni timbratura</li>
-    <li><strong>Rimborsi spese</strong> ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â date, categorie, importi, descrizioni, stato (approvato/rifiutato/in attesa) con nota admin</li>
-    <li><strong>Banca ore</strong> ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â rettifiche manuali del periodo (detrazioni/straordinari) e saldo LIVE attuale</li>
-    <li><strong>Riepilogo</strong> ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â un foglio con totali di periodo per tutti i dipendenti selezionati</li>
+    <li><strong>Presenze</strong> Ã¢â‚¬â€ date, orari, cantiere/fiera, note di ogni timbratura</li>
+    <li><strong>Rimborsi spese</strong> Ã¢â‚¬â€ date, categorie, importi, descrizioni, stato (approvato/rifiutato/in attesa) con nota admin</li>
+    <li><strong>Banca ore</strong> Ã¢â‚¬â€ rettifiche manuali del periodo (detrazioni/straordinari) e saldo LIVE attuale</li>
+    <li><strong>Riepilogo</strong> Ã¢â‚¬â€ un foglio con totali di periodo per tutti i dipendenti selezionati</li>
   </ul>
 </div>
 
@@ -35109,9 +33224,9 @@ REPORT_TMPL = """
     <div class="form-group" style="margin:0">
       <label>Dipendente</label>
       <select name="dipendente_id">
-        <option value="tutti">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Tutti i dipendenti attivi ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â</option>
+        <option value="tutti">Ã¢â‚¬â€ Tutti i dipendenti attivi Ã¢â‚¬â€</option>
         {% for d in dipendenti %}
-        <option value="{{ d.id }}">{{ d.cognome }} {{ d.nome }}{% if d.mansione %} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {{ d.mansione }}{% endif %}</option>
+        <option value="{{ d.id }}">{{ d.cognome }} {{ d.nome }}{% if d.mansione %} Ã‚Â· {{ d.mansione }}{% endif %}</option>
         {% endfor %}
       </select>
     </div>
@@ -35140,7 +33255,7 @@ REPORT_TMPL = """
     <div class="form-group" style="margin:0">
       <label style="font-size:11px">Dipendente</label>
       <select name="dipendente_id" style="width:100%">
-        <option value="">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Tutti ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â</option>
+        <option value="">Ã¢â‚¬â€ Tutti Ã¢â‚¬â€</option>
         {% for d in dipendenti %}
         <option value="{{ d.id }}" {{ 'selected' if filtro_dip == d.id|string }}>{{ d.cognome }} {{ d.nome }}</option>
         {% endfor %}
@@ -35149,7 +33264,7 @@ REPORT_TMPL = """
     <div class="form-group" style="margin:0">
       <label style="font-size:11px">Cantiere / Fiera</label>
       <select name="cantiere_id" style="width:100%">
-        <option value="">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Tutti ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â</option>
+        <option value="">Ã¢â‚¬â€ Tutti Ã¢â‚¬â€</option>
         {% for c in cantieri %}
         <option value="{{ c.id }}" {{ 'selected' if filtro_can == c.id|string }}>{{ c.nome }}</option>
         {% endfor %}
@@ -35192,10 +33307,10 @@ REPORT_TMPL = """
     {% for t in timbrature %}
     <tr {% if t.dip_eliminato %}class="dip-eliminato"{% endif %}>
       <td style="font-family:monospace">{{ t.data }}</td>
-      <td><strong>{{ t.nome or 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â' }} {{ t.cognome or '' }}</strong></td>
-      <td>{% if t.cantiere_nome %}<span style="background:#e0e7ff;color:#3730a3;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">{{ t.cantiere_nome }}</span>{% else %}<span style="color:var(--text-light)">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â</span>{% endif %}</td>
-      <td style="font-family:monospace;font-size:12px">{{ t.ora_entrata or 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â' }}</td>
-      <td style="font-family:monospace;font-size:12px">{{ t.ora_uscita or 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â' }}</td>
+      <td><strong>{{ t.nome or 'Ã¢â‚¬â€' }} {{ t.cognome or '' }}</strong></td>
+      <td>{% if t.cantiere_nome %}<span style="background:#e0e7ff;color:#3730a3;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">{{ t.cantiere_nome }}</span>{% else %}<span style="color:var(--text-light)">Ã¢â‚¬â€</span>{% endif %}</td>
+      <td style="font-family:monospace;font-size:12px">{{ t.ora_entrata or 'Ã¢â‚¬â€' }}</td>
+      <td style="font-family:monospace;font-size:12px">{{ t.ora_uscita or 'Ã¢â‚¬â€' }}</td>
       <td style="text-align:right;font-weight:700;font-family:monospace">{{ "%.1f"|format(t.ore_totali or 0) }}</td>
       <td style="font-size:12px;color:var(--text-light)">{{ t.note or '' }}</td>
     </tr>
@@ -35235,7 +33350,7 @@ def report_pagina():
                               ORDER BY s.cognome, s.nome""").fetchall()
     dipendenti_list = [dict(d) for d in dipendenti] + [dict(e) for e in eliminati]
 
-    # Elenco cantieri (tutti, anche archiviati, perchÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© potrei voler filtrare storico)
+    # Elenco cantieri (tutti, anche archiviati, perchÃƒÂ© potrei voler filtrare storico)
     cantieri = db.execute("SELECT id, nome FROM cantieri ORDER BY nome").fetchall()
 
     # Filtri dall'URL
@@ -35245,7 +33360,7 @@ def report_pagina():
     filtro_da   = (request.args.get('data_da') or '').strip()
     filtro_a    = (request.args.get('data_a') or '').strip()
 
-    # Default mese corrente se nessun filtro date/mese ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ stato impostato
+    # Default mese corrente se nessun filtro date/mese ÃƒÂ¨ stato impostato
     oggi = date.today()
     primo_mese_corr = oggi.replace(day=1)
     if not filtro_mese and not filtro_da and not filtro_a:
@@ -35255,7 +33370,7 @@ def report_pagina():
     date_da_eff = filtro_da or None
     date_a_eff  = filtro_a  or None
     if filtro_mese and not date_da_eff and not date_a_eff:
-        # mese YYYY-MM ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ primo e ultimo giorno
+        # mese YYYY-MM Ã¢â€ â€™ primo e ultimo giorno
         try:
             from datetime import datetime as _dt
             y, m = filtro_mese.split('-')
@@ -35334,7 +33449,7 @@ def report_export():
 
     db = get_db()
     if dipendente_id == 'tutti':
-        # Dipendenti attivi + dipendenti eliminati che hanno attivitÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  nel periodo
+        # Dipendenti attivi + dipendenti eliminati che hanno attivitÃƒÂ  nel periodo
         dips_attivi = db.execute("""SELECT id, nome, cognome, mansione, email,
                                     ore_contratto_giornaliere, ore_contratto_mensili,
                                     0 AS eliminato
@@ -35394,11 +33509,11 @@ def report_export():
     thin = Side(border_style='thin', color='CBD5E1')
     border_all = Border(top=thin, left=thin, right=thin, bottom=thin)
 
-    ws_sum['A1'] = f'REPORT COMPLESSIVO ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Periodo {data_da} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ {data_a}'
+    ws_sum['A1'] = f'REPORT COMPLESSIVO Ã¢â‚¬â€ Periodo {data_da} Ã¢â€ â€™ {data_a}'
     ws_sum['A1'].font = Font(bold=True, size=14, color="0F4C81")
     ws_sum.merge_cells('A1:G1')
     headers_sum = ['DIPENDENTE', 'RUOLO', 'PRESENZE', 'ORE LAVORATE',
-                   'RIMBORSI APPROVATI (ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬)', 'RETTIFICHE BANCA (h)', 'SALDO BANCA (h)']
+                   'RIMBORSI APPROVATI (Ã¢â€šÂ¬)', 'RETTIFICHE BANCA (h)', 'SALDO BANCA (h)']
     for j, h in enumerate(headers_sum, 1):
         c = ws_sum.cell(3, j, h)
         c.font = header_font; c.fill = header_fill
@@ -35423,13 +33538,13 @@ def report_export():
         ws['A1'] = nome_full + (' [ELIMINATO]' if is_eliminato else '')
         ws['A1'].font = Font(bold=True, size=16, color=("DC2626" if is_eliminato else "0F4C81"))
         ws.merge_cells('A1:G1')
-        ws['A2'] = f"{u['mansione'] or 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â'} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {u['email'] or ''} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· Periodo: {data_da} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ {data_a}" + (
-                     ' ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· Dipendente eliminato (dati storici)' if is_eliminato else '')
+        ws['A2'] = f"{u['mansione'] or 'Ã¢â‚¬â€'} Ã‚Â· {u['email'] or ''} Ã‚Â· Periodo: {data_da} Ã¢â€ â€™ {data_a}" + (
+                     ' Ã‚Â· Dipendente eliminato (dati storici)' if is_eliminato else '')
         ws['A2'].font = Font(italic=True, size=10, color="64748B")
         ws.merge_cells('A2:G2')
         row = 4
 
-        # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â PRESENZE ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+        # Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â PRESENZE Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
         c = ws.cell(row, 1, 'PRESENZE')
         c.font = section_font; c.fill = section_fill; c.alignment = left
         ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=7)
@@ -35463,7 +33578,7 @@ def report_export():
             ws.cell(row, 4, p['ora_uscita'] or '').alignment = center
             cell_ore = ws.cell(row, 5, p['ore_totali'] or 0)
             cell_ore.number_format = '0.00'; cell_ore.alignment = right
-            ws.cell(row, 6, p['cantiere'] or 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â').alignment = left
+            ws.cell(row, 6, p['cantiere'] or 'Ã¢â‚¬â€').alignment = left
             ws.cell(row, 7, p['note'] or '').alignment = left
             tot_ore += float(p['ore_totali'] or 0)
             row += 1
@@ -35481,12 +33596,12 @@ def report_export():
             row += 1
         row += 1
 
-        # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â RIMBORSI SPESE ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+        # Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â RIMBORSI SPESE Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
         c = ws.cell(row, 1, 'RIMBORSI SPESE')
         c.font = section_font; c.fill = section_fill; c.alignment = left
         ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=7)
         row += 1
-        headers_sp = ['DATA', 'CATEGORIA', 'DESCRIZIONE', 'IMPORTO (ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬)', 'STATO', 'NOTA ADMIN', '']
+        headers_sp = ['DATA', 'CATEGORIA', 'DESCRIZIONE', 'IMPORTO (Ã¢â€šÂ¬)', 'STATO', 'NOTA ADMIN', '']
         for j, h in enumerate(headers_sp, 1):
             cl = ws.cell(row, j, h)
             cl.font = header_font; cl.fill = header_fill
@@ -35504,9 +33619,9 @@ def report_export():
             ws.cell(row, 2, s['categoria'] or '').alignment = left
             ws.cell(row, 3, s['descrizione'] or '').alignment = left
             cimp = ws.cell(row, 4, float(s['importo'] or 0))
-            cimp.number_format = '#,##0.00" ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬"'; cimp.alignment = right
+            cimp.number_format = '#,##0.00" Ã¢â€šÂ¬"'; cimp.alignment = right
             stato = s['stato'] or 'in_attesa'
-            stato_lbl = {'approvata':'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ Approvata','rifiutata':'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Rifiutata','in_attesa':'ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€šÃ‚Â³ In attesa'}.get(stato, stato)
+            stato_lbl = {'approvata':'Ã¢Å“â€œ Approvata','rifiutata':'Ã¢Å“â€” Rifiutata','in_attesa':'Ã¢ÂÂ³ In attesa'}.get(stato, stato)
             cs = ws.cell(row, 5, stato_lbl); cs.alignment = center
             if stato == 'approvata': cs.fill = pos_fill
             elif stato == 'rifiutata': cs.fill = neg_fill
@@ -35520,7 +33635,7 @@ def report_export():
             c = ws.cell(row, 1, 'TOTALE APPROVATI')
             c.font = tot_font; c.fill = tot_fill; c.alignment = right
             ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=3)
-            cc = ws.cell(row, 4, tot_approvati); cc.number_format = '#,##0.00" ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬"'; cc.font = tot_font; cc.fill = pos_fill; cc.alignment = right
+            cc = ws.cell(row, 4, tot_approvati); cc.number_format = '#,##0.00" Ã¢â€šÂ¬"'; cc.font = tot_font; cc.fill = pos_fill; cc.alignment = right
             n_appr = sum(1 for s in spese if (s['stato'] or 'in_attesa') == 'approvata')
             ws.cell(row, 5, f'{n_appr} rimborsi').fill = tot_fill
             ws.cell(row, 6, '').fill = tot_fill; row += 1
@@ -35528,13 +33643,13 @@ def report_export():
                 c = ws.cell(row, 1, 'Di cui ancora in attesa')
                 c.font = Font(italic=True, size=10); c.alignment = right
                 ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=3)
-                ca = ws.cell(row, 4, tot_attesa); ca.number_format = '#,##0.00" ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬"'; ca.alignment = right
+                ca = ws.cell(row, 4, tot_attesa); ca.number_format = '#,##0.00" Ã¢â€šÂ¬"'; ca.alignment = right
                 row += 1
             if tot_rifiutati > 0:
                 c = ws.cell(row, 1, 'Di cui rifiutati')
                 c.font = Font(italic=True, size=10, color="94A3B8"); c.alignment = right
                 ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=3)
-                cx = ws.cell(row, 4, tot_rifiutati); cx.number_format = '#,##0.00" ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬"'
+                cx = ws.cell(row, 4, tot_rifiutati); cx.number_format = '#,##0.00" Ã¢â€šÂ¬"'
                 cx.alignment = right; cx.font = Font(italic=True, color="94A3B8"); row += 1
         else:
             c = ws.cell(row, 1, 'Nessun rimborso nel periodo.')
@@ -35543,8 +33658,8 @@ def report_export():
             row += 1
         row += 1
 
-        # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â BANCA ORE ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
-        c = ws.cell(row, 1, 'BANCA ORE ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Rettifiche manuali / Detrazioni / Straordinari')
+        # Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â BANCA ORE Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+        c = ws.cell(row, 1, 'BANCA ORE Ã¢â‚¬â€ Rettifiche manuali / Detrazioni / Straordinari')
         c.font = section_font; c.fill = section_fill; c.alignment = left
         ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=7)
         row += 1
@@ -35611,10 +33726,10 @@ def report_export():
 
         # Riga riepilogo
         ws_sum.cell(riga_sum, 1, nome_full).alignment = left
-        ws_sum.cell(riga_sum, 2, u['mansione'] or 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â').alignment = left
+        ws_sum.cell(riga_sum, 2, u['mansione'] or 'Ã¢â‚¬â€').alignment = left
         ws_sum.cell(riga_sum, 3, len(presenze)).alignment = center
         c_ore = ws_sum.cell(riga_sum, 4, tot_ore); c_ore.number_format = '0.00'; c_ore.alignment = right
-        c_rim = ws_sum.cell(riga_sum, 5, tot_approvati); c_rim.number_format = '#,##0.00" ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬"'; c_rim.alignment = right
+        c_rim = ws_sum.cell(riga_sum, 5, tot_approvati); c_rim.number_format = '#,##0.00" Ã¢â€šÂ¬"'; c_rim.alignment = right
         c_ret = ws_sum.cell(riga_sum, 6, tot_rettifiche); c_ret.number_format = '+0.00;-0.00;0.00'; c_ret.alignment = right
         if tot_rettifiche > 0: c_ret.fill = pos_fill
         elif tot_rettifiche < 0: c_ret.fill = neg_fill
@@ -35637,7 +33752,7 @@ def report_export():
         ws_sum.merge_cells(start_row=riga_sum, start_column=1, end_row=riga_sum, end_column=2)
         cp = ws_sum.cell(riga_sum, 3, totali['presenze']); cp.font = Font(bold=True); cp.fill = tot_fill; cp.alignment = center
         co = ws_sum.cell(riga_sum, 4, totali['ore']); co.number_format = '0.00'; co.font = Font(bold=True); co.fill = tot_fill; co.alignment = right
-        cr = ws_sum.cell(riga_sum, 5, totali['rimborsi']); cr.number_format = '#,##0.00" ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬"'; cr.font = Font(bold=True); cr.fill = tot_fill; cr.alignment = right
+        cr = ws_sum.cell(riga_sum, 5, totali['rimborsi']); cr.number_format = '#,##0.00" Ã¢â€šÂ¬"'; cr.font = Font(bold=True); cr.fill = tot_fill; cr.alignment = right
         ct = ws_sum.cell(riga_sum, 6, totali['rettifiche']); ct.number_format = '+0.00;-0.00;0.00'; ct.font = Font(bold=True); ct.fill = tot_fill; ct.alignment = right
         ws_sum.cell(riga_sum, 7, '').fill = tot_fill
 
@@ -35654,12 +33769,12 @@ def report_export():
                     headers={'Content-Disposition': f'attachment; filename={fname}'})
 
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
-#  AI ASSISTANT ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Chat con accesso ai dati del tenant via tool use
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+#  AI ASSISTANT Ã¢â‚¬â€ Chat con accesso ai dati del tenant via tool use
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 
-# Tool functions: ognuna ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ una query SQL sicura predefinita.
-# Claude (l'AI) potrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  chiamarle ma NON puÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â² scrivere SQL libero.
+# Tool functions: ognuna ÃƒÂ¨ una query SQL sicura predefinita.
+# Claude (l'AI) potrÃƒÂ  chiamarle ma NON puÃƒÂ² scrivere SQL libero.
 
 def _ai_tool_query_presenze_periodo(db, args):
     """Restituisce somma ore lavorate per dipendente in un periodo."""
@@ -35805,7 +33920,7 @@ def _ai_tool_fiere_attive(db, args):
 
 
 def _ai_tool_banca_ore(db, args):
-    """Saldo banca ore per dipendente ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â usa la nuova logica: ore lavorate vs monte ore manuale + rettifiche + riporto."""
+    """Saldo banca ore per dipendente Ã¢â‚¬â€ usa la nuova logica: ore lavorate vs monte ore manuale + rettifiche + riporto."""
     nome_dip = (args.get('nome_dipendente') or '').strip().lower()
     sql = """SELECT id, nome, cognome FROM utenti WHERE COALESCE(attivo,1)=1 AND ruolo != 'admin'"""
     params = []
@@ -35827,7 +33942,7 @@ def _ai_tool_banca_ore(db, args):
     return out
 
 
-# Mappa nome tool ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ funzione (ordine usato anche nella schema definita per Claude)
+# Mappa nome tool Ã¢â€ â€™ funzione (ordine usato anche nella schema definita per Claude)
 AI_TOOLS = {
     'query_presenze_periodo': _ai_tool_query_presenze_periodo,
     'margine_fiera': _ai_tool_margine_fiera,
@@ -35924,7 +34039,7 @@ def ai_analyze_document():
 
     api_key = get_setting('anthropic_api_key', '').strip()
     if not api_key:
-        return jsonify({'error': "Chiave API Anthropic non configurata. Impostazioni ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ AI."}), 400
+        return jsonify({'error': "Chiave API Anthropic non configurata. Impostazioni Ã¢â€ â€™ AI."}), 400
 
     if 'file' not in request.files:
         return jsonify({'error': 'Nessun file inviato'}), 400
@@ -35975,24 +34090,24 @@ def ai_chat():
 
     api_key = get_setting('anthropic_api_key', '').strip()
     if not api_key:
-        return jsonify({'error': "Chiave API Anthropic non configurata. Impostazioni ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ AI."}), 400
+        return jsonify({'error': "Chiave API Anthropic non configurata. Impostazioni Ã¢â€ â€™ AI."}), 400
 
     nome_azienda = get_setting('nome_azienda', 'Accesso Fiere')
     oggi = date.today().isoformat()
 
     system_prompt = f"""Sei un assistente AI integrato nel gestionale "{nome_azienda}" per allestitori fieristici.
-Il tuo compito ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ rispondere alle domande dell'amministratore usando i dati reali dell'azienda.
+Il tuo compito ÃƒÂ¨ rispondere alle domande dell'amministratore usando i dati reali dell'azienda.
 
 REGOLE:
 - Rispondi sempre in italiano
-- Usa i tool disponibili per recuperare dati reali ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â non inventare numeri
+- Usa i tool disponibili per recuperare dati reali Ã¢â‚¬â€ non inventare numeri
 - Sii conciso: vai al dunque, evita preamboli
-- Per importi usa il formato ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ 1.234,56
+- Per importi usa il formato Ã¢â€šÂ¬ 1.234,56
 - Per ore usa formato come "8.5h" o "8 ore e 30 minuti"
 - Se la domanda riguarda un periodo non specificato, usa l'ultimo mese (da {oggi})
 - Se non hai dati sufficienti per rispondere, dillo chiaramente
-- Quando mostri liste di piÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¹ di 5 elementi, riassumi (es. "I primi 5 sono...")
-- Oggi ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ {oggi}"""
+- Quando mostri liste di piÃƒÂ¹ di 5 elementi, riassumi (es. "I primi 5 sono...")
+- Oggi ÃƒÂ¨ {oggi}"""
 
     # Costruisci la conversazione per Claude
     messages = []
@@ -36066,15 +34181,15 @@ REGOLE:
 
         # Se siamo qui, abbiamo superato i 5 round
         db.close()
-        return jsonify({'reply': 'Mi spiace, la richiesta ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ troppo complessa. Prova a riformulare.'})
+        return jsonify({'reply': 'Mi spiace, la richiesta ÃƒÂ¨ troppo complessa. Prova a riformulare.'})
     except Exception as e:
         db.close()
         return jsonify({'error': f'Errore inatteso: {e}'}), 500
 
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 #  CONTRATTI CLIENTI
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 
 CONTRATTI_CLIENTI_TMPL = """
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
@@ -36106,25 +34221,25 @@ CONTRATTI_CLIENTI_TMPL = """
         <strong>{{ c.cliente_nome }}</strong>
         {% if c.cliente_piva %}<div style="font-size:11px;color:var(--text-light)">P.IVA {{ c.cliente_piva }}</div>{% endif %}
       </td>
-      <td style="font-size:13px">{{ c.oggetto or 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ' }}</td>
-      <td style="font-size:12px;font-family:monospace">{{ c.data_firma or 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ' }}</td>
+      <td style="font-size:13px">{{ c.oggetto or 'Ã¢â‚¬â€œ' }}</td>
+      <td style="font-size:12px;font-family:monospace">{{ c.data_firma or 'Ã¢â‚¬â€œ' }}</td>
       <td>
         {% if c.data_scadenza %}
           {% set today = today_str %}
           {% if c.data_scadenza < today %}
-            <span class="badge badge-red">ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â  Scaduto {{ c.data_scadenza }}</span>
+            <span class="badge badge-red">Ã¢Å¡Â  Scaduto {{ c.data_scadenza }}</span>
           {% elif c.giorni_scadenza <= 30 %}
-            <span class="badge badge-amber">ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€šÃ‚Â³ {{ c.data_scadenza }} ({{ c.giorni_scadenza }}gg)</span>
+            <span class="badge badge-amber">Ã¢ÂÂ³ {{ c.data_scadenza }} ({{ c.giorni_scadenza }}gg)</span>
           {% else %}
             <span style="font-size:12px;font-family:monospace;color:var(--text-light)">{{ c.data_scadenza }}</span>
           {% endif %}
-        {% else %}ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ{% endif %}
+        {% else %}Ã¢â‚¬â€œ{% endif %}
       </td>
       <td style="font-family:monospace;font-size:13px">
-        {% if c.valore %}ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ {{ "%.2f"|format(c.valore) }}{% else %}ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ{% endif %}
+        {% if c.valore %}Ã¢â€šÂ¬ {{ "%.2f"|format(c.valore) }}{% else %}Ã¢â‚¬â€œ{% endif %}
       </td>
       <td>
-        {% if c.stato == 'attivo' %}<span class="badge badge-green">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€šÃ‚Â Attivo</span>
+        {% if c.stato == 'attivo' %}<span class="badge badge-green">Ã¢â€”Â Attivo</span>
         {% elif c.stato == 'scaduto' %}<span class="badge badge-red">Scaduto</span>
         {% elif c.stato == 'rescisso' %}<span class="badge badge-gray">Rescisso</span>
         {% elif c.stato == 'bozza' %}<span class="badge badge-blue">Bozza</span>
@@ -36163,7 +34278,7 @@ CONTRATTO_FORM_TMPL = """
       <div class="form-group">
         <label>Cliente *</label>
         <select name="cliente_id" required onchange="this.form.submit()">
-          <option value="">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Seleziona cliente ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â</option>
+          <option value="">Ã¢â‚¬â€ Seleziona cliente Ã¢â‚¬â€</option>
           {% for cl in clienti %}
           <option value="{{ cl.id }}" {{ 'selected' if contratto and contratto.cliente_id==cl.id }}>{{ cl.nome }}</option>
           {% endfor %}
@@ -36181,7 +34296,7 @@ CONTRATTO_FORM_TMPL = """
     </div>
     <div class="form-group">
       <label>Oggetto / descrizione contratto *</label>
-      <input name="oggetto" value="{{ contratto.oggetto if contratto else '' }}" required placeholder="es. Contratto allestimento stand EICMA 2025 ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Pad. 18 Stand A12">
+      <input name="oggetto" value="{{ contratto.oggetto if contratto else '' }}" required placeholder="es. Contratto allestimento stand EICMA 2025 Ã¢â‚¬â€ Pad. 18 Stand A12">
     </div>
     <div class="form-row">
       <div class="form-group">
@@ -36195,13 +34310,13 @@ CONTRATTO_FORM_TMPL = """
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>Valore contratto (ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬)</label>
+        <label>Valore contratto (Ã¢â€šÂ¬)</label>
         <input name="valore" type="number" step="0.01" min="0" value="{{ contratto.valore if contratto else '' }}" placeholder="es. 15000.00">
       </div>
       <div class="form-group">
         <label>Fiera / Stand collegato</label>
         <select name="cantiere_id">
-          <option value="">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Nessuno ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â</option>
+          <option value="">Ã¢â‚¬â€ Nessuno Ã¢â‚¬â€</option>
           {% for f in fiere %}
           <option value="{{ f.id }}" {{ 'selected' if contratto and contratto.cantiere_id==f.id }}>{{ f.nome }}</option>
           {% endfor %}
@@ -36222,7 +34337,7 @@ CONTRATTO_FORM_TMPL = """
       </div>
       {% endif %}
       <input type="file" name="file_contratto" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp" style="padding:6px">
-      <div style="font-size:11px;color:var(--text-light);margin-top:4px">Max 20MB ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â PDF, PNG, JPG, WEBP</div>
+      <div style="font-size:11px;color:var(--text-light);margin-top:4px">Max 20MB Ã¢â‚¬â€ PDF, PNG, JPG, WEBP</div>
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
       <a href="/contratti-clienti" class="btn btn-secondary">Annulla</a>
@@ -36355,8 +34470,8 @@ def contratto_cliente_elimina(cid):
     flash('Contratto eliminato.', 'success')
     return redirect(url_for('contratti_clienti'))
 
-#  SAAS ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â LANDING ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· REGISTRAZIONE ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ABBONAMENTI ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· SUPERADMIN
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+#  SAAS Ã¢â‚¬â€ LANDING Ã‚Â· REGISTRAZIONE Ã‚Â· ABBONAMENTI Ã‚Â· SUPERADMIN
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 
 STRIPE_SECRET      = os.environ.get('STRIPE_SECRET_KEY', '')
 STRIPE_WEBHOOK_SEC = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
@@ -36367,7 +34482,7 @@ STRIPE_PRICE_ENT   = os.environ.get('STRIPE_PRICE_ENT', '')
 SUPERADMIN_EMAIL = os.environ.get('SUPERADMIN_EMAIL', 'superadmin@gestionale.app')
 SUPERADMIN_PW    = os.environ.get('SUPERADMIN_PASSWORD', '')
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Landing page ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+# Ã¢â€â‚¬Ã¢â€â‚¬ Landing page Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 @app.route('/landing')
 def landing():
     mdb = get_master_db()
@@ -36375,7 +34490,7 @@ def landing():
     mdb.close()
     return render_template_string(LANDING_TMPL, piani=piani)
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Registrazione nuova azienda ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+# Ã¢â€â‚¬Ã¢â€â‚¬ Registrazione nuova azienda Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 @app.route('/registrati', methods=['GET','POST'])
 def registrati():
     if request.method == 'POST':
@@ -36393,7 +34508,7 @@ def registrati():
         existing = mdb.execute("SELECT id FROM aziende WHERE email_admin=?", (email,)).fetchone()
         if existing:
             mdb.close()
-            return render_template_string(REGISTRATI_TMPL, error='Email giÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  registrata.', piano_sel=piano)
+            return render_template_string(REGISTRATI_TMPL, error='Email giÃƒÂ  registrata.', piano_sel=piano)
         import re, time as _t
         slug = re.sub(r'[^a-z0-9]', '', nome_az.lower())[:20] + str(int(_t.time()))[-4:]
         pw_hash = hash_pw(password)
@@ -36426,12 +34541,12 @@ def registrati():
             'azienda_id': azienda_id, 'azienda_nome': nome_az,
             'is_saas': True,
         })
-        flash(f'ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚Â½ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â° Benvenuto! Hai 14 giorni di prova gratuita. Buon lavoro con {nome_az}!', 'success')
+        flash(f'Ã°Å¸Å½â€° Benvenuto! Hai 14 giorni di prova gratuita. Buon lavoro con {nome_az}!', 'success')
         return redirect(url_for('dashboard'))
     piano_sel = request.args.get('piano', 'base')
     return render_template_string(REGISTRATI_TMPL, error=None, piano_sel=piano_sel)
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Stripe: crea sessione checkout ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+# Ã¢â€â‚¬Ã¢â€â‚¬ Stripe: crea sessione checkout Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 @app.route('/abbonamento/checkout', methods=['POST'])
 @login_required
 def abbonamento_checkout():
@@ -36467,7 +34582,7 @@ def abbonamento_checkout():
 @app.route('/abbonamento/successo')
 @login_required
 def abbonamento_successo():
-    flash('ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Abbonamento attivato! Grazie.', 'success')
+    flash('Ã¢Å“â€¦ Abbonamento attivato! Grazie.', 'success')
     return redirect(url_for('abbonamento_gestisci'))
 
 @app.route('/abbonamento/gestisci')
@@ -36483,7 +34598,7 @@ def abbonamento_gestisci():
     return render_template_string(ABBONAMENTO_TMPL, az=az, piani=piani,
                                   stripe_ok=bool(STRIPE_SECRET))
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Stripe webhook ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+# Ã¢â€â‚¬Ã¢â€â‚¬ Stripe webhook Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 @app.route('/stripe/webhook', methods=['POST'])
 def stripe_webhook():
     if not STRIPE_SECRET: return 'ok', 200
@@ -36510,7 +34625,7 @@ def stripe_webhook():
         print(f'[Stripe webhook] {e}')
     return 'ok', 200
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Super-Admin ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+# Ã¢â€â‚¬Ã¢â€â‚¬ Super-Admin Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 def superadmin_required(f):
     @wraps(f)
     def d(*a, **k):
@@ -36600,14 +34715,14 @@ def superadmin_entra_azienda(aid):
     flash(f'Ora stai operando come admin di {az["nome"]}.', 'info')
     return redirect(url_for('dashboard'))
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Templates SaaS ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+# Ã¢â€â‚¬Ã¢â€â‚¬ Templates SaaS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 LANDING_TMPL = """<!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GestionaleHR ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Il Accesso Fiere per le PMI italiane</title>
+<title>GestionaleHR Ã¢â‚¬â€ Il Accesso Fiere per le PMI italiane</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -36655,7 +34770,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <nav class="nav">
   <a href="/landing" class="nav-logo"><i class="fa fa-chart-line" style="color:#f59e0b"></i> GestionaleHR</a>
   <div class="nav-links">
-    <a href="#features">FunzionalitÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â </a>
+    <a href="#features">FunzionalitÃƒÂ </a>
     <a href="#pricing">Prezzi</a>
     <a href="/area-clienti">Accedi</a>
     <a href="/registrati" class="cta">Prova gratis</a>
@@ -36665,7 +34780,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div class="hero">
   <h1>Il Accesso Fiere per le<br><span>PMI italiane</span></h1>
   <p>Presenze, cedolini, fatture, cantieri, veicoli e molto altro.<br>Tutto in un'unica piattaforma semplice e potente.</p>
-  <a href="/registrati" class="btn-hero">Inizia gratis ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â 14 giorni</a>
+  <a href="/registrati" class="btn-hero">Inizia gratis Ã¢â‚¬â€ 14 giorni</a>
   <a href="/area-clienti" class="btn-sec">Accedi</a>
 </div>
 
@@ -36707,13 +34822,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 <div class="pricing" id="pricing">
   <h2>Prezzi trasparenti, senza sorprese</h2>
-  <p class="sub">14 giorni di prova gratuita ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Nessuna carta di credito richiesta</p>
+  <p class="sub">14 giorni di prova gratuita Ã¢â‚¬â€ Nessuna carta di credito richiesta</p>
   <div class="price-grid">
     {% for p in piani %}
     <div class="price-card {{ 'popular' if p.nome=='Professional' }}">
-      {% if p.nome=='Professional' %}<div class="popular-badge">ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚Â­Ãƒâ€šÃ‚Â PIÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ SCELTO</div>{% endif %}
+      {% if p.nome=='Professional' %}<div class="popular-badge">Ã¢Â­Â PIÃƒâ„¢ SCELTO</div>{% endif %}
       <h3>{{ p.nome }}</h3>
-      <div class="price">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬{{ p.prezzo_mensile|int }}<span>/mese</span></div>
+      <div class="price">Ã¢â€šÂ¬{{ p.prezzo_mensile|int }}<span>/mese</span></div>
       <ul>
         <li><i class="fa fa-check"></i> {% if p.max_dipendenti < 999 %}Fino a {{ p.max_dipendenti }} dipendenti{% else %}Dipendenti illimitati{% endif %}</li>
         <li><i class="fa fa-check"></i> Presenze e timbrature GPS</li>
@@ -36724,14 +34839,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         {% if p.nome == 'Enterprise' %}<li><i class="fa fa-check"></i> Supporto prioritario</li>{% endif %}
       </ul>
       <a href="/registrati?piano={{ p.nome|lower }}" class="btn-price">Inizia gratis</a>
-      <div class="trial-badge">ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ 14 giorni gratuiti</div>
+      <div class="trial-badge">Ã¢Å“â€œ 14 giorni gratuiti</div>
     </div>
     {% endfor %}
   </div>
 </div>
 
 <div class="footer">
-  <p>ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© 2025 GestionaleHR ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Made in Italy ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡Ãƒâ€šÃ‚Â®ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡Ãƒâ€šÃ‚Â¹ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· <a href="/privacy" style="color:rgba(255,255,255,.4)">Privacy</a> ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· <a href="/termini" style="color:rgba(255,255,255,.4)">Termini</a> ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· <a href="/cookies" style="color:rgba(255,255,255,.4)">Cookie</a></p>
+  <p>Ã‚Â© 2025 GestionaleHR Ã¢â‚¬â€ Made in Italy Ã°Å¸â€¡Â®Ã°Å¸â€¡Â¹ Ã‚Â· <a href="/privacy" style="color:rgba(255,255,255,.4)">Privacy</a> Ã‚Â· <a href="/termini" style="color:rgba(255,255,255,.4)">Termini</a> Ã‚Â· <a href="/cookies" style="color:rgba(255,255,255,.4)">Cookie</a></p>
 </div>
 </body>
 </html>"""
@@ -36741,7 +34856,7 @@ REGISTRATI_TMPL = """<!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Registrati ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Accesso Fiere</title>
+<title>Registrati Ã¢â‚¬â€ Accesso Fiere</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
@@ -36809,7 +34924,7 @@ input:focus,select:focus{outline:none;border-color:#0f4c81;box-shadow:0 0 0 3px 
     </div>
   </div>
   <div class="hero-title">Il gestionale pensato<br>per chi <span>allestisce le fiere</span></div>
-  <div class="hero-sub">Gestisci personale, fiere, veicoli, documenti e preventivi ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â tutto in un unico strumento, isolato per la tua azienda.</div>
+  <div class="hero-sub">Gestisci personale, fiere, veicoli, documenti e preventivi Ã¢â‚¬â€ tutto in un unico strumento, isolato per la tua azienda.</div>
   <div class="features">
     <div class="feature">
       <div class="feat-icon"><i class="fa fa-store" style="color:#f59e0b"></i></div>
@@ -36835,7 +34950,7 @@ input:focus,select:focus{outline:none;border-color:#0f4c81;box-shadow:0 0 0 3px 
 </div>
 <div class="right">
   <div class="form-card">
-    <div class="trial-pill"><i class="fa fa-gift"></i> 14 giorni gratuiti ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â nessuna carta richiesta</div>
+    <div class="trial-pill"><i class="fa fa-gift"></i> 14 giorni gratuiti Ã¢â‚¬â€ nessuna carta richiesta</div>
     <h2>Crea il tuo account</h2>
     <p class="sub">Inizia subito, sei operativo in 30 secondi.</p>
     {% if error %}<div class="error"><i class="fa fa-exclamation-circle"></i> {{ error }}</div>{% endif %}
@@ -36860,20 +34975,20 @@ input:focus,select:focus{outline:none;border-color:#0f4c81;box-shadow:0 0 0 3px 
           <label class="piano-card {{ 'checked' if piano_sel=='base' }}">
             <input type="radio" name="piano" value="base" {{ 'checked' if piano_sel=='base' }} onchange="document.querySelectorAll('.piano-card').forEach(c=>c.classList.remove('checked'));this.closest('.piano-card').classList.add('checked')">
             <div class="pnome">Base</div>
-            <div class="pprezzo">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬29</div>
-            <div class="psub">/mese ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· 5 op.</div>
+            <div class="pprezzo">Ã¢â€šÂ¬29</div>
+            <div class="psub">/mese Ã‚Â· 5 op.</div>
           </label>
           <label class="piano-card {{ 'checked' if piano_sel=='professional' }}">
             <input type="radio" name="piano" value="professional" {{ 'checked' if piano_sel=='professional' }} onchange="document.querySelectorAll('.piano-card').forEach(c=>c.classList.remove('checked'));this.closest('.piano-card').classList.add('checked')">
             <div class="pnome" style="color:#0f4c81">Pro</div>
-            <div class="pprezzo">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬59</div>
-            <div class="psub">/mese ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· 20 op.</div>
+            <div class="pprezzo">Ã¢â€šÂ¬59</div>
+            <div class="psub">/mese Ã‚Â· 20 op.</div>
           </label>
           <label class="piano-card {{ 'checked' if piano_sel=='enterprise' }}">
             <input type="radio" name="piano" value="enterprise" {{ 'checked' if piano_sel=='enterprise' }} onchange="document.querySelectorAll('.piano-card').forEach(c=>c.classList.remove('checked'));this.closest('.piano-card').classList.add('checked')">
             <div class="pnome">Enterprise</div>
-            <div class="pprezzo">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬99</div>
-            <div class="psub">/mese ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ÃƒÆ’Ã‚Â¢Ãƒâ€¹Ã¢â‚¬Â Ãƒâ€¦Ã‚Â¾ op.</div>
+            <div class="pprezzo">Ã¢â€šÂ¬99</div>
+            <div class="psub">/mese Ã‚Â· Ã¢Ë†Å¾ op.</div>
           </label>
         </div>
       </div>
@@ -36889,7 +35004,7 @@ input:focus,select:focus{outline:none;border-color:#0f4c81;box-shadow:0 0 0 3px 
       </div>
       <button type="submit" class="btn-register"><i class="fa fa-rocket"></i> Crea account e inizia gratis</button>
     </form>
-    <div class="login-link">Hai giÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  un account? <a href="/area-clienti">Accedi ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢</a></div>
+    <div class="login-link">Hai giÃƒÂ  un account? <a href="/area-clienti">Accedi Ã¢â€ â€™</a></div>
   </div>
 </div>
 </body>
@@ -36909,9 +35024,9 @@ ABBONAMENTO_TMPL = """
       </div>
       <div style="text-align:right">
         <div style="font-size:12px;color:#64748b">Stato</div>
-        {% if az.stato=='attivo' %}<span class="badge badge-green">ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ Attivo</span>
-        {% elif az.stato=='trial' %}<span class="badge badge-amber">ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€šÃ‚Â³ Trial fino al {{ az.trial_fino_al }}</span>
-        {% else %}<span class="badge badge-red">ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Sospeso</span>{% endif %}
+        {% if az.stato=='attivo' %}<span class="badge badge-green">Ã¢Å“â€œ Attivo</span>
+        {% elif az.stato=='trial' %}<span class="badge badge-amber">Ã¢ÂÂ³ Trial fino al {{ az.trial_fino_al }}</span>
+        {% else %}<span class="badge badge-red">Ã¢Å“â€” Sospeso</span>{% endif %}
       </div>
     </div>
     <div style="font-weight:700;margin-bottom:12px">Piano attuale: <span style="color:#f59e0b;text-transform:capitalize">{{ az.piano }}</span></div>
@@ -36919,7 +35034,7 @@ ABBONAMENTO_TMPL = """
     <div style="background:#fef3c7;border-radius:8px;padding:12px;margin-bottom:20px;font-size:13px;color:#92400e">
       <i class="fa fa-info-circle"></i>
       {% if az.stato=='trial' %}Attiva un abbonamento per continuare a usare il gestionale dopo il trial.
-      {% else %}Il tuo abbonamento ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ sospeso. Rinnova per riaccedere.{% endif %}
+      {% else %}Il tuo abbonamento ÃƒÂ¨ sospeso. Rinnova per riaccedere.{% endif %}
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px">
     {% for p in piani %}
@@ -36927,7 +35042,7 @@ ABBONAMENTO_TMPL = """
       <input type="hidden" name="piano" value="{{ p.nome|lower }}">
       <div style="border:2px solid {{ '#f59e0b' if p.nome|lower==az.piano else '#e2e8f0' }};border-radius:12px;padding:16px;text-align:center">
         <div style="font-weight:700">{{ p.nome }}</div>
-        <div style="font-size:24px;font-weight:800;color:#f59e0b">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬{{ p.prezzo_mensile|int }}</div>
+        <div style="font-size:24px;font-weight:800;color:#f59e0b">Ã¢â€šÂ¬{{ p.prezzo_mensile|int }}</div>
         <div style="font-size:11px;color:#64748b;margin-bottom:12px">/mese</div>
         <button type="submit" class="btn btn-primary" style="width:100%;font-size:13px">
           {{ 'Piano attuale' if p.nome|lower==az.piano else 'Attiva' }}
@@ -36938,7 +35053,7 @@ ABBONAMENTO_TMPL = """
     </div>
     {% else %}
     <div style="background:#f0fdf4;border-radius:8px;padding:12px;color:#16a34a;font-size:13px">
-      <i class="fa fa-check-circle"></i> Il tuo abbonamento ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ attivo. Gestiscilo dal portale Stripe.
+      <i class="fa fa-check-circle"></i> Il tuo abbonamento ÃƒÂ¨ attivo. Gestiscilo dal portale Stripe.
     </div>
     {% endif %}
   </div>
@@ -36954,7 +35069,7 @@ input{width:100%;padding:10px;margin-bottom:12px;border:1px solid #334155;border
 button{width:100%;padding:12px;background:#f59e0b;color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer}
 .err{color:#ef4444;font-size:13px;margin-bottom:12px}</style>
 </head><body><div class="card">
-<h2>ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â SuperAdmin</h2>
+<h2>Ã°Å¸â€Â SuperAdmin</h2>
 {% if error %}<div class="err">{{ error }}</div>{% endif %}
 <form method="POST">
   <input type="email" name="email" placeholder="Email" required>
@@ -36966,7 +35081,7 @@ button{width:100%;padding:12px;background:#f59e0b;color:#000;border:none;border-
 
 _SA_DASHBOARD_TMPL = """
 <div style="margin-bottom:24px;display:flex;justify-content:space-between;align-items:center">
-  <h2><i class="fa fa-globe" style="color:#f59e0b"></i> SuperAdmin ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Aziende clienti</h2>
+  <h2><i class="fa fa-globe" style="color:#f59e0b"></i> SuperAdmin Ã¢â‚¬â€ Aziende clienti</h2>
   <a href="/superadmin/logout" class="btn btn-secondary btn-sm"><i class="fa fa-sign-out"></i> Esci</a>
 </div>
 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
@@ -37027,7 +35142,7 @@ _SA_DASHBOARD_TMPL = """
   </table>
 </div>"""
 
-# ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Init master DB all'avvio ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+# Ã¢â€â‚¬Ã¢â€â‚¬ Init master DB all'avvio Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 try:
     init_master_db()
 except Exception as e:
@@ -37040,7 +35155,7 @@ with app.app_context():
         init_db()
     except Exception as _e:
         print(f'[INIT_DB] Warning: {_e}')
-    # Garantisce le colonne critiche anche se init_db ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨ parzialmente fallita
+    # Garantisce le colonne critiche anche se init_db ÃƒÂ¨ parzialmente fallita
     try:
         ensure_columns()
     except Exception as _e:
@@ -37056,4 +35171,3 @@ except Exception as _e:
 if __name__ == '__main__':
     debug = os.environ.get('RAILWAY_ENVIRONMENT') is None
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=debug)
-
