@@ -13256,11 +13256,7 @@ window.submitConGPS = function(form, ev) {
       <td><strong>{{ "%.1f"|format(p.ore_totali) if p.ore_totali else 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ' }}</strong></td>
       <td style="color:var(--text-light);font-size:12px">{{ p.note or '' }}</td>
       {% if session.ruolo=='admin' %}<td style="display:flex;gap:4px">
-        {% if p.nome_jolly %}
-        <button type="button" class="btn btn-secondary btn-sm" title="Modifica non disponibile per jolly esterno" style="opacity:.4;cursor:not-allowed" disabled><i class="fa fa-pen"></i></button>
-        {% else %}
-        <button type="button" onclick='apriModificaPresenza({{ p.id }}, {{ (p.data or "")|tojson }}, {{ (p.ora_entrata or "")|tojson }}, {{ (p.ora_uscita or "")|tojson }}, {{ (p.ore_totali or "")|tojson }}, {{ (p.cantiere_id or "")|tojson }}, {{ (p.note or "")|tojson }}, {{ ((p.nome or "") ~ " " ~ (p.cognome or ""))|trim|tojson }}, {{ (p.pausa_ore or 0)|tojson }})' class="btn btn-secondary btn-sm" title="Modifica"><i class="fa fa-pen"></i></button>
-        {% endif %}
+        <a href="/presenze/{{ p.id }}/modifica" class="btn btn-secondary btn-sm" title="Modifica"><i class="fa fa-pen"></i></a>
         <a href="/presenze/{{ p.id }}/elimina" class="btn btn-danger btn-sm" onclick="return confirm('Eliminare?')" title="Elimina"><i class="fa fa-trash"></i></a>
       </td>{% endif %}
     </tr>{% else %}
@@ -13300,7 +13296,7 @@ window.submitConGPS = function(form, ev) {
         {% endif %}
         {% if session.ruolo=='admin' %}
         <div class="pmc-actions">
-          <button type="button" onclick="var b=document.querySelector('#row-{{ p.id }} .btn[title=Modifica]'); if(b) b.click();" class="btn btn-secondary btn-sm"><i class="fa fa-pen"></i> Modifica</button>
+          <a href="/presenze/{{ p.id }}/modifica" class="btn btn-secondary btn-sm"><i class="fa fa-pen"></i> Modifica</a>
           <a href="/presenze/{{ p.id }}/elimina" class="btn btn-danger btn-sm" onclick="return confirm('Eliminare?')"><i class="fa fa-trash"></i></a>
         </div>
         {% endif %}
@@ -14051,6 +14047,124 @@ def presenza_modifica():
     safe_commit(db); db.close()
     flash('Presenza aggiornata!','success')
     return redirect(url_for('presenze'))
+
+
+PRESENZA_EDIT_TMPL = """
+<div style="margin-bottom:16px">
+  <a href="/presenze" class="btn btn-secondary btn-sm"><i class="fa fa-arrow-left"></i> Torna alle presenze</a>
+</div>
+<div class="card" style="max-width:760px;margin:0 auto">
+  <div class="card-header">
+    <h3><i class="fa fa-pen" style="color:var(--accent2)"></i> Modifica timbratura</h3>
+  </div>
+  <form method="POST" action="/presenze/modifica">
+    <div class="card-body">
+      <input type="hidden" name="pid" value="{{ p.id }}">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:12px">
+        <div>
+          <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:800;margin-bottom:4px">Dipendente</div>
+          <div style="font-weight:900;color:var(--text)">{{ p.nome }} {{ p.cognome }}</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:800;margin-bottom:4px">Ore attuali</div>
+          <div style="font-weight:900;color:var(--text)">{{ "%.2f"|format(p.ore_totali or 0) }} h</div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Data</label>
+          <input type="date" name="data" value="{{ p.data or today }}" required>
+        </div>
+        <div class="form-group">
+          <label>Fiera / evento</label>
+          <select name="cantiere_id">
+            <option value="">Nessuna fiera collegata</option>
+            {% for c in cantieri %}
+            <option value="{{ c.id }}" {{ 'selected' if p.cantiere_id and p.cantiere_id == c.id }}>{{ c.nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      {% set usa_orari = p.ora_entrata and p.ora_uscita and p.ora_entrata != '00:00' and p.ora_uscita != '00:00' %}
+      <div style="display:flex;gap:8px;margin:4px 0 14px;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:8px;padding:9px 14px;border:1px solid var(--border);border-radius:10px;cursor:pointer">
+          <input type="radio" name="mod_modalita" value="ore" {{ '' if usa_orari else 'checked' }} onchange="toggleEditPresMode()"> Ore totali
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;padding:9px 14px;border:1px solid var(--border);border-radius:10px;cursor:pointer">
+          <input type="radio" name="mod_modalita" value="orari" {{ 'checked' if usa_orari else '' }} onchange="toggleEditPresMode()"> Entrata / uscita
+        </label>
+      </div>
+
+      <div id="edit-pres-ore">
+        <div class="form-group">
+          <label>Ore totali</label>
+          <input type="number" step="0.25" min="0.25" max="24" name="ore_dirette" value="{{ p.ore_totali or '' }}">
+        </div>
+      </div>
+      <div id="edit-pres-orari" style="display:none">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Entrata</label>
+            <input type="time" name="ora_entrata" value="{{ (p.ora_entrata or '')[:5] }}">
+          </div>
+          <div class="form-group">
+            <label>Uscita</label>
+            <input type="time" name="ora_uscita" value="{{ (p.ora_uscita or '')[:5] }}">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Pausa</label>
+          <select name="pausa_ore">
+            {% for val, lab in [('0','Nessuna pausa'),('0.5','30 min'),('1','1 ora'),('1.5','1h 30m'),('2','2 ore')] %}
+            <option value="{{ val }}" {{ 'selected' if (p.pausa_ore or 0)|float == val|float }}>{{ lab }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Note</label>
+          <input name="note" value="{{ p.note or '' }}" placeholder="Note interne">
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;padding:0 20px 18px">
+      <a href="/presenze" class="btn btn-secondary">Annulla</a>
+      <button type="submit" class="btn btn-blue"><i class="fa fa-save"></i> Salva modifiche</button>
+    </div>
+  </form>
+</div>
+<script>
+function toggleEditPresMode(){
+  var checked = document.querySelector('input[name="mod_modalita"]:checked');
+  var isOrari = checked && checked.value === 'orari';
+  document.getElementById('edit-pres-ore').style.display = isOrari ? 'none' : 'block';
+  document.getElementById('edit-pres-orari').style.display = isOrari ? 'block' : 'none';
+}
+toggleEditPresMode();
+</script>
+"""
+
+
+@app.route('/presenze/<int:pid>/modifica', methods=['GET'])
+@admin_required
+def presenza_modifica_pagina(pid):
+    db = get_db()
+    p = db.execute("""SELECT p.*, COALESCE(u.nome, p.nome_jolly, 'Jolly') AS nome,
+                             COALESCE(u.cognome, p.cognome_jolly, 'Esterno') AS cognome
+                      FROM presenze p
+                      LEFT JOIN utenti u ON u.id=p.utente_id
+                      WHERE p.id=?""", (pid,)).fetchone()
+    cantieri = db.execute("SELECT id, nome FROM cantieri ORDER BY COALESCE(data_inizio,'' ) DESC, nome").fetchall()
+    db.close()
+    if not p:
+        flash('Timbratura non trovata.', 'error')
+        return redirect(url_for('presenze'))
+    return render_page(PRESENZA_EDIT_TMPL, page_title='Modifica timbratura', active='presenze',
+                       p=p, cantieri=cantieri, today=date.today().isoformat())
 
 
 @app.route('/presenze/<int:pid>/elimina')
