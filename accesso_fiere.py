@@ -13259,7 +13259,7 @@ window.submitConGPS = function(form, ev) {
         {% if p.nome_jolly %}
         <button type="button" class="btn btn-secondary btn-sm" title="Modifica non disponibile per jolly esterno" style="opacity:.4;cursor:not-allowed" disabled><i class="fa fa-pen"></i></button>
         {% else %}
-        <button type="button" onclick='apriModifica({{ p.id }}, {{ (p.data or "")|tojson }}, {{ (p.ora_entrata or "")|tojson }}, {{ (p.ora_uscita or "")|tojson }}, {{ (p.ore_totali or "")|tojson }}, {{ (p.cantiere_id or "")|tojson }}, {{ (p.note or "")|tojson }}, {{ ((p.nome or "") ~ " " ~ (p.cognome or ""))|trim|tojson }}, {{ (p.pausa_ore or 0)|tojson }})' class="btn btn-secondary btn-sm" title="Modifica"><i class="fa fa-pen"></i></button>
+        <button type="button" onclick='apriModificaPresenza({{ p.id }}, {{ (p.data or "")|tojson }}, {{ (p.ora_entrata or "")|tojson }}, {{ (p.ora_uscita or "")|tojson }}, {{ (p.ore_totali or "")|tojson }}, {{ (p.cantiere_id or "")|tojson }}, {{ (p.note or "")|tojson }}, {{ ((p.nome or "") ~ " " ~ (p.cognome or ""))|trim|tojson }}, {{ (p.pausa_ore or 0)|tojson }})' class="btn btn-secondary btn-sm" title="Modifica"><i class="fa fa-pen"></i></button>
         {% endif %}
         <a href="/presenze/{{ p.id }}/elimina" class="btn btn-danger btn-sm" onclick="return confirm('Eliminare?')" title="Elimina"><i class="fa fa-trash"></i></a>
       </td>{% endif %}
@@ -13518,7 +13518,7 @@ function chiudiModificaPresenza() {
   var modal = document.getElementById('modal-mod-pres');
   if (modal) modal.style.display = 'none';
 }
-function apriModifica(pid, data, oe, ou, ore, cid, note, nome, pausa) {
+function apriModificaPresenza(pid, data, oe, ou, ore, cid, note, nome, pausa) {
   var modal = document.getElementById('modal-mod-pres');
   try {
   document.getElementById('mod-pid').value   = pid || '';
