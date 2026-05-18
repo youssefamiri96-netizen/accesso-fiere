@@ -13256,7 +13256,11 @@ window.submitConGPS = function(form, ev) {
       <td><strong>{{ "%.1f"|format(p.ore_totali) if p.ore_totali else 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ' }}</strong></td>
       <td style="color:var(--text-light);font-size:12px">{{ p.note or '' }}</td>
       {% if session.ruolo=='admin' %}<td style="display:flex;gap:4px">
-        <button onclick="apriModifica({{ p.id }},'{{ p.data }}','{{ p.ora_entrata or '' }}','{{ p.ora_uscita or '' }}','{{ p.ore_totali or '' }}','{{ p.cantiere_id or '' }}','{{ p.note or '' }}','{{ p.nome }} {{ p.cognome }}','{{ p.pausa_ore or 0 }}')" class="btn btn-secondary btn-sm" title="Modifica"{% if p.nome_jolly %} style="opacity:.4;cursor:not-allowed" onclick="return false"{% endif %}><i class="fa fa-pen"></i></button>
+        {% if p.nome_jolly %}
+        <button type="button" class="btn btn-secondary btn-sm" title="Modifica non disponibile per jolly esterno" style="opacity:.4;cursor:not-allowed" disabled><i class="fa fa-pen"></i></button>
+        {% else %}
+        <button type="button" onclick='apriModifica({{ p.id }}, {{ (p.data or "")|tojson }}, {{ (p.ora_entrata or "")|tojson }}, {{ (p.ora_uscita or "")|tojson }}, {{ (p.ore_totali or "")|tojson }}, {{ (p.cantiere_id or "")|tojson }}, {{ (p.note or "")|tojson }}, {{ ((p.nome or "") ~ " " ~ (p.cognome or ""))|trim|tojson }}, {{ (p.pausa_ore or 0)|tojson }})' class="btn btn-secondary btn-sm" title="Modifica"><i class="fa fa-pen"></i></button>
+        {% endif %}
         <a href="/presenze/{{ p.id }}/elimina" class="btn btn-danger btn-sm" onclick="return confirm('Eliminare?')" title="Elimina"><i class="fa fa-trash"></i></a>
       </td>{% endif %}
     </tr>{% else %}
@@ -13310,8 +13314,8 @@ window.submitConGPS = function(form, ev) {
 
 {% if session.ruolo=='admin' %}
 <!-- Modal modifica singola (esistente) -->
-<div id="modal-mod-pres" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center">
-  <div class="card" style="width:460px;max-width:95vw;max-height:90vh;overflow-y:auto">
+<div id="modal-mod-pres" style="display:none;position:fixed;inset:0;background:rgba(3,7,18,.72);z-index:99999;align-items:center;justify-content:center;padding:18px">
+  <div class="card" style="width:460px;max-width:95vw;max-height:90vh;overflow-y:auto;position:relative;z-index:100000;background:var(--card,#172a43);border:1px solid var(--border);box-shadow:0 34px 90px -28px rgba(0,0,0,.85)">
     <div class="card-header">
       <h3 id="mod-pres-dip" style="font-size:15px"></h3>
       <button onclick="document.getElementById('modal-mod-pres').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-light)">ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</button>
@@ -13354,7 +13358,7 @@ window.submitConGPS = function(form, ev) {
         <div class="form-group"><label>Note</label><input name="note" id="mod-note"></div>
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;padding:0 20px 16px">
-        <button type="button" onclick="document.getElementById('modal-mod-pres').style.display='none'" class="btn btn-secondary">Annulla</button>
+        <button type="button" onclick="chiudiModificaPresenza()" class="btn btn-secondary">Annulla</button>
         <button type="submit" class="btn btn-blue"><i class="fa fa-save"></i> Salva</button>
       </div>
     </form>
@@ -13510,11 +13514,17 @@ function bulkElimina() {
 }
 
 // ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Modifica singola ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+function chiudiModificaPresenza() {
+  var modal = document.getElementById('modal-mod-pres');
+  if (modal) modal.style.display = 'none';
+}
 function apriModifica(pid, data, oe, ou, ore, cid, note, nome, pausa) {
-  document.getElementById('mod-pid').value   = pid;
-  document.getElementById('mod-data').value  = data;
-  document.getElementById('mod-note').value  = note;
-  document.getElementById('mod-pres-dip').textContent = 'ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“Ãƒâ€šÃ‚Â¤ ' + nome;
+  var modal = document.getElementById('modal-mod-pres');
+  try {
+  document.getElementById('mod-pid').value   = pid || '';
+  document.getElementById('mod-data').value  = data || '';
+  document.getElementById('mod-note').value  = note || '';
+  document.getElementById('mod-pres-dip').textContent = 'Modifica timbratura - ' + (nome || '');
   // Imposta pausa
   var pausaSel = document.getElementById('mod-pausa');
   if (pausaSel) {
@@ -13528,7 +13538,9 @@ function apriModifica(pid, data, oe, ou, ore, cid, note, nome, pausa) {
     if (!found) pausaSel.value = '0';
   }
   var sel = document.getElementById('mod-cant');
-  for (var i=0;i<sel.options.length;i++) sel.options[i].selected = (sel.options[i].value == cid);
+  if (sel) {
+    for (var i=0;i<sel.options.length;i++) sel.options[i].selected = (String(sel.options[i].value) == String(cid || ''));
+  }
   if (oe && ou) {
     document.querySelector('[name=mod_modalita][value=orari]').checked = true;
     document.getElementById('mod-oe').value = oe.substring(0,5);
@@ -13539,7 +13551,12 @@ function apriModifica(pid, data, oe, ou, ore, cid, note, nome, pausa) {
     document.getElementById('mod-ore').value = ore ? parseFloat(ore).toFixed(1) : '';
     toggleModModalita();
   }
-  document.getElementById('modal-mod-pres').style.display = 'flex';
+  if (modal) modal.style.display = 'flex';
+  } catch (err) {
+    console.error('Errore apertura modifica presenza', err);
+    if (modal) modal.style.display = 'none';
+    alert('Non riesco ad aprire la modifica di questa timbratura. Ricarica la pagina e riprova.');
+  }
 }
 function toggleModModalita() {
   var isOrari = document.querySelector('[name=mod_modalita]:checked').value === 'orari';
