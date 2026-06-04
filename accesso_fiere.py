@@ -1633,6 +1633,58 @@ def get_squadra_membri_ids(db, caposquadra_id):
 
 def hash_pw(pw): return hashlib.sha256(pw.encode()).hexdigest()
 
+def _sync_master_owner_credentials(new_email=None, password_hash=None):
+    """
+    Allinea l'account proprietario nel master SaaS quando email o password
+    vengono cambiate dal profilo tenant. Il login admin parte dal master.
+    """
+    az_id = session.get('azienda_id')
+    if not az_id:
+        return True, ''
+    mdb = None
+    try:
+        mdb = get_master_db()
+        az = mdb.execute("SELECT id,email_admin FROM aziende WHERE id=?", (az_id,)).fetchone()
+        if not az:
+            return True, ''
+
+        current_email = (session.get('email') or '').strip().lower()
+        owner_email = (az['email_admin'] or '').strip().lower()
+        is_owner = bool(session.get('is_tenant_owner')) or (current_email and current_email == owner_email)
+        if not is_owner:
+            return True, ''
+
+        updates = []
+        params = []
+        if new_email is not None:
+            email = (new_email or '').strip().lower()
+            if not email:
+                return False, 'Email non valida.'
+            existing = mdb.execute(
+                "SELECT id FROM aziende WHERE email_admin=? AND id!=?",
+                (email, az_id)
+            ).fetchone()
+            if existing:
+                return False, 'Email gia usata da un altra azienda.'
+            updates.append('email_admin=?')
+            params.append(email)
+        if password_hash is not None:
+            updates.append('password_admin=?')
+            params.append(password_hash)
+        if updates:
+            params.append(az_id)
+            mdb.execute("UPDATE aziende SET " + ", ".join(updates) + " WHERE id=?", params)
+            mdb.commit()
+        return True, ''
+    except Exception as e:
+        return False, str(e)
+    finally:
+        try:
+            if mdb:
+                mdb.close()
+        except Exception:
+            pass
+
 # Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 #  EMAIL
 # Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
@@ -13233,7 +13285,7 @@ window.submitConGPS = function(form, ev) {
           data-pid="{{ p.id }}" data-data="{{ p.data }}"
           data-oe="{{ p.ora_entrata or '' }}" data-ou="{{ p.ora_uscita or '' }}"
           data-ore="{{ p.ore_totali or '' }}" data-cid="{{ p.cantiere_id or '' }}"
-          data-note="{{ p.note or '' }}" data-nome="{{ p.nome }} {{ p.cognome }}"
+          data-note="{{ (p.note or '')|e }}" data-nome="{{ (p.nome ~ ' ' ~ p.cognome)|e }}"
           data-jolly="{{ '1' if p.nome_jolly else '0' }}"
           onchange="aggiornaSelzione()"></td>
       <td>
@@ -15000,7 +15052,13 @@ RIC_TMPL = """
       <td style="color:var(--text-light);font-size:12px;max-width:160px">{{ r.note or 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ' }}</td>
       <td>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          <button onclick="apriModifica({{ r.id }},'{{ r.data }}',{{ r.ore_totali or 0 }},'{{ r.cantiere_id or '' }}','{{ r.note or '' }}')"
+          <button type="button"
+            data-rid="{{ r.id }}"
+            data-data="{{ r.data or '' }}"
+            data-ore="{{ r.ore_totali or 0 }}"
+            data-cantiere="{{ r.cantiere_id or '' }}"
+            data-note="{{ (r.note or '')|e }}"
+            onclick="apriModificaDaBottone(this)"
             class="btn btn-sm btn-secondary"><i class="fa fa-pen"></i> Modifica</button>
           <form method="POST" action="/admin/richieste/{{ r.id }}/gestisci" style="display:flex;gap:6px">
             <input name="nota_admin" placeholder="Nota..." style="padding:5px 8px;font-size:12px;width:100px;border:1px solid var(--border);border-radius:6px">
@@ -15041,11 +15099,22 @@ RIC_TMPL = """
 </div>
 
 <!-- Modal modifica richiesta -->
-<div id="modal-ric" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center">
-  <div class="card" style="width:460px;max-width:95vw">
+<style>
+#modal-ric.request-modal{display:none;position:fixed;inset:0;background:rgba(2,6,23,.62);z-index:9999;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(8px)}
+#modal-ric.request-modal.is-open{display:flex!important}
+#modal-ric .request-card{width:460px;max-width:95vw;max-height:calc(100vh - 36px);overflow:auto;opacity:1!important;filter:none!important;transform:none!important}
+body.modal-ric-open{overflow:hidden}
+@media(max-width:720px){
+  #modal-ric.request-modal{align-items:flex-start;overflow-y:auto}
+  #modal-ric .request-card{width:100%;margin:18px 0}
+  #modal-ric .form-row{grid-template-columns:1fr!important}
+}
+</style>
+<div id="modal-ric" class="request-modal" onclick="chiudiModificaRichiesta(event)">
+  <div class="card request-card" role="dialog" aria-modal="true" aria-labelledby="modal-ric-title" onclick="event.stopPropagation()">
     <div class="card-header">
-      <h3><i class="fa fa-pen" style="color:var(--accent2)"></i> Modifica e approva</h3>
-      <button onclick="document.getElementById('modal-ric').style.display='none'" class="btn btn-secondary btn-sm"><i class="fa fa-times"></i></button>
+      <h3 id="modal-ric-title"><i class="fa fa-pen" style="color:var(--accent2)"></i> Modifica e approva</h3>
+      <button type="button" onclick="chiudiModificaRichiesta()" class="btn btn-secondary btn-sm"><i class="fa fa-times"></i></button>
     </div>
     <div class="card-body">
       <form method="POST" id="form-modifica-ric">
@@ -15074,7 +15143,7 @@ RIC_TMPL = """
           <input name="nota_admin" id="mod-nota" placeholder="Es. corretta da 8h a 7.5h">
         </div>
         <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
-          <button type="button" onclick="document.getElementById('modal-ric').style.display='none'" class="btn btn-secondary">Annulla</button>
+          <button type="button" onclick="chiudiModificaRichiesta()" class="btn btn-secondary">Annulla</button>
           <button type="submit" class="btn btn-primary"><i class="fa fa-check"></i> Modifica e approva</button>
         </div>
       </form>
@@ -15082,14 +15151,38 @@ RIC_TMPL = """
   </div>
 </div>
 <script>
-function apriModifica(id, data, ore, cantiere_id, note) {
-  document.getElementById('form-modifica-ric').action = '/admin/richieste/' + id + '/gestisci';
-  document.getElementById('mod-data').value = data;
-  document.getElementById('mod-ore').value = ore;
-  document.getElementById('mod-cantiere').value = cantiere_id;
-  document.getElementById('mod-nota').value = '';
-  document.getElementById('modal-ric').style.display = 'flex';
+function chiudiModificaRichiesta(ev) {
+  if (ev && ev.target && ev.target.id !== 'modal-ric') return;
+  var modal = document.getElementById('modal-ric');
+  if (!modal) return;
+  modal.classList.remove('is-open');
+  modal.style.display = 'none';
+  document.body.classList.remove('modal-ric-open');
 }
+function apriModificaCore(id, data, ore, cantiere_id) {
+  var modal = document.getElementById('modal-ric');
+  var form = document.getElementById('form-modifica-ric');
+  if (!modal || !form) return;
+  form.action = '/admin/richieste/' + encodeURIComponent(id) + '/gestisci';
+  document.getElementById('mod-data').value = data || '';
+  document.getElementById('mod-ore').value = ore || '';
+  document.getElementById('mod-cantiere').value = cantiere_id || '';
+  document.getElementById('mod-nota').value = '';
+  modal.style.display = 'flex';
+  modal.classList.add('is-open');
+  document.body.classList.add('modal-ric-open');
+  setTimeout(function(){ var el = document.getElementById('mod-ore'); if (el) el.focus(); }, 60);
+}
+function apriModificaDaBottone(btn) {
+  apriModificaCore(btn.dataset.rid, btn.dataset.data, btn.dataset.ore, btn.dataset.cantiere);
+}
+function apriModifica(id, data, ore, cantiere_id, note) {
+  apriModificaCore(id, data, ore, cantiere_id);
+}
+window.addEventListener('pageshow', function(){ chiudiModificaRichiesta(); });
+document.addEventListener('keydown', function(ev){
+  if (ev.key === 'Escape') chiudiModificaRichiesta();
+});
 </script>
 """
 
@@ -27190,12 +27283,19 @@ def mobile_cambia_email():
     pwd   = hash_pw(request.form.get('password_attuale',''))
     db = get_db()
     u = db.execute("SELECT * FROM utenti WHERE id=?", (session['user_id'],)).fetchone()
+    if not u:
+        db.close(); flash('Sessione non valida. Effettua di nuovo il login.', 'error')
+        return redirect(url_for('login'))
     if u['password'] != pwd:
         db.close(); flash('Password attuale non corretta.', 'error')
         return redirect(url_for('mobile_profilo'))
     existing = db.execute("SELECT id FROM utenti WHERE email=? AND id!=?", (nuova, session['user_id'])).fetchone()
     if existing:
         db.close(); flash('Email giÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  in uso da un altro account.', 'error')
+        return redirect(url_for('mobile_profilo'))
+    ok, msg = _sync_master_owner_credentials(new_email=nuova)
+    if not ok:
+        db.close(); flash('Email non aggiornata nel profilo admin: ' + msg, 'error')
         return redirect(url_for('mobile_profilo'))
     db.execute("UPDATE utenti SET email=? WHERE id=?", (nuova, session['user_id']))
     safe_commit(db); db.close()
@@ -27211,6 +27311,9 @@ def mobile_cambia_password():
     conferma_pwd = request.form.get('conferma_password','')
     db = get_db()
     u = db.execute("SELECT * FROM utenti WHERE id=?", (session['user_id'],)).fetchone()
+    if not u:
+        db.close(); flash('Sessione non valida. Effettua di nuovo il login.', 'error')
+        return redirect(url_for('login'))
     if u['password'] != pwd_attuale:
         db.close(); flash('Password attuale non corretta.', 'error')
         return redirect(url_for('mobile_profilo'))
@@ -27220,7 +27323,12 @@ def mobile_cambia_password():
     if nuova_pwd != conferma_pwd:
         db.close(); flash('Le due password non coincidono.', 'error')
         return redirect(url_for('mobile_profilo'))
-    db.execute("UPDATE utenti SET password=? WHERE id=?", (hash_pw(nuova_pwd), session['user_id']))
+    h = hash_pw(nuova_pwd)
+    ok, msg = _sync_master_owner_credentials(password_hash=h)
+    if not ok:
+        db.close(); flash('Password non aggiornata nel profilo admin: ' + msg, 'error')
+        return redirect(url_for('mobile_profilo'))
+    db.execute("UPDATE utenti SET password=? WHERE id=?", (h, session['user_id']))
     safe_commit(db); db.close()
     flash('ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Password cambiata con successo!', 'success')
     return redirect(url_for('mobile_profilo'))
@@ -30382,10 +30490,20 @@ def impostazioni_password():
         flash('Password troppo corta (min. 6 caratteri).','error')
     else:
         db = get_db()
-        h  = hashlib.sha256(np.encode()).hexdigest()
-        db.execute("UPDATE utenti SET password=? WHERE ruolo='admin'", (h,))
+        h = hash_pw(np)
+        ok, msg = _sync_master_owner_credentials(password_hash=h)
+        if not ok:
+            db.close()
+            flash('Password non aggiornata nel profilo admin: ' + msg, 'error')
+            return redirect(url_for('impostazioni'))
+        updated = db.execute(
+            "UPDATE utenti SET password=? WHERE id=? AND ruolo='admin'",
+            (h, session.get('user_id'))
+        ).rowcount
+        if not updated:
+            db.execute("UPDATE utenti SET password=? WHERE email=? AND ruolo='admin'", (h, session.get('email','')))
         safe_commit(db); db.close()
-        flash('Password aggiornata!','success')
+        flash('Password admin aggiornata. Usa la nuova password al prossimo login.','success')
     return redirect(url_for('impostazioni'))
 
 
