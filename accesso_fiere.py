@@ -1554,12 +1554,23 @@ def login_required(f):
         if session.get('azienda_id') and not session.get('is_superadmin') and f.__name__ not in allowed_when_suspended:
             try:
                 mdb = get_master_db()
-                az = mdb.execute("SELECT stato FROM aziende WHERE id=?", (session.get('azienda_id'),)).fetchone()
+                az = mdb.execute("SELECT stato,trial_fino_al,piano FROM aziende WHERE id=?", (session.get('azienda_id'),)).fetchone()
                 mdb.close()
+                if az and _azienda_trial_scaduto(az):
+                    _sospendi_azienda(session.get('azienda_id'))
+                    checkout_url, checkout_err = _crea_checkout_abbonamento_stripe(session.get('azienda_id'), az['piano'] or 'base')
+                    if checkout_url:
+                        return redirect(checkout_url)
+                    flash(f'Pagamento Stripe non configurato: {checkout_err}', 'error')
+                    return redirect(url_for('logout'))
                 if az and az['stato'] == 'sospeso':
-                    if not _sync_azienda_pagata_da_stripe(session.get('azienda_id')):
-                        flash('Completa il pagamento per attivare il gestionale.', 'warning')
-                        return redirect(url_for('abbonamento_gestisci'))
+                    trial_ok = _riattiva_trial_se_valido(session.get('azienda_id'), az)
+                    if not trial_ok and not _sync_azienda_pagata_da_stripe(session.get('azienda_id')):
+                        checkout_url, checkout_err = _crea_checkout_abbonamento_stripe(session.get('azienda_id'), az['piano'] or 'base')
+                        if checkout_url:
+                            return redirect(checkout_url)
+                        flash(f'Pagamento Stripe non configurato: {checkout_err}', 'error')
+                        return redirect(url_for('logout'))
             except Exception:
                 pass
         admin_pages = {'dashboard','dipendenti','presenze','ferie','cantieri','global_search',
@@ -6957,8 +6968,14 @@ def login():
                 az['password_admin'] = pw
             # Verifica stato abbonamento
             needs_subscription_redirect = False
-            if az['stato'] == 'sospeso':
-                if _sync_azienda_pagata_da_stripe(az['id']):
+            if _azienda_trial_scaduto(az):
+                _sospendi_azienda(az['id'])
+                az['stato'] = 'sospeso'
+                needs_subscription_redirect = True
+            elif az['stato'] == 'sospeso':
+                if _riattiva_trial_se_valido(az['id'], az):
+                    az['stato'] = 'trial'
+                elif _sync_azienda_pagata_da_stripe(az['id']):
                     az['stato'] = 'attivo'
                 else:
                     needs_subscription_redirect = True
@@ -6998,14 +7015,24 @@ def login():
             db.close()
             session['user_id'] = admin_tenant['id']
             if needs_subscription_redirect:
-                flash('Pagamento non ancora riconciliato. Premi "Verifica pagamento" dopo aver completato Stripe.', 'warning')
-                return redirect(url_for('abbonamento_gestisci'))
+                checkout_url, checkout_err = _crea_checkout_abbonamento_stripe(az['id'], az.get('piano') or 'base')
+                if checkout_url:
+                    return redirect(checkout_url)
+                flash(f'Pagamento Stripe non configurato: {checkout_err}', 'error')
+                return redirect(url_for('login'))
             return redirect(url_for('dashboard'))
 
         # Login dipendente: cerca in TUTTI i tenant DB per trovare a quale azienda appartiene
         mdb = get_master_db()
         aziende_attive = mdb.execute(
-            "SELECT id, nome FROM aziende WHERE stato != 'sospeso'"
+            """SELECT id, nome FROM aziende
+               WHERE stato != 'sospeso'
+                 AND NOT (
+                   stato='trial'
+                   AND trial_fino_al IS NOT NULL
+                   AND trial_fino_al != ''
+                   AND date(trial_fino_al) < date('now')
+                 )"""
         ).fetchall()
         mdb.close()
 
@@ -10294,7 +10321,7 @@ def _amministrazione_stats():
 PUBLIC_NO_TENANT_ENDPOINTS = {
     'index', 'public_home', 'privacy', 'termini', 'cookie_policy', 'sicurezza', 'robots_txt', 'sitemap_xml', 'login', 'logout', 'area_clienti',
     'set_lang', 'registrati', 'landing', 'pwa_manifest', 'pwa_service_worker', 'pwa_offline',
-    'static', 'pwa_static', 'stripe_webhook', 'fattureincloud_webhook', 'acube_webhook', 'aruba_webhook',
+    'static', 'pwa_static', 'stripe_webhook', 'abbonamento_successo', 'fattureincloud_webhook', 'acube_webhook', 'aruba_webhook',
     'fatturazione_elettronica_callback',
 }
 
@@ -35663,6 +35690,54 @@ STRIPE_LINK_ENT    = os.environ.get('STRIPE_PAYMENT_LINK_ENT', 'https://buy.stri
 SUPERADMIN_EMAIL = os.environ.get('SUPERADMIN_EMAIL', 'superadmin@gestionale.app')
 SUPERADMIN_PW    = os.environ.get('SUPERADMIN_PASSWORD', '')
 
+def _azienda_trial_valido(az):
+    try:
+        stato = (az.get('stato') if hasattr(az, 'get') else az['stato']) or ''
+        trial_fino = (az.get('trial_fino_al') if hasattr(az, 'get') else az['trial_fino_al']) or ''
+        return stato == 'sospeso' and bool(trial_fino) and date.fromisoformat(trial_fino) >= date.today()
+    except Exception:
+        return False
+
+def _riattiva_trial_se_valido(azienda_id, az=None):
+    if not azienda_id:
+        return False
+    try:
+        if az is None:
+            mdb = get_master_db()
+            az = mdb.execute("SELECT stato,trial_fino_al FROM aziende WHERE id=?", (azienda_id,)).fetchone()
+            mdb.close()
+        if not az or not _azienda_trial_valido(az):
+            return False
+        mdb = get_master_db()
+        mdb.execute("UPDATE aziende SET stato='trial' WHERE id=?", (azienda_id,))
+        mdb.commit()
+        mdb.close()
+        return True
+    except Exception as e:
+        print(f'[Trial access restore] {e}')
+        return False
+
+def _azienda_trial_scaduto(az):
+    try:
+        stato = (az.get('stato') if hasattr(az, 'get') else az['stato']) or ''
+        trial_fino = (az.get('trial_fino_al') if hasattr(az, 'get') else az['trial_fino_al']) or ''
+        return stato == 'trial' and bool(trial_fino) and date.fromisoformat(trial_fino) < date.today()
+    except Exception:
+        return False
+
+def _sospendi_azienda(azienda_id):
+    if not azienda_id:
+        return False
+    try:
+        mdb = get_master_db()
+        mdb.execute("UPDATE aziende SET stato='sospeso' WHERE id=?", (azienda_id,))
+        mdb.commit()
+        mdb.close()
+        return True
+    except Exception as e:
+        print(f'[Sospendi azienda] {e}')
+        return False
+
 def _crea_checkout_abbonamento_stripe(azienda_id, piano):
     piano = (piano or 'base').strip().lower()
     link_map = {
@@ -35701,29 +35776,31 @@ def _crea_checkout_abbonamento_stripe(azienda_id, piano):
         except Exception as e:
             return None, str(e)
 
+    price_id = (price_map.get(piano) or '').strip()
+    if STRIPE_SECRET and price_id:
+        try:
+            import stripe
+            stripe.api_key = STRIPE_SECRET
+            stripe.api_version = '2025-03-31.basil'
+
+            ref = f'azienda_{azienda_id}_{piano}'
+            checkout = stripe.checkout.Session.create(
+                customer_email=az['email_admin'],
+                client_reference_id=ref,
+                line_items=[{'price': price_id, 'quantity': 1}],
+                mode='subscription',
+                success_url=request.host_url + 'abbonamento/successo?session_id={CHECKOUT_SESSION_ID}',
+                cancel_url=request.host_url + 'abbonamento/gestisci',
+                metadata={'azienda_id': str(azienda_id), 'piano': piano},
+                subscription_data={'metadata': {'azienda_id': str(azienda_id), 'piano': piano}},
+            )
+            return checkout.url, ''
+        except Exception as e:
+            return None, str(e)
+
     if not STRIPE_SECRET:
         return None, 'Pagamenti non ancora configurati. Contatta il supporto.'
-    try:
-        import stripe
-        stripe.api_key = STRIPE_SECRET
-        stripe.api_version = '2025-03-31.basil'
-
-        price_id = price_map.get(piano)
-        if not price_id:
-            return None, 'Piano non valido.'
-
-        checkout = stripe.checkout.Session.create(
-            customer_email=az['email_admin'],
-            line_items=[{'price': price_id, 'quantity': 1}],
-            managed_payments={'enabled': True},
-            mode='subscription',
-            success_url=request.host_url + 'abbonamento/successo?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url=request.host_url + 'abbonamento/gestisci',
-            metadata={'azienda_id': str(azienda_id), 'piano': piano},
-        )
-        return checkout.url, ''
-    except Exception as e:
-        return None, str(e)
+    return None, 'Configura STRIPE_PRICE_BASE, STRIPE_PRICE_PRO e STRIPE_PRICE_ENT oppure i Payment Links.'
 
 def _azienda_piano_da_checkout_stripe(checkout_session):
     metadata = checkout_session.get('metadata') or {}
@@ -35759,21 +35836,148 @@ def _attiva_azienda_da_checkout_stripe(checkout_session, fallback_azienda_id=Non
     if not azienda_id:
         return False
     mdb = get_master_db()
+    payment_status = (checkout_session.get('payment_status') or '').strip().lower()
+    nuovo_stato = 'trial' if payment_status in ('no_payment_required', 'unpaid') else 'attivo'
     if piano:
-        mdb.execute("UPDATE aziende SET stato='attivo', piano=?, stripe_customer_id=?, stripe_subscription_id=? WHERE id=?",
-                    (piano, checkout_session.get('customer'), checkout_session.get('subscription'), azienda_id))
+        mdb.execute("UPDATE aziende SET stato=?, piano=?, stripe_customer_id=?, stripe_subscription_id=? WHERE id=?",
+                    (nuovo_stato, piano, checkout_session.get('customer'), checkout_session.get('subscription'), azienda_id))
     else:
-        mdb.execute("UPDATE aziende SET stato='attivo', stripe_customer_id=?, stripe_subscription_id=? WHERE id=?",
-                    (checkout_session.get('customer'), checkout_session.get('subscription'), azienda_id))
+        mdb.execute("UPDATE aziende SET stato=?, stripe_customer_id=?, stripe_subscription_id=? WHERE id=?",
+                    (nuovo_stato, checkout_session.get('customer'), checkout_session.get('subscription'), azienda_id))
     mdb.commit()
     mdb.close()
     return True
 
 # Ã¢â€â‚¬Ã¢â€â‚¬ Landing page Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+def _stripe_piano_da_subscription(sub, default_piano='base'):
+    piano = default_piano or 'base'
+    try:
+        items = ((sub.get('items') or {}).get('data') or [])
+        price_id = (((items[0] if items else {}).get('price') or {}).get('id') or '')
+        price_to_plan = {
+            STRIPE_PRICE_BASE: 'base',
+            STRIPE_PRICE_PRO: 'professional',
+            STRIPE_PRICE_ENT: 'enterprise',
+        }
+        piano = price_to_plan.get(price_id, piano)
+    except Exception:
+        pass
+    return piano
+
+def _stripe_update_azienda_abbonamento(customer_id=None, subscription_id=None, stato=None, piano=None):
+    customer_id = (customer_id or '').strip()
+    subscription_id = (subscription_id or '').strip()
+    if not customer_id and not subscription_id:
+        return 0
+    where = []
+    params = []
+    if subscription_id:
+        where.append("stripe_subscription_id=?")
+        params.append(subscription_id)
+    if customer_id:
+        where.append("stripe_customer_id=?")
+        params.append(customer_id)
+    updates = []
+    values = []
+    if stato:
+        updates.append("stato=?")
+        values.append(stato)
+    if piano:
+        updates.append("piano=?")
+        values.append(piano)
+    if customer_id:
+        updates.append("stripe_customer_id=?")
+        values.append(customer_id)
+    if subscription_id:
+        updates.append("stripe_subscription_id=?")
+        values.append(subscription_id)
+    if not updates or not where:
+        return 0
+    mdb = get_master_db()
+    cur = mdb.execute(
+        f"UPDATE aziende SET {', '.join(updates)} WHERE {' OR '.join(where)}",
+        tuple(values + params)
+    )
+    mdb.commit()
+    rowcount = cur.rowcount
+    mdb.close()
+    return rowcount
+
+def _stripe_update_azienda_abbonamento_email(email=None, customer_id=None, subscription_id=None, stato=None, piano=None):
+    email = (email or '').strip().lower()
+    customer_id = (customer_id or '').strip()
+    subscription_id = (subscription_id or '').strip()
+    if not email:
+        return 0
+    updates = []
+    values = []
+    if stato:
+        updates.append("stato=?")
+        values.append(stato)
+    if piano:
+        updates.append("piano=?")
+        values.append(piano)
+    if customer_id:
+        updates.append("stripe_customer_id=?")
+        values.append(customer_id)
+    if subscription_id:
+        updates.append("stripe_subscription_id=?")
+        values.append(subscription_id)
+    if not updates:
+        return 0
+    mdb = get_master_db()
+    cur = mdb.execute(
+        f"UPDATE aziende SET {', '.join(updates)} WHERE lower(email_admin)=?",
+        tuple(values + [email])
+    )
+    mdb.commit()
+    rowcount = cur.rowcount
+    mdb.close()
+    return rowcount
+
+def _stripe_handle_subscription_status(sub):
+    status = (sub.get('status') or '').strip().lower()
+    customer_id = sub.get('customer') or ''
+    subscription_id = sub.get('id') or ''
+    if status == 'trialing':
+        return _stripe_update_azienda_abbonamento(customer_id, subscription_id, 'trial', _stripe_piano_da_subscription(sub))
+    if status == 'active':
+        return _stripe_update_azienda_abbonamento(customer_id, subscription_id, 'attivo', _stripe_piano_da_subscription(sub))
+    if status in ('past_due', 'unpaid', 'canceled', 'incomplete_expired', 'paused'):
+        return _stripe_update_azienda_abbonamento(customer_id, subscription_id, 'sospeso')
+    return 0
+
+def _stripe_handle_invoice_paid(invoice):
+    customer_id = invoice.get('customer') or ''
+    subscription_id = invoice.get('subscription') or ''
+    updated = _stripe_update_azienda_abbonamento(customer_id, subscription_id, 'attivo')
+    if not updated:
+        updated = _stripe_update_azienda_abbonamento_email(
+            invoice.get('customer_email') or invoice.get('account_email') or '',
+            customer_id,
+            subscription_id,
+            'attivo'
+        )
+    return updated
+
+def _stripe_handle_invoice_failed(invoice):
+    customer_id = invoice.get('customer') or ''
+    subscription_id = invoice.get('subscription') or ''
+    updated = _stripe_update_azienda_abbonamento(customer_id, subscription_id, 'sospeso')
+    if not updated:
+        updated = _stripe_update_azienda_abbonamento_email(
+            invoice.get('customer_email') or invoice.get('account_email') or '',
+            customer_id,
+            subscription_id,
+            'sospeso'
+        )
+    return updated
+
 def _sync_azienda_pagata_da_stripe(azienda_id):
     if not STRIPE_SECRET or not azienda_id:
         return False
     try:
+        import time
         import stripe
         stripe.api_key = STRIPE_SECRET
         stripe.api_version = '2025-03-31.basil'
@@ -35787,6 +35991,7 @@ def _sync_azienda_pagata_da_stripe(azienda_id):
         email = (az.get('email_admin') or '').strip().lower()
 
         sessions = stripe.checkout.Session.list(limit=100)
+        rescue_sessions = []
         for checkout in sessions.get('data', []):
             if checkout.get('status') != 'complete':
                 continue
@@ -35796,15 +36001,38 @@ def _sync_azienda_pagata_da_stripe(azienda_id):
             matches_ref = ref_azienda_id == int(azienda_id)
             matches_email = bool(email and checkout_email and checkout_email == email)
             if not matches_ref and not matches_email:
+                created_ts = int(checkout.get('created') or 0)
+                is_recent = created_ts and (time.time() - created_ts) <= 86400
+                stripe_customer = (checkout.get('customer') or '').strip()
+                stripe_subscription = (checkout.get('subscription') or '').strip()
+                if is_recent and (stripe_customer or stripe_subscription):
+                    mdb = get_master_db()
+                    linked = mdb.execute(
+                        """SELECT id FROM aziende
+                           WHERE id != ? AND (
+                             (stripe_customer_id IS NOT NULL AND stripe_customer_id != '' AND stripe_customer_id = ?)
+                             OR (stripe_subscription_id IS NOT NULL AND stripe_subscription_id != '' AND stripe_subscription_id = ?)
+                           )
+                           LIMIT 1""",
+                        (azienda_id, stripe_customer, stripe_subscription)
+                    ).fetchone()
+                    mdb.close()
+                    if not linked:
+                        rescue_sessions.append(checkout)
                 continue
 
             piano = ref_piano or (az.get('piano') or 'base')
-            mdb = get_master_db()
-            mdb.execute("UPDATE aziende SET stato='attivo', piano=?, stripe_customer_id=?, stripe_subscription_id=? WHERE id=?",
-                        (piano, checkout.get('customer'), checkout.get('subscription'), azienda_id))
-            mdb.commit()
-            mdb.close()
-            return True
+            if _attiva_azienda_da_checkout_stripe(checkout, fallback_azienda_id=azienda_id, fallback_piano=piano):
+                return True
+
+        if len(rescue_sessions) == 1:
+            checkout = rescue_sessions[0]
+            if _attiva_azienda_da_checkout_stripe(
+                checkout,
+                fallback_azienda_id=azienda_id,
+                fallback_piano=(az.get('piano') or 'base')
+            ):
+                return True
 
         try:
             customers = stripe.Customer.list(email=email, limit=10) if email else {'data': []}
@@ -35825,9 +36053,10 @@ def _sync_azienda_pagata_da_stripe(azienda_id):
                         piano = price_to_plan.get(price_id, piano)
                     except Exception:
                         pass
+                    stato = 'trial' if sub.get('status') == 'trialing' else 'attivo'
                     mdb = get_master_db()
-                    mdb.execute("UPDATE aziende SET stato='attivo', piano=?, stripe_customer_id=?, stripe_subscription_id=? WHERE id=?",
-                                (piano, customer.get('id'), sub.get('id'), azienda_id))
+                    mdb.execute("UPDATE aziende SET stato=?, piano=?, stripe_customer_id=?, stripe_subscription_id=? WHERE id=?",
+                                (stato, piano, customer.get('id'), sub.get('id'), azienda_id))
                     mdb.commit()
                     mdb.close()
                     return True
@@ -35866,12 +36095,12 @@ def registrati():
         import re, time as _t
         slug = re.sub(r'[^a-z0-9]', '', nome_az.lower())[:20] + str(int(_t.time()))[-4:]
         pw_hash = hash_pw(password)
-        # L'azienda resta bloccata finche' Stripe non conferma il pagamento.
+        # L'azienda entra in prova: Stripe conferma poi trial/attivo o mancato pagamento via webhook.
         from datetime import date as _d, timedelta as _td
         trial_fino = (_d.today() + _td(days=14)).isoformat()
         cur = mdb.execute(
             "INSERT INTO aziende (nome,email_admin,password_admin,piano,stato,trial_fino_al,slug) VALUES (?,?,?,?,?,?,?)",
-            (nome_az, email, pw_hash, piano, 'sospeso', trial_fino, slug))
+            (nome_az, email, pw_hash, piano, 'trial', trial_fino, slug))
         azienda_id = cur.lastrowid
         mdb.commit(); mdb.close()
         # Crea DB tenant e inizializza schema
@@ -35897,10 +36126,10 @@ def registrati():
         })
         checkout_url, checkout_err = _crea_checkout_abbonamento_stripe(azienda_id, piano)
         if checkout_url:
-            flash('Account creato. Completa il pagamento per attivare il gestionale.', 'info')
+            flash('Account creato. Completa Stripe per avviare la prova gratuita.', 'info')
             return redirect(checkout_url)
-        flash(f'Account creato, ma non riesco a generare il link di pagamento: {checkout_err}', 'error')
-        return redirect(url_for('abbonamento_gestisci'))
+        flash(f'Account creato in prova. Link Stripe non disponibile: {checkout_err}', 'warning')
+        return redirect(url_for('dashboard'))
     piano_sel = request.args.get('piano', 'base')
     return render_template_string(REGISTRATI_TMPL, error=None, piano_sel=piano_sel)
 
@@ -35918,7 +36147,6 @@ def abbonamento_checkout():
     return redirect(url_for('abbonamento_gestisci'))
 
 @app.route('/abbonamento/successo')
-@login_required
 def abbonamento_successo():
     session_id = request.args.get('session_id', '').strip()
     attivato = False
@@ -35936,10 +36164,11 @@ def abbonamento_successo():
                 session_azienda_id = int(session.get('azienda_id') or 0)
                 pending_azienda_id = int(session.get('stripe_pending_azienda_id') or 0)
                 pending_piano = (session.get('stripe_pending_piano') or '').strip().lower()
+                attivato = _attiva_azienda_da_checkout_stripe(checkout)
                 matches_ref = int(ref_azienda_id or 0) == session_azienda_id
                 matches_email = bool(checkout_email and checkout_email == session_email)
                 matches_pending = bool(pending_azienda_id and pending_azienda_id == session_azienda_id)
-                if matches_ref or matches_email or matches_pending:
+                if not attivato and (matches_ref or matches_email or matches_pending):
                     attivato = _attiva_azienda_da_checkout_stripe(
                         checkout,
                         fallback_azienda_id=session_azienda_id if matches_pending else None,
@@ -35951,8 +36180,12 @@ def abbonamento_successo():
         session.pop('stripe_pending_azienda_id', None)
         session.pop('stripe_pending_piano', None)
         flash('Abbonamento attivato. Benvenuto nel gestionale.', 'success')
-        return redirect(url_for('dashboard'))
+        if session.get('user_id'):
+            return redirect(url_for('dashboard'))
+        return redirect(url_for('login'))
     flash('Pagamento ricevuto, sto attendendo conferma Stripe. Riprova tra qualche secondo.', 'warning')
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
     return redirect(url_for('abbonamento_gestisci'))
 
 @app.route('/abbonamento/verifica', methods=['GET', 'POST'])
@@ -35975,14 +36208,19 @@ def abbonamento_gestisci():
         return redirect(url_for('login'))
     mdb = get_master_db()
     az = dict(mdb.execute("SELECT * FROM aziende WHERE id=?", (azienda_id,)).fetchone())
-    piani = [dict(p) for p in mdb.execute("SELECT * FROM piani ORDER BY prezzo_mensile").fetchall()]
     mdb.close()
-    if az.get('stato') == 'sospeso' and _sync_azienda_pagata_da_stripe(azienda_id):
-        mdb = get_master_db()
-        az = dict(mdb.execute("SELECT * FROM aziende WHERE id=?", (azienda_id,)).fetchone())
-        mdb.close()
-    return render_template_string(ABBONAMENTO_TMPL, az=az, piani=piani,
-                                  stripe_ok=bool(STRIPE_SECRET or STRIPE_LINK_BASE or STRIPE_LINK_PRO or STRIPE_LINK_ENT))
+    if _azienda_trial_scaduto(az):
+        _sospendi_azienda(azienda_id)
+        az['stato'] = 'sospeso'
+    if az.get('stato') == 'sospeso':
+        if _riattiva_trial_se_valido(azienda_id, az) or _sync_azienda_pagata_da_stripe(azienda_id):
+            return redirect(url_for('dashboard'))
+        checkout_url, checkout_err = _crea_checkout_abbonamento_stripe(azienda_id, az.get('piano') or 'base')
+        if checkout_url:
+            return redirect(checkout_url)
+        flash(f'Pagamento Stripe non configurato: {checkout_err}', 'error')
+        return redirect(url_for('login'))
+    return redirect(url_for('dashboard'))
 
 # Ã¢â€â‚¬Ã¢â€â‚¬ Stripe webhook Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 @app.route('/stripe/webhook', methods=['POST'])
@@ -35998,11 +36236,18 @@ def stripe_webhook():
         if event['type'] == 'checkout.session.completed':
             obj = event['data']['object']
             _attiva_azienda_da_checkout_stripe(obj)
+        elif event['type'] in ('invoice.paid', 'invoice.payment_succeeded'):
+            invoice = event['data']['object']
+            _stripe_handle_invoice_paid(invoice)
+        elif event['type'] == 'invoice.payment_failed':
+            invoice = event['data']['object']
+            _stripe_handle_invoice_failed(invoice)
+        elif event['type'] == 'customer.subscription.updated':
+            sub = event['data']['object']
+            _stripe_handle_subscription_status(sub)
         elif event['type'] in ('customer.subscription.deleted','customer.subscription.paused'):
             sub = event['data']['object']
-            mdb = get_master_db()
-            mdb.execute("UPDATE aziende SET stato='sospeso' WHERE stripe_subscription_id=?", (sub['id'],))
-            mdb.commit(); mdb.close()
+            _stripe_update_azienda_abbonamento(sub.get('customer'), sub.get('id'), 'sospeso')
     except Exception as e:
         print(f'[Stripe webhook] {e}')
     return 'ok', 200
