@@ -504,9 +504,15 @@ def _env_first(*names):
 def _apply_global_default_settings(db, azienda_nome=None):
     """Precompila le impostazioni tenant dai valori Railway, senza sovrascrivere valori gia' inseriti."""
     public_url = _env_first('ACCESSO_FIERE_PUBLIC_URL', 'PUBLIC_BASE_URL', 'APP_URL').rstrip('/')
+    email_provider = _env_first('ACCESSO_FIERE_EMAIL_PROVIDER', 'EMAIL_PROVIDER', 'MAIL_PROVIDER').lower()
+    resend_key = _env_first('ACCESSO_FIERE_RESEND_API_KEY', 'RESEND_API_KEY')
+    resend_sender = _env_first('ACCESSO_FIERE_EMAIL_FROM', 'EMAIL_FROM', 'RESEND_FROM_EMAIL')
+    postmark_key = _env_first('ACCESSO_FIERE_POSTMARK_SERVER_TOKEN', 'POSTMARK_SERVER_TOKEN')
+    postmark_sender = _env_first('ACCESSO_FIERE_POSTMARK_FROM_EMAIL', 'POSTMARK_FROM_EMAIL')
     brevo_key = _env_first('ACCESSO_FIERE_BREVO_API_KEY', 'BREVO_API_KEY', 'SENDINBLUE_API_KEY')
     brevo_sender = _env_first('ACCESSO_FIERE_BREVO_SENDER', 'BREVO_SENDER_EMAIL', 'BREVO_FROM_EMAIL', 'SMTP_FROM_EMAIL')
-    notify_email = _env_first('ACCESSO_FIERE_NOTIFY_EMAIL', 'NOTIFY_EMAIL', 'ADMIN_EMAIL', 'BREVO_NOTIFY_EMAIL') or brevo_sender
+    email_sender = resend_sender or postmark_sender or brevo_sender
+    notify_email = _env_first('ADMIN_ALERT_EMAIL', 'ACCESSO_FIERE_NOTIFY_EMAIL', 'NOTIFY_EMAIL', 'ADMIN_EMAIL', 'BREVO_NOTIFY_EMAIL') or email_sender
     anthropic_key = _env_first('ACCESSO_FIERE_ANTHROPIC_API_KEY', 'ANTHROPIC_API_KEY')
 
     defaults = {}
@@ -515,12 +521,20 @@ def _apply_global_default_settings(db, azienda_nome=None):
         defaults['nome_azienda'] = azienda_nome
     if public_url:
         defaults['app_url'] = public_url
-    if brevo_key:
-        defaults['smtp_host'] = 'brevo'
+    if resend_key:
+        defaults['smtp_host'] = email_provider or 'resend'
+        defaults['smtp_port'] = '587'
+        defaults['smtp_pass'] = resend_key
+    elif postmark_key:
+        defaults['smtp_host'] = email_provider or 'postmark'
+        defaults['smtp_port'] = '587'
+        defaults['smtp_pass'] = postmark_key
+    elif brevo_key:
+        defaults['smtp_host'] = email_provider or 'brevo'
         defaults['smtp_port'] = '587'
         defaults['smtp_pass'] = brevo_key
-    if brevo_sender:
-        defaults['smtp_user'] = brevo_sender
+    if email_sender:
+        defaults['smtp_user'] = email_sender
     if notify_email:
         defaults['email_notifiche'] = notify_email
     if anthropic_key:
@@ -1187,7 +1201,10 @@ def get_setting(chiave, default=''):
     db = get_db()
     r = db.execute("SELECT valore FROM impostazioni WHERE chiave=?", (chiave,)).fetchone()
     db.close()
-    return r['valore'] if r else default
+    value = r['valore'] if r else ''
+    if chiave == 'email_notifiche' and not (value or '').strip():
+        return _env_first('ADMIN_ALERT_EMAIL', 'ACCESSO_FIERE_NOTIFY_EMAIL', 'NOTIFY_EMAIL', 'ADMIN_EMAIL', 'BREVO_NOTIFY_EMAIL') or default
+    return value if r else default
 
 def set_setting(chiave, valore):
     db = get_db()
@@ -1197,6 +1214,9 @@ def set_setting(chiave, valore):
 
 def get_base_url():
     """Restituisce l'URL base del sito (usato nei link delle email)."""
+    url = _env_first('ACCESSO_FIERE_PUBLIC_URL', 'PUBLIC_BASE_URL', 'APP_URL') or get_setting('app_url', '')
+    if url:
+        return url.rstrip('/')
     try:
         from flask import request as _req
         return _req.host_url.rstrip('/')
@@ -1763,30 +1783,149 @@ def _sync_master_owner_credentials(new_email=None, password_hash=None):
 # Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 #  EMAIL
 # Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+def _email_recipients(to):
+    if isinstance(to, (list, tuple, set)):
+        raw = []
+        for item in to:
+            raw.extend(str(item or '').replace(';', ',').split(','))
+    else:
+        raw = str(to or '').replace(';', ',').split(',')
+    return [x.strip() for x in raw if x and x.strip()]
+
+
+def _email_config():
+    metodo = (get_setting('smtp_host', 'smtp.gmail.com') or '').strip()
+    env_provider = _env_first('ACCESSO_FIERE_EMAIL_PROVIDER', 'EMAIL_PROVIDER', 'MAIL_PROVIDER').lower()
+    resend_key = _env_first('ACCESSO_FIERE_RESEND_API_KEY', 'RESEND_API_KEY')
+    postmark_key = _env_first('ACCESSO_FIERE_POSTMARK_SERVER_TOKEN', 'POSTMARK_SERVER_TOKEN')
+    brevo_key = _env_first('ACCESSO_FIERE_BREVO_API_KEY', 'BREVO_API_KEY', 'SENDINBLUE_API_KEY')
+
+    provider = env_provider
+    if not provider:
+        metodo_l = metodo.lower()
+        if resend_key:
+            provider = 'resend'
+        elif postmark_key:
+            provider = 'postmark'
+        elif brevo_key or 'brevo' in metodo_l or 'sendinblue' in metodo_l:
+            provider = 'brevo'
+        else:
+            provider = metodo_l or 'smtp'
+
+    sender = _env_first(
+        'ACCESSO_FIERE_EMAIL_FROM',
+        'EMAIL_FROM',
+        'RESEND_FROM_EMAIL',
+        'POSTMARK_FROM_EMAIL',
+        'BREVO_FROM_EMAIL',
+        'SMTP_FROM_EMAIL',
+        'BREVO_SENDER_EMAIL',
+        'BREVO_SENDER',
+    ) or get_setting('smtp_user', '')
+    reply_to = _env_first('ACCESSO_FIERE_EMAIL_REPLY_TO', 'EMAIL_REPLY_TO', 'REPLY_TO_EMAIL')
+
+    if provider == 'resend':
+        api_key = resend_key or get_setting('smtp_pass', '')
+    elif provider == 'postmark':
+        api_key = postmark_key or get_setting('smtp_pass', '')
+    elif provider == 'brevo' or 'sendinblue' in provider:
+        api_key = brevo_key or get_setting('smtp_pass', '')
+    else:
+        api_key = _env_first('ACCESSO_FIERE_SMTP_PASSWORD', 'SMTP_PASSWORD', 'EMAIL_SMTP_PASSWORD') or get_setting('smtp_pass', '')
+
+    return provider, sender, api_key, reply_to, metodo
+
+
 def send_email(to, subject, body):
     """
-    Invia email tramite Brevo HTTP API (funziona su Railway).
-    Configura in Impostazioni: smtp_user = API Key Brevo, email_notifiche = mittente verificato.
-    Fallback SMTP se smtp_host non e' brevo.
+    Invia email operative tramite provider API configurato su Railway.
+    Provider supportati: Resend, Postmark, Brevo e fallback SMTP.
     """
     import traceback, urllib.request
-    api_key  = get_setting('smtp_pass', '')   # riutilizziamo smtp_pass per la API key
-    mittente = get_setting('smtp_user', '')    # email mittente verificata su Brevo
-    metodo   = get_setting('smtp_host', 'smtp.gmail.com')
+    import json as _json
+    provider, mittente, api_key, reply_to, metodo = _email_config()
+    recipients = _email_recipients(to)
 
-    if not mittente or not api_key or not to:
-        print(f"[EMAIL] Config mancante: mittente={mittente!r} api_key={'ok' if api_key else 'VUOTA'} to={to!r}")
+    if not mittente or not api_key or not recipients:
+        print(f"[EMAIL] Config mancante: provider={provider!r} mittente={mittente!r} api_key={'ok' if api_key else 'VUOTA'} to={to!r}")
         return False
 
-    print(f"[EMAIL] Invio a={to} via={metodo} mittente={mittente}")
+    print(f"[EMAIL] Invio a={','.join(recipients)} via={provider} mittente={mittente}")
 
     # Ã¢â€â‚¬Ã¢â€â‚¬ Brevo / Sendinblue HTTP API (funziona su Railway) Ã¢â€â‚¬Ã¢â€â‚¬
-    if 'brevo' in metodo or 'sendinblue' in metodo or metodo.strip() == 'brevo':
+    if provider == 'resend':
         try:
-            import json as _json
+            payload_data = {
+                "from": mittente,
+                "to": recipients,
+                "subject": subject,
+                "html": body,
+            }
+            if reply_to:
+                payload_data["reply_to"] = reply_to
+            payload = _json.dumps(payload_data).encode('utf-8')
+            req = urllib.request.Request(
+                'https://api.resend.com/emails',
+                data=payload,
+                headers={
+                    'Authorization': f'Bearer {api_key}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'User-Agent': 'accesso-fiere/1.0',
+                },
+                method='POST'
+            )
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                print(f"[EMAIL] Resend OK status={resp.status} a={','.join(recipients)}")
+                return True
+        except urllib.error.HTTPError as e:
+            err_body = e.read().decode('utf-8', errors='replace')
+            print(f"[EMAIL] Resend HTTP {e.code}: {err_body}")
+            return False
+        except Exception as e:
+            print(f"[EMAIL] Resend errore: {e}")
+            traceback.print_exc()
+            return False
+
+    if provider == 'postmark':
+        try:
+            payload_data = {
+                "From": mittente,
+                "To": ",".join(recipients),
+                "Subject": subject,
+                "HtmlBody": body,
+                "MessageStream": "outbound",
+            }
+            if reply_to:
+                payload_data["ReplyTo"] = reply_to
+            payload = _json.dumps(payload_data).encode('utf-8')
+            req = urllib.request.Request(
+                'https://api.postmarkapp.com/email',
+                data=payload,
+                headers={
+                    'X-Postmark-Server-Token': api_key,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                method='POST'
+            )
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                print(f"[EMAIL] Postmark OK status={resp.status} a={','.join(recipients)}")
+                return True
+        except urllib.error.HTTPError as e:
+            err_body = e.read().decode('utf-8', errors='replace')
+            print(f"[EMAIL] Postmark HTTP {e.code}: {err_body}")
+            return False
+        except Exception as e:
+            print(f"[EMAIL] Postmark errore: {e}")
+            traceback.print_exc()
+            return False
+
+    if provider == 'brevo' or 'brevo' in provider or 'sendinblue' in provider or 'brevo' in metodo.lower() or 'sendinblue' in metodo.lower():
+        try:
             payload = _json.dumps({
                 "sender":  {"email": mittente},
-                "to":      [{"email": to}],
+                "to":      [{"email": r} for r in recipients],
                 "subject": subject,
                 "htmlContent": body,
             }).encode('utf-8')
@@ -1801,7 +1940,7 @@ def send_email(to, subject, body):
                 method='POST'
             )
             with urllib.request.urlopen(req, timeout=15) as resp:
-                print(f"[EMAIL] Brevo OK status={resp.status} a={to}")
+                print(f"[EMAIL] Brevo OK status={resp.status} a={','.join(recipients)}")
                 return True
         except urllib.error.HTTPError as e:
             err_body = e.read().decode('utf-8', errors='replace')
@@ -1818,8 +1957,10 @@ def send_email(to, subject, body):
         port = int(get_setting('smtp_port', '587'))
         msg  = MIMEMultipart('alternative')
         msg['From']    = mittente
-        msg['To']      = to
+        msg['To']      = ', '.join(recipients)
         msg['Subject'] = subject
+        if reply_to:
+            msg['Reply-To'] = reply_to
         msg.attach(MIMEText(body, 'html', 'utf-8'))
         if port == 465:
             import ssl as _ssl
@@ -1828,9 +1969,9 @@ def send_email(to, subject, body):
             s = smtplib.SMTP(host, port, timeout=15)
             s.ehlo(); s.starttls(); s.ehlo()
         s.login(mittente, api_key)
-        s.sendmail(mittente, to, msg.as_string())
+        s.sendmail(mittente, recipients, msg.as_string())
         s.quit()
-        print(f"[EMAIL] SMTP OK a={to}")
+        print(f"[EMAIL] SMTP OK a={','.join(recipients)}")
         return True
     except Exception as e:
         print(f"[EMAIL] SMTP errore: {e}")
@@ -1945,6 +2086,10 @@ def check_scadenze_email():
              f"<a href='{base}/documenti' style='background:#2563eb;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:700'>Documenti dipendenti Ã¢â€ â€™</a>"
              f"</p>")
 
+    send_email(email_admin,
+        f'[ACCESSO FIERE] {len(righe)} scadenze nei prossimi 30 giorni - {oggi}', corpo)
+    return
+
     import threading
     threading.Thread(target=lambda: send_email(email_admin,
         f'[ACCESSO FIERE] {len(righe)} scadenze nei prossimi 30 giorni Ã¢â‚¬â€ {oggi}', corpo), daemon=True).start()
@@ -2052,7 +2197,17 @@ def render_page(tmpl, **ctx):
         if session.get('_scadenze_check') != oggi:
             session['_scadenze_check'] = oggi
             import threading
-            threading.Thread(target=check_scadenze_email, daemon=True).start()
+            _az_scadenze = session.get('azienda_id')
+            def _bg_scadenze_email():
+                try:
+                    with app.app_context():
+                        with app.test_request_context('/'):
+                            if _az_scadenze:
+                                session['azienda_id'] = _az_scadenze
+                            check_scadenze_email()
+                except Exception as e:
+                    print(f'[scadenze email] {e}')
+            threading.Thread(target=_bg_scadenze_email, daemon=True).start()
             try:
                 invia_notifiche_scadenze_imminenti()
             except Exception as e:
@@ -5968,10 +6123,56 @@ def conta_notifiche_non_lette(utente_id):
     return n
 
 
+def _email_notifica_app_utente(utente_id, titolo, messaggio, url='/mobile/notifiche', tipo='manuale'):
+    flag = _env_first('ACCESSO_FIERE_EMAIL_APP_NOTIFICATIONS', 'EMAIL_APP_NOTIFICATIONS')
+    if flag.lower() in ('0', 'false', 'no', 'off'):
+        return False
+
+    tipo_norm = (tipo or '').lower()
+    if not (tipo_norm.startswith('ferie_') or tipo_norm == 'scadenze_imminenti'):
+        return False
+
+    db = get_db()
+    row = db.execute("""SELECT email, nome, cognome, ruolo
+                        FROM utenti WHERE id=? AND COALESCE(attivo,1)=1""",
+                     (utente_id,)).fetchone()
+    db.close()
+    if not row or not (row['email'] or '').strip():
+        return False
+    if tipo_norm == 'scadenze_imminenti' and (row['ruolo'] or '').lower() == 'admin':
+        return False
+
+    import html as _html
+    base = get_public_base_url()
+    target = (url or '/mobile/notifiche').strip()
+    if not target.startswith('http://') and not target.startswith('https://'):
+        target = base.rstrip('/') + '/' + target.lstrip('/')
+    azienda = get_setting('azienda', 'Accesso Fiere')
+    nome = f"{row['nome'] or ''} {row['cognome'] or ''}".strip()
+    corpo = (
+        "<div style=\"font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#0f172a\">"
+        f"<p>Ciao {_html.escape(nome or 'dipendente')},</p>"
+        f"<h2 style=\"font-size:20px;margin:0 0 12px\">{_html.escape(titolo or 'Notifica')}</h2>"
+        f"<p style=\"font-size:15px;line-height:1.5;color:#334155\">{_html.escape(messaggio or '')}</p>"
+        f"<p style=\"margin:24px 0\"><a href=\"{_html.escape(target)}\" "
+        "style=\"background:#2563eb;color:#fff;padding:12px 18px;border-radius:8px;"
+        "text-decoration:none;font-weight:700\">Apri Accesso Fiere</a></p>"
+        f"<p style=\"font-size:12px;color:#94a3b8\">{_html.escape(azienda)} - notifica automatica</p>"
+        "</div>"
+    )
+    return send_email(row['email'], f"[{azienda}] {titolo}", corpo)
+
+
 def notifica_utente(utente_id, titolo, messaggio, url='/mobile/notifiche', tipo='manuale'):
     """Salva nello storico dipendente e prova anche la push immediata."""
     salva_notifica_app(utente_id, titolo, messaggio, url, tipo)
-    return send_push_to_user(utente_id, titolo, messaggio, url)
+    sent = send_push_to_user(utente_id, titolo, messaggio, url)
+    try:
+        _email_notifica_app_utente(utente_id, titolo, messaggio, url, tipo)
+    except Exception as e:
+        print(f'[email notifica app] utente={utente_id}: {e}')
+    return sent
+
 
 
 def notifica_admins(titolo, messaggio, url='/admin/notifiche', tipo='admin'):
@@ -19453,7 +19654,7 @@ def evento_assegna(eid):
                 data_fine   = ev['data_fine']   or data_inizio
                 luogo       = ev['luogo']        or 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â'
                 titolo      = ev['titolo']       or 'Nuovo lavoro'
-                app_url     = request.host_url.rstrip('/')
+                app_url     = get_public_base_url()
                 link        = f"{app_url}/mobile/calendario"
 
                 corpo = f"""
@@ -30309,6 +30510,30 @@ def pos_elimina(pid):
 @app.route('/admin/test-email')
 @admin_required
 def test_email():
+    from email.utils import parseaddr
+    provider, sender, api_key, reply_to, metodo = _email_config()
+    to = (
+        _env_first('EMAIL_TEST_TO', 'ADMIN_ALERT_EMAIL', 'ACCESSO_FIERE_NOTIFY_EMAIL', 'NOTIFY_EMAIL', 'ADMIN_EMAIL')
+        or get_setting('email_notifiche', '')
+        or parseaddr(sender or '')[1]
+    )
+    if not to:
+        flash('Configura ADMIN_ALERT_EMAIL su Railway prima di testare.', 'error')
+        return redirect(url_for('impostazioni'))
+    if not sender or not api_key:
+        flash(f'Config email mancante: provider={provider}, mittente o API key vuoti.', 'error')
+        return redirect(url_for('impostazioni'))
+    result = send_email(
+        to,
+        'Test email - Accesso Fiere',
+        f'<p>Se ricevi questa mail, la configurazione email funziona.</p><p>Provider: <b>{provider}</b></p>'
+    )
+    if result:
+        flash(f'Email di test inviata a {to}!', 'success')
+    else:
+        flash('Invio fallito: controlla i log Railway cercando [EMAIL].', 'error')
+    return redirect(url_for('impostazioni'))
+
     """Route di test per verificare la configurazione SMTP."""
     to = get_setting('email_notifiche', '')
     user = get_setting('smtp_user', '')
