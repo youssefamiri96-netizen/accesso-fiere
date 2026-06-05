@@ -1556,8 +1556,9 @@ def login_required(f):
                 az = mdb.execute("SELECT stato FROM aziende WHERE id=?", (session.get('azienda_id'),)).fetchone()
                 mdb.close()
                 if az and az['stato'] == 'sospeso':
-                    flash('Completa il pagamento per attivare il gestionale.', 'warning')
-                    return redirect(url_for('abbonamento_gestisci'))
+                    if not _sync_azienda_pagata_da_stripe(session.get('azienda_id')):
+                        flash('Completa il pagamento per attivare il gestionale.', 'warning')
+                        return redirect(url_for('abbonamento_gestisci'))
             except Exception:
                 pass
         admin_pages = {'dashboard','dipendenti','presenze','ferie','cantieri','global_search',
@@ -6955,7 +6956,10 @@ def login():
                 az['password_admin'] = pw
             # Verifica stato abbonamento
             if az['stato'] == 'sospeso':
-                return render_template_string(LOGIN_TMPL, error='Abbonamento sospeso. Contatta il supporto.', **lang_ctx)
+                if _sync_azienda_pagata_da_stripe(az['id']):
+                    az['stato'] = 'attivo'
+                else:
+                    return render_template_string(LOGIN_TMPL, error='Abbonamento sospeso. Contatta il supporto.', **lang_ctx)
             # Inizializza/aggiorna DB tenant (sempre, aggiunge tabelle mancanti)
             db_path = get_tenant_db_path(az['id'])
             reset_auth_session_keep_lang()
@@ -35746,6 +35750,45 @@ def _attiva_azienda_da_checkout_stripe(checkout_session):
     return True
 
 # Ã¢â€â‚¬Ã¢â€â‚¬ Landing page Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+def _sync_azienda_pagata_da_stripe(azienda_id):
+    if not STRIPE_SECRET or not azienda_id:
+        return False
+    try:
+        import stripe
+        stripe.api_key = STRIPE_SECRET
+        stripe.api_version = '2025-03-31.basil'
+
+        mdb = get_master_db()
+        az_row = mdb.execute("SELECT * FROM aziende WHERE id=?", (azienda_id,)).fetchone()
+        mdb.close()
+        if not az_row:
+            return False
+        az = dict(az_row)
+        email = (az.get('email_admin') or '').strip().lower()
+
+        sessions = stripe.checkout.Session.list(limit=100)
+        for checkout in sessions.get('data', []):
+            if checkout.get('status') != 'complete':
+                continue
+            ref_azienda_id, ref_piano = _azienda_piano_da_checkout_stripe(checkout)
+            customer_details = checkout.get('customer_details') or {}
+            checkout_email = (customer_details.get('email') or checkout.get('customer_email') or '').strip().lower()
+            matches_ref = ref_azienda_id == int(azienda_id)
+            matches_email = bool(email and checkout_email and checkout_email == email)
+            if not matches_ref and not matches_email:
+                continue
+
+            piano = ref_piano or (az.get('piano') or 'base')
+            mdb = get_master_db()
+            mdb.execute("UPDATE aziende SET stato='attivo', piano=?, stripe_customer_id=?, stripe_subscription_id=? WHERE id=?",
+                        (piano, checkout.get('customer'), checkout.get('subscription'), azienda_id))
+            mdb.commit()
+            mdb.close()
+            return True
+    except Exception as e:
+        print(f'[Stripe sync suspended] {e}')
+    return False
+
 @app.route('/landing')
 def landing():
     mdb = get_master_db()
@@ -35859,6 +35902,10 @@ def abbonamento_gestisci():
     az = dict(mdb.execute("SELECT * FROM aziende WHERE id=?", (azienda_id,)).fetchone())
     piani = [dict(p) for p in mdb.execute("SELECT * FROM piani ORDER BY prezzo_mensile").fetchall()]
     mdb.close()
+    if az.get('stato') == 'sospeso' and _sync_azienda_pagata_da_stripe(azienda_id):
+        mdb = get_master_db()
+        az = dict(mdb.execute("SELECT * FROM aziende WHERE id=?", (azienda_id,)).fetchone())
+        mdb.close()
     return render_template_string(ABBONAMENTO_TMPL, az=az, piani=piani,
                                   stripe_ok=bool(STRIPE_SECRET or STRIPE_LINK_BASE or STRIPE_LINK_PRO or STRIPE_LINK_ENT))
 
