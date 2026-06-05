@@ -1599,9 +1599,11 @@ def login_required(f):
         if session.get('azienda_id') and not session.get('is_superadmin') and f.__name__ not in allowed_when_suspended:
             try:
                 mdb = get_master_db()
-                az = mdb.execute("SELECT stato,trial_fino_al,piano FROM aziende WHERE id=?", (session.get('azienda_id'),)).fetchone()
+                az = mdb.execute("SELECT id,email_admin,stato,trial_fino_al,piano FROM aziende WHERE id=?", (session.get('azienda_id'),)).fetchone()
                 mdb.close()
-                if az and _azienda_trial_scaduto(az):
+                if az and _azienda_esente_pagamento(az):
+                    _attiva_azienda_esente_pagamento(az['id'])
+                elif az and _azienda_trial_scaduto(az):
                     _sospendi_azienda(session.get('azienda_id'))
                     checkout_url, checkout_err = _crea_checkout_abbonamento_stripe(session.get('azienda_id'), az['piano'] or 'base')
                     if checkout_url:
@@ -7013,7 +7015,10 @@ def login():
                 az['password_admin'] = pw
             # Verifica stato abbonamento
             needs_subscription_redirect = False
-            if _azienda_trial_scaduto(az):
+            if _azienda_esente_pagamento(az):
+                _attiva_azienda_esente_pagamento(az['id'])
+                az['stato'] = 'attivo'
+            elif _azienda_trial_scaduto(az):
                 _sospendi_azienda(az['id'])
                 az['stato'] = 'sospeso'
                 needs_subscription_redirect = True
@@ -35738,6 +35743,34 @@ STRIPE_LINK_ENT    = os.environ.get('STRIPE_PAYMENT_LINK_ENT', 'https://buy.stri
 
 SUPERADMIN_EMAIL = os.environ.get('SUPERADMIN_EMAIL', 'superadmin@gestionale.app')
 SUPERADMIN_PW    = os.environ.get('SUPERADMIN_PASSWORD', '')
+FREE_ACCOUNT_EMAILS = {
+    'h3srl@accessocantieri.com',
+    *{
+        e.strip().lower()
+        for e in (os.environ.get('ACCESSO_FIERE_FREE_ACCOUNT_EMAILS') or os.environ.get('FREE_ACCOUNT_EMAILS') or '').split(',')
+        if e.strip()
+    }
+}
+
+def _azienda_esente_pagamento(az):
+    try:
+        email = (az.get('email_admin') if hasattr(az, 'get') else az['email_admin']) or ''
+        return email.strip().lower() in FREE_ACCOUNT_EMAILS
+    except Exception:
+        return False
+
+def _attiva_azienda_esente_pagamento(azienda_id):
+    if not azienda_id:
+        return False
+    try:
+        mdb = get_master_db()
+        mdb.execute("UPDATE aziende SET stato='attivo' WHERE id=?", (azienda_id,))
+        mdb.commit()
+        mdb.close()
+        return True
+    except Exception as e:
+        print(f'[Account esente pagamento] {e}')
+        return False
 
 def _azienda_trial_valido(az):
     try:
@@ -36259,6 +36292,9 @@ def abbonamento_gestisci():
     mdb = get_master_db()
     az = dict(mdb.execute("SELECT * FROM aziende WHERE id=?", (azienda_id,)).fetchone())
     mdb.close()
+    if _azienda_esente_pagamento(az):
+        _attiva_azienda_esente_pagamento(azienda_id)
+        return redirect(url_for('dashboard'))
     if _azienda_trial_scaduto(az):
         _sospendi_azienda(azienda_id)
         az['stato'] = 'sospeso'
