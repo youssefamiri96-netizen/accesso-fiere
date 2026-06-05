@@ -501,7 +501,23 @@ def _env_first(*names):
             return value
     return ''
 
-def _apply_global_default_settings(db, azienda_nome=None):
+def _current_tenant_admin_email():
+    try:
+        azienda_id = session.get('azienda_id')
+    except RuntimeError:
+        azienda_id = None
+    if not azienda_id:
+        return ''
+    try:
+        mdb = get_master_db()
+        row = mdb.execute("SELECT email_admin FROM aziende WHERE id=?", (azienda_id,)).fetchone()
+        mdb.close()
+        return (row['email_admin'] or '').strip().lower() if row else ''
+    except Exception:
+        return ''
+
+
+def _apply_global_default_settings(db, azienda_nome=None, admin_email=None):
     """Precompila le impostazioni tenant dai valori Railway, senza sovrascrivere valori gia' inseriti."""
     public_url = _env_first('ACCESSO_FIERE_PUBLIC_URL', 'PUBLIC_BASE_URL', 'APP_URL').rstrip('/')
     email_provider = _env_first('ACCESSO_FIERE_EMAIL_PROVIDER', 'EMAIL_PROVIDER', 'MAIL_PROVIDER').lower()
@@ -512,7 +528,7 @@ def _apply_global_default_settings(db, azienda_nome=None):
     brevo_key = _env_first('ACCESSO_FIERE_BREVO_API_KEY', 'BREVO_API_KEY', 'SENDINBLUE_API_KEY')
     brevo_sender = _env_first('ACCESSO_FIERE_BREVO_SENDER', 'BREVO_SENDER_EMAIL', 'BREVO_FROM_EMAIL', 'SMTP_FROM_EMAIL')
     email_sender = resend_sender or postmark_sender or brevo_sender
-    notify_email = _env_first('ADMIN_ALERT_EMAIL', 'ACCESSO_FIERE_NOTIFY_EMAIL', 'NOTIFY_EMAIL', 'ADMIN_EMAIL', 'BREVO_NOTIFY_EMAIL') or email_sender
+    notify_email = (admin_email or '').strip().lower() or _current_tenant_admin_email()
     anthropic_key = _env_first('ACCESSO_FIERE_ANTHROPIC_API_KEY', 'ANTHROPIC_API_KEY')
 
     defaults = {}
@@ -1203,7 +1219,12 @@ def get_setting(chiave, default=''):
     db.close()
     value = r['valore'] if r else ''
     if chiave == 'email_notifiche' and not (value or '').strip():
-        return _env_first('ADMIN_ALERT_EMAIL', 'ACCESSO_FIERE_NOTIFY_EMAIL', 'NOTIFY_EMAIL', 'ADMIN_EMAIL', 'BREVO_NOTIFY_EMAIL') or default
+        return _current_tenant_admin_email() or default
+    if chiave == 'email_notifiche':
+        old_global = _env_first('ADMIN_ALERT_EMAIL', 'ACCESSO_FIERE_NOTIFY_EMAIL', 'NOTIFY_EMAIL', 'ADMIN_EMAIL', 'BREVO_NOTIFY_EMAIL').lower()
+        tenant_admin = _current_tenant_admin_email()
+        if old_global and tenant_admin and (value or '').strip().lower() == old_global:
+            return tenant_admin
     return value if r else default
 
 def set_setting(chiave, valore):
@@ -30513,8 +30534,10 @@ def test_email():
     from email.utils import parseaddr
     provider, sender, api_key, reply_to, metodo = _email_config()
     to = (
-        _env_first('EMAIL_TEST_TO', 'ADMIN_ALERT_EMAIL', 'ACCESSO_FIERE_NOTIFY_EMAIL', 'NOTIFY_EMAIL', 'ADMIN_EMAIL')
+        _env_first('EMAIL_TEST_TO')
         or get_setting('email_notifiche', '')
+        or _current_tenant_admin_email()
+        or _env_first('ADMIN_ALERT_EMAIL', 'ACCESSO_FIERE_NOTIFY_EMAIL', 'NOTIFY_EMAIL', 'ADMIN_EMAIL')
         or parseaddr(sender or '')[1]
     )
     print(f"[EMAIL TEST] provider={provider!r} sender={'ok' if sender else 'VUOTO'} api_key={'ok' if api_key else 'VUOTA'} to={to!r}", flush=True)
@@ -36428,7 +36451,8 @@ def registrati():
             "INSERT INTO utenti (nome,cognome,email,password,ruolo,titolo) VALUES (?,?,?,?,?,?)",
             ('Admin', nome_az, email, pw_hash, 'admin', 'Amministratore'))
         db.execute("INSERT OR REPLACE INTO impostazioni (chiave,valore) VALUES ('azienda',?)", (nome_az,))
-        _apply_global_default_settings(db, nome_az)
+        db.execute("INSERT OR REPLACE INTO impostazioni (chiave,valore) VALUES ('email_notifiche',?)", (email,))
+        _apply_global_default_settings(db, nome_az, email)
         safe_commit(db)
         admin_row = db.execute("SELECT id FROM utenti WHERE ruolo='admin' LIMIT 1").fetchone()
         db.close()
