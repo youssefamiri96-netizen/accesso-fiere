@@ -494,6 +494,45 @@ def safe_commit(conn):
                 raise
     conn.commit()  # ultimo tentativo, se fallisce lascia propagare
 
+def _env_first(*names):
+    for name in names:
+        value = (os.environ.get(name) or '').strip()
+        if value:
+            return value
+    return ''
+
+def _apply_global_default_settings(db, azienda_nome=None):
+    """Precompila le impostazioni tenant dai valori Railway, senza sovrascrivere valori gia' inseriti."""
+    public_url = _env_first('ACCESSO_FIERE_PUBLIC_URL', 'PUBLIC_BASE_URL', 'APP_URL').rstrip('/')
+    brevo_key = _env_first('ACCESSO_FIERE_BREVO_API_KEY', 'BREVO_API_KEY', 'SENDINBLUE_API_KEY')
+    brevo_sender = _env_first('ACCESSO_FIERE_BREVO_SENDER', 'BREVO_SENDER_EMAIL', 'BREVO_FROM_EMAIL', 'SMTP_FROM_EMAIL')
+    notify_email = _env_first('ACCESSO_FIERE_NOTIFY_EMAIL', 'NOTIFY_EMAIL', 'ADMIN_EMAIL', 'BREVO_NOTIFY_EMAIL') or brevo_sender
+    anthropic_key = _env_first('ACCESSO_FIERE_ANTHROPIC_API_KEY', 'ANTHROPIC_API_KEY')
+
+    defaults = {}
+    if azienda_nome:
+        defaults['azienda'] = azienda_nome
+        defaults['nome_azienda'] = azienda_nome
+    if public_url:
+        defaults['app_url'] = public_url
+    if brevo_key:
+        defaults['smtp_host'] = 'brevo'
+        defaults['smtp_port'] = '587'
+        defaults['smtp_pass'] = brevo_key
+    if brevo_sender:
+        defaults['smtp_user'] = brevo_sender
+    if notify_email:
+        defaults['email_notifiche'] = notify_email
+    if anthropic_key:
+        defaults['anthropic_api_key'] = anthropic_key
+
+    for key, value in defaults.items():
+        row = db.execute("SELECT valore FROM impostazioni WHERE chiave=?", (key,)).fetchone()
+        if row is None:
+            db.execute("INSERT INTO impostazioni (chiave,valore) VALUES (?,?)", (key, value))
+        elif not (row['valore'] or '').strip():
+            db.execute("UPDATE impostazioni SET valore=? WHERE chiave=?", (value, key))
+
 def init_db():
     db = get_db()  # giÃƒÂ  con WAL e timeout 30s
     db.executescript("""
@@ -1134,8 +1173,14 @@ def init_db():
         db.execute("INSERT INTO impostazioni (chiave,valore) VALUES (?,?)",('smtp_user',''))
         db.execute("INSERT INTO impostazioni (chiave,valore) VALUES (?,?)",('smtp_pass',''))
         db.execute("INSERT INTO impostazioni (chiave,valore) VALUES (?,?)",('app_url',''))
+        _apply_global_default_settings(db)
         safe_commit(db)
     except: pass
+    try:
+        _apply_global_default_settings(db)
+        safe_commit(db)
+    except Exception as e:
+        print(f'[Global defaults] errore applicazione impostazioni: {e}')
     db.close()
 
 def get_setting(chiave, default=''):
@@ -30326,6 +30371,7 @@ IMP_TMPL = """
     </form>
   </div>
 </div>
+{% if false %}
 <div class="card" style="margin-top:20px">
   <div class="card-header"><h3><i class="fa fa-envelope"></i> Email notifiche</h3></div>
   <div class="card-body">
@@ -30383,6 +30429,7 @@ IMP_TMPL = """
 </div>
 
 
+{% endif %}
 <!-- Card Logo Azienda -->
 <div class="card" style="margin-top:20px">
   <div class="card-header"><h3><i class="fa fa-image"></i> Logo Aziendale</h3></div>
@@ -36113,6 +36160,7 @@ def registrati():
             "INSERT INTO utenti (nome,cognome,email,password,ruolo,titolo) VALUES (?,?,?,?,?,?)",
             ('Admin', nome_az, email, pw_hash, 'admin', 'Amministratore'))
         db.execute("INSERT OR REPLACE INTO impostazioni (chiave,valore) VALUES ('azienda',?)", (nome_az,))
+        _apply_global_default_settings(db, nome_az)
         safe_commit(db)
         admin_row = db.execute("SELECT id FROM utenti WHERE ruolo='admin' LIMIT 1").fetchone()
         db.close()
