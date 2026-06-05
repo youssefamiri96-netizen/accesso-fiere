@@ -1549,6 +1549,7 @@ def login_required(f):
             'abbonamento_gestisci',
             'abbonamento_checkout',
             'abbonamento_successo',
+            'abbonamento_verifica',
         }
         if session.get('azienda_id') and not session.get('is_superadmin') and f.__name__ not in allowed_when_suspended:
             try:
@@ -6955,11 +6956,12 @@ def login():
                 mdb.close()
                 az['password_admin'] = pw
             # Verifica stato abbonamento
+            needs_subscription_redirect = False
             if az['stato'] == 'sospeso':
                 if _sync_azienda_pagata_da_stripe(az['id']):
                     az['stato'] = 'attivo'
                 else:
-                    return render_template_string(LOGIN_TMPL, error='Abbonamento sospeso. Contatta il supporto.', **lang_ctx)
+                    needs_subscription_redirect = True
             # Inizializza/aggiorna DB tenant (sempre, aggiunge tabelle mancanti)
             db_path = get_tenant_db_path(az['id'])
             reset_auth_session_keep_lang()
@@ -6995,6 +6997,9 @@ def login():
                 safe_commit(db)
             db.close()
             session['user_id'] = admin_tenant['id']
+            if needs_subscription_redirect:
+                flash('Pagamento non ancora riconciliato. Premi "Verifica pagamento" dopo aver completato Stripe.', 'warning')
+                return redirect(url_for('abbonamento_gestisci'))
             return redirect(url_for('dashboard'))
 
         # Login dipendente: cerca in TUTTI i tenant DB per trovare a quale azienda appartiene
@@ -35679,6 +35684,8 @@ def _crea_checkout_abbonamento_stripe(azienda_id, piano):
     if not az_row:
         return None, 'Azienda non trovata.'
     az = dict(az_row)
+    session['stripe_pending_azienda_id'] = int(azienda_id)
+    session['stripe_pending_piano'] = piano
 
     payment_link = (link_map.get(piano) or '').strip()
     if payment_link:
@@ -35734,8 +35741,21 @@ def _azienda_piano_da_checkout_stripe(checkout_session):
             pass
     return azienda_id, piano
 
-def _attiva_azienda_da_checkout_stripe(checkout_session):
+def _attiva_azienda_da_checkout_stripe(checkout_session, fallback_azienda_id=None, fallback_piano=None):
     azienda_id, piano = _azienda_piano_da_checkout_stripe(checkout_session)
+    if not azienda_id and fallback_azienda_id:
+        azienda_id = int(fallback_azienda_id)
+        piano = piano or (fallback_piano or '').strip().lower()
+    if not azienda_id:
+        customer_details = checkout_session.get('customer_details') or {}
+        checkout_email = (customer_details.get('email') or checkout_session.get('customer_email') or '').strip().lower()
+        if checkout_email:
+            mdb = get_master_db()
+            az = mdb.execute("SELECT id,piano FROM aziende WHERE lower(email_admin)=? LIMIT 1", (checkout_email,)).fetchone()
+            mdb.close()
+            if az:
+                azienda_id = az['id']
+                piano = piano or (az['piano'] or 'base')
     if not azienda_id:
         return False
     mdb = get_master_db()
@@ -35785,6 +35805,34 @@ def _sync_azienda_pagata_da_stripe(azienda_id):
             mdb.commit()
             mdb.close()
             return True
+
+        try:
+            customers = stripe.Customer.list(email=email, limit=10) if email else {'data': []}
+            for customer in customers.get('data', []):
+                subs = stripe.Subscription.list(customer=customer.get('id'), status='all', limit=20)
+                for sub in subs.get('data', []):
+                    if sub.get('status') not in ('active', 'trialing'):
+                        continue
+                    piano = az.get('piano') or 'base'
+                    try:
+                        items = ((sub.get('items') or {}).get('data') or [])
+                        price_id = (((items[0] if items else {}).get('price') or {}).get('id') or '')
+                        price_to_plan = {
+                            STRIPE_PRICE_BASE: 'base',
+                            STRIPE_PRICE_PRO: 'professional',
+                            STRIPE_PRICE_ENT: 'enterprise',
+                        }
+                        piano = price_to_plan.get(price_id, piano)
+                    except Exception:
+                        pass
+                    mdb = get_master_db()
+                    mdb.execute("UPDATE aziende SET stato='attivo', piano=?, stripe_customer_id=?, stripe_subscription_id=? WHERE id=?",
+                                (piano, customer.get('id'), sub.get('id'), azienda_id))
+                    mdb.commit()
+                    mdb.close()
+                    return True
+        except Exception as e:
+            print(f'[Stripe sync subscription fallback] {e}')
     except Exception as e:
         print(f'[Stripe sync suspended] {e}')
     return False
@@ -35881,15 +35929,42 @@ def abbonamento_successo():
             stripe.api_version = '2025-03-31.basil'
             checkout = stripe.checkout.Session.retrieve(session_id)
             if checkout.get('status') == 'complete':
-                metadata = checkout.get('metadata') or {}
-                if int(metadata.get('azienda_id', 0) or 0) == int(session.get('azienda_id') or 0):
-                    attivato = _attiva_azienda_da_checkout_stripe(checkout)
+                ref_azienda_id, _ = _azienda_piano_da_checkout_stripe(checkout)
+                customer_details = checkout.get('customer_details') or {}
+                checkout_email = (customer_details.get('email') or checkout.get('customer_email') or '').strip().lower()
+                session_email = (session.get('email') or '').strip().lower()
+                session_azienda_id = int(session.get('azienda_id') or 0)
+                pending_azienda_id = int(session.get('stripe_pending_azienda_id') or 0)
+                pending_piano = (session.get('stripe_pending_piano') or '').strip().lower()
+                matches_ref = int(ref_azienda_id or 0) == session_azienda_id
+                matches_email = bool(checkout_email and checkout_email == session_email)
+                matches_pending = bool(pending_azienda_id and pending_azienda_id == session_azienda_id)
+                if matches_ref or matches_email or matches_pending:
+                    attivato = _attiva_azienda_da_checkout_stripe(
+                        checkout,
+                        fallback_azienda_id=session_azienda_id if matches_pending else None,
+                        fallback_piano=pending_piano
+                    )
         except Exception as e:
             print(f'[Stripe success verify] {e}')
     if attivato:
+        session.pop('stripe_pending_azienda_id', None)
+        session.pop('stripe_pending_piano', None)
         flash('Abbonamento attivato. Benvenuto nel gestionale.', 'success')
         return redirect(url_for('dashboard'))
     flash('Pagamento ricevuto, sto attendendo conferma Stripe. Riprova tra qualche secondo.', 'warning')
+    return redirect(url_for('abbonamento_gestisci'))
+
+@app.route('/abbonamento/verifica', methods=['GET', 'POST'])
+@login_required
+def abbonamento_verifica():
+    azienda_id = session.get('azienda_id')
+    if not azienda_id:
+        return redirect(url_for('login'))
+    if _sync_azienda_pagata_da_stripe(azienda_id):
+        flash('Pagamento verificato. Abbonamento attivato.', 'success')
+        return redirect(url_for('dashboard'))
+    flash('Non trovo ancora un abbonamento attivo su Stripe per questa email. Attendi qualche secondo e riprova.', 'warning')
     return redirect(url_for('abbonamento_gestisci'))
 
 @app.route('/abbonamento/gestisci')
@@ -36406,6 +36481,11 @@ ABBONAMENTO_TMPL = """
       {% if az.stato=='trial' %}Attiva un abbonamento per continuare a usare il gestionale dopo il trial.
       {% else %}Il tuo abbonamento ÃƒÂ¨ sospeso. Rinnova per riaccedere.{% endif %}
     </div>
+    <form method="POST" action="/abbonamento/verifica" style="margin:0 0 18px 0">
+      <button type="submit" class="btn btn-green" style="width:100%;font-size:14px">
+        <i class="fa fa-rotate"></i> Ho completato Stripe: verifica pagamento
+      </button>
+    </form>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px">
     {% for p in piani %}
     <form method="POST" action="/abbonamento/checkout">
