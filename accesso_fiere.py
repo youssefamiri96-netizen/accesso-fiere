@@ -1545,6 +1545,21 @@ def login_required(f):
             except Exception:
                 pass
         # Solo admin vedono le pagine admin. Caposquadra Ã¢â€ â€™ mobile-cs, dipendenti Ã¢â€ â€™ mobile
+        allowed_when_suspended = {
+            'abbonamento_gestisci',
+            'abbonamento_checkout',
+            'abbonamento_successo',
+        }
+        if session.get('azienda_id') and not session.get('is_superadmin') and f.__name__ not in allowed_when_suspended:
+            try:
+                mdb = get_master_db()
+                az = mdb.execute("SELECT stato FROM aziende WHERE id=?", (session.get('azienda_id'),)).fetchone()
+                mdb.close()
+                if az and az['stato'] == 'sospeso':
+                    flash('Completa il pagamento per attivare il gestionale.', 'warning')
+                    return redirect(url_for('abbonamento_gestisci'))
+            except Exception:
+                pass
         admin_pages = {'dashboard','dipendenti','presenze','ferie','cantieri','global_search',
                        'documenti','scadenze','calendario','richieste','impostazioni','fatturazione','preventivi','clienti','contratti_clienti',
                        'banca_ore','banca_ore_dettaglio','squadre_lista','calendario_fiere',
@@ -35636,6 +35651,61 @@ STRIPE_PRICE_ENT   = os.environ.get('STRIPE_PRICE_ENT', '')
 SUPERADMIN_EMAIL = os.environ.get('SUPERADMIN_EMAIL', 'superadmin@gestionale.app')
 SUPERADMIN_PW    = os.environ.get('SUPERADMIN_PASSWORD', '')
 
+def _crea_checkout_abbonamento_stripe(azienda_id, piano):
+    if not STRIPE_SECRET:
+        return None, 'Pagamenti non ancora configurati. Contatta il supporto.'
+    try:
+        import stripe
+        stripe.api_key = STRIPE_SECRET
+        stripe.api_version = '2025-03-31.basil'
+
+        piano = (piano or 'base').strip().lower()
+        price_map = {
+            'base': STRIPE_PRICE_BASE,
+            'professional': STRIPE_PRICE_PRO,
+            'enterprise': STRIPE_PRICE_ENT,
+        }
+        price_id = price_map.get(piano)
+        if not price_id:
+            return None, 'Piano non valido.'
+
+        mdb = get_master_db()
+        az_row = mdb.execute("SELECT * FROM aziende WHERE id=?", (azienda_id,)).fetchone()
+        mdb.close()
+        if not az_row:
+            return None, 'Azienda non trovata.'
+        az = dict(az_row)
+
+        checkout = stripe.checkout.Session.create(
+            customer_email=az['email_admin'],
+            line_items=[{'price': price_id, 'quantity': 1}],
+            managed_payments={'enabled': True},
+            mode='subscription',
+            success_url=request.host_url + 'abbonamento/successo?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url=request.host_url + 'abbonamento/gestisci',
+            metadata={'azienda_id': str(azienda_id), 'piano': piano},
+        )
+        return checkout.url, ''
+    except Exception as e:
+        return None, str(e)
+
+def _attiva_azienda_da_checkout_stripe(checkout_session):
+    metadata = checkout_session.get('metadata') or {}
+    azienda_id = int(metadata.get('azienda_id', 0) or 0)
+    piano = (metadata.get('piano') or '').strip().lower()
+    if not azienda_id:
+        return False
+    mdb = get_master_db()
+    if piano:
+        mdb.execute("UPDATE aziende SET stato='attivo', piano=?, stripe_customer_id=?, stripe_subscription_id=? WHERE id=?",
+                    (piano, checkout_session.get('customer'), checkout_session.get('subscription'), azienda_id))
+    else:
+        mdb.execute("UPDATE aziende SET stato='attivo', stripe_customer_id=?, stripe_subscription_id=? WHERE id=?",
+                    (checkout_session.get('customer'), checkout_session.get('subscription'), azienda_id))
+    mdb.commit()
+    mdb.close()
+    return True
+
 # Ã¢â€â‚¬Ã¢â€â‚¬ Landing page Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 @app.route('/landing')
 def landing():
@@ -35666,12 +35736,12 @@ def registrati():
         import re, time as _t
         slug = re.sub(r'[^a-z0-9]', '', nome_az.lower())[:20] + str(int(_t.time()))[-4:]
         pw_hash = hash_pw(password)
-        # Trial 14 giorni
+        # L'azienda resta bloccata finche' Stripe non conferma il pagamento.
         from datetime import date as _d, timedelta as _td
         trial_fino = (_d.today() + _td(days=14)).isoformat()
         cur = mdb.execute(
             "INSERT INTO aziende (nome,email_admin,password_admin,piano,stato,trial_fino_al,slug) VALUES (?,?,?,?,?,?,?)",
-            (nome_az, email, pw_hash, piano, 'trial', trial_fino, slug))
+            (nome_az, email, pw_hash, piano, 'sospeso', trial_fino, slug))
         azienda_id = cur.lastrowid
         mdb.commit(); mdb.close()
         # Crea DB tenant e inizializza schema
@@ -35695,8 +35765,12 @@ def registrati():
             'azienda_id': azienda_id, 'azienda_nome': nome_az,
             'is_saas': True,
         })
-        flash(f'Ã°Å¸Å½â€° Benvenuto! Hai 14 giorni di prova gratuita. Buon lavoro con {nome_az}!', 'success')
-        return redirect(url_for('dashboard'))
+        checkout_url, checkout_err = _crea_checkout_abbonamento_stripe(azienda_id, piano)
+        if checkout_url:
+            flash('Account creato. Completa il pagamento per attivare il gestionale.', 'info')
+            return redirect(checkout_url)
+        flash(f'Account creato, ma non riesco a generare il link di pagamento: {checkout_err}', 'error')
+        return redirect(url_for('abbonamento_gestisci'))
     piano_sel = request.args.get('piano', 'base')
     return render_template_string(REGISTRATI_TMPL, error=None, piano_sel=piano_sel)
 
@@ -35704,40 +35778,36 @@ def registrati():
 @app.route('/abbonamento/checkout', methods=['POST'])
 @login_required
 def abbonamento_checkout():
-    if not STRIPE_SECRET:
-        flash('Pagamenti non ancora configurati. Contatta il supporto.', 'error')
-        return redirect(url_for('abbonamento_gestisci'))
-    try:
-        import stripe
-        stripe.api_key = STRIPE_SECRET
-        stripe.api_version = '2025-03-31.basil'
-        piano = request.form.get('piano', 'base')
-        price_map = {'base': STRIPE_PRICE_BASE, 'professional': STRIPE_PRICE_PRO, 'enterprise': STRIPE_PRICE_ENT}
-        price_id = price_map.get(piano)
-        if not price_id:
-            flash('Piano non valido.', 'error'); return redirect(url_for('abbonamento_gestisci'))
-        azienda_id = session.get('azienda_id')
-        mdb = get_master_db()
-        az = dict(mdb.execute("SELECT * FROM aziende WHERE id=?", (azienda_id,)).fetchone())
-        mdb.close()
-        checkout = stripe.checkout.Session.create(
-            customer_email=az['email_admin'],
-            line_items=[{'price': price_id, 'quantity': 1}],
-            managed_payments={'enabled': True},
-            mode='subscription',
-            success_url=request.host_url + 'abbonamento/successo?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url=request.host_url + 'abbonamento/gestisci',
-            metadata={'azienda_id': str(azienda_id)},
-        )
-        return redirect(checkout.url)
-    except Exception as e:
-        flash(f'Errore pagamento: {e}', 'error')
-        return redirect(url_for('abbonamento_gestisci'))
+    checkout_url, checkout_err = _crea_checkout_abbonamento_stripe(
+        session.get('azienda_id'),
+        request.form.get('piano', 'base')
+    )
+    if checkout_url:
+        return redirect(checkout_url)
+    flash(f'Errore pagamento: {checkout_err}', 'error')
+    return redirect(url_for('abbonamento_gestisci'))
 
 @app.route('/abbonamento/successo')
 @login_required
 def abbonamento_successo():
-    flash('Ã¢Å“â€¦ Abbonamento attivato! Grazie.', 'success')
+    session_id = request.args.get('session_id', '').strip()
+    attivato = False
+    if session_id and STRIPE_SECRET:
+        try:
+            import stripe
+            stripe.api_key = STRIPE_SECRET
+            stripe.api_version = '2025-03-31.basil'
+            checkout = stripe.checkout.Session.retrieve(session_id)
+            if checkout.get('status') == 'complete':
+                metadata = checkout.get('metadata') or {}
+                if int(metadata.get('azienda_id', 0) or 0) == int(session.get('azienda_id') or 0):
+                    attivato = _attiva_azienda_da_checkout_stripe(checkout)
+        except Exception as e:
+            print(f'[Stripe success verify] {e}')
+    if attivato:
+        flash('Abbonamento attivato. Benvenuto nel gestionale.', 'success')
+        return redirect(url_for('dashboard'))
+    flash('Pagamento ricevuto, sto attendendo conferma Stripe. Riprova tra qualche secondo.', 'warning')
     return redirect(url_for('abbonamento_gestisci'))
 
 @app.route('/abbonamento/gestisci')
@@ -35765,11 +35835,17 @@ def stripe_webhook():
         event = stripe.Webhook.construct_event(payload, sig, STRIPE_WEBHOOK_SEC)
         if event['type'] == 'checkout.session.completed':
             obj = event['data']['object']
-            azienda_id = int(obj['metadata'].get('azienda_id', 0))
+            metadata = obj.get('metadata') or {}
+            azienda_id = int(metadata.get('azienda_id', 0))
+            piano = (metadata.get('piano') or '').strip().lower()
             if azienda_id:
                 mdb = get_master_db()
-                mdb.execute("UPDATE aziende SET stato='attivo', stripe_customer_id=?, stripe_subscription_id=? WHERE id=?",
-                            (obj.get('customer'), obj.get('subscription'), azienda_id))
+                if piano:
+                    mdb.execute("UPDATE aziende SET stato='attivo', piano=?, stripe_customer_id=?, stripe_subscription_id=? WHERE id=?",
+                                (piano, obj.get('customer'), obj.get('subscription'), azienda_id))
+                else:
+                    mdb.execute("UPDATE aziende SET stato='attivo', stripe_customer_id=?, stripe_subscription_id=? WHERE id=?",
+                                (obj.get('customer'), obj.get('subscription'), azienda_id))
                 mdb.commit(); mdb.close()
         elif event['type'] in ('customer.subscription.deleted','customer.subscription.paused'):
             sub = event['data']['object']
@@ -35928,14 +36004,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <a href="#features">FunzionalitÃƒÂ </a>
     <a href="#pricing">Prezzi</a>
     <a href="/area-clienti">Accedi</a>
-    <a href="/registrati" class="cta">Prova gratis</a>
+    <a href="/registrati" class="cta">Attiva piano</a>
   </div>
 </nav>
 
 <div class="hero">
   <h1>Il Accesso Fiere per le<br><span>PMI italiane</span></h1>
   <p>Presenze, cedolini, fatture, cantieri, veicoli e molto altro.<br>Tutto in un'unica piattaforma semplice e potente.</p>
-  <a href="/registrati" class="btn-hero">Inizia gratis Ã¢â‚¬â€ 14 giorni</a>
+  <a href="/registrati" class="btn-hero">Scegli piano e attiva</a>
   <a href="/area-clienti" class="btn-sec">Accedi</a>
 </div>
 
@@ -35977,7 +36053,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 <div class="pricing" id="pricing">
   <h2>Prezzi trasparenti, senza sorprese</h2>
-  <p class="sub">14 giorni di prova gratuita Ã¢â‚¬â€ Nessuna carta di credito richiesta</p>
+  <p class="sub">Scegli il piano, crea l account e completa il pagamento sicuro con Stripe.</p>
   <div class="price-grid">
     {% for p in piani %}
     <div class="price-card {{ 'popular' if p.nome=='Professional' }}">
@@ -35993,8 +36069,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         {% if p.nome != 'Base' %}<li><i class="fa fa-check"></i> Export Excel avanzato</li>{% endif %}
         {% if p.nome == 'Enterprise' %}<li><i class="fa fa-check"></i> Supporto prioritario</li>{% endif %}
       </ul>
-      <a href="/registrati?piano={{ p.nome|lower }}" class="btn-price">Inizia gratis</a>
-      <div class="trial-badge">Ã¢Å“â€œ 14 giorni gratuiti</div>
+      <a href="/registrati?piano={{ p.nome|lower }}" class="btn-price">Scegli piano</a>
+      <div class="trial-badge">Pagamento sicuro con Stripe</div>
     </div>
     {% endfor %}
   </div>
@@ -36105,7 +36181,7 @@ input:focus,select:focus{outline:none;border-color:#0f4c81;box-shadow:0 0 0 3px 
 </div>
 <div class="right">
   <div class="form-card">
-    <div class="trial-pill"><i class="fa fa-gift"></i> 14 giorni gratuiti Ã¢â‚¬â€ nessuna carta richiesta</div>
+    <div class="trial-pill"><i class="fa fa-lock"></i> Attivazione con pagamento sicuro Stripe</div>
     <h2>Crea il tuo account</h2>
     <p class="sub">Inizia subito, sei operativo in 30 secondi.</p>
     {% if error %}<div class="error"><i class="fa fa-exclamation-circle"></i> {{ error }}</div>{% endif %}
@@ -36157,7 +36233,7 @@ input:focus,select:focus{outline:none;border-color:#0f4c81;box-shadow:0 0 0 3px 
           <span>Accetto i <a href="/termini" target="_blank" rel="noopener" style="color:#0f4c81;font-weight:800">Termini di servizio</a> e prendo visione della <a href="/cookies" target="_blank" rel="noopener" style="color:#0f4c81;font-weight:800">Cookie Policy</a>.</span>
         </label>
       </div>
-      <button type="submit" class="btn-register"><i class="fa fa-rocket"></i> Crea account e inizia gratis</button>
+      <button type="submit" class="btn-register"><i class="fa fa-credit-card"></i> Crea account e vai al pagamento</button>
     </form>
     <div class="login-link">Hai giÃƒÂ  un account? <a href="/area-clienti">Accedi Ã¢â€ â€™</a></div>
   </div>
