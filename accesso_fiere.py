@@ -1474,16 +1474,24 @@ def _registra_trial_usato(mdb, azienda_id, identificativi):
 def _master_db_backfill_trial_utilizzati(db):
     rows = db.execute("SELECT * FROM aziende").fetchall()
     for az in rows:
+        email = (_row_get(az, 'email_admin') or '').strip().lower()
         identificativi = _trial_identificativi(
             _row_get(az, 'nome'),
-            _row_get(az, 'email_admin'),
+            email,
             _row_get(az, 'telefono'),
             _row_get(az, 'partita_iva'),
         )
         if identificativi:
             _registra_trial_usato(db, az['id'], identificativi)
-        if not _row_get(az, 'trial_usato_il') and _row_get(az, 'trial_fino_al'):
-            db.execute("UPDATE aziende SET trial_usato_il=COALESCE(creato_il, datetime('now')) WHERE id=?", (az['id'],))
+        trial_gia_concesso = bool(_row_get(az, 'trial_fino_al') or _row_get(az, 'trial_usato_il'))
+        if trial_gia_concesso and email not in FREE_ACCOUNT_EMAILS:
+            db.execute(
+                """UPDATE aziende
+                   SET trial_eligibile=0,
+                       trial_usato_il=COALESCE(NULLIF(trial_usato_il,''), creato_il, datetime('now'))
+                   WHERE id=?""",
+                (az['id'],)
+            )
 
 
 def _master_db_sync_account_esenti(db):
@@ -36406,7 +36414,6 @@ def _azienda_trial_valido(az):
         trial_fino = (az.get('trial_fino_al') if hasattr(az, 'get') else az['trial_fino_al']) or ''
         return (
             stato == 'sospeso'
-            and _azienda_trial_eligibile(az)
             and bool(trial_fino)
             and date.fromisoformat(trial_fino) >= date.today()
         )
@@ -36438,8 +36445,6 @@ def _azienda_trial_scaduto(az):
         trial_fino = (az.get('trial_fino_al') if hasattr(az, 'get') else az['trial_fino_al']) or ''
         if stato != 'trial':
             return False
-        if not _azienda_trial_eligibile(az):
-            return True
         if not trial_fino:
             return True
         return date.fromisoformat(trial_fino) < date.today()
@@ -36484,21 +36489,7 @@ def _crea_checkout_abbonamento_stripe(azienda_id, piano):
     session['stripe_pending_azienda_id'] = int(azienda_id)
     session['stripe_pending_piano'] = piano
 
-    payment_link = (link_map.get(piano) or '').strip()
     price_id = (price_map.get(piano) or '').strip()
-    if payment_link and (trial_eligibile or not (STRIPE_SECRET and price_id)):
-        try:
-            from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
-            parts = urlsplit(payment_link)
-            query = dict(parse_qsl(parts.query, keep_blank_values=True))
-            query.update({
-                'client_reference_id': f'azienda_{azienda_id}_{piano}',
-                'prefilled_email': az['email_admin'],
-            })
-            return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment)), ''
-        except Exception as e:
-            return None, str(e)
-
     if STRIPE_SECRET and price_id:
         try:
             import stripe
@@ -36520,6 +36511,26 @@ def _crea_checkout_abbonamento_stripe(azienda_id, piano):
                 subscription_data=subscription_data,
             )
             return checkout.url, ''
+        except Exception as e:
+            return None, str(e)
+
+    payment_link = (link_map.get(piano) or '').strip()
+    if payment_link:
+        if not trial_eligibile:
+            return None, (
+                f'Questa azienda ha gia usato la prova gratuita. '
+                f'Configura STRIPE_PRICE_{piano.upper().replace("PROFESSIONAL", "PRO").replace("ENTERPRISE", "ENT")} '
+                'su Railway per creare un pagamento senza trial.'
+            )
+        try:
+            from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
+            parts = urlsplit(payment_link)
+            query = dict(parse_qsl(parts.query, keep_blank_values=True))
+            query.update({
+                'client_reference_id': f'azienda_{azienda_id}_{piano}',
+                'prefilled_email': az['email_admin'],
+            })
+            return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment)), ''
         except Exception as e:
             return None, str(e)
 
@@ -36571,14 +36582,14 @@ def _attiva_azienda_da_checkout_stripe(checkout_session, fallback_azienda_id=Non
         trial_fino = _row_get(row, 'trial_fino_al') or (date.today() + timedelta(days=14)).isoformat()
     if piano:
         if trial_fino:
-            mdb.execute("UPDATE aziende SET stato=?, piano=?, stripe_customer_id=?, stripe_subscription_id=?, trial_fino_al=? WHERE id=?",
+            mdb.execute("UPDATE aziende SET stato=?, piano=?, stripe_customer_id=?, stripe_subscription_id=?, trial_fino_al=?, trial_eligibile=0, trial_usato_il=COALESCE(NULLIF(trial_usato_il,''), datetime('now')) WHERE id=?",
                         (nuovo_stato, piano, checkout_session.get('customer'), checkout_session.get('subscription'), trial_fino, azienda_id))
         else:
             mdb.execute("UPDATE aziende SET stato=?, piano=?, stripe_customer_id=?, stripe_subscription_id=? WHERE id=?",
                         (nuovo_stato, piano, checkout_session.get('customer'), checkout_session.get('subscription'), azienda_id))
     else:
         if trial_fino:
-            mdb.execute("UPDATE aziende SET stato=?, stripe_customer_id=?, stripe_subscription_id=?, trial_fino_al=? WHERE id=?",
+            mdb.execute("UPDATE aziende SET stato=?, stripe_customer_id=?, stripe_subscription_id=?, trial_fino_al=?, trial_eligibile=0, trial_usato_il=COALESCE(NULLIF(trial_usato_il,''), datetime('now')) WHERE id=?",
                         (nuovo_stato, checkout_session.get('customer'), checkout_session.get('subscription'), trial_fino, azienda_id))
         else:
             mdb.execute("UPDATE aziende SET stato=?, stripe_customer_id=?, stripe_subscription_id=? WHERE id=?",
@@ -36624,6 +36635,8 @@ def _stripe_update_azienda_abbonamento(customer_id=None, subscription_id=None, s
         if stato == 'trial':
             updates.append("trial_fino_al=COALESCE(NULLIF(trial_fino_al,''), ?)")
             values.append((date.today() + timedelta(days=14)).isoformat())
+            updates.append("trial_eligibile=0")
+            updates.append("trial_usato_il=COALESCE(NULLIF(trial_usato_il,''), datetime('now'))")
     if piano:
         updates.append("piano=?")
         values.append(piano)
@@ -36664,6 +36677,8 @@ def _stripe_update_azienda_abbonamento_email(email=None, customer_id=None, subsc
         if stato == 'trial':
             updates.append("trial_fino_al=COALESCE(NULLIF(trial_fino_al,''), ?)")
             values.append((date.today() + timedelta(days=14)).isoformat())
+            updates.append("trial_eligibile=0")
+            updates.append("trial_usato_il=COALESCE(NULLIF(trial_usato_il,''), datetime('now'))")
     if piano:
         updates.append("piano=?")
         values.append(piano)
