@@ -180,6 +180,10 @@ def init_master_db():
         stripe_subscription_id TEXT,
         data_scadenza TEXT,
         trial_fino_al TEXT,
+        telefono TEXT,
+        partita_iva TEXT,
+        trial_eligibile INTEGER DEFAULT 1,
+        trial_usato_il TEXT,
         creato_il TEXT DEFAULT (datetime('now')),
         slug TEXT UNIQUE
     );
@@ -195,16 +199,40 @@ def init_master_db():
         chiave TEXT PRIMARY KEY,
         valore TEXT
     );
+    CREATE TABLE IF NOT EXISTS trial_utilizzati (
+        chiave TEXT PRIMARY KEY,
+        tipo TEXT NOT NULL,
+        valore TEXT NOT NULL,
+        azienda_id INTEGER,
+        creato_il TEXT DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_trial_utilizzati_tipo_valore
+        ON trial_utilizzati(tipo, valore);
     """)
+    for sql in (
+        "ALTER TABLE aziende ADD COLUMN telefono TEXT",
+        "ALTER TABLE aziende ADD COLUMN partita_iva TEXT",
+        "ALTER TABLE aziende ADD COLUMN trial_eligibile INTEGER DEFAULT 1",
+        "ALTER TABLE aziende ADD COLUMN trial_usato_il TEXT",
+    ):
+        try:
+            db.execute(sql)
+        except sqlite3.OperationalError:
+            pass
     # Inserisci piani di default
     existing = db.execute("SELECT COUNT(*) FROM piani").fetchone()[0]
     if not existing:
         db.execute("INSERT INTO piani (nome,prezzo_mensile,max_dipendenti,descrizione) VALUES (?,?,?,?)",
-                   ('Base', 29.0, 5, 'Fino a 5 operatori - ideale per piccole squadre'))
+                   ('Base', 29.0, 5, 'Fino a 5 dipendenti, 2 veicoli e 3 fiere'))
         db.execute("INSERT INTO piani (nome,prezzo_mensile,max_dipendenti,descrizione) VALUES (?,?,?,?)",
-                   ('Professional', 59.0, 20, 'Fino a 20 operatori - per squadre medie'))
+                   ('Professional', 59.0, 20, 'Fino a 20 dipendenti, 5 veicoli e 5 fiere'))
         db.execute("INSERT INTO piani (nome,prezzo_mensile,max_dipendenti,descrizione) VALUES (?,?,?,?)",
-                   ('Enterprise', 99.0, 999, 'Dipendenti illimitati'))
+                   ('Enterprise', 99.0, 999, 'Tutto illimitato'))
+    try:
+        _master_db_backfill_trial_utilizzati(db)
+        _master_db_sync_account_esenti(db)
+    except Exception as e:
+        print(f'[Master trial/esenti] {e}')
     db.commit(); db.close()
 
 # Ã¢â€â‚¬Ã¢â€â‚¬ TENANT DB Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
@@ -1268,6 +1296,223 @@ def get_public_base_url():
     if url == 'https://accessofiere.com':
         url = 'https://www.accessofiere.com'
     return url
+
+
+PIANO_LIMITI = {
+    'base': {'dipendenti': 5, 'veicoli': 2, 'fiere': 3},
+    'professional': {'dipendenti': 20, 'veicoli': 5, 'fiere': 5},
+    'enterprise': {'dipendenti': None, 'veicoli': None, 'fiere': None},
+}
+
+PIANO_LABEL = {
+    'base': 'Base',
+    'professional': 'Pro',
+    'enterprise': 'Enterprise',
+}
+
+RISORSA_LABEL = {
+    'dipendenti': 'dipendenti attivi',
+    'veicoli': 'veicoli attivi',
+    'fiere': 'fiere attive',
+}
+
+
+def _normalizza_piano_abbonamento(piano):
+    piano = (piano or 'base').strip().lower()
+    if piano in ('pro', 'professional', 'professionale'):
+        return 'professional'
+    if piano in ('enterprise', 'ent', 'ultimo'):
+        return 'enterprise'
+    return 'base'
+
+
+def _piano_abbonamento_corrente():
+    try:
+        azienda_id = session.get('azienda_id')
+    except RuntimeError:
+        azienda_id = None
+    if not azienda_id:
+        return 'enterprise'
+    try:
+        mdb = get_master_db()
+        row = mdb.execute("SELECT piano FROM aziende WHERE id=?", (azienda_id,)).fetchone()
+        mdb.close()
+        return _normalizza_piano_abbonamento(row['piano'] if row else 'base')
+    except Exception:
+        return 'base'
+
+
+def _conteggio_risorsa_abbonamento(db, risorsa):
+    if risorsa == 'dipendenti':
+        return db.execute("""
+            SELECT COUNT(*)
+            FROM utenti
+            WHERE COALESCE(attivo,1)=1
+              AND LOWER(COALESCE(ruolo,'')) NOT IN ('admin','superadmin')
+        """).fetchone()[0]
+    if risorsa == 'veicoli':
+        return db.execute("SELECT COUNT(*) FROM veicoli WHERE COALESCE(attivo,1)=1").fetchone()[0]
+    if risorsa == 'fiere':
+        return db.execute("SELECT COUNT(*) FROM cantieri WHERE COALESCE(attivo,1)=1").fetchone()[0]
+    return 0
+
+
+def _ruolo_conta_come_dipendente(ruolo):
+    return (ruolo or '').strip().lower() not in ('admin', 'superadmin')
+
+
+def _verifica_limite_abbonamento(db, risorsa):
+    piano = _piano_abbonamento_corrente()
+    limite = PIANO_LIMITI.get(piano, PIANO_LIMITI['base']).get(risorsa)
+    if limite is None:
+        return True, ''
+    attuali = _conteggio_risorsa_abbonamento(db, risorsa)
+    if attuali < limite:
+        return True, ''
+    return False, (
+        f"Limite piano {PIANO_LABEL.get(piano, piano.title())} raggiunto: "
+        f"hai gia {attuali}/{limite} {RISORSA_LABEL.get(risorsa, risorsa)}. "
+        "Passa a un piano superiore oppure disattiva/elimina un record prima di aggiungerne un altro."
+    )
+
+
+FREE_EMAIL_DOMAINS = {
+    'gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com', 'live.com',
+    'icloud.com', 'yahoo.com', 'yahoo.it', 'libero.it', 'virgilio.it',
+    'alice.it', 'tin.it', 'tiscali.it', 'email.it', 'pec.it'
+}
+
+
+def _row_get(row, key, default=''):
+    if not row:
+        return default
+    try:
+        if hasattr(row, 'get'):
+            return row.get(key, default)
+        if hasattr(row, 'keys') and key not in row.keys():
+            return default
+        value = row[key]
+        return default if value is None else value
+    except Exception:
+        return default
+
+
+def _norm_trial_text(value):
+    import re, unicodedata
+    s = unicodedata.normalize('NFKD', str(value or '')).encode('ascii', 'ignore').decode('ascii')
+    return re.sub(r'[^a-z0-9]+', '', s.lower())
+
+
+def _norm_trial_phone(value):
+    import re
+    digits = re.sub(r'\D+', '', str(value or ''))
+    if digits.startswith('0039'):
+        digits = digits[4:]
+    elif digits.startswith('39') and len(digits) > 10:
+        digits = digits[2:]
+    return digits
+
+
+def _norm_trial_piva(value):
+    import re
+    return re.sub(r'[^a-zA-Z0-9]+', '', str(value or '')).upper()
+
+
+def _norm_trial_azienda(value):
+    import re, unicodedata
+    s = unicodedata.normalize('NFKD', str(value or '')).encode('ascii', 'ignore').decode('ascii').lower()
+    words = [w for w in re.split(r'[^a-z0-9]+', s) if w]
+    stop = {'srl', 'sr l', 'spa', 'snc', 'sas', 'societa', 'cooperativa', 'ditta', 'individuale'}
+    words = [w for w in words if w not in stop]
+    return ''.join(words)
+
+
+def _trial_identificativi(nome_azienda, email, telefono='', partita_iva=''):
+    email = (email or '').strip().lower()
+    items = []
+    if email:
+        items.append(('email', email))
+        if '@' in email:
+            domain = email.rsplit('@', 1)[1].strip().lower()
+            if domain and domain not in FREE_EMAIL_DOMAINS:
+                items.append(('dominio_email', domain))
+    tel = _norm_trial_phone(telefono)
+    if len(tel) >= 6:
+        items.append(('telefono', tel))
+    piva = _norm_trial_piva(partita_iva)
+    if len(piva) >= 5:
+        items.append(('partita_iva', piva))
+    azienda = _norm_trial_azienda(nome_azienda)
+    if len(azienda) >= 4:
+        items.append(('azienda', azienda))
+    return items
+
+
+def _trial_chiave(tipo, valore):
+    return f'{tipo}:{valore}'
+
+
+def _trial_gia_usato(mdb, identificativi):
+    for tipo, valore in identificativi:
+        row = mdb.execute(
+            "SELECT tipo, valore, azienda_id FROM trial_utilizzati WHERE chiave=? LIMIT 1",
+            (_trial_chiave(tipo, valore),)
+        ).fetchone()
+        if row:
+            return True, tipo
+    return False, ''
+
+
+def _registra_trial_usato(mdb, azienda_id, identificativi):
+    for tipo, valore in identificativi:
+        mdb.execute(
+            "INSERT OR IGNORE INTO trial_utilizzati (chiave,tipo,valore,azienda_id) VALUES (?,?,?,?)",
+            (_trial_chiave(tipo, valore), tipo, valore, azienda_id)
+        )
+
+
+def _master_db_backfill_trial_utilizzati(db):
+    rows = db.execute("SELECT * FROM aziende").fetchall()
+    for az in rows:
+        identificativi = _trial_identificativi(
+            _row_get(az, 'nome'),
+            _row_get(az, 'email_admin'),
+            _row_get(az, 'telefono'),
+            _row_get(az, 'partita_iva'),
+        )
+        if identificativi:
+            _registra_trial_usato(db, az['id'], identificativi)
+        if not _row_get(az, 'trial_usato_il') and _row_get(az, 'trial_fino_al'):
+            db.execute("UPDATE aziende SET trial_usato_il=COALESCE(creato_il, datetime('now')) WHERE id=?", (az['id'],))
+
+
+def _master_db_sync_account_esenti(db):
+    try:
+        emails = sorted({e.strip().lower() for e in FREE_ACCOUNT_EMAILS if e.strip()})
+    except NameError:
+        emails = []
+    if not emails:
+        return
+    placeholders = ','.join('?' for _ in emails)
+    db.execute(
+        f"UPDATE aziende SET stato='attivo', piano='enterprise' WHERE lower(email_admin) IN ({placeholders})",
+        tuple(emails)
+    )
+
+
+def _azienda_trial_eligibile(az_or_id):
+    if not az_or_id:
+        return True
+    row = az_or_id
+    if isinstance(az_or_id, int):
+        mdb = get_master_db()
+        row = mdb.execute("SELECT trial_eligibile FROM aziende WHERE id=?", (az_or_id,)).fetchone()
+        mdb.close()
+    try:
+        value = _row_get(row, 'trial_eligibile', 1)
+        return str(value).strip().lower() not in ('0', 'false', 'no')
+    except Exception:
+        return True
 
 _ensure_done = False
 _ensure_lock = threading.Lock()
@@ -7240,6 +7485,7 @@ def login():
             if _azienda_esente_pagamento(az):
                 _attiva_azienda_esente_pagamento(az['id'])
                 az['stato'] = 'attivo'
+                az['piano'] = 'enterprise'
             elif _azienda_trial_scaduto(az):
                 _sospendi_azienda(az['id'])
                 az['stato'] = 'sospeso'
@@ -12675,6 +12921,11 @@ def cantieri():
 def cantiere_nuovo():
     if request.method == 'POST':
         db = get_db()
+        ok_limite, msg_limite = _verifica_limite_abbonamento(db, 'fiere')
+        if not ok_limite:
+            db.close()
+            flash(msg_limite, 'error')
+            return redirect(url_for('cantieri'))
         # Auto-fill dei campi legacy data_inizio/data_fine se non compilati
         data_setup = request.form.get('data_setup') or None
         data_dismantling = request.form.get('data_dismantling') or None
@@ -13368,6 +13619,14 @@ def incarico_elimina(cid, iid):
 def cantiere_toggle(cid):
     db = get_db()
     c = db.execute("SELECT attivo FROM cantieri WHERE id=?",(cid,)).fetchone()
+    if not c:
+        db.close(); flash('Fiera non trovata.','error'); return redirect(url_for('cantieri'))
+    if not c['attivo']:
+        ok_limite, msg_limite = _verifica_limite_abbonamento(db, 'fiere')
+        if not ok_limite:
+            db.close()
+            flash(msg_limite, 'error')
+            return redirect(url_for('cantieri'))
     db.execute("UPDATE cantieri SET attivo=? WHERE id=?", (0 if c['attivo'] else 1, cid))
     safe_commit(db); db.close()
     flash('Fiera aggiornata.','success')
@@ -16723,6 +16982,13 @@ def dipendenti():
 def dipendente_nuovo():
     if request.method=='POST':
         db=get_db()
+        ruolo = request.form.get('ruolo','dipendente')
+        if _ruolo_conta_come_dipendente(ruolo):
+            ok_limite, msg_limite = _verifica_limite_abbonamento(db, 'dipendenti')
+            if not ok_limite:
+                db.close()
+                flash(msg_limite, 'error')
+                return redirect(url_for('dipendenti'))
         try:
             ore_g = request.form.get('ore_contratto_giornaliere', '') or 0
             try: ore_g = float(ore_g)
@@ -16733,7 +16999,7 @@ def dipendente_nuovo():
             except: costo_orario = 0
             db.execute("INSERT INTO utenti (nome,cognome,email,password,mansione,telefono,data_assunzione,ruolo,ore_contratto_giornaliere,ore_contratto_mensili,costo_orario) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                 (request.form['nome'],request.form['cognome'],request.form['email'].lower(),hash_pw(request.form['password']),
-                 request.form.get('mansione'),request.form.get('telefono'),request.form.get('data_assunzione'),request.form.get('ruolo','dipendente'),
+                 request.form.get('mansione'),request.form.get('telefono'),request.form.get('data_assunzione'),ruolo,
                  ore_g, ore_m, costo_orario))
             safe_commit(db);flash('Dipendente aggiunto!','success')
         except Exception as e:
@@ -16782,9 +17048,15 @@ def dipendente_elimina(uid):
 def dipendente_riattiva(uid):
     """Riattiva un account dipendente precedentemente disattivato."""
     db = get_db()
-    dip = db.execute("SELECT nome, cognome FROM utenti WHERE id=?", (uid,)).fetchone()
+    dip = db.execute("SELECT nome, cognome, ruolo, attivo FROM utenti WHERE id=?", (uid,)).fetchone()
     if not dip:
         db.close(); flash('Dipendente non trovato.', 'error'); return redirect(url_for('dipendenti'))
+    if dip['attivo'] != 1 and _ruolo_conta_come_dipendente(dip['ruolo']):
+        ok_limite, msg_limite = _verifica_limite_abbonamento(db, 'dipendenti')
+        if not ok_limite:
+            db.close()
+            flash(msg_limite, 'error')
+            return redirect(url_for('dipendenti', mostra='disattivati'))
     db.execute("UPDATE utenti SET attivo=1 WHERE id=?", (uid,))
     safe_commit(db); db.close()
     flash(f'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Account di {dip["nome"]} {dip["cognome"]} riattivato. PotrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  accedere nuovamente.', 'success')
@@ -21241,6 +21513,11 @@ def veicoli():
 def veicolo_nuovo():
     if request.method == 'POST':
         db = get_db()
+        ok_limite, msg_limite = _verifica_limite_abbonamento(db, 'veicoli')
+        if not ok_limite:
+            db.close()
+            flash(msg_limite, 'error')
+            return redirect(url_for('veicoli'))
         db.execute(
             "INSERT INTO veicoli (targa,marca,modello,tipo,anno,colore,note) VALUES (?,?,?,?,?,?,?)",
             (request.form['targa'].upper(), request.form.get('marca'), request.form.get('modello'),
@@ -36094,6 +36371,7 @@ STRIPE_LINK_ENT    = os.environ.get('STRIPE_PAYMENT_LINK_ENT', 'https://buy.stri
 SUPERADMIN_EMAIL = os.environ.get('SUPERADMIN_EMAIL', 'superadmin@gestionale.app')
 SUPERADMIN_PW    = os.environ.get('SUPERADMIN_PASSWORD', '')
 FREE_ACCOUNT_EMAILS = {
+    'h3srl@accessofiere.com',
     'h3srl@accessocantieri.com',
     *{
         e.strip().lower()
@@ -36114,7 +36392,7 @@ def _attiva_azienda_esente_pagamento(azienda_id):
         return False
     try:
         mdb = get_master_db()
-        mdb.execute("UPDATE aziende SET stato='attivo' WHERE id=?", (azienda_id,))
+        mdb.execute("UPDATE aziende SET stato='attivo', piano='enterprise' WHERE id=?", (azienda_id,))
         mdb.commit()
         mdb.close()
         return True
@@ -36126,7 +36404,12 @@ def _azienda_trial_valido(az):
     try:
         stato = (az.get('stato') if hasattr(az, 'get') else az['stato']) or ''
         trial_fino = (az.get('trial_fino_al') if hasattr(az, 'get') else az['trial_fino_al']) or ''
-        return stato == 'sospeso' and bool(trial_fino) and date.fromisoformat(trial_fino) >= date.today()
+        return (
+            stato == 'sospeso'
+            and _azienda_trial_eligibile(az)
+            and bool(trial_fino)
+            and date.fromisoformat(trial_fino) >= date.today()
+        )
     except Exception:
         return False
 
@@ -36153,9 +36436,15 @@ def _azienda_trial_scaduto(az):
     try:
         stato = (az.get('stato') if hasattr(az, 'get') else az['stato']) or ''
         trial_fino = (az.get('trial_fino_al') if hasattr(az, 'get') else az['trial_fino_al']) or ''
-        return stato == 'trial' and bool(trial_fino) and date.fromisoformat(trial_fino) < date.today()
+        if stato != 'trial':
+            return False
+        if not _azienda_trial_eligibile(az):
+            return True
+        if not trial_fino:
+            return True
+        return date.fromisoformat(trial_fino) < date.today()
     except Exception:
-        return False
+        return True
 
 def _sospendi_azienda(azienda_id):
     if not azienda_id:
@@ -36171,7 +36460,7 @@ def _sospendi_azienda(azienda_id):
         return False
 
 def _crea_checkout_abbonamento_stripe(azienda_id, piano):
-    piano = (piano or 'base').strip().lower()
+    piano = _normalizza_piano_abbonamento(piano)
     link_map = {
         'base': STRIPE_LINK_BASE,
         'professional': STRIPE_LINK_PRO,
@@ -36191,11 +36480,13 @@ def _crea_checkout_abbonamento_stripe(azienda_id, piano):
     if not az_row:
         return None, 'Azienda non trovata.'
     az = dict(az_row)
+    trial_eligibile = _azienda_trial_eligibile(az)
     session['stripe_pending_azienda_id'] = int(azienda_id)
     session['stripe_pending_piano'] = piano
 
     payment_link = (link_map.get(piano) or '').strip()
-    if payment_link:
+    price_id = (price_map.get(piano) or '').strip()
+    if payment_link and (trial_eligibile or not (STRIPE_SECRET and price_id)):
         try:
             from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
             parts = urlsplit(payment_link)
@@ -36208,7 +36499,6 @@ def _crea_checkout_abbonamento_stripe(azienda_id, piano):
         except Exception as e:
             return None, str(e)
 
-    price_id = (price_map.get(piano) or '').strip()
     if STRIPE_SECRET and price_id:
         try:
             import stripe
@@ -36216,6 +36506,9 @@ def _crea_checkout_abbonamento_stripe(azienda_id, piano):
             stripe.api_version = '2025-03-31.basil'
 
             ref = f'azienda_{azienda_id}_{piano}'
+            subscription_data = {'metadata': {'azienda_id': str(azienda_id), 'piano': piano}}
+            if trial_eligibile:
+                subscription_data['trial_period_days'] = 14
             checkout = stripe.checkout.Session.create(
                 customer_email=az['email_admin'],
                 client_reference_id=ref,
@@ -36224,7 +36517,7 @@ def _crea_checkout_abbonamento_stripe(azienda_id, piano):
                 success_url=request.host_url + 'abbonamento/successo?session_id={CHECKOUT_SESSION_ID}',
                 cancel_url=request.host_url + 'abbonamento/gestisci',
                 metadata={'azienda_id': str(azienda_id), 'piano': piano},
-                subscription_data={'metadata': {'azienda_id': str(azienda_id), 'piano': piano}},
+                subscription_data=subscription_data,
             )
             return checkout.url, ''
         except Exception as e:
@@ -36269,16 +36562,30 @@ def _attiva_azienda_da_checkout_stripe(checkout_session, fallback_azienda_id=Non
         return False
     mdb = get_master_db()
     payment_status = (checkout_session.get('payment_status') or '').strip().lower()
-    nuovo_stato = 'trial' if payment_status in ('no_payment_required', 'unpaid') else 'attivo'
+    richiede_trial = payment_status in ('no_payment_required', 'unpaid')
+    trial_eligibile = _azienda_trial_eligibile(azienda_id)
+    nuovo_stato = 'trial' if richiede_trial and trial_eligibile else ('sospeso' if richiede_trial else 'attivo')
+    trial_fino = None
+    if nuovo_stato == 'trial':
+        row = mdb.execute("SELECT trial_fino_al FROM aziende WHERE id=?", (azienda_id,)).fetchone()
+        trial_fino = _row_get(row, 'trial_fino_al') or (date.today() + timedelta(days=14)).isoformat()
     if piano:
-        mdb.execute("UPDATE aziende SET stato=?, piano=?, stripe_customer_id=?, stripe_subscription_id=? WHERE id=?",
-                    (nuovo_stato, piano, checkout_session.get('customer'), checkout_session.get('subscription'), azienda_id))
+        if trial_fino:
+            mdb.execute("UPDATE aziende SET stato=?, piano=?, stripe_customer_id=?, stripe_subscription_id=?, trial_fino_al=? WHERE id=?",
+                        (nuovo_stato, piano, checkout_session.get('customer'), checkout_session.get('subscription'), trial_fino, azienda_id))
+        else:
+            mdb.execute("UPDATE aziende SET stato=?, piano=?, stripe_customer_id=?, stripe_subscription_id=? WHERE id=?",
+                        (nuovo_stato, piano, checkout_session.get('customer'), checkout_session.get('subscription'), azienda_id))
     else:
-        mdb.execute("UPDATE aziende SET stato=?, stripe_customer_id=?, stripe_subscription_id=? WHERE id=?",
-                    (nuovo_stato, checkout_session.get('customer'), checkout_session.get('subscription'), azienda_id))
+        if trial_fino:
+            mdb.execute("UPDATE aziende SET stato=?, stripe_customer_id=?, stripe_subscription_id=?, trial_fino_al=? WHERE id=?",
+                        (nuovo_stato, checkout_session.get('customer'), checkout_session.get('subscription'), trial_fino, azienda_id))
+        else:
+            mdb.execute("UPDATE aziende SET stato=?, stripe_customer_id=?, stripe_subscription_id=? WHERE id=?",
+                        (nuovo_stato, checkout_session.get('customer'), checkout_session.get('subscription'), azienda_id))
     mdb.commit()
     mdb.close()
-    return True
+    return nuovo_stato != 'sospeso'
 
 # Ã¢â€â‚¬Ã¢â€â‚¬ Landing page Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 def _stripe_piano_da_subscription(sub, default_piano='base'):
@@ -36314,6 +36621,9 @@ def _stripe_update_azienda_abbonamento(customer_id=None, subscription_id=None, s
     if stato:
         updates.append("stato=?")
         values.append(stato)
+        if stato == 'trial':
+            updates.append("trial_fino_al=COALESCE(NULLIF(trial_fino_al,''), ?)")
+            values.append((date.today() + timedelta(days=14)).isoformat())
     if piano:
         updates.append("piano=?")
         values.append(piano)
@@ -36330,6 +36640,11 @@ def _stripe_update_azienda_abbonamento(customer_id=None, subscription_id=None, s
         f"UPDATE aziende SET {', '.join(updates)} WHERE {' OR '.join(where)}",
         tuple(values + params)
     )
+    if stato == 'trial':
+        mdb.execute(
+            f"UPDATE aziende SET stato='sospeso' WHERE ({' OR '.join(where)}) AND COALESCE(trial_eligibile,1)=0",
+            tuple(params)
+        )
     mdb.commit()
     rowcount = cur.rowcount
     mdb.close()
@@ -36346,6 +36661,9 @@ def _stripe_update_azienda_abbonamento_email(email=None, customer_id=None, subsc
     if stato:
         updates.append("stato=?")
         values.append(stato)
+        if stato == 'trial':
+            updates.append("trial_fino_al=COALESCE(NULLIF(trial_fino_al,''), ?)")
+            values.append((date.today() + timedelta(days=14)).isoformat())
     if piano:
         updates.append("piano=?")
         values.append(piano)
@@ -36362,6 +36680,11 @@ def _stripe_update_azienda_abbonamento_email(email=None, customer_id=None, subsc
         f"UPDATE aziende SET {', '.join(updates)} WHERE lower(email_admin)=?",
         tuple(values + [email])
     )
+    if stato == 'trial':
+        mdb.execute(
+            "UPDATE aziende SET stato='sospeso' WHERE lower(email_admin)=? AND COALESCE(trial_eligibile,1)=0",
+            (email,)
+        )
     mdb.commit()
     rowcount = cur.rowcount
     mdb.close()
@@ -36485,13 +36808,19 @@ def _sync_azienda_pagata_da_stripe(azienda_id):
                         piano = price_to_plan.get(price_id, piano)
                     except Exception:
                         pass
-                    stato = 'trial' if sub.get('status') == 'trialing' else 'attivo'
+                    is_trial = sub.get('status') == 'trialing'
+                    stato = 'trial' if is_trial and _azienda_trial_eligibile(az) else ('sospeso' if is_trial else 'attivo')
                     mdb = get_master_db()
-                    mdb.execute("UPDATE aziende SET stato=?, piano=?, stripe_customer_id=?, stripe_subscription_id=? WHERE id=?",
-                                (stato, piano, customer.get('id'), sub.get('id'), azienda_id))
+                    if stato == 'trial':
+                        trial_fino = az.get('trial_fino_al') or (date.today() + timedelta(days=14)).isoformat()
+                        mdb.execute("UPDATE aziende SET stato=?, piano=?, stripe_customer_id=?, stripe_subscription_id=?, trial_fino_al=? WHERE id=?",
+                                    (stato, piano, customer.get('id'), sub.get('id'), trial_fino, azienda_id))
+                    else:
+                        mdb.execute("UPDATE aziende SET stato=?, piano=?, stripe_customer_id=?, stripe_subscription_id=? WHERE id=?",
+                                    (stato, piano, customer.get('id'), sub.get('id'), azienda_id))
                     mdb.commit()
                     mdb.close()
-                    return True
+                    return stato != 'sospeso'
         except Exception as e:
             print(f'[Stripe sync subscription fallback] {e}')
     except Exception as e:
@@ -36511,9 +36840,14 @@ def registrati():
     if request.method == 'POST':
         nome_az  = request.form.get('nome_azienda','').strip()
         email    = request.form.get('email','').strip().lower()
+        telefono = request.form.get('telefono','').strip()
+        partita_iva = request.form.get('partita_iva','').strip()
         password = request.form.get('password','')
-        piano    = request.form.get('piano','base')
-        if not nome_az or not email or not password:
+        piano    = _normalizza_piano_abbonamento(request.form.get('piano','base'))
+        is_account_esente = email in FREE_ACCOUNT_EMAILS
+        if is_account_esente:
+            piano = 'enterprise'
+        if not nome_az or not email or not telefono or not partita_iva or not password:
             return render_template_string(REGISTRATI_TMPL, error='Compila tutti i campi.', piano_sel=piano)
         if len(password) < 6:
             return render_template_string(REGISTRATI_TMPL, error='Password di almeno 6 caratteri.', piano_sel=piano)
@@ -36524,16 +36858,26 @@ def registrati():
         if existing:
             mdb.close()
             return render_template_string(REGISTRATI_TMPL, error='Email giÃƒÂ  registrata.', piano_sel=piano)
+        identificativi_trial = _trial_identificativi(nome_az, email, telefono, partita_iva)
+        trial_gia_usato, trial_match_tipo = _trial_gia_usato(mdb, identificativi_trial)
+        trial_eligibile = (not trial_gia_usato) and (not is_account_esente)
         import re, time as _t
         slug = re.sub(r'[^a-z0-9]', '', nome_az.lower())[:20] + str(int(_t.time()))[-4:]
         pw_hash = hash_pw(password)
         # L'azienda entra in prova: Stripe conferma poi trial/attivo o mancato pagamento via webhook.
         from datetime import date as _d, timedelta as _td
-        trial_fino = (_d.today() + _td(days=14)).isoformat()
+        trial_fino = (_d.today() + _td(days=14)).isoformat() if trial_eligibile else None
+        stato_iniziale = 'attivo' if is_account_esente else ('trial' if trial_eligibile else 'sospeso')
+        trial_usato_il = _d.today().isoformat() if trial_eligibile else None
         cur = mdb.execute(
-            "INSERT INTO aziende (nome,email_admin,password_admin,piano,stato,trial_fino_al,slug) VALUES (?,?,?,?,?,?,?)",
-            (nome_az, email, pw_hash, piano, 'trial', trial_fino, slug))
+            """INSERT INTO aziende
+               (nome,email_admin,password_admin,piano,stato,trial_fino_al,slug,telefono,partita_iva,trial_eligibile,trial_usato_il)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+            (nome_az, email, pw_hash, piano, stato_iniziale, trial_fino, slug,
+             telefono, partita_iva, 1 if trial_eligibile else 0, trial_usato_il))
         azienda_id = cur.lastrowid
+        if trial_eligibile:
+            _registra_trial_usato(mdb, azienda_id, identificativi_trial)
         mdb.commit(); mdb.close()
         # Crea DB tenant e inizializza schema
         reset_auth_session_keep_lang()
@@ -36558,13 +36902,22 @@ def registrati():
             'azienda_id': azienda_id, 'azienda_nome': nome_az,
             'is_saas': True,
         })
+        if is_account_esente:
+            flash('Account test attivato come Enterprise illimitato.', 'success')
+            return redirect(url_for('dashboard'))
         checkout_url, checkout_err = _crea_checkout_abbonamento_stripe(azienda_id, piano)
         if checkout_url:
-            flash('Account creato. Completa Stripe per avviare la prova gratuita.', 'info')
+            if trial_eligibile:
+                flash('Account creato. Completa Stripe per avviare la prova gratuita.', 'info')
+            else:
+                flash('Prova gratuita gia usata per questi dati aziendali: completa il pagamento per attivare il gestionale.', 'warning')
             return redirect(checkout_url)
-        flash(f'Account creato in prova. Link Stripe non disponibile: {checkout_err}', 'warning')
+        if trial_eligibile:
+            flash(f'Account creato in prova. Link Stripe non disponibile: {checkout_err}', 'warning')
+        else:
+            flash(f'Account creato, ma la prova gratuita risulta gia usata. Pagamento Stripe non disponibile: {checkout_err}', 'warning')
         return redirect(url_for('dashboard'))
-    piano_sel = request.args.get('piano', 'base')
+    piano_sel = _normalizza_piano_abbonamento(request.args.get('piano', 'base'))
     return render_template_string(REGISTRATI_TMPL, error=None, piano_sel=piano_sel)
 
 # Ã¢â€â‚¬Ã¢â€â‚¬ Stripe: crea sessione checkout Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
@@ -36957,7 +37310,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <h3>{{ p.nome }}</h3>
       <div class="price">Ã¢â€šÂ¬{{ p.prezzo_mensile|int }}<span>/mese</span></div>
       <ul>
+        {% set pn = p.nome|lower %}
         <li><i class="fa fa-check"></i> {% if p.max_dipendenti < 999 %}Fino a {{ p.max_dipendenti }} dipendenti{% else %}Dipendenti illimitati{% endif %}</li>
+        <li><i class="fa fa-check"></i> {% if pn == 'enterprise' %}Veicoli illimitati{% elif pn == 'professional' %}Fino a 5 veicoli{% else %}Fino a 2 veicoli{% endif %}</li>
+        <li><i class="fa fa-check"></i> {% if pn == 'enterprise' %}Fiere illimitate{% elif pn == 'professional' %}Fino a 5 fiere{% else %}Fino a 3 fiere{% endif %}</li>
         <li><i class="fa fa-check"></i> Presenze e timbrature GPS</li>
         <li><i class="fa fa-check"></i> Fatturazione e preventivi</li>
         <li><i class="fa fa-check"></i> Cedolini automatici</li>
@@ -37088,6 +37444,16 @@ input:focus,select:focus{outline:none;border-color:#0f4c81;box-shadow:0 0 0 3px 
       </div>
       <div class="form-row">
         <div class="form-group">
+          <label>Telefono azienda</label>
+          <input name="telefono" inputmode="tel" placeholder="Es. 3331234567" required>
+        </div>
+        <div class="form-group">
+          <label>P.IVA / C.F.</label>
+          <input name="partita_iva" placeholder="Es. 01234567890" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
           <label>Email amministratore</label>
           <input type="email" name="email" placeholder="admin@tuaazienda.it" required>
         </div>
@@ -37103,19 +37469,19 @@ input:focus,select:focus{outline:none;border-color:#0f4c81;box-shadow:0 0 0 3px 
             <input type="radio" name="piano" value="base" {{ 'checked' if piano_sel=='base' }} onchange="document.querySelectorAll('.piano-card').forEach(c=>c.classList.remove('checked'));this.closest('.piano-card').classList.add('checked')">
             <div class="pnome">Base</div>
             <div class="pprezzo">Ã¢â€šÂ¬29</div>
-            <div class="psub">/mese Ã‚Â· 5 op.</div>
+            <div class="psub">5 dip. / 2 veic. / 3 fiere</div>
           </label>
           <label class="piano-card {{ 'checked' if piano_sel=='professional' }}">
             <input type="radio" name="piano" value="professional" {{ 'checked' if piano_sel=='professional' }} onchange="document.querySelectorAll('.piano-card').forEach(c=>c.classList.remove('checked'));this.closest('.piano-card').classList.add('checked')">
             <div class="pnome" style="color:#0f4c81">Pro</div>
             <div class="pprezzo">Ã¢â€šÂ¬59</div>
-            <div class="psub">/mese Ã‚Â· 20 op.</div>
+            <div class="psub">20 dip. / 5 veic. / 5 fiere</div>
           </label>
           <label class="piano-card {{ 'checked' if piano_sel=='enterprise' }}">
             <input type="radio" name="piano" value="enterprise" {{ 'checked' if piano_sel=='enterprise' }} onchange="document.querySelectorAll('.piano-card').forEach(c=>c.classList.remove('checked'));this.closest('.piano-card').classList.add('checked')">
             <div class="pnome">Enterprise</div>
             <div class="pprezzo">Ã¢â€šÂ¬99</div>
-            <div class="psub">/mese Ã‚Â· Ã¢Ë†Å¾ op.</div>
+            <div class="psub">Tutto illimitato</div>
           </label>
         </div>
       </div>
@@ -37176,6 +37542,10 @@ ABBONAMENTO_TMPL = """
         <div style="font-weight:700">{{ p.nome }}</div>
         <div style="font-size:24px;font-weight:800;color:#f59e0b">Ã¢â€šÂ¬{{ p.prezzo_mensile|int }}</div>
         <div style="font-size:11px;color:#64748b;margin-bottom:12px">/mese</div>
+        {% set pn = p.nome|lower %}
+        <div style="font-size:11px;color:#475569;line-height:1.35;margin-bottom:12px">
+          {% if pn == 'enterprise' %}Tutto illimitato{% elif pn == 'professional' %}20 dipendenti, 5 veicoli, 5 fiere{% else %}5 dipendenti, 2 veicoli, 3 fiere{% endif %}
+        </div>
         <button type="submit" class="btn btn-primary" style="width:100%;font-size:13px">
           {{ 'Piano attuale' if p.nome|lower==az.piano else 'Attiva' }}
         </button>
