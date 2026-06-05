@@ -1902,16 +1902,16 @@ def login_required(f):
                     checkout_url, checkout_err = _crea_checkout_abbonamento_stripe(session.get('azienda_id'), az['piano'] or 'base')
                     if checkout_url:
                         return redirect(checkout_url)
-                    flash(f'Pagamento Stripe non configurato: {checkout_err}', 'error')
-                    return redirect(url_for('logout'))
+                    reset_auth_session_keep_lang()
+                    return _render_login_error(f'Pagamento Stripe non configurato: {checkout_err}')
                 if az and az['stato'] == 'sospeso':
                     trial_ok = _riattiva_trial_se_valido(session.get('azienda_id'), az)
                     if not trial_ok and not _sync_azienda_pagata_da_stripe(session.get('azienda_id')):
                         checkout_url, checkout_err = _crea_checkout_abbonamento_stripe(session.get('azienda_id'), az['piano'] or 'base')
                         if checkout_url:
                             return redirect(checkout_url)
-                        flash(f'Pagamento Stripe non configurato: {checkout_err}', 'error')
-                        return redirect(url_for('logout'))
+                        reset_auth_session_keep_lang()
+                        return _render_login_error(f'Pagamento Stripe non configurato: {checkout_err}')
             except Exception:
                 pass
         admin_pages = {'dashboard','dipendenti','presenze','ferie','cantieri','global_search',
@@ -7565,8 +7565,12 @@ def login():
                 checkout_url, checkout_err = _crea_checkout_abbonamento_stripe(az['id'], az.get('piano') or 'base')
                 if checkout_url:
                     return redirect(checkout_url)
-                flash(f'Pagamento Stripe non configurato: {checkout_err}', 'error')
-                return redirect(url_for('login'))
+                reset_auth_session_keep_lang()
+                return render_template_string(
+                    LOGIN_TMPL,
+                    error=f'Pagamento Stripe non configurato: {checkout_err}',
+                    **lang_ctx
+                )
             return redirect(url_for('dashboard'))
 
         # Login dipendente: cerca in TUTTI i tenant DB per trovare a quale azienda appartiene
@@ -10882,6 +10886,12 @@ def reset_auth_session_keep_lang():
     lang = session.get('lang', 'it')
     session.clear()
     session['lang'] = lang
+
+def _render_login_error(message):
+    t = get_lang()
+    lang_ctx = dict(t=t, langs=LANGS, current_lang=session.get('lang','it'),
+                    is_mobile=is_mobile_request(), public_home=False, show_landing=False)
+    return render_template_string(LOGIN_TMPL, error=message, **lang_ctx)
 
 def _same_origin_url(value):
     if not value:
@@ -36396,6 +36406,9 @@ STRIPE_PRICE_ENT   = os.environ.get('STRIPE_PRICE_ENT', '')
 STRIPE_LINK_BASE   = os.environ.get('STRIPE_PAYMENT_LINK_BASE', 'https://buy.stripe.com/3cIeVc9rY6LVeEJdkBf7i02')
 STRIPE_LINK_PRO    = os.environ.get('STRIPE_PAYMENT_LINK_PRO', 'https://buy.stripe.com/14A14mfQmb2bgMR1BTf7i03')
 STRIPE_LINK_ENT    = os.environ.get('STRIPE_PAYMENT_LINK_ENT', 'https://buy.stripe.com/6oUbJ0dIe1rB0NT6Wdf7i04')
+STRIPE_LINK_BASE_PAID = os.environ.get('STRIPE_PAYMENT_LINK_BASE_NO_TRIAL') or os.environ.get('STRIPE_PAYMENT_LINK_BASE_PAID', '')
+STRIPE_LINK_PRO_PAID  = os.environ.get('STRIPE_PAYMENT_LINK_PRO_NO_TRIAL') or os.environ.get('STRIPE_PAYMENT_LINK_PRO_PAID', '')
+STRIPE_LINK_ENT_PAID  = os.environ.get('STRIPE_PAYMENT_LINK_ENT_NO_TRIAL') or os.environ.get('STRIPE_PAYMENT_LINK_ENT_PAID', '')
 
 SUPERADMIN_EMAIL = os.environ.get('SUPERADMIN_EMAIL', 'superadmin@gestionale.app')
 SUPERADMIN_PW    = os.environ.get('SUPERADMIN_PASSWORD', '')
@@ -36492,6 +36505,11 @@ def _crea_checkout_abbonamento_stripe(azienda_id, piano):
         'professional': STRIPE_LINK_PRO,
         'enterprise': STRIPE_LINK_ENT,
     }
+    paid_link_map = {
+        'base': STRIPE_LINK_BASE_PAID,
+        'professional': STRIPE_LINK_PRO_PAID,
+        'enterprise': STRIPE_LINK_ENT_PAID,
+    }
     price_map = {
         'base': STRIPE_PRICE_BASE,
         'professional': STRIPE_PRICE_PRO,
@@ -36535,23 +36553,37 @@ def _crea_checkout_abbonamento_stripe(azienda_id, piano):
         except Exception as e:
             return None, str(e)
 
+    def _payment_link_con_context(payment_link):
+        from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
+        parts = urlsplit(payment_link)
+        query = dict(parse_qsl(parts.query, keep_blank_values=True))
+        query.update({
+            'client_reference_id': f'azienda_{azienda_id}_{piano}',
+            'prefilled_email': az['email_admin'],
+        })
+        return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
+
+    paid_link = (paid_link_map.get(piano) or '').strip()
+    if paid_link and not trial_eligibile:
+        try:
+            return _payment_link_con_context(paid_link), ''
+        except Exception as e:
+            return None, str(e)
+
     payment_link = (link_map.get(piano) or '').strip()
     if payment_link:
         if not trial_eligibile:
+            no_trial_var = {
+                'base': 'STRIPE_PRICE_BASE oppure STRIPE_PAYMENT_LINK_BASE_NO_TRIAL',
+                'professional': 'STRIPE_PRICE_PRO oppure STRIPE_PAYMENT_LINK_PRO_NO_TRIAL',
+                'enterprise': 'STRIPE_PRICE_ENT oppure STRIPE_PAYMENT_LINK_ENT_NO_TRIAL',
+            }.get(piano, 'STRIPE_PRICE_* oppure STRIPE_PAYMENT_LINK_*_NO_TRIAL')
             return None, (
-                f'Questa azienda ha gia usato la prova gratuita. '
-                f'Configura STRIPE_PRICE_{piano.upper().replace("PROFESSIONAL", "PRO").replace("ENTERPRISE", "ENT")} '
-                'su Railway per creare un pagamento senza trial.'
+                'Questa azienda ha gia usato la prova gratuita. '
+                f'Configura {no_trial_var} su Railway per mandarla al pagamento senza prova.'
             )
         try:
-            from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
-            parts = urlsplit(payment_link)
-            query = dict(parse_qsl(parts.query, keep_blank_values=True))
-            query.update({
-                'client_reference_id': f'azienda_{azienda_id}_{piano}',
-                'prefilled_email': az['email_admin'],
-            })
-            return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment)), ''
+            return _payment_link_con_context(payment_link), ''
         except Exception as e:
             return None, str(e)
 
@@ -37044,8 +37076,8 @@ def abbonamento_gestisci():
         checkout_url, checkout_err = _crea_checkout_abbonamento_stripe(azienda_id, az.get('piano') or 'base')
         if checkout_url:
             return redirect(checkout_url)
-        flash(f'Pagamento Stripe non configurato: {checkout_err}', 'error')
-        return redirect(url_for('login'))
+        reset_auth_session_keep_lang()
+        return _render_login_error(f'Pagamento Stripe non configurato: {checkout_err}')
     return redirect(url_for('dashboard'))
 
 # Ã¢â€â‚¬Ã¢â€â‚¬ Stripe webhook Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
