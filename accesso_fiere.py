@@ -3409,6 +3409,27 @@ textarea{resize:vertical;min-height:80px}
   }
   body:not(.theme-light) tbody tr:nth-child(even):not(:hover) td{background:rgba(255,255,255,.018)!important}
   body:not(.theme-light) tbody tr:hover td{background:rgba(56,169,189,.075)!important}
+  body:not(.theme-light) tr.riga-disattivo,
+  body:not(.theme-light) tr.riga-disattivo td,
+  body:not(.theme-light) tbody tr.riga-disattivo:nth-child(even):not(:hover) td{
+    background:rgba(15,31,51,.72)!important;
+    color:#8ea0b6!important;
+    border-bottom-color:rgba(177,194,214,.10)!important;
+  }
+  body:not(.theme-light) tbody tr.riga-disattivo:hover td{
+    background:rgba(25,45,68,.88)!important;
+    color:#b7c5d8!important;
+  }
+  body:not(.theme-light) tr.riga-disattivo strong,
+  body:not(.theme-light) tr.riga-disattivo a:not(.btn),
+  body:not(.theme-light) tr.riga-disattivo .text-muted,
+  body:not(.theme-light) tr.riga-disattivo small{
+    color:#8ea0b6!important;
+  }
+  body:not(.theme-light) table.mobile-card-table tr.riga-disattivo{
+    background:rgba(15,31,51,.72)!important;
+    border-color:rgba(177,194,214,.16)!important;
+  }
 }
 
 @media (min-width:901px){
