@@ -1847,10 +1847,10 @@ def send_email(to, subject, body):
     recipients = _email_recipients(to)
 
     if not mittente or not api_key or not recipients:
-        print(f"[EMAIL] Config mancante: provider={provider!r} mittente={mittente!r} api_key={'ok' if api_key else 'VUOTA'} to={to!r}")
+        print(f"[EMAIL] Config mancante: provider={provider!r} mittente={mittente!r} api_key={'ok' if api_key else 'VUOTA'} to={to!r}", flush=True)
         return False
 
-    print(f"[EMAIL] Invio a={','.join(recipients)} via={provider} mittente={mittente}")
+    print(f"[EMAIL] Invio a={','.join(recipients)} via={provider} mittente={mittente}", flush=True)
 
     # Ã¢â€â‚¬Ã¢â€â‚¬ Brevo / Sendinblue HTTP API (funziona su Railway) Ã¢â€â‚¬Ã¢â€â‚¬
     if provider == 'resend':
@@ -1876,14 +1876,14 @@ def send_email(to, subject, body):
                 method='POST'
             )
             with urllib.request.urlopen(req, timeout=20) as resp:
-                print(f"[EMAIL] Resend OK status={resp.status} a={','.join(recipients)}")
+                print(f"[EMAIL] Resend OK status={resp.status} a={','.join(recipients)}", flush=True)
                 return True
         except urllib.error.HTTPError as e:
             err_body = e.read().decode('utf-8', errors='replace')
-            print(f"[EMAIL] Resend HTTP {e.code}: {err_body}")
+            print(f"[EMAIL] Resend HTTP {e.code}: {err_body}", flush=True)
             return False
         except Exception as e:
-            print(f"[EMAIL] Resend errore: {e}")
+            print(f"[EMAIL] Resend errore: {e}", flush=True)
             traceback.print_exc()
             return False
 
@@ -1910,14 +1910,14 @@ def send_email(to, subject, body):
                 method='POST'
             )
             with urllib.request.urlopen(req, timeout=20) as resp:
-                print(f"[EMAIL] Postmark OK status={resp.status} a={','.join(recipients)}")
+                print(f"[EMAIL] Postmark OK status={resp.status} a={','.join(recipients)}", flush=True)
                 return True
         except urllib.error.HTTPError as e:
             err_body = e.read().decode('utf-8', errors='replace')
-            print(f"[EMAIL] Postmark HTTP {e.code}: {err_body}")
+            print(f"[EMAIL] Postmark HTTP {e.code}: {err_body}", flush=True)
             return False
         except Exception as e:
-            print(f"[EMAIL] Postmark errore: {e}")
+            print(f"[EMAIL] Postmark errore: {e}", flush=True)
             traceback.print_exc()
             return False
 
@@ -1940,14 +1940,14 @@ def send_email(to, subject, body):
                 method='POST'
             )
             with urllib.request.urlopen(req, timeout=15) as resp:
-                print(f"[EMAIL] Brevo OK status={resp.status} a={','.join(recipients)}")
+                print(f"[EMAIL] Brevo OK status={resp.status} a={','.join(recipients)}", flush=True)
                 return True
         except urllib.error.HTTPError as e:
             err_body = e.read().decode('utf-8', errors='replace')
-            print(f"[EMAIL] Brevo HTTP {e.code}: {err_body}")
+            print(f"[EMAIL] Brevo HTTP {e.code}: {err_body}", flush=True)
             return False
         except Exception as e:
-            print(f"[EMAIL] Brevo errore: {e}")
+            print(f"[EMAIL] Brevo errore: {e}", flush=True)
             traceback.print_exc()
             return False
 
@@ -1971,10 +1971,10 @@ def send_email(to, subject, body):
         s.login(mittente, api_key)
         s.sendmail(mittente, recipients, msg.as_string())
         s.quit()
-        print(f"[EMAIL] SMTP OK a={','.join(recipients)}")
+        print(f"[EMAIL] SMTP OK a={','.join(recipients)}", flush=True)
         return True
     except Exception as e:
-        print(f"[EMAIL] SMTP errore: {e}")
+        print(f"[EMAIL] SMTP errore: {e}", flush=True)
         traceback.print_exc()
         return False
 
@@ -30526,11 +30526,16 @@ def test_email():
         print(f"[EMAIL TEST] config mancante provider={provider!r} sender={sender!r} api_key={'ok' if api_key else 'VUOTA'}", flush=True)
         flash(f'Config email mancante: provider={provider}, mittente o API key vuoti.', 'error')
         return redirect(url_for('impostazioni'))
-    result = send_email(
-        to,
-        'Test email - Accesso Fiere',
-        f'<p>Se ricevi questa mail, la configurazione email funziona.</p><p>Provider: <b>{provider}</b></p>'
-    )
+    try:
+        result = send_email(
+            to,
+            'Test email - Accesso Fiere',
+            f'<p>Se ricevi questa mail, la configurazione email funziona.</p><p>Provider: <b>{provider}</b></p>'
+        )
+        print(f"[EMAIL TEST] risultato={'ok' if result else 'fallito'}", flush=True)
+    except Exception as e:
+        print(f"[EMAIL TEST] eccezione durante invio: {e}", flush=True)
+        result = False
     if result:
         flash(f'Email di test inviata a {to}!', 'success')
     else:
