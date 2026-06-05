@@ -35647,11 +35647,49 @@ STRIPE_WEBHOOK_SEC = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
 STRIPE_PRICE_BASE  = os.environ.get('STRIPE_PRICE_BASE', '')
 STRIPE_PRICE_PRO   = os.environ.get('STRIPE_PRICE_PRO', '')
 STRIPE_PRICE_ENT   = os.environ.get('STRIPE_PRICE_ENT', '')
+STRIPE_LINK_BASE   = os.environ.get('STRIPE_PAYMENT_LINK_BASE', 'https://buy.stripe.com/3cIeVc9rY6LVeEJdkBf7i02')
+STRIPE_LINK_PRO    = os.environ.get('STRIPE_PAYMENT_LINK_PRO', 'https://buy.stripe.com/14A14mfQmb2bgMR1BTf7i03')
+STRIPE_LINK_ENT    = os.environ.get('STRIPE_PAYMENT_LINK_ENT', 'https://buy.stripe.com/6oUbJ0dIe1rB0NT6Wdf7i04')
 
 SUPERADMIN_EMAIL = os.environ.get('SUPERADMIN_EMAIL', 'superadmin@gestionale.app')
 SUPERADMIN_PW    = os.environ.get('SUPERADMIN_PASSWORD', '')
 
 def _crea_checkout_abbonamento_stripe(azienda_id, piano):
+    piano = (piano or 'base').strip().lower()
+    link_map = {
+        'base': STRIPE_LINK_BASE,
+        'professional': STRIPE_LINK_PRO,
+        'enterprise': STRIPE_LINK_ENT,
+    }
+    price_map = {
+        'base': STRIPE_PRICE_BASE,
+        'professional': STRIPE_PRICE_PRO,
+        'enterprise': STRIPE_PRICE_ENT,
+    }
+    if piano not in link_map:
+        return None, 'Piano non valido.'
+
+    mdb = get_master_db()
+    az_row = mdb.execute("SELECT * FROM aziende WHERE id=?", (azienda_id,)).fetchone()
+    mdb.close()
+    if not az_row:
+        return None, 'Azienda non trovata.'
+    az = dict(az_row)
+
+    payment_link = (link_map.get(piano) or '').strip()
+    if payment_link:
+        try:
+            from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
+            parts = urlsplit(payment_link)
+            query = dict(parse_qsl(parts.query, keep_blank_values=True))
+            query.update({
+                'client_reference_id': f'azienda_{azienda_id}_{piano}',
+                'prefilled_email': az['email_admin'],
+            })
+            return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment)), ''
+        except Exception as e:
+            return None, str(e)
+
     if not STRIPE_SECRET:
         return None, 'Pagamenti non ancora configurati. Contatta il supporto.'
     try:
@@ -35659,22 +35697,9 @@ def _crea_checkout_abbonamento_stripe(azienda_id, piano):
         stripe.api_key = STRIPE_SECRET
         stripe.api_version = '2025-03-31.basil'
 
-        piano = (piano or 'base').strip().lower()
-        price_map = {
-            'base': STRIPE_PRICE_BASE,
-            'professional': STRIPE_PRICE_PRO,
-            'enterprise': STRIPE_PRICE_ENT,
-        }
         price_id = price_map.get(piano)
         if not price_id:
             return None, 'Piano non valido.'
-
-        mdb = get_master_db()
-        az_row = mdb.execute("SELECT * FROM aziende WHERE id=?", (azienda_id,)).fetchone()
-        mdb.close()
-        if not az_row:
-            return None, 'Azienda non trovata.'
-        az = dict(az_row)
 
         checkout = stripe.checkout.Session.create(
             customer_email=az['email_admin'],
@@ -35689,10 +35714,24 @@ def _crea_checkout_abbonamento_stripe(azienda_id, piano):
     except Exception as e:
         return None, str(e)
 
-def _attiva_azienda_da_checkout_stripe(checkout_session):
+def _azienda_piano_da_checkout_stripe(checkout_session):
     metadata = checkout_session.get('metadata') or {}
     azienda_id = int(metadata.get('azienda_id', 0) or 0)
     piano = (metadata.get('piano') or '').strip().lower()
+    if not azienda_id:
+        try:
+            import re
+            ref = (checkout_session.get('client_reference_id') or '').strip()
+            m = re.match(r'^azienda_(\d+)_(base|professional|enterprise)$', ref)
+            if m:
+                azienda_id = int(m.group(1))
+                piano = m.group(2)
+        except Exception:
+            pass
+    return azienda_id, piano
+
+def _attiva_azienda_da_checkout_stripe(checkout_session):
+    azienda_id, piano = _azienda_piano_da_checkout_stripe(checkout_session)
     if not azienda_id:
         return False
     mdb = get_master_db()
@@ -35821,32 +35860,22 @@ def abbonamento_gestisci():
     piani = [dict(p) for p in mdb.execute("SELECT * FROM piani ORDER BY prezzo_mensile").fetchall()]
     mdb.close()
     return render_template_string(ABBONAMENTO_TMPL, az=az, piani=piani,
-                                  stripe_ok=bool(STRIPE_SECRET))
+                                  stripe_ok=bool(STRIPE_SECRET or STRIPE_LINK_BASE or STRIPE_LINK_PRO or STRIPE_LINK_ENT))
 
 # Ã¢â€â‚¬Ã¢â€â‚¬ Stripe webhook Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 @app.route('/stripe/webhook', methods=['POST'])
 def stripe_webhook():
-    if not STRIPE_SECRET: return 'ok', 200
+    if not STRIPE_WEBHOOK_SEC: return 'ok', 200
     try:
         import stripe
-        stripe.api_key = STRIPE_SECRET
+        if STRIPE_SECRET:
+            stripe.api_key = STRIPE_SECRET
         payload = request.get_data()
         sig = request.headers.get('Stripe-Signature','')
         event = stripe.Webhook.construct_event(payload, sig, STRIPE_WEBHOOK_SEC)
         if event['type'] == 'checkout.session.completed':
             obj = event['data']['object']
-            metadata = obj.get('metadata') or {}
-            azienda_id = int(metadata.get('azienda_id', 0))
-            piano = (metadata.get('piano') or '').strip().lower()
-            if azienda_id:
-                mdb = get_master_db()
-                if piano:
-                    mdb.execute("UPDATE aziende SET stato='attivo', piano=?, stripe_customer_id=?, stripe_subscription_id=? WHERE id=?",
-                                (piano, obj.get('customer'), obj.get('subscription'), azienda_id))
-                else:
-                    mdb.execute("UPDATE aziende SET stato='attivo', stripe_customer_id=?, stripe_subscription_id=? WHERE id=?",
-                                (obj.get('customer'), obj.get('subscription'), azienda_id))
-                mdb.commit(); mdb.close()
+            _attiva_azienda_da_checkout_stripe(obj)
         elif event['type'] in ('customer.subscription.deleted','customer.subscription.paused'):
             sub = event['data']['object']
             mdb = get_master_db()
