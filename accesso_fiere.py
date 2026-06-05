@@ -35995,6 +35995,69 @@ def superadmin_riattiva(aid):
     flash('Azienda riattivata.', 'success')
     return redirect(url_for('superadmin_dashboard'))
 
+def _superadmin_delete_suspended_company(aid):
+    mdb = get_master_db()
+    az = mdb.execute("SELECT id,nome,email_admin,stato FROM aziende WHERE id=?", (aid,)).fetchone()
+    if not az:
+        mdb.close()
+        return False, 'Azienda non trovata.'
+    if az['stato'] != 'sospeso':
+        mdb.close()
+        return False, 'Per sicurezza puoi eliminare solo aziende sospese.'
+
+    tenants_dir = os.path.abspath(os.path.join(DATA_DIR, 'tenants'))
+    db_path = os.path.abspath(get_tenant_db_path(aid))
+    try:
+        if os.path.commonpath([tenants_dir, db_path]) != tenants_dir:
+            mdb.close()
+            return False, 'Percorso tenant non valido: eliminazione bloccata.'
+    except Exception:
+        mdb.close()
+        return False, 'Percorso tenant non valido: eliminazione bloccata.'
+
+    removed_files = 0
+    for suffix in ('', '-wal', '-shm'):
+        path = db_path + suffix
+        if os.path.exists(path):
+            try:
+                os.remove(path)
+                removed_files += 1
+            except Exception as e:
+                mdb.close()
+                return False, f'Impossibile eliminare il DB tenant: {e}'
+
+    mdb.execute("DELETE FROM aziende WHERE id=?", (aid,))
+    mdb.commit()
+    mdb.close()
+    return True, f'Azienda sospesa eliminata: {az["nome"]} ({removed_files} file rimossi).'
+
+@app.route('/superadmin/aziende/<int:aid>/elimina-sospesa', methods=['POST'])
+@superadmin_required
+def superadmin_elimina_sospesa(aid):
+    ok, msg = _superadmin_delete_suspended_company(aid)
+    flash(msg, 'success' if ok else 'error')
+    return redirect(url_for('superadmin_dashboard'))
+
+@app.route('/superadmin/aziende/elimina-sospese', methods=['POST'])
+@superadmin_required
+def superadmin_elimina_sospese():
+    mdb = get_master_db()
+    ids = [r['id'] for r in mdb.execute("SELECT id FROM aziende WHERE stato='sospeso'").fetchall()]
+    mdb.close()
+    deleted = 0
+    errors = []
+    for aid in ids:
+        ok, msg = _superadmin_delete_suspended_company(aid)
+        if ok:
+            deleted += 1
+        else:
+            errors.append(msg)
+    if errors:
+        flash(f'Eliminate {deleted} aziende sospese. Errori: ' + ' | '.join(errors[:3]), 'error')
+    else:
+        flash(f'Eliminate {deleted} aziende sospese.', 'success')
+    return redirect(url_for('superadmin_dashboard'))
+
 @app.route('/superadmin/aziende/<int:aid>/entra')
 @superadmin_required
 def superadmin_entra_azienda(aid):
@@ -36389,8 +36452,23 @@ button{width:100%;padding:12px;background:#f59e0b;color:#000;border:none;border-
 _SA_DASHBOARD_TMPL = """
 <div style="margin-bottom:24px;display:flex;justify-content:space-between;align-items:center">
   <h2><i class="fa fa-globe" style="color:#f59e0b"></i> SuperAdmin Ã¢â‚¬â€ Aziende clienti</h2>
-  <a href="/superadmin/logout" class="btn btn-secondary btn-sm"><i class="fa fa-sign-out"></i> Esci</a>
+  <div style="display:flex;gap:8px;align-items:center">
+    <form method="POST" action="/superadmin/aziende/elimina-sospese" style="margin:0"
+          onsubmit="return confirm('Eliminare DEFINITIVAMENTE tutte le aziende sospese e i loro database tenant?')">
+      <button class="btn btn-danger btn-sm" type="submit"><i class="fa fa-trash"></i> Pulisci sospese</button>
+    </form>
+    <a href="/superadmin/logout" class="btn btn-secondary btn-sm"><i class="fa fa-sign-out"></i> Esci</a>
+  </div>
 </div>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div style="display:grid;gap:8px;margin-bottom:16px">
+    {% for cat,msg in messages %}
+    <div style="padding:12px 14px;border-radius:10px;font-weight:700;background:{% if cat=='success' %}#dcfce7{% else %}#fee2e2{% endif %};color:{% if cat=='success' %}#166534{% else %}#991b1b{% endif %}">{{ msg }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
   <div class="card" style="padding:20px;text-align:center;border-top:3px solid #6366f1">
     <div style="font-size:28px;font-weight:800">{{ totali.totale }}</div>
@@ -36438,6 +36516,10 @@ _SA_DASHBOARD_TMPL = """
           <a href="/superadmin/aziende/{{ az.id }}/sospendi" class="btn btn-sm btn-danger" onclick="return confirm('Sospendere?')"><i class="fa fa-ban"></i></a>
           {% else %}
           <a href="/superadmin/aziende/{{ az.id }}/riattiva" class="btn btn-sm btn-green"><i class="fa fa-check"></i></a>
+          <form method="POST" action="/superadmin/aziende/{{ az.id }}/elimina-sospesa" style="margin:0"
+                onsubmit="return confirm('Eliminare DEFINITIVAMENTE questa azienda sospesa e il suo database tenant?')">
+            <button class="btn btn-sm btn-danger" type="submit" title="Elimina azienda sospesa"><i class="fa fa-trash"></i></button>
+          </form>
           {% endif %}
         </div>
       </td>
