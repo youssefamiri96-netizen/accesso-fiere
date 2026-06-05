@@ -12801,6 +12801,53 @@ FIERA_DETTAGLIO_TMPL = """
 .fdt-stato-completato{background:#dbeafe;color:#1e40af}
 .fdt-stato-rifiutato{background:#fee2e2;color:#991b1b}
 .fdt-incarico-form{background:#f8fafc;padding:14px;border-radius:10px;border:1px dashed var(--border);margin-bottom:14px}
+body:not(.theme-light) .fdt-card{
+  background:linear-gradient(180deg,rgba(15,31,51,.94),rgba(9,21,36,.96))!important;
+  border-color:rgba(148,163,184,.20)!important;
+  color:#dce7f5!important;
+  box-shadow:0 20px 52px -44px rgba(0,0,0,.92),inset 0 1px 0 rgba(255,255,255,.035)!important;
+}
+body:not(.theme-light) .fdt-card h3,
+body:not(.theme-light) .fdt-card strong,
+body:not(.theme-light) .fdt-info-row .val{
+  color:#eef5ff!important;
+}
+body:not(.theme-light) .fdt-info-row{
+  border-bottom-color:rgba(148,163,184,.20)!important;
+}
+body:not(.theme-light) .fdt-info-row .lbl,
+body:not(.theme-light) .fdt-cost-line .lbl,
+body:not(.theme-light) .fdt-card [style*="color:var(--text-light)"]{
+  color:#9fb1c7!important;
+}
+body:not(.theme-light) .fdt-incarico-form,
+body:not(.theme-light) .fdt-card tr[style*="background:#f8fafc"]{
+  background:rgba(5,14,27,.55)!important;
+  border-color:rgba(148,163,184,.22)!important;
+}
+body:not(.theme-light) .fdt-card .table-wrap,
+body:not(.theme-light) .fdt-card table{
+  background:transparent!important;
+  color:#dce7f5!important;
+}
+body:not(.theme-light) .fdt-card th{
+  background:rgba(5,14,27,.78)!important;
+  color:#9fb1c7!important;
+  border-color:rgba(148,163,184,.20)!important;
+}
+body:not(.theme-light) .fdt-card td{
+  color:#dce7f5!important;
+  border-color:rgba(148,163,184,.18)!important;
+}
+body:not(.theme-light) .fdt-margine.pos,
+body:not(.theme-light) .fdt-margine.neg,
+body:not(.theme-light) .fdt-margine.neutral{
+  background:rgba(5,14,27,.62)!important;
+}
+body:not(.theme-light) .fdt-margine .lbl,
+body:not(.theme-light) .fdt-margine .sub{
+  color:#9fb1c7!important;
+}
 </style>
 
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
@@ -13232,17 +13279,64 @@ def incarico_nuovo(cid):
     except (ValueError, TypeError):
         db.close(); flash('Seleziona un dipendente.', 'error')
         return redirect(url_for('cantiere_dettaglio', cid=cid))
+    cantiere = db.execute("SELECT nome, indirizzo, citta, data_setup, data_live, data_dismantling FROM cantieri WHERE id=?", (cid,)).fetchone()
+    dip = db.execute("SELECT nome, cognome, email FROM utenti WHERE id=?", (utente_id,)).fetchone()
+    mansione = request.form.get('mansione','Montatore')
+    data_da = request.form.get('data_da') or None
+    data_a = request.form.get('data_a') or None
+    tariffa_tipo = request.form.get('tariffa_tipo','giornaliera')
+    tariffa_importo = float(request.form.get('tariffa_importo') or 0)
     db.execute("""INSERT INTO incarichi (cantiere_id, utente_id, mansione, data_da, data_a,
                                           tariffa_tipo, tariffa_importo, note, stato)
                   VALUES (?,?,?,?,?,?,?,?,'proposto')""",
                (cid, utente_id,
-                request.form.get('mansione','Montatore'),
-                request.form.get('data_da') or None,
-                request.form.get('data_a') or None,
-                request.form.get('tariffa_tipo','giornaliera'),
-                float(request.form.get('tariffa_importo') or 0),
+                mansione,
+                data_da,
+                data_a,
+                tariffa_tipo,
+                tariffa_importo,
                 request.form.get('note','')))
     safe_commit(db); db.close()
+    if cantiere and dip:
+        try:
+            notifica_utente(
+                utente_id,
+                'Nuovo incarico',
+                f"Sei stato assegnato a {cantiere['nome']} come {mansione}.",
+                '/mobile',
+                'incarico_nuovo'
+            )
+        except Exception as e:
+            print(f'[EMAIL INCARICO] notifica app errore utente={utente_id}: {e}', flush=True)
+        if (dip['email'] or '').strip():
+            import html as _html
+            azienda = get_setting('azienda', 'Accesso Fiere')
+            base = get_public_base_url()
+            periodo = ''
+            if data_da or data_a:
+                periodo = f"{data_da or ''} - {data_a or ''}".strip(' -')
+            luogo = ', '.join([x for x in [cantiere['indirizzo'], cantiere['citta']] if x])
+            corpo = (
+                "<div style=\"font-family:Arial,sans-serif;max-width:580px;margin:0 auto;color:#0f172a\">"
+                f"<p>Ciao <strong>{_html.escape((dip['nome'] or '') + ' ' + (dip['cognome'] or ''))}</strong>,</p>"
+                f"<h2 style=\"font-size:20px;margin:0 0 12px\">Nuovo incarico assegnato</h2>"
+                f"<p>Sei stato inserito nella fiera/cantiere <b>{_html.escape(cantiere['nome'] or '')}</b>.</p>"
+                "<table style=\"border-collapse:collapse;width:100%;margin:16px 0\">"
+                f"<tr><td style=\"padding:8px 0;color:#64748b;width:34%\">Mansione</td><td style=\"padding:8px 0\"><b>{_html.escape(mansione or '')}</b></td></tr>"
+                f"<tr><td style=\"padding:8px 0;color:#64748b\">Periodo</td><td style=\"padding:8px 0\">{_html.escape(periodo or 'Da definire')}</td></tr>"
+                f"<tr><td style=\"padding:8px 0;color:#64748b\">Luogo</td><td style=\"padding:8px 0\">{_html.escape(luogo or 'Da definire')}</td></tr>"
+                "</table>"
+                f"<p><a href=\"{base}/mobile\" style=\"background:#2563eb;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:700\">Apri Accesso Fiere</a></p>"
+                f"<p style=\"font-size:12px;color:#94a3b8\">{_html.escape(azienda)} - notifica automatica</p>"
+                "</div>"
+            )
+            ok = send_email(dip['email'], f"[{azienda}] Nuovo incarico: {cantiere['nome']}", corpo)
+            print(f"[EMAIL INCARICO] utente={utente_id} email={dip['email']} risultato={'ok' if ok else 'fallito'}", flush=True)
+            if not ok:
+                flash('Incarico aggiunto, ma email non inviata: controlla i log Railway [EMAIL INCARICO].', 'error')
+        else:
+            print(f"[EMAIL INCARICO] utente={utente_id} senza email nel profilo", flush=True)
+            flash('Incarico aggiunto, ma il dipendente non ha email nel profilo.', 'error')
     flash('Incarico aggiunto.', 'success')
     return redirect(url_for('cantiere_dettaglio', cid=cid))
 
