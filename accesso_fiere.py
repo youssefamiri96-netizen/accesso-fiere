@@ -35710,6 +35710,7 @@ def abbonamento_checkout():
     try:
         import stripe
         stripe.api_key = STRIPE_SECRET
+        stripe.api_version = '2025-03-31.basil'
         piano = request.form.get('piano', 'base')
         price_map = {'base': STRIPE_PRICE_BASE, 'professional': STRIPE_PRICE_PRO, 'enterprise': STRIPE_PRICE_ENT}
         price_id = price_map.get(piano)
@@ -35721,8 +35722,8 @@ def abbonamento_checkout():
         mdb.close()
         checkout = stripe.checkout.Session.create(
             customer_email=az['email_admin'],
-            payment_method_types=['card'],
             line_items=[{'price': price_id, 'quantity': 1}],
+            managed_payments={'enabled': True},
             mode='subscription',
             success_url=request.host_url + 'abbonamento/successo?session_id={CHECKOUT_SESSION_ID}',
             cancel_url=request.host_url + 'abbonamento/gestisci',
