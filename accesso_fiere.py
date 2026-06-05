@@ -30517,10 +30517,13 @@ def test_email():
         or get_setting('email_notifiche', '')
         or parseaddr(sender or '')[1]
     )
+    print(f"[EMAIL TEST] provider={provider!r} sender={'ok' if sender else 'VUOTO'} api_key={'ok' if api_key else 'VUOTA'} to={to!r}", flush=True)
     if not to:
+        print("[EMAIL TEST] manca destinatario: imposta ADMIN_ALERT_EMAIL o EMAIL_TEST_TO", flush=True)
         flash('Configura ADMIN_ALERT_EMAIL su Railway prima di testare.', 'error')
         return redirect(url_for('impostazioni'))
     if not sender or not api_key:
+        print(f"[EMAIL TEST] config mancante provider={provider!r} sender={sender!r} api_key={'ok' if api_key else 'VUOTA'}", flush=True)
         flash(f'Config email mancante: provider={provider}, mittente o API key vuoti.', 'error')
         return redirect(url_for('impostazioni'))
     result = send_email(
