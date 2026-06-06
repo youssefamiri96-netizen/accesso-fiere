@@ -36528,6 +36528,23 @@ def _crea_checkout_abbonamento_stripe(azienda_id, piano):
     session['stripe_pending_azienda_id'] = int(azienda_id)
     session['stripe_pending_piano'] = piano
 
+    def _payment_link_con_context(payment_link):
+        from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
+        parts = urlsplit(payment_link)
+        query = dict(parse_qsl(parts.query, keep_blank_values=True))
+        query.update({
+            'client_reference_id': f'azienda_{azienda_id}_{piano}',
+            'prefilled_email': az['email_admin'],
+        })
+        return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
+
+    paid_link = (paid_link_map.get(piano) or '').strip()
+    if paid_link and not trial_eligibile:
+        try:
+            return _payment_link_con_context(paid_link), ''
+        except Exception as e:
+            return None, str(e)
+
     price_id = (price_map.get(piano) or '').strip()
     if STRIPE_SECRET and price_id:
         try:
@@ -36550,23 +36567,6 @@ def _crea_checkout_abbonamento_stripe(azienda_id, piano):
                 subscription_data=subscription_data,
             )
             return checkout.url, ''
-        except Exception as e:
-            return None, str(e)
-
-    def _payment_link_con_context(payment_link):
-        from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
-        parts = urlsplit(payment_link)
-        query = dict(parse_qsl(parts.query, keep_blank_values=True))
-        query.update({
-            'client_reference_id': f'azienda_{azienda_id}_{piano}',
-            'prefilled_email': az['email_admin'],
-        })
-        return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
-
-    paid_link = (paid_link_map.get(piano) or '').strip()
-    if paid_link and not trial_eligibile:
-        try:
-            return _payment_link_con_context(paid_link), ''
         except Exception as e:
             return None, str(e)
 
