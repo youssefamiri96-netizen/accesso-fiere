@@ -2110,13 +2110,30 @@ def _email_config():
     return provider, sender, api_key, reply_to, metodo
 
 
-def send_email(to, subject, body):
+def send_email(to, subject, body, is_notification=False):
     """
     Invia email operative tramite provider API configurato su Railway.
     Provider supportati: Resend, Postmark, Brevo e fallback SMTP.
+
+    Se `is_notification=True`, controlla il flag tenant `email_notifiche_attive`:
+    se e' impostato a '0' o 'no', l'email viene silenziosamente saltata.
+    Questo permette all'admin di disattivare le notifiche via email senza
+    bloccare email di sistema (reset password, onboarding, verifiche, ecc.).
     """
     import traceback, urllib.request
     import json as _json
+
+    # Blocco notifiche disattivate lato tenant
+    if is_notification:
+        try:
+            flag = (get_setting('email_notifiche_attive', '1') or '1').strip().lower()
+            if flag in ('0', 'no', 'off', 'false', 'disattivo', 'disattivate'):
+                print(f"[EMAIL] Notifica saltata (flag email_notifiche_attive={flag!r}) to={to!r} subject={subject!r}", flush=True)
+                return False
+        except Exception as e:
+            # In caso di errore nel leggere la setting, non blocco
+            print(f"[EMAIL] Warning check flag notifiche: {e}", flush=True)
+
     provider, mittente, api_key, reply_to, metodo = _email_config()
     recipients = _email_recipients(to)
 
@@ -2361,12 +2378,12 @@ def check_scadenze_email():
              f"</p>")
 
     send_email(email_admin,
-        f'[ACCESSO FIERE] {len(righe)} scadenze nei prossimi 30 giorni - {oggi}', corpo)
+        f'[ACCESSO FIERE] {len(righe)} scadenze nei prossimi 30 giorni - {oggi}', corpo, is_notification=True)
     return
 
     import threading
     threading.Thread(target=lambda: send_email(email_admin,
-        f'[ACCESSO FIERE] {len(righe)} scadenze nei prossimi 30 giorni Ã¢â‚¬â€ {oggi}', corpo), daemon=True).start()
+        f'[ACCESSO FIERE] {len(righe)} scadenze nei prossimi 30 giorni Ã¢â‚¬â€ {oggi}', corpo, is_notification=True), daemon=True).start()
 
 
 # Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
@@ -15405,7 +15422,7 @@ def invia_richiesta_presenza():
                 send_email(email_admin, f'[ACCESSO FIERE] Nuova richiesta da {_nome_d}',
                     f'<p><b>{_nome_d}</b> ha inviato una richiesta di presenza per il <b>{data}</b>.<br>'
                     f'{riepilogo}<br>Motivo: {note}</p>'
-                    f'<p><a href="/admin/richieste">Vai alle richieste</a></p>')
+                    f'<p><a href="/admin/richieste">Vai alle richieste</a></p>', is_notification=True)
             except Exception: pass
         threading.Thread(target=_send_desk, daemon=True).start()
     flash('Richiesta inviata!','success'); return redirect(url_for('presenze'))
@@ -15671,7 +15688,7 @@ def ferie_richiesta():
     email_admin = get_setting('email_notifiche','')
     if email_admin:
         send_email(email_admin, f'[ACCESSO FIERE] Richiesta {tipo} da {session["nome"]} {session["cognome"]}',
-            f'<p><b>{session["nome"]} {session["cognome"]}</b> ha richiesto <b>{dettaglio}</b>.</p>')
+            f'<p><b>{session["nome"]} {session["cognome"]}</b> ha richiesto <b>{dettaglio}</b>.</p>', is_notification=True)
     db.close()
     # ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Notifica agli admin ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
     try:
@@ -29099,7 +29116,7 @@ def mobile_inserisci():
                     f'[ACCESSO FIERE] Richiesta ore da {nome_dip}',
                     f'<p><b>{nome_dip}</b> ha inviato una richiesta ore per il <b>{data}</b>.<br>'
                     f'Ore nette: {ore_nette}h ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Pausa: {pausa}h<br>Note: {note or "ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ"}</p>'
-                    f'<p><a href="{_base}/admin/richieste" style="background:#2563eb;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:700">Approva o rifiuta ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢</a></p>')
+                    f'<p><a href="{_base}/admin/richieste" style="background:#2563eb;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:700">Approva o rifiuta ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢</a></p>', is_notification=True)
             except: pass
         threading.Thread(target=_send, daemon=True).start()
     success_msg = f'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Richiesta inviata per {data} ({ore_nette}h) ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â in attesa di approvazione.'
@@ -30742,7 +30759,7 @@ def mobile_spese_inserisci():
                     f'</table>'
                     f'<p style="margin-top:16px"><a href="{_base}/admin/spese?stato=in_attesa" '
                     f'style="background:#059669;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:700">'
-                    f'Approva o rifiuta ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢</a></p>')
+                    f'Approva o rifiuta ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢</a></p>', is_notification=True)
             except: pass
         threading.Thread(target=_send_spesa, daemon=True).start()
 
@@ -31024,6 +31041,60 @@ IMP_TMPL = """
     </div>
   </div>
 </div>
+
+{# ══════════════ NOTIFICHE EMAIL ══════════════ #}
+<div class="card" style="margin-top:20px">
+  <div class="card-header">
+    <h3><i class="fa fa-envelope-open-text" style="color:#0ea5e9"></i> Notifiche via email</h3>
+    {% if cfg.email_notifiche_attive_bool %}
+      <span style="background:#dcfce7;color:#166534;padding:4px 12px;border-radius:99px;font-weight:700;font-size:12px">
+        <i class="fa fa-circle-check"></i> Attive
+      </span>
+    {% else %}
+      <span style="background:#fef3c7;color:#92400e;padding:4px 12px;border-radius:99px;font-weight:700;font-size:12px">
+        <i class="fa fa-bell-slash"></i> Disattivate
+      </span>
+    {% endif %}
+  </div>
+  <div class="card-body">
+    <p style="color:var(--text-light);font-size:13px;margin:0 0 16px">
+      Imposta l'indirizzo email dove ricevere le notifiche del gestionale:
+      nuove richieste di timbratura/ferie/permessi dei dipendenti, scadenze documenti
+      e veicoli in arrivo, aggiornamenti stato SDI delle fatture elettroniche.
+    </p>
+    <form method="POST" action="/admin/impostazioni/notifiche-email">
+      <div class="form-group">
+        <label style="display:block;font-weight:700;margin-bottom:6px">
+          <i class="fa fa-at"></i> Email di ricezione notifiche
+        </label>
+        <input type="email" name="email_notifiche" value="{{ cfg.email_notifiche }}"
+               placeholder="admin@miaazienda.it"
+               style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px">
+        <div style="font-size:12px;color:var(--text-light);margin-top:4px">
+          Puoi anche inserire più email separate da virgola (es. <em>admin@ditta.it, direzione@ditta.it</em>).
+        </div>
+      </div>
+      <div class="form-group" style="background:#f8fafc;padding:14px;border-radius:10px;border:1px solid var(--border);margin-top:14px">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:600;margin-bottom:0">
+          <input type="checkbox" name="email_notifiche_attive" value="1"
+                 {% if cfg.email_notifiche_attive_bool %}checked{% endif %}
+                 style="width:18px;height:18px;cursor:pointer">
+          <span>
+            Ricevi notifiche via email
+            <div style="font-size:12px;color:var(--text-light);font-weight:400;margin-top:2px">
+              Se disattivato, non riceverai email di notifica. Le notifiche
+              continueranno comunque ad apparire nel centro notifiche del gestionale
+              e come push (se attivate).
+            </div>
+          </span>
+        </label>
+      </div>
+      <button type="submit" class="btn btn-primary" style="margin-top:14px">
+        <i class="fa fa-save"></i> Salva impostazioni notifiche
+      </button>
+    </form>
+  </div>
+</div>
 <div class="card" style="margin-top:20px">
   <div class="card-header"><h3><i class="fa fa-palette"></i> Aspetto gestionale</h3></div>
   <div class="card-body">
@@ -31229,11 +31300,19 @@ def logo_delete():
 def impostazioni():
     db = get_db()
     keys = ['azienda','sede_legale','partita_iva','attivita_azienda','email_notifiche',
+            'email_notifiche_attive',
             'smtp_host','smtp_port','smtp_user','smtp_pass','anthropic_api_key',
             'google_client_id','google_client_secret','app_url','tema_gestionale']
     cfg = {k: get_setting(k,'') for k in keys}
     if cfg.get('tema_gestionale') not in ('dark', 'light'):
         cfg['tema_gestionale'] = 'dark'
+    # Default: se il flag non è mai stato settato, considera attivo (backward compat).
+    # Diventerà '0' solo quando l'admin lo disattiva esplicitamente.
+    flag_raw = (cfg.get('email_notifiche_attive') or '').strip().lower()
+    if flag_raw == '':
+        cfg['email_notifiche_attive_bool'] = True
+    else:
+        cfg['email_notifiche_attive_bool'] = flag_raw not in ('0', 'no', 'off', 'false', 'disattivo', 'disattivate')
     db.close()
     return render_page(IMP_TMPL, page_title='Impostazioni', active='impostazioni', cfg=cfg, ai_ok=AI_OK)
 
@@ -31275,6 +31354,32 @@ def impostazioni_password():
             db.execute("UPDATE utenti SET password=? WHERE email=? AND ruolo='admin'", (h, session.get('email','')))
         safe_commit(db); db.close()
         flash('Password admin aggiornata. Usa la nuova password al prossimo login.','success')
+    return redirect(url_for('impostazioni'))
+
+
+@app.route('/admin/impostazioni/notifiche-email', methods=['POST'])
+@admin_required
+def impostazioni_notifiche_email():
+    """Salva email destinataria delle notifiche + flag on/off invio email di notifica."""
+    email_dest = (request.form.get('email_notifiche', '') or '').strip()
+    # Validazione base email (non troppo severa, meglio permissivo)
+    if email_dest and ('@' not in email_dest or '.' not in email_dest.split('@')[-1]):
+        flash('Email non valida. Inserisci un indirizzo del tipo nome@dominio.it', 'error')
+        return redirect(url_for('impostazioni'))
+    # Flag "attive": checkbox HTML manda 'on' se spuntato, niente se non spuntato
+    attive = '1' if request.form.get('email_notifiche_attive') else '0'
+    db = get_db()
+    db.execute("INSERT OR REPLACE INTO impostazioni (chiave,valore) VALUES (?,?)",
+               ('email_notifiche', email_dest))
+    db.execute("INSERT OR REPLACE INTO impostazioni (chiave,valore) VALUES (?,?)",
+               ('email_notifiche_attive', attive))
+    safe_commit(db); db.close()
+    if not email_dest:
+        flash('Email di notifica azzerata. Nessuna notifica verrà inviata via email.', 'info')
+    elif attive == '0':
+        flash(f'Email salvata ({email_dest}) ma invio disattivato: non riceverai notifiche via mail.', 'info')
+    else:
+        flash(f'✅ Notifiche email attivate verso {email_dest}.', 'success')
     return redirect(url_for('impostazioni'))
 
 
